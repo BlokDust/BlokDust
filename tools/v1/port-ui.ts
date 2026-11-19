@@ -60,6 +60,10 @@ const REWRITES: Record<string, ([string, string, string] | [string, string, stri
     // ABOUT's three people side by side don't fit a phone: scene.ts draws them one a row there (owner, 2026-11-18).
     ['            var xs = [x1,x2,x3];', '            if (!App.SettingsPhone) {\n            var xs = [x1,x2,x3];', 'phone: people drawn by scene.ts'],
     ['            // END TAB 3 //', '            }\n            // END TAB 3 //', 'phone: people drawn by scene.ts']],
+  // UI-0016 (CHG-0040): a row drawn by v2 (the note bars) is declared as a slider with its own height in units.
+  'UI/OptionsPanel.ts': [['            if (json.parameters[i].type == "slider") {\n                getHeight += 48;\n                optionHeight[i] = 48 * units;',
+    '            if (json.parameters[i].type == "slider") {\n                var rowH = (json.parameters[i].props && json.parameters[i].props.height) || 48;\n                getHeight += rowH;\n                optionHeight[i] = rowH * units;',
+    'slider rows can be taller (note bars)']],
   'UI/Options/OptionMeter.ts': [['        var height = 48*units;', '        var height = App.SettingsRow*units;', 'phone rows taller (Settings only)']],
   // v1 sized everything from the width alone, so a short wide view (a plugin above GarageBand's keyboard on an iPad)
   // got panels taller than the view: past App.MaxAspect (shim.ts) the unit follows the height (owner, 2026-11-16).

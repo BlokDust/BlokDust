@@ -216,7 +216,7 @@ class Engine {
   struct NoteFx { int random = -1, chord = -1, arp = -1; };
   NoteFx noteFxFor(int slot) const noexcept;
   bool wantsArranged(int slot) const noexcept;
-  void arrange(int slot, bool trigger) noexcept;
+  void arrange(int slot, bool trigger, bool keyPress = false) noexcept;
   void arrangedKey(int slot, const Block& ctrl, int key, int channel, bool on) noexcept;
   void stepArps() noexcept;
   void runModulators() noexcept;

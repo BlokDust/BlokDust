@@ -2,6 +2,7 @@
 // (SPEC-SIMULATION-POWER-AND-PARTICLES R10e–R10h).
 #include <catch2/catch_test_macros.hpp>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <utility>
 #include <vector>
@@ -85,42 +86,70 @@ TEST_CASE("R10e Keys set pitch: a particle strums the held chord") {
   CHECK(on.size() == hits.size() * 2);              // two notes per hit
 }
 
-TEST_CASE("R10f Chord: power on a Tone plays the chord on its own note; the type and inversion pick the notes") {
+TEST_CASE("R10f Chord: power on a Tone plays the chord on its own note's bar, as the Tone's Note sets it") {
   auto e = toneAndKeys({BlockType::FxChord});
+  e->push(Command::setParam(10, P::FxChord::smooth, 0));
   e->push(Command::press(1, true));
   render(*e, 480);
   const auto st = [](int semis) { return kBase * std::pow(2.0, semis / 12.0); };
-  CHECK(are(pitches(*e), {st(0), st(4), st(7)}));   // major, the default
-  e->push(Command::setParam(10, P::FxChord::chord, 2));
+  CHECK(are(pitches(*e), {st(0), st(4), st(7)}));            // C: major (default)
+  e->push(Command::setParam(10, P::FxChord::q0, 2));
   render(*e, 480);
-  CHECK(are(pitches(*e), {st(0), st(3), st(7)}));   // minor: only the third changed
-  e->push(Command::setParam(10, P::FxChord::chord, 5));
-  e->push(Command::setParam(10, P::FxChord::inversion, 1));
+  CHECK(are(pitches(*e), {st(0), st(3), st(7)}));            // C's bar set to minor: only the third moved
+  e->push(Command::press(1, false)); render(*e, 4800);
+  e->push(Command::setParam(1, P::SourceTone::transpose, 2));
+  e->push(Command::press(1, true));
   render(*e, 480);
-  CHECK(are(pitches(*e), {st(4), st(7), st(10), st(12)}));  // seventh, first inversion
+  CHECK(are(pitches(*e), {st(2), st(5), st(9), st(12)}));    // the Tone plays D: D's bar, minor 7th
+  e->push(Command::setParam(10, P::FxChord::q2, 0));          // a setting changing re-plays the chord (CHG-0017)
+  render(*e, 480);
+  CHECK(are(pitches(*e), {st(2)}));                          // None: the note alone
 }
 
-TEST_CASE("R10f Chord: every key of a keyboard becomes a chord, and lets go with its key") {
+TEST_CASE("R10f Chord: each key plays the chord on its own bar; Key slides the bars; each lets go with its key") {
   auto e = toneAndKeys({BlockType::FxChord});
   e->push(Command::setParam(2, P::InputComputerKeyboard::isPolyphonic, 1));
-  e->push(Command::setParam(10, P::FxChord::chord, 0));  // fifths
+  e->push(Command::setParam(10, P::FxChord::smooth, 0));
   e->push(Command::noteOn(KB, 60));
   e->push(Command::noteOn(KB, 62));
   render(*e, 480);
-  CHECK(are(pitches(*e), {hz(60), hz(67), hz(62), hz(69)}));
+  CHECK(are(pitches(*e), {hz(60), hz(64), hz(67), hz(62), hz(65), hz(69), hz(72)}));  // C major, D minor 7th
   e->push(Command::noteOff(KB, 60));
   render(*e, 480);
-  CHECK(are(pitches(*e), {hz(62), hz(69)}));
+  CHECK(are(pitches(*e), {hz(62), hz(65), hz(69), hz(72)}));
+  e->push(Command::noteOff(KB, 62));
+  e->push(Command::setParam(10, P::FxChord::key, 2));       // Key D: E plays D's stored chord (minor 7th)
+  e->push(Command::noteOn(KB, 64));
+  render(*e, 480);
+  CHECK(are(pitches(*e), {hz(64), hz(67), hz(71), hz(74)}));
   // A mono keyboard sounds its newest key only.
   auto m = toneAndKeys({BlockType::FxChord});
-  m->push(Command::setParam(10, P::FxChord::chord, 0));
+  m->push(Command::setParam(10, P::FxChord::smooth, 0));
   m->push(Command::noteOn(KB, 60));
-  m->push(Command::noteOn(KB, 62));
+  m->push(Command::noteOn(KB, 64));
   render(*m, 480);
-  CHECK(are(pitches(*m), {hz(62), hz(69)}));
-  m->push(Command::noteOff(KB, 62));
+  CHECK(are(pitches(*m), {hz(64), hz(67), hz(71)}));        // E minor
+  m->push(Command::noteOff(KB, 64));
   render(*m, 480);
-  CHECK(are(pitches(*m), {hz(60), hz(67)}));        // back to the key still held
+  CHECK(are(pitches(*m), {hz(60), hz(64), hz(67)}));        // back to the key still held
+}
+
+TEST_CASE("R10f Chord, Smooth: the first chord in root position, then each note to the octave nearest the last chord") {
+  auto e = toneAndKeys({BlockType::FxChord});                // Smooth is on by default
+  e->push(Command::noteOn(KB, 60));
+  render(*e, 480);
+  CHECK(are(pitches(*e), {hz(60), hz(64), hz(67)}));        // C major, root position
+  e->push(Command::noteOn(KB, 65));                          // F major 7th: F stays; A, C and E nearest C-E-G
+  render(*e, 480);
+  CHECK(are(pitches(*e), {hz(60), hz(64), hz(65), hz(69)}));
+  e->push(Command::setParam(10, P::FxChord::q0, 2));        // another bar changing doesn't move the sounding chord
+  render(*e, 480);
+  CHECK(are(pitches(*e), {hz(60), hz(64), hz(65), hz(69)}));
+  e->push(Command::noteOff(KB, 65)); e->push(Command::noteOff(KB, 60));
+  e->push(Command::setParam(10, P::FxChord::smooth, 0));
+  e->push(Command::noteOn(KB, 65));
+  render(*e, 480);
+  CHECK(are(pitches(*e), {hz(65), hz(69), hz(72), hz(76)}));  // Smooth off: root position
 }
 
 TEST_CASE("R10f Chord: per-note bend reaches every note of that key's chord (PLUGIN-0004)") {
@@ -130,11 +159,10 @@ TEST_CASE("R10f Chord: per-note bend reaches every note of that key's chord (PLU
   e->push(Command::add(2, MIDI, 0, -3));
   e->push(Command::setParam(2, P::InputMidiController::isPolyphonic, 1));
   e->push(Command::add(10, BlockType::FxChord, 3, 0));
-  e->push(Command::setParam(10, P::FxChord::chord, 0));
   e->push(Command::noteOn(MIDI, 60, 1.0, -1, 3));
   e->push(Command::noteExpression(MIDI, 60, 3, Command::Expression::Bend, 2.0));
   render(*e, 480);
-  CHECK(are(pitches(*e), {hz(62), hz(69)}));
+  CHECK(are(pitches(*e), {hz(62), hz(66), hz(69)}));        // C major, bent up a tone
 }
 
 TEST_CASE("R10g Arpeggiator, per hit: each strike plays the next of the held notes") {
@@ -204,56 +232,90 @@ TEST_CASE("R10g Arpeggiator, on its own: Speed (not synced) and Division (synced
   CHECK(pitches(*s).empty());
 }
 
-TEST_CASE("R10h Random Note: each hit gets a note of the key and scale, the same notes every run") {
-  const auto run = [](std::uint64_t seed) {
-    auto e = makeEngine(48000, seed, false);
-    e->push(Command::add(1, BlockType::SourceTone, 0, 0));
-    e->push(Command::add(10, BlockType::FxRandomNote, 3, 0));
-    e->push(Command::setParam(10, P::FxRandomNote::key, 2));     // D
-    e->push(Command::setParam(10, P::FxRandomNote::scale, 5));   // pentatonic
-    e->push(Command::setParam(10, P::FxRandomNote::high, 1));    // two octaves
-    std::vector<int> got;
-    for (int i = 0; i < 40; ++i) {
-      e->push(Command::press(1, true)); render(*e, 480);
-      got.push_back(static_cast<int>(std::lround(69.0 + 12.0 * std::log2(pitches(*e).at(0) / 440.0))));
-      e->push(Command::press(1, false)); render(*e, 2400);
-    }
-    return got;
-  };
-  const auto a = run(1);
-  const int pent[5] = {0, 2, 4, 7, 9};
-  int distinct = 0; std::array<bool, 128> seen{};
-  for (int k : a) {
-    CHECK(k >= 62);
-    CHECK(k < 62 + 24);
-    CHECK(std::find(std::begin(pent), std::end(pent), (k - 62) % 12) != std::end(pent));
-    if (!seen[static_cast<std::size_t>(k)]) { seen[static_cast<std::size_t>(k)] = true; ++distinct; }
-  }
-  CHECK(distinct >= 5);
-  CHECK(run(1) == a);
-  CHECK(run(99) == a);   // the patch seed is visual-only (R12)
-}
-
-TEST_CASE("R10h Random Note with Keys set pitch picks among the held keys; then Chord, then Arpeggiator") {
-  auto e = toneAndKeys({BlockType::FxRandomNote}, true);
-  for (int k : {50, 57}) e->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
-  for (int i = 0; i < 12; ++i) {
+namespace {
+int midiOf(double p) { return static_cast<int>(std::lround(69.0 + 12.0 * std::log2(p / 440.0))); }
+/// A Tone (1) with a Random Note (10) whose weights are `w` (C…B); then `presses` presses of the Tone's power.
+std::vector<int> randomPresses(std::uint64_t seed, const std::array<double, 12>& w, int presses, int key = 0, int low = 60, int high = 71) {
+  auto e = makeEngine(48000, seed, false);
+  e->push(Command::add(1, BlockType::SourceTone, 0, 0));
+  e->push(Command::add(10, BlockType::FxRandomNote, 3, 0));
+  for (int i = 0; i < 12; ++i) e->push(Command::setParam(10, static_cast<std::uint8_t>(P::FxRandomNote::w0 + i), w[static_cast<std::size_t>(i)]));
+  e->push(Command::setParam(10, P::FxRandomNote::key, key));
+  e->push(Command::setParam(10, P::FxRandomNote::low, low));
+  e->push(Command::setParam(10, P::FxRandomNote::high, high));
+  std::vector<int> got;
+  for (int i = 0; i < presses; ++i) {
     e->push(Command::press(1, true)); render(*e, 480);
-    const auto p = pitches(*e);
-    REQUIRE(p.size() == 1);
-    CHECK((near(p[0], hz(50)) || near(p[0], hz(57))));
+    got.push_back(midiOf(pitches(*e).at(0)));
     e->push(Command::press(1, false)); render(*e, 2400);
   }
-  // Random Note → Chord → Arpeggiator: one random root per strike, its fifth chord, played one note at a time.
+  return got;
+}
+}  // namespace
+
+TEST_CASE("R10h Random Note: each trigger draws a note in the range, weighted by its bar; the same notes every run") {
+  const std::array<double, 12> w = {0.05, 0, 0, 0, 0, 1, 0, 1, 0, 0.05, 1, 0};  // F, G, A# mostly; C and A rarely
+  const auto a = randomPresses(1, w, 300, 0, 48, 72);
+  std::array<int, 12> count{};
+  for (int k : a) {
+    CHECK(k >= 48); CHECK(k <= 72);
+    ++count[static_cast<std::size_t>(k % 12)];
+  }
+  for (int pc : {1, 2, 3, 4, 6, 8, 11}) CHECK(count[static_cast<std::size_t>(pc)] == 0);
+  for (int pc : {5, 7, 10}) CHECK(count[static_cast<std::size_t>(pc)] > 60);
+  CHECK(count[0] + count[9] > 0);
+  CHECK(count[0] + count[9] < 30);
+  CHECK(randomPresses(1, w, 300, 0, 48, 72) == a);
+  CHECK(randomPresses(99, w, 300, 0, 48, 72) == a);   // the patch seed is visual-only (R12)
+}
+
+TEST_CASE("R10h Random Note: Key slides the weights; with no weight in the range the note in plays unchanged") {
+  std::array<double, 12> onlyC{}; onlyC[0] = 1;
+  for (int k : randomPresses(1, onlyC, 20, 2, 48, 72)) CHECK(k % 12 == 2);   // Key D: C's bar is D's
+  for (int k : randomPresses(1, onlyC, 5, 0, 61, 71)) CHECK(k == 60);       // no C in C#4–B4: the Tone's own note
+  const std::array<double, 12> none{};
+  for (int k : randomPresses(1, none, 5)) CHECK(k == 60);
+}
+
+TEST_CASE("R10h Random Note with Keys set pitch: each held key gets its own random note, picked again at each strike; then Chord, then Arpeggiator") {
+  auto e = toneAndKeys({BlockType::FxRandomNote}, true);
+  for (int k : {50, 57}) e->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
+  std::vector<std::vector<int>> strikes;
+  for (int i = 0; i < 12; ++i) {
+    e->push(Command::press(1, true)); render(*e, 480);
+    std::vector<int> got;
+    for (double p : pitches(*e)) got.push_back(midiOf(p));
+    for (int k : got) { CHECK(k >= 60); CHECK(k <= 71); CHECK(((k % 12) != 1 && (k % 12) != 3 && (k % 12) != 6 && (k % 12) != 8 && (k % 12) != 10)); }
+    CHECK(!got.empty()); CHECK(got.size() <= 2);
+    strikes.push_back(got);
+    e->push(Command::press(1, false)); render(*e, 2400);
+  }
+  CHECK(std::count_if(strikes.begin(), strikes.end(), [&](const auto& g) { return g != strikes[0]; }) > 0);  // picked again
+  // Random Note → Chord → Arpeggiator: one random root per strike, its chord (all major here), one note at a time.
   auto c = toneAndKeys({BlockType::FxArpeggiator, BlockType::FxChord, BlockType::FxRandomNote});
-  c->push(Command::setParam(11, P::FxChord::chord, 0));
+  for (int i = 0; i < 12; ++i) c->push(Command::setParam(11, static_cast<std::uint8_t>(P::FxChord::q0 + i), 3));
+  c->push(Command::setParam(11, P::FxChord::smooth, 0));
   c->push(Command::setParam(10, P::FxArpeggiator::sync, 0));
   c->push(Command::setParam(10, P::FxArpeggiator::speed, 20));
   c->push(Command::press(1, true));
   render(*c, 480);
   const double root = pitches(*c).at(0);
-  render(*c, 2400);                                  // the Arpeggiator's next step: the fifth above the same root
-  CHECK(near(pitches(*c).at(0), root * std::pow(2.0, 7.0 / 12.0)));
+  render(*c, 2400);                                  // the Arpeggiator's next step: the third above the same root
+  CHECK(near(pitches(*c).at(0), root * std::pow(2.0, 4.0 / 12.0)));
+}
+
+TEST_CASE("R10h Random Note: three keys held on a polyphonic keyboard sound three random notes, each let go with its key") {
+  // Owner bug, 2026-11-19: through Random Note a polyphonic keyboard sounded one note, flicking between the held keys.
+  auto e = toneAndKeys({BlockType::FxRandomNote});
+  e->push(Command::setParam(2, P::InputComputerKeyboard::isPolyphonic, 1));
+  for (int k : {40, 41, 42}) { e->push(Command::noteOn(KB, static_cast<std::uint8_t>(k))); render(*e, 480); }
+  const auto held = pitches(*e);
+  CHECK(held.size() == 3);
+  e->push(Command::noteOff(KB, 41));
+  render(*e, 4800);
+  const auto two = pitches(*e);
+  CHECK(two.size() == 2);
+  for (double p : two) CHECK(std::find_if(held.begin(), held.end(), [&](double h) { return near(h, p); }) != held.end());  // the others kept their notes
 }
 
 TEST_CASE("CHG-0017: joining or leaving a note effect starts clean, and plain sources are untouched (R12)") {

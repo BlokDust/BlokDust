@@ -118,8 +118,9 @@ export class OptionsPanel extends DisplayObject {
         var optionHeight = [];
         for (var i=0;i<n;i++) {
             if (json.parameters[i].type == "slider") {
-                getHeight += 48;
-                optionHeight[i] = 48 * units;
+                var rowH = (json.parameters[i].props && json.parameters[i].props.height) || 48;
+                getHeight += rowH;
+                optionHeight[i] = rowH * units;
             } else if (json.parameters[i].type == "sample") {
                 getHeight += 48;
                 optionHeight[i] = 48 * units;

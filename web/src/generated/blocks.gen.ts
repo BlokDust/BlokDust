@@ -2722,7 +2722,7 @@ export const BLOCKS: readonly BlockDef[] = [
     "category": "effect",
     "kind": "pre-effect",
     "name": "Chord",
-    "description": "Expands single incoming notes into full chords automatically.",
+    "description": "Plays a chord on every note it is given: a chord for each of the 12 notes, voiced smoothly.",
     "draft": false,
     "v1Type": null,
     "menuId": "Chord",
@@ -2787,8 +2787,8 @@ export const BLOCKS: readonly BlockDef[] = [
     },
     "params": [
       {
-        "key": "chord",
-        "default": 1,
+        "key": "q0",
+        "default": 3,
         "unit": "enum",
         "ui": {
           "transform": "Identity",
@@ -2798,13 +2798,145 @@ export const BLOCKS: readonly BlockDef[] = [
         }
       },
       {
-        "key": "inversion",
-        "default": 0,
-        "unit": "count",
+        "key": "q1",
+        "default": 7,
+        "unit": "enum",
         "ui": {
           "transform": "Identity",
           "min": 0,
-          "max": 3,
+          "max": 7,
+          "k": 0
+        }
+      },
+      {
+        "key": "q2",
+        "default": 5,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 7,
+          "k": 0
+        }
+      },
+      {
+        "key": "q3",
+        "default": 3,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 7,
+          "k": 0
+        }
+      },
+      {
+        "key": "q4",
+        "default": 2,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 7,
+          "k": 0
+        }
+      },
+      {
+        "key": "q5",
+        "default": 7,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 7,
+          "k": 0
+        }
+      },
+      {
+        "key": "q6",
+        "default": 7,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 7,
+          "k": 0
+        }
+      },
+      {
+        "key": "q7",
+        "default": 6,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 7,
+          "k": 0
+        }
+      },
+      {
+        "key": "q8",
+        "default": 7,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 7,
+          "k": 0
+        }
+      },
+      {
+        "key": "q9",
+        "default": 5,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 7,
+          "k": 0
+        }
+      },
+      {
+        "key": "q10",
+        "default": 3,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 7,
+          "k": 0
+        }
+      },
+      {
+        "key": "q11",
+        "default": 2,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 7,
+          "k": 0
+        }
+      },
+      {
+        "key": "key",
+        "default": 0,
+        "unit": "semitones",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 11,
+          "k": 0
+        }
+      },
+      {
+        "key": "smooth",
+        "default": 1,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
           "k": 0
         }
       }
@@ -4314,7 +4446,7 @@ export const BLOCKS: readonly BlockDef[] = [
     "category": "effect",
     "kind": "pre-effect",
     "name": "Random Note",
-    "description": "Randomly picks a note from a key and scale.",
+    "description": "Picks a random note for every note it is given, weighted per note, within a range.",
     "draft": false,
     "v1Type": null,
     "menuId": "RandomNote",
@@ -4395,9 +4527,141 @@ export const BLOCKS: readonly BlockDef[] = [
     },
     "params": [
       {
+        "key": "w0",
+        "default": 1,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
+        "key": "w1",
+        "default": 0,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
+        "key": "w2",
+        "default": 1,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
+        "key": "w3",
+        "default": 0,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
+        "key": "w4",
+        "default": 1,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
+        "key": "w5",
+        "default": 1,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
+        "key": "w6",
+        "default": 0,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
+        "key": "w7",
+        "default": 1,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
+        "key": "w8",
+        "default": 0,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
+        "key": "w9",
+        "default": 1,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
+        "key": "w10",
+        "default": 0,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
+        "key": "w11",
+        "default": 1,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
         "key": "key",
         "default": 0,
-        "unit": "enum",
+        "unit": "semitones",
         "ui": {
           "transform": "Identity",
           "min": 0,
@@ -4406,35 +4670,24 @@ export const BLOCKS: readonly BlockDef[] = [
         }
       },
       {
-        "key": "scale",
-        "default": 0,
-        "unit": "enum",
-        "ui": {
-          "transform": "Identity",
-          "min": 0,
-          "max": 5,
-          "k": 0
-        }
-      },
-      {
         "key": "low",
-        "default": 0,
-        "unit": "octaves",
+        "default": 60,
+        "unit": "midi",
         "ui": {
           "transform": "Identity",
-          "min": -3,
-          "max": 3,
+          "min": 24,
+          "max": 107,
           "k": 0
         }
       },
       {
         "key": "high",
-        "default": 0,
-        "unit": "octaves",
+        "default": 71,
+        "unit": "midi",
         "ui": {
           "transform": "Identity",
-          "min": -3,
-          "max": 3,
+          "min": 24,
+          "max": 107,
           "k": 0
         }
       }

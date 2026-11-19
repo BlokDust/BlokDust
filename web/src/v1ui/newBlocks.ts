@@ -7,6 +7,7 @@ import { App, PLUGIN_LABELS, Point } from './shim.ts';
 import { addSelector, isSelector } from './selectorOption.ts';
 import { touchpadForm } from './touchpadPanel.ts';
 import { tablePicture } from '../engine/wasmEngine.ts';
+import { drawNoteBars, drawRange, noteName, rangeOf } from './noteBars.ts';
 
 /** The new blocks in each v1 category (the menu then sorts each category: MENU_ORDER). */
 const MENU: Record<string, string[]> = {
@@ -125,7 +126,6 @@ const ms = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(2)} s` : `${Math.ro
 /** Scales shared by Random Note and the Touchpad (engine kScales), and the twelve keys. */
 export const SCALES = ['MAJOR', 'MINOR', 'DORIAN', 'LYDIAN', 'MIXOLYDIAN', 'PENTATONIC'];
 export const KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-const CHORDS = ['FIFTH', 'MAJOR', 'MINOR', 'SUS 2', 'SUS 4', 'SEVENTH', 'MAJOR 7TH', 'MINOR 7TH'];
 /** A synced Arpeggiator's speeds (beats per note), with triplets. */
 const ARP_STEPS = [
   { beats: 4, label: '1 BAR' }, { beats: 2, label: '1/2' }, { beats: 1, label: '1/4' }, { beats: 2 / 3, label: '1/4T' }, { beats: 0.5, label: '1/8' },
@@ -229,9 +229,11 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
     ];
   },
   // CHG-0017 (AUDIO-0002): the note effects.
+  // CHG-0040 (UI-0016): a chord for each note, the Key that slides them, and smooth voicing.
   'fx.chord': b => [
-    choice('Chord', 'chord', Number(b.Params.chord), CHORDS),
-    slider('Inversion', 'inversion', Number(b.Params.inversion), 0, 3, { quantised: true }),
+    { type: 'slider', name: 'Chords', setting: 'noteBars', props: { value: 0, min: 0, max: 1, height: 110 } },
+    slider('Key', 'key', Number(b.Params.key ?? 0), 0, 11, { quantised: true, display: v => KEYS[Math.max(0, Math.min(11, Math.round(v)))] }),
+    switches({ name: 'Smooth', setting: 'smooth', value: b.Params.smooth === undefined ? true : !!Number(b.Params.smooth) }),
   ],
   // Speed is how fast it moves between the held notes: musical lengths when synced, notes a second when not. Per Hit
   // hands the stepping to the hits instead, so Speed and Tempo Sync go.
@@ -243,11 +245,11 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
       : slider('Speed', 'speed', Number(b.Params.speed), 1, 30, { display: v => `${v.toFixed(1)} / S` })]),
     slider('Octaves', 'octaves', Number(b.Params.octaves), 1, 3, { quantised: true }),
   ],
+  // CHG-0040 (UI-0016): a weight for each note, the Key that slides them, and the range by semitone.
   'fx.random-note': b => [
-    choice('Key', 'key', Number(b.Params.key), KEYS),
-    choice('Scale', 'scale', Number(b.Params.scale), SCALES),
-    slider('Low', 'low', Number(b.Params.low), -3, 3, { quantised: true, centered: true, display: v => `OCTAVE ${Math.round(v) >= 0 ? '+' : ''}${Math.round(v)}` }),
-    slider('High', 'high', Number(b.Params.high), -3, 3, { quantised: true, centered: true, display: v => `OCTAVE ${Math.round(v) >= 0 ? '+' : ''}${Math.round(v)}` }),
+    { type: 'slider', name: 'Notes', setting: 'noteBars', props: { value: 0, min: 0, max: 1, height: 110 } },
+    slider('Key', 'key', Number(b.Params.key ?? 0), 0, 11, { quantised: true, display: v => KEYS[Math.max(0, Math.min(11, Math.round(v)))] }),
+    { type: 'slider', name: 'Range', setting: 'noteRange', props: { value: 0, min: 0, max: 1, convertDisplay: () => rangeOf(b).map(noteName).join(' – ') } },
   ],
   // CHG-0016: what it hears against its threshold, then when the beam comes on, then the Laser's own rows.
   'power.sound-laser': b => [
@@ -290,6 +292,9 @@ interface LfoTarget { id: number; param: string; label: string }
 function modulatable(block: any): { param: string; label: string }[] {
   const def = block.def as BlockDef, out: { param: string; label: string }[] = [];
   if (def.id === 'fx.filter') return [{ param: 'frequency', label: 'Frequency' }, { param: 'gain', label: 'Gain' }, { param: 'Q', label: 'Width' }];
+  // CHG-0040: Random Note's bars and range ends (its Key is a slider row); a Chord's Key only, not its chord bars.
+  if (def.id === 'fx.random-note') return [...KEYS.map((k, i) => ({ param: `w${i}`, label: `Weight ${k}` })), { param: 'key', label: 'Key' }, { param: 'low', label: 'Range Low' }, { param: 'high', label: 'Range High' }];
+  if (def.id === 'fx.chord') return [{ param: 'key', label: 'Key' }];
   block.UpdateOptionsForm();
   for (const row of (block.OptionsForm?.parameters ?? []) as any[]) {
     if (row.type !== 'slider' || isSelector(row.setting) || (LIVE_ROWS[row.setting] && !METER_ROWS.has(row.setting))) continue;
@@ -515,7 +520,7 @@ const drawWavePicture: RowDraw = function (ctx, units, i, panel) {
 
 /** Live rows that are also sliders (dragged as v1 drags any slider). */
 const METER_ROWS = new Set(['compMeter', 'soundMeter']);
-const LIVE_ROWS: Record<string, RowDraw> = { compMeter: drawCompressorMeter, soundMeter: drawCompressorMeter, counterPattern: drawCounterPattern, wavePicture: drawWavePicture };
+const LIVE_ROWS: Record<string, RowDraw> = { compMeter: drawCompressorMeter, soundMeter: drawCompressorMeter, counterPattern: drawCounterPattern, wavePicture: drawWavePicture, noteBars: drawNoteBars, noteRange: drawRange };
 
 /** A selected Prism's exit directions, drawn on the stage while its panel is open (as a Laser shows its beam): thin
  * dashed lines from the block, following its rotation. */
