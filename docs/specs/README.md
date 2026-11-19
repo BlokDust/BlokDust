@@ -64,3 +64,4 @@
 | [CHG-0037](changes/0037-pre-release-polish-particles-save-connect-account/proposal.md) | Pre-release polish: particles, save, Connect, account, patches lists | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2, SPEC-SHARING-ACCOUNTS, SPEC-SHARING-BACKEND, SPEC-VISUAL-V1-PARITY, SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS |
 | [CHG-0038](changes/0038-stage-in-the-plugins/proposal.md) | Stage in the plugins | **done** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |
 | [CHG-0039](changes/0039-sign-in-methods-plugin-gallery-and-plugin-sign-in/proposal.md) | Sign-in methods, plugin gallery and plugin sign-in | **in-progress** | SPEC-SHARING-ACCOUNTS, SPEC-SHARING-GALLERY |
+| [CHG-0040](changes/0040-note-bars-for-random-note-and-chord/proposal.md) | Note bars for Random Note and Chord | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |

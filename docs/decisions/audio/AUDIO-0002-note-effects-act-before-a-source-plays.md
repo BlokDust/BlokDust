@@ -19,15 +19,19 @@ We will add **note effects**: Effect-menu blocks that connect to sources by prox
 notes a source is asked to play, before its voices, whatever their place in the effect chain (as Envelope's settings
 apply at gate-on, SPEC-SIMULATION-POWER-AND-PARTICLES R10b). Order between note effects: Random Note, then Chord, then
 Arpeggiator.
-- **Chord** adds fixed intervals to every note.
+- **Chord** gives each of the 12 notes its own chord quality (a row of bars, shifted by a Key slider), voiced
+  smoothly from the previous chord, so a melody through it is harmonised rather than moved in parallel.
 - **Arpeggiator** plays the held notes one after another, at a synced rate, or one per hit.
-- **Random Note** picks each hit's note from a pool: key + scale + octave range (seeded PRNG).
+- **Random Note** draws each note from a semitone range, weighted per note by a row of 12 bars (shifted by a Key
+  slider; seeded PRNG). Keys and hits only trigger it: each note in gets its own random note.
 - Keyboards get **Keys set pitch** (default off): keys stop sounding and only set what power and hits play. With no keys
   held a source plays its own note.
 
 ## Consequences
 - Hold a chord and particles strum it; add an Arpeggiator and each hit plays the next note.
-- Scales are shared with Touchpad (CHG-0019): one table in the engine.
 
 ## Alternatives considered
+- **Key + scale for Random Note, one chord type for Chord:** too few choices, and parallel chords sound wrong
+  (owner, 2026-11-19).
+- **A circle of notes (as funputs Orbit):** BlokDust's shapes are all 45° angles; bars fit.
 - **Effects in chain order:** the user would have to place note effects first; the owner asked for no routing.

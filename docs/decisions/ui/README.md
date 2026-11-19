@@ -20,3 +20,4 @@
 | [UI-0013](UI-0013-waveforms-zoom-as-a-view-window-over-v1-s-panel.md) | Waveforms zoom as a view window over v1's panel | **proposed** | 2026-11-15 | ui, options-panel, samples, post-2-0 |
 | [UI-0014](UI-0014-the-envelope-graph-uses-a-curved-time-axis.md) | The Envelope graph uses a curved time axis | **accepted** | 2026-11-17 | ui, options-panel, envelope, post-2-0 |
 | [UI-0015](UI-0015-host-the-power-switch-s-third-cell-hands-power-to.md) | HOST: the power switch's third cell hands power to the DAW transport | **accepted** | 2026-11-16 | power, plugin, ipad |
+| [UI-0016](UI-0016-note-bars-and-a-range-slider-in-the-options-panel.md) | Note bars and a range slider in the options panel | **proposed** | 2026-11-19 | ui, options-panel, note-effects, post-2-0 |
