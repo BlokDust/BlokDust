@@ -82,8 +82,6 @@ export interface AccountHost {
     open(url: string): void;
     /** Keep the key (the plugin's file) and use it from now on. */
     keep(key: string, handle: string | null): void;
-    /** The account on the website (sign-in methods, deleting it). */
-    website(): void;
     /** The iPad app: Sign in with Apple and passkeys natively; the answer is the key (fresh: a new account). */
     native?: { apple(): Promise<{ key: string; user: { handle: string | null }; fresh?: boolean }>; passkey(): Promise<{ key: string; user: { handle: string | null } }> };
   };

@@ -18,9 +18,9 @@
 //               the ways in, APPS SIGNED IN: each plugin signed in to the account, with REMOVE (SHARING-0011);
 //   approve:    (website, `?link=CODE` from a plugin) "Sign in BlokDust on another device?", what asks and the code,
 //               CANCEL · APPROVE; with no code, the name field takes it;
-//   plugins:    (SHARING-0011) signed out, SIGN IN WITH YOUR BROWSER: the code large, a QR code of the address, the
-//               browser opened where it can be, waiting with v1's spinner, BACK. Signed in: the stats, then ON THE
-//               WEBSITE (methods and deleting live there) · SIGN OUT.
+//   plugins:    (SHARING-0011) signed out, SIGN IN WITH YOUR BROWSER: the code large, the browser opened (the AUv3,
+//               which can't open one: a QR code of the address), waiting with v1's spinner, BACK. Signed in: the
+//               stats, then SIGN OUT (methods and deleting are the website's); signing in goes back to the stage.
 import { App, Dimensions, Point } from './shim.ts';
 import { BLOCKS_BY_ID } from '../generated/blocks.gen.ts';
 import { activity } from '../account/activity.ts';
@@ -49,8 +49,7 @@ const COPY = {
   browser: 'Sign In With Your Browser', codeTitle: 'Sign in with your browser',
   codeOpened: 'Your browser has opened. Sign in there, check it shows this code, and press APPROVE.',
   codeGo: (at: string) => `On your phone or computer, go to ${at} and enter this code, or scan the QR code with your phone's camera.`,
-  waiting: 'Waiting for you to approve it…', openAgain: 'Open Browser Again', website: 'On The Website',
-  signedIn: 'Signed in.', denied: 'Sign-in was turned down on the website.', expired: 'The code expired. Try again.',
+  waiting: 'Waiting for you to approve it…', openAgain: 'Open Browser Again', denied: 'Sign-in was turned down on the website.', expired: 'The code expired. Try again.',
   approveTitle: 'Sign in BlokDust on another device?', approveLine: (name: string, handle: string) => `${name} asks to sign in as @${handle}. Check it shows this code, then press APPROVE.`,
   enterTitle: 'Enter the code BlokDust shows', continue: 'Continue', approve: 'Approve',
   approved: (name: string) => `${name} is signed in. You can go back to it now.`, turnedDown: (name: string) => `${name} was not signed in.`,
@@ -162,6 +161,8 @@ export class AccountPage {
     if (this.Account && !this.Account.handle && this.View === 'main') { this.View = 'name'; this.input.value = ''; }
     if (!this.Account && this.View !== 'create' && this.View !== 'code' && this.View !== 'approve') this.View = 'main';
     if (this.View === 'approve' && this.Account && this.ApproveCode && !this.ApproveName) void this.lookUpCode();
+    // SIGN-IN METHODS' APPS SIGNED IN, ready before it opens (owner, 2026-11-19: it jumped as the list arrived).
+    if (this.Account && this.host.apps && !this.host.plugin) void this.loadApps();
     if (was === undefined || (this.Account?.handle ?? null) !== before || !!was !== !!this.Account) this.onChange();
     this.mark();
   }
@@ -189,7 +190,7 @@ export class AccountPage {
     const below2 = top + this.statsHeight() * u;
     // DELETE ACCOUNT at the bottom right of the screen, out of the way (owner, 2026-11-18); it slides with the page.
     const screenBottom = top - ACCOUNT_TOP * u + App.Height;
-    const signedIn = { add: half(false, below2), out: half(true, below2), del: this.bordered(COPY.deleteAccount, W - 20 * u, screenBottom - 40 * u) };
+    const signedIn = { add: half(false, below2), out: half(true, below2), outFull: full(below2), del: this.bordered(COPY.deleteAccount, W - 20 * u, screenBottom - 40 * u) };
     const del = { cancel: half(false, top + 75 * u), ok: half(true, top + 75 * u) };
     // Signed in: the ways in on the line under the buttons, then any message.
     const methods = below2 + 62 * u;
@@ -369,7 +370,7 @@ export class AccountPage {
       this.heading(COPY.codeTitle, plug.canOpenBrowser ? COPY.codeOpened : COPY.codeGo(d.verifyAt), top, Lo.L);
       App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtSlider;
       c.fillText(d.userCode, Lo.L, Lo.code.text);
-      this.drawQr(d.verifyUrl, Lo.code.qr);
+      if (!plug.canOpenBrowser) this.drawQr(d.verifyUrl, Lo.code.qr);  // only where the browser can't be opened (owner, 2026-11-19)
       App.AnimationsLayer.DrawSprite(c, 'loading', Lo.L + 8 * u, Lo.code.waiting - 5 * u, 16, true);
       App.FillColor(c, txt); c.font = App.Metrics.TxtItalic2; c.textAlign = 'left'; c.fillText(COPY.waiting, Lo.L + 24 * u, Lo.code.waiting);
       this.drawBordered(Lo.code.back, App.Palette[1]);
@@ -424,8 +425,9 @@ export class AccountPage {
       c.fillText(COPY.stats.toUpperCase(), Lo.L, top + 10 * u);  // the corner already says who (owner, 2026-11-18)
       this.drawStats(top, Lo.L, Lo.R);
       const plugin = !!this.host.plugin;  // the plugins: methods and deleting are the website's (SHARING-0011)
-      this.filled(Lo.signedIn.add, App.Palette[busy ? 1 : menu[1]], plugin ? COPY.website : COPY.methodsButton, !busy && !!(plugin ? r.website : r.methods), true);
-      this.filled(Lo.signedIn.out, App.Palette[busy ? 1 : menu[3]], COPY.signOut, !busy && !!r.signOut, true);
+      // The plugins: SIGN OUT only (owner, 2026-11-19: the account's methods are on the website, and it is reached there).
+      if (!plugin) this.filled(Lo.signedIn.add, App.Palette[busy ? 1 : menu[1]], COPY.methodsButton, !busy && !!r.methods, true);
+      this.filled(plugin ? Lo.signedIn.outFull : Lo.signedIn.out, App.Palette[busy ? 1 : menu[3]], COPY.signOut, !busy && !!r.signOut, true);
       if (!plugin) this.drawBordered(Lo.signedIn.del, App.Palette[1]);
       App.FillColor(c, txt); c.font = App.Metrics.TxtItalic2; c.textAlign = 'left';
       c.fillText(`${COPY.methods}: ${this.methods().join(' · ')}`, Lo.L, Lo.methods);
@@ -470,7 +472,7 @@ export class AccountPage {
       Lo.appRows.forEach((row, i) => { out[`app${i}`] = pad(row.remove); });
       return out;
     }
-    if (this.Account && this.host.plugin) return { website: Lo.signedIn.add, signOut: Lo.signedIn.out };
+    if (this.Account && this.host.plugin) return { signOut: Lo.signedIn.outFull };
     if (this.Account) return { methods: Lo.signedIn.add, signOut: Lo.signedIn.out, deleteAccount: pad(Lo.signedIn.del) };
     if (this.Account === null && !this.noBackend) return { ...Lo.out };
     return {};
@@ -499,7 +501,6 @@ export class AccountPage {
     if (r.browser) { void this.startCode(); return; }
     if (r.codeBack) { this.stopCode(); this.View = 'main'; this.Message = ''; return; }
     if (r.openAgain) { if (this.Device) this.host.plugin?.open(this.Device.verifyUrl); return; }
-    if (r.website) { this.host.plugin?.website(); return; }
     if (r.approveOk || r.approveCancel) { void this.answer(!!r.approveOk); return; }
     if (r.submitCode) { this.ApproveCode = this.input.value.trim() || null; this.Message = ''; void this.lookUpCode(); return; }
     if (r.approveBack) { this.View = 'main'; this.ApproveCode = null; this.Message = ''; return; }
@@ -509,7 +510,7 @@ export class AccountPage {
       if (a && this.host.apps) void this.action(async () => { await this.host.apps!.remove(a.id); await this.loadApps(); }, true).then(ok => { if (ok) this.Message = COPY.removed(a.name); });
       return;
     }
-    if (r.methods) { this.View = 'methods'; this.Message = ''; void this.loadApps(); return; }
+    if (r.methods) { this.View = 'methods'; this.Message = ''; return; }
     if (r.methodsBack) { this.View = 'main'; this.Message = ''; return; }
     if (r.addGoogle) { a.google(); return; }  // signed in, Google or Apple joins this account (R7a)
     if (r.addApple) { a.apple(); return; }
@@ -582,7 +583,7 @@ export class AccountPage {
     let r: Awaited<ReturnType<typeof plug.poll>>;
     try { r = await plug.poll(d.deviceCode); } catch { this.schedulePoll(interval); return; }  // offline a moment: keep asking until it expires
     if (this.Device !== d) return;  // BACK meanwhile
-    if (r.status === 'approved') { plug.keep(r.key, r.user.handle); this.stopCode(); this.View = 'main'; this.Message = COPY.signedIn; await this.refresh(); }
+    if (r.status === 'approved') { this.stopCode(); this.View = 'main'; plug.keep(r.key, r.user.handle); await this.refresh(); }
     else if (r.status === 'pending') this.schedulePoll(interval);
     else if (r.status === 'slow_down') this.schedulePoll(interval + 5);
     else { this.stopCode(); this.View = 'main'; this.Message = r.status === 'denied' ? COPY.denied : COPY.expired; }

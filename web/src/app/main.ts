@@ -696,8 +696,11 @@ async function main() {
         start: () => startDevice(pluginName),
         poll: code => pollDevice(code),
         open: url => j.emitEvent('bd_openUrl', { url }),
-        keep: (key, handle) => { setAppKey(key); j.emitEvent('bd_accountSave', { key, handle: handle ?? '' }); refreshOwnership(); },
-        website: () => j.emitEvent('bd_openUrl', { url: `${PLUGIN_SITE}?account=open` }),
+        // Signed in: back to the stage, whose corner says who (owner, 2026-11-19); a new account names itself first.
+        keep: (key, handle) => {
+          setAppKey(key); j.emitEvent('bd_accountSave', { key, handle: handle ?? '' }); refreshOwnership();
+          if (handle) (scene.SettingsPanel as any).ClosePanel();
+        },
         // The iPad app (SHARING-0011): Apple and passkeys through the system; the server gives the key.
         get native() { return pluginNative ? nativeSignIn : undefined; },
       },
@@ -2061,8 +2064,6 @@ async function main() {
         (scene.SettingsPanel as any).accountPage?.showMethods(linked);
       });
       else if (signInReturn === 'new') requestAnimationFrame(() => (scene.SettingsPanel as any).openAccount?.());
-      // A plugin's ON THE WEBSITE (SHARING-0011): the account, where its sign-in methods are.
-      else if (signInReturn === 'open') requestAnimationFrame(() => (scene.SettingsPanel as any).openAccount?.());
       else if (pendingLink() !== null) { /* approving a plugin's code: below */ }
       // No new account today from this network (R1b): Settings › SIGN IN says why.
       else if (signInReturn === 'limit') requestAnimationFrame(() => {

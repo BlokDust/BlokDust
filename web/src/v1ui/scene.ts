@@ -848,7 +848,8 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     };
     // Closing Settings (×) while DELETE ACCOUNT asks is CANCEL (owner, 2026-11-18: it opened on the question again).
     const closeSettings = p.ClosePanel.bind(p);
-    p.ClosePanel = () => { if (account?.View === 'delete') account.View = 'main'; closeSettings(); };
+    // SIGN-IN METHODS too: the account comes back on its own page (owner, 2026-11-19).
+    p.ClosePanel = () => { if (account?.View === 'delete' || account?.View === 'methods') { account.View = 'main'; account.Message = ''; } closeSettings(); };
     /** Open Settings on SIGN IN / ACCOUNT (back from Google, the signed-in mark on the stage). */
     p.openAccount = () => {
       p._OpenTab = AT;
@@ -1059,7 +1060,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   p.MouseDown = (pt: { x: number; y: number }) => {
     const before = p._OpenTab;
     mouseDown(pt);
-    if (account && p._OpenTab === AT && before !== AT) { account.View = account.View === 'delete' ? 'main' : account.View; void account.refresh(); }
+    if (account && p._OpenTab === AT && before !== AT) { if (account.View === 'delete' || account.View === 'methods') { account.View = 'main'; account.Message = ''; } void account.refresh(); }
     if (!p.Open) return;
     if (linkHover >= 0) { window.open(footerLinks()[linkHover].url, '_blank'); return; }
     if (statsHover && host.usageStats) { host.usageStats.set(!host.usageStats.get()); return; }

@@ -314,6 +314,11 @@ const tests: Record<string, () => Promise<void>> = {
     check('R7c: a passkey added and removed', withKey.rows.length === 2 && /^Passkey/.test(withKey.rows[1]) && back.rows.join(',') === 'Apple', { withKey, back });
     const last = await api(l, 'DELETE', 'me/methods', { kind: 'apple' });
     check('R7c: the last way in is never removed (409)', last.status === 409 && (await pp(l.page)).rows.join(',') === 'Apple', last);
+    // Leaving SIGN-IN METHODS (×, another tab) brings the account back on its own page (owner, 2026-11-19).
+    await l.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel()); await l.page.waitForTimeout(800);
+    await openAccount(l.page);
+    const reopened = (await pp(l.page)).view;
+    check('… leaving SIGN-IN METHODS and coming back shows the account page', reopened === 'main', reopened);
     const cross = await fetch(`${base}/api/me/methods`, { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind: 'apple' }) });
     check('R5: removing needs this site\'s Origin', cross.status === 403, cross.status);
     await m.ctx.close(); await l.ctx.close();
@@ -438,11 +443,14 @@ const tests: Record<string, () => Promise<void>> = {
     const said = (await pp(w.page)).message;
     await pg.waitForFunction(() => (window as any).__bd_probe.scene.SettingsPanel.accountPage.Account?.handle === 'pia_g', null, { timeout: 20000 }).catch(() => {});
     const kept = await pg.evaluate(() => ((window as any).__sent as { id: string; v: any }[]).filter(e => e.id === 'bd_accountSave').map(e => e.v).pop());
-    const inPlugin = await pg.evaluate(() => { const x = (window as any).__bd_probe.scene.SettingsPanel.accountPage; return { handle: x.Account?.handle, view: x.View, message: x.Message, stats: !!x.Account?.stats }; });
+    await pg.waitForTimeout(900);
+    const inPlugin = await pg.evaluate(() => { const s = (window as any).__bd_probe.scene.SettingsPanel, x = s.accountPage; return { handle: x.Account?.handle, view: x.View, message: x.Message, settings: s.Open, me: (window as any).__bd_probe.corners?.me }; });
     await pg.waitForTimeout(600); await pg.mouse.move(5, 5); await pg.waitForTimeout(200); await pg.screenshot({ path: `${OUT}/plugin-signed-in.png` });
-    check('… APPROVE signs the plugin in; it keeps its key (bd_accountSave)', /is signed in/.test(said) && inPlugin.handle === 'pia_g' && /^bdk_/.test(kept?.key ?? '') && kept?.handle === 'pia_g', { said, inPlugin, kept: kept && { ...kept, key: String(kept.key).slice(0, 6) } });
-    const pluginControls = await pg.evaluate(() => ['website', 'signOut', 'deleteAccount', 'methods'].map(k => !!(window as any).__bd_probe.scene.SettingsPanel.accountCentre(k)));
-    check('… signed in, the plugin has ON THE WEBSITE · SIGN OUT (no DELETE ACCOUNT, no SIGN-IN METHODS)', JSON.stringify(pluginControls) === '[true,true,false,false]', pluginControls);
+    check('… APPROVE signs the plugin in: it keeps its key (bd_accountSave) and goes back to the stage, no message (owner, 2026-11-19)', /is signed in/.test(said) && inPlugin.handle === 'pia_g'
+      && !inPlugin.settings && inPlugin.message === '' && inPlugin.me === 'pia_g' && /^bdk_/.test(kept?.key ?? '') && kept?.handle === 'pia_g', { said, inPlugin, kept: kept && { ...kept, key: String(kept.key).slice(0, 6) } });
+    await openAccount(pg);
+    const pluginControls = await pg.evaluate(() => ['signOut', 'deleteAccount', 'methods', 'website'].map(k => !!(window as any).__bd_probe.scene.SettingsPanel.accountCentre(k)));
+    check('… signed in, the plugin has SIGN OUT only (no SIGN-IN METHODS, DELETE ACCOUNT or ON THE WEBSITE)', JSON.stringify(pluginControls) === '[true,false,false,false]', pluginControls);
     // SAVE in the plugin saves to the account (no bot check), and OPEN lists the account's patches.
     await pg.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel()); await pg.waitForTimeout(800);
     await pg.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.OpenPanel(0)); await pg.waitForTimeout(1200);
