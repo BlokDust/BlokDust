@@ -78,8 +78,9 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   - creating an account or naming one: a small heading in the tab type with no rule and no explanation (owner review
     2: the large heading over a rule read as a text field), a NAME field, the main button and BACK;
   - signed in: STATS in the tab type, no rule (the stage's corner already says who: owner, 2026-11-18), the page
-    35 units higher than the other tabs' pages, DELETE ACCOUNT (asked first) at the right of that line (CHG-0027), the stats (R15, R16), then ADD PASSKEY · SIGN OUT, and under them
-    "Sign-in methods: Google · Apple · 2 passkeys" (the ones it has; CHG-0035).
+    35 units higher than the other tabs' pages, the stats (R15, R16), then ADD PASSKEY · SIGN OUT, and under them
+    "Sign-in methods: Google · Apple · 2 passkeys" (the ones it has; CHG-0035); DELETE ACCOUNT (asked first) at the bottom right of
+    the screen, out of the way (owner, 2026-11-18).
   Signing in with a passkey closes Settings: back to the stage.
 - **R13a.** Back from Google or Apple there is no start screen and no intro: the stage takes input at once and the first press
   or key starts the sound. A new account opens Settings at the name step; a known one stays on the stage.
@@ -88,8 +89,8 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   - PATCHES (the account's), REMIXES (its patches made from someone else's: `parent` owned by another or nobody),
     LIKES (on its gallery patches) and PLAYS (its patches opened in the app, by anyone; owner, 2026-11-16: was OPENS), each a number in the Settings sliders'
     light type over a mid-type label; numbers past 9,999 are short (12.3K, 1.2M);
-  - on a phone (CHG-0037): the numbers two a row (PATCHES · REMIXES, LIKES · PLAYS, HOURS PLAYED · BLOCKS ADDED,
-    PARTICLES · LASER TURNS), FAVOURITE BLOCKS in two rows of three (six), the most remixed line under its title;
+  - on a phone (CHG-0037): the two rows of four numbers, FAVOURITE BLOCKS in two rows of three (six), the most remixed
+    line under its title, more room between the parts;
   - FAVOURITE BLOCKS: up to five block types (the server sends six), in the most of the account's patches first, then the most of them,
     each v1's menu icon over its menu name (two lines when wider than its column); or a line saying to save a patch;
   - "Most remixed: TITLE, N times" at the right of the FAVOURITE BLOCKS line, when others have made patches from one

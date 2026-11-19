@@ -22,3 +22,11 @@ Third round (owner, 2026-11-18):
 - [x] 14. Phone Settings: tabs clear of ×, wider and taller rows, About people and Download buttons one a row (settings-phone-layout).
 - [x] 15. iOS text fields no longer zoom the page (viewport maximum-scale=1; settings-phone-layout).
 - [x] 16. Phone ACCOUNT: numbers two a row, favourites two rows of three.
+
+Fourth round (owner, 2026-11-18):
+
+- [x] 17. DELETE ACCOUNT at the bottom right; phone stats back to two rows of four, more room (accounts e2e screenshots).
+- [x] 18. Phone Settings: × where the header's settings icon is, tabs narrower, full-width rule (settings-phone-layout).
+- [x] 19. Phone DOWNLOAD: intro in three lines, no version.
+- [x] 20. Phone OPEN / GALLERY rows: content centred.
+- [x] 21. The keyboard no longer lays the app out tiny and stuck (keyboard-keeps-layout; fails without the fix).

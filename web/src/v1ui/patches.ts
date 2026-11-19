@@ -329,6 +329,10 @@ export class PatchesPanel extends DisplayObject {
   private get rowH() { return (this.mobile ? 48 : 40) * App.Unit; }
   private get rowFont() { return this.mobile ? App.Metrics.TxtItalic3 : App.Metrics.TxtItalic; }
   /** A row's first line sits this far above its second (v1: 10 units). */
+  /** A row's second baseline under its top, and its divider over that baseline: the text and buttons sit in the middle of
+   * the row (a phone's rows are taller: owner, 2026-11-18, they sat a few units high). */
+  private get rowBase() { return (this.mobile ? 35 : 30) * App.Unit; }
+  private get rowDivider() { return (this.mobile ? 33 : 28) * App.Unit; }
   private get rowGap() { return (this.mobile ? 13 : 10) * App.Unit; }
   /** OPEN FROM YOUR DEVICE: not in a phone's browser (owner: it opens nothing useful there; the list does). */
   private get fileButtonShown() { return !(this.mobile && this.web); }
@@ -647,7 +651,7 @@ export class PatchesPanel extends DisplayObject {
     return { rule, top, bottom: top + this.windowH(this.listFoot - 35 * u - top) };
   }
   /** Row n's second line's baseline, scrolled. */
-  private openRowY(n: number) { return this.openLayout().top + 30 * App.Unit + n * this.rowH - this.OpenScroll; }
+  private openRowY(n: number) { return this.openLayout().top + this.rowBase + n * this.rowH - this.OpenScroll; }
   /** The last row ends 10 units above the window's foot (owner, 2026-11-17: it was cut off). */
   private openMaxScroll() { const L = this.openLayout(), n = this.Items.length; return Math.max(0, n * this.rowH + 10 * App.Unit - (L.bottom - L.top)); }
   scrollOpen(dy: number): void { this.OpenScroll = Math.max(0, Math.min(this.openMaxScroll(), this.OpenScroll + dy)); this.settled(); }
@@ -664,7 +668,7 @@ export class PatchesPanel extends DisplayObject {
     for (let n = 0; n < n0; n++) {
       const y = this.openRowY(n);
       if (y + 20 * u < L.top || y - 40 * u > L.bottom) continue;
-      if (n < n0 - 1) { App.StrokeColor(ctx, App.Palette[1]); ctx.beginPath(); ctx.moveTo(margin, y + this.rowH - 28 * u); ctx.lineTo(margin + pageW, y + this.rowH - 28 * u); ctx.stroke(); }
+      if (n < n0 - 1) { App.StrokeColor(ctx, App.Palette[1]); ctx.beginPath(); ctx.moveTo(margin, y + this.rowH - this.rowDivider); ctx.lineTo(margin + pageW, y + this.rowH - this.rowDivider); ctx.stroke(); }
       const item = this.Items[n], b = this.rowButtons(n);
       App.FillColor(ctx, txt);
       ctx.font = this.rowFont; ctx.textAlign = 'left';
@@ -833,7 +837,7 @@ export class PatchesPanel extends DisplayObject {
    * divider) to 45 units above the sorts, holding whole rows and a half (owner, 2026-11-17, CHG-0035). */
   private galleryWindow() { const u = App.Unit, L = this.galleryLayout(), top = L.rule - 2 * u; return { top, bottom: top + this.windowH(L.sortY - 35 * u - top), clip: L.rule + u }; }
   /** Row n's second line's baseline (v1 SoundcloudPanel's row: name 10 units above it), scrolled. */
-  private galleryRowY(n: number) { return this.galleryWindow().top + 30 * App.Unit + n * this.rowH - this.GalleryScroll; }
+  private galleryRowY(n: number) { return this.galleryWindow().top + this.rowBase + n * this.rowH - this.GalleryScroll; }
   /** Every row, the SHOW MORE row when there are more, and 10 units under the last (owner, 2026-11-17: it was cut off). */
   private galleryMaxScroll() { const u = App.Unit, w = this.galleryWindow(); return Math.max(0, this.GalleryItems.length * this.rowH + (this.GalleryMore || this.GalleryLoading ? this.rowH : 0) + 10 * u - (w.bottom - w.top)); }
   /** SHOW MORE, centred in the row after the last (more to fetch; a spinner while they come). */
@@ -903,7 +907,7 @@ export class PatchesPanel extends DisplayObject {
     for (let n = 0; n < n0; n++) {
       const y = this.galleryRowY(n), it = this.GalleryItems[n], b = this.galleryRow(n);
       if (y + 20 * u < win.top || y - 40 * u > win.bottom) continue;
-      if (n < n0 - 1 || this.GalleryMore) { App.StrokeColor(ctx, App.Palette[1]); ctx.beginPath(); ctx.moveTo(margin, y + this.rowH - 28 * u); ctx.lineTo(margin + this.pageW, y + this.rowH - 28 * u); ctx.stroke(); }
+      if (n < n0 - 1 || this.GalleryMore) { App.StrokeColor(ctx, App.Palette[1]); ctx.beginPath(); ctx.moveTo(margin, y + this.rowH - this.rowDivider); ctx.lineTo(margin + this.pageW, y + this.rowH - this.rowDivider); ctx.stroke(); }
       App.FillColor(ctx, txt); ctx.font = this.rowFont; ctx.textAlign = 'left';
       const left = margin + u + 30 * u, maxW = b.textRight - left;
       const fit = (t: string, yy: number, x = left) => { const w = ctx.measureText(t).width; if (w <= maxW - (x - left)) { ctx.fillText(t, x, yy); return; } ctx.save(); ctx.translate(x, yy); ctx.scale((maxW - (x - left)) / w, 1); ctx.fillText(t, 0, 0); ctx.restore(); };

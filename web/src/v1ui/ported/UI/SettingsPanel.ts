@@ -133,7 +133,7 @@ export class SettingsPanel extends DisplayObject{
 
         // total text width //
         for (var i=0; i<n; i++) {
-            catWidth[i] = App.SettingsPhone ? (this.DrawTo.Width - (40*units)) / n : ctx.measureText(json.categories[i].name.toUpperCase()).width + (gutter*units);
+            catWidth[i] = App.SettingsPhone ? App.SettingsTabsWidth(this.DrawTo.Width) / n : ctx.measureText(json.categories[i].name.toUpperCase()).width + (gutter*units);
         }
 
         // start x for positioning //
@@ -540,8 +540,8 @@ export class SettingsPanel extends DisplayObject{
 
             // Horizontal //
             ctx.beginPath();
-            ctx.moveTo(dx - halfWidth,tabY + (60*units)-1);
-            ctx.lineTo(dx + halfWidth,tabY + (60*units)-1);
+            ctx.moveTo(App.SettingsPhone ? 0 : dx - halfWidth,tabY + (60*units)-1);
+            ctx.lineTo(App.SettingsPhone ? App.Width : dx + halfWidth,tabY + (60*units)-1);
 
             //vertical //
             for (var i=0;i<this.MenuItems.length;i++) {

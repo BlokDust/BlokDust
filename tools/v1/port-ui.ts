@@ -50,7 +50,9 @@ const REWRITES: Record<string, ([string, string, string] | [string, string, stri
     // share the width left of the close cross, and the rows are taller (App.SettingsRow). Desktop keeps v1's sizes.
     ['var menuWidth = (this.DrawTo.Width/7)*5;', 'var menuWidth = App.SettingsMenuWidth(this.DrawTo.Width);', 'phone page width', 'all'],
     ['            catWidth[i] = ctx.measureText(json.categories[i].name.toUpperCase()).width + (gutter*units);',
-      '            catWidth[i] = App.SettingsPhone ? (this.DrawTo.Width - (40*units)) / n : ctx.measureText(json.categories[i].name.toUpperCase()).width + (gutter*units);', 'phone tabs share the width'],
+      '            catWidth[i] = App.SettingsPhone ? App.SettingsTabsWidth(this.DrawTo.Width) / n : ctx.measureText(json.categories[i].name.toUpperCase()).width + (gutter*units);', 'phone tabs share the width'],
+    ['            ctx.moveTo(dx - halfWidth,tabY + (60*units)-1);\n            ctx.lineTo(dx + halfWidth,tabY + (60*units)-1);',
+      '            ctx.moveTo(App.SettingsPhone ? 0 : dx - halfWidth,tabY + (60*units)-1);\n            ctx.lineTo(App.SettingsPhone ? App.Width : dx + halfWidth,tabY + (60*units)-1);', 'phone: the rule under the tabs is the screen\'s width'],
     ['        var catX = ((this.DrawTo.Width*0.5) - (menuWidth*0.5));', '        var catX = App.SettingsPhone ? 0 : ((this.DrawTo.Width*0.5) - (menuWidth*0.5));', 'phone tabs from the left edge'],
     ['(108*units)', '((60+App.SettingsRow)*units)', 'phone rows taller', 'all'],
     ['(156*units)', '((60+2*App.SettingsRow)*units)', 'phone rows taller', 'all'],

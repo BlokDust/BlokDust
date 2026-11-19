@@ -193,8 +193,24 @@ async function main() {
 
   const app = new Application();
   // Transparent: the static stage is an on-page Canvas2D layer behind Pixi (Stage 'canvas' renderer, UI-0005).
-  await app.init({ resizeTo: window, resolution: devicePixelRatio, autoDensity: true, antialias: true, background: 0x000000, backgroundAlpha: 0 });
+  await app.init({ width: window.innerWidth, height: window.innerHeight, resolution: devicePixelRatio, autoDensity: true, antialias: true, background: 0x000000, backgroundAlpha: 0 });
   document.getElementById('stage')!.appendChild(app.canvas);
+  // The stage fills the window (as Pixi's resizeTo did), except while a text field is being typed into on a touch
+  // screen: the keyboard only makes the window shorter, and laying the app out for that left it tiny and stuck when
+  // the keyboard went (owner, iPhone, 2026-11-18). When the field lets go, the page scrolls back and is measured again.
+  {
+    const touch = matchMedia('(pointer: coarse)').matches;
+    const typing = () => { const a = document.activeElement; return touch && !!a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA'); };
+    let w = window.innerWidth, h = window.innerHeight;
+    const fit = () => {
+      const nw = window.innerWidth, nh = window.innerHeight;
+      if (nw === w && (nh === h || typing())) return;
+      w = nw; h = nh;
+      app.renderer.resize(w, h);
+    };
+    window.addEventListener('resize', fit);
+    document.addEventListener('focusout', () => { for (const t of [60, 350, 900]) setTimeout(() => { if (!typing()) { window.scrollTo(0, 0); fit(); } }, t); });
+  }
   // iOS Safari's long-press magnifier and double-tap recognisers run on the touch stream, under Pointer Events:
   // cancelling pointerdown does not stop them, cancelling touchstart does (Funputs #45). Only the stage: text
   // fields and menus keep their defaults. The stage is driven by pointer events alone, so nothing is lost.

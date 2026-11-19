@@ -2900,6 +2900,28 @@ Object.assign(tests, {
     await p.close();
     return [r.clip === link && !!r.saved?.copied && /link copied/i.test(r.bar), { link, ...r }];
   },
+  /** Owner (2026-11-18, iPhone): typing in a text field (Connect's message, a patch's name), the keyboard made the
+   * window shorter and the app laid itself out for that, tiny, and stayed so once the keyboard went. While a field is
+   * typed into on a touch screen, a height-only change is the keyboard: the layout keeps its size. */
+  async 'keyboard-keeps-layout'(errors: string[]) {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+    const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
+    await p.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
+    await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start'); await p.waitForTimeout(1500);
+    await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.OpenPanel(0)); await p.waitForTimeout(1200);
+    const size = () => p.evaluate(() => { const a = (window as any).__bd_probe.v1App; return { unit: a.Unit, w: a.Width, h: a.Height, device: a.Metrics.Device }; });
+    const before = await size();
+    await p.focus('#patchTitleInput');
+    await p.setViewportSize({ width: 390, height: 420 }); await p.waitForTimeout(700);  // the keyboard is up
+    const typing = await size();
+    await p.evaluate(() => (document.activeElement as HTMLElement).blur());
+    await p.setViewportSize({ width: 390, height: 844 }); await p.waitForTimeout(1200);  // and gone
+    const after = await size();
+    await ctx.close();
+    const same = (a: typeof before, b: typeof before) => a.unit === b.unit && a.w === b.w && a.h === b.h && a.device === b.device;
+    return [same(before, typing) && same(before, after), { before, typing, after }];
+  },
+
   /** Owner (2026-11-18, iPhone): Settings on a phone. The tabs share the width left of the × (SIGN IN ran under it);
    * the rows are nearly the screen's width and taller; ABOUT's people and DOWNLOAD's buttons go one a row; and a text
    * field no longer zooms the page in for good (viewport maximum-scale=1). */

@@ -37,7 +37,7 @@ import { OptionSample } from './ported/UI/Options/OptionSample';
 import { Slider } from './ported/UI/Options/OptionSlider';
 import type { FreesoundSound } from '../patch/samples.ts';
 import { PatchesPanel, drawUploadLink, type PatchesHost } from './patches.ts';
-import { AccountPage, pageWidth } from './accountPage.ts';
+import { ACCOUNT_TOP, AccountPage, pageWidth } from './accountPage.ts';
 
 export interface SceneHost extends PatchesHost {
   feedback?: { draw(panel: SettingsPanel): void };
@@ -813,7 +813,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     };
   }
   // 35 units higher than the other pages (owner, 2026-11-18: the stats left too much room under the tabs).
-  const accountTop = () => p.OffsetY + 85 * App.Unit + (p.MenuItems[4]?.YOffset ?? -p.DrawTo.Height);
+  const accountTop = () => p.OffsetY + ACCOUNT_TOP * App.Unit + (p.MenuItems[4]?.YOffset ?? -p.DrawTo.Height);
   /** Tests: an account control's centre in CSS px. */
   p.accountCentre = (name: string) => account?.centreOf(name, accountTop()) ?? null;
   /** The DOWNLOAD page's two buttons (v1 SharePanel's halves, 420u wide) and their state. */
@@ -858,7 +858,9 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     App.FillColor(ctx, txt); ctx.textAlign = 'left'; ctx.font = App.Metrics.TxtMid;
     let iy = top + 10 * u;
     const pw = pageWidth();
-    for (const para of DOWNLOAD.intro) iy = wrap(ctx, para, W * 0.5 - pw * 0.5, iy, 16 * u, pw);
+    // A phone (owner, 2026-11-18): three lines, broken after "DAW," (the desktop's break left "plugin." alone).
+    const intro = App.SettingsPhone ? [...DOWNLOAD.intro[0].split(/(?<=DAW,) /), ...DOWNLOAD.intro.slice(1)] : DOWNLOAD.intro;
+    for (const para of intro) iy = wrap(ctx, para, W * 0.5 - pw * 0.5, iy, 16 * u, pw);
     // MACOS · WINDOWS · IPAD (v1 SharePanel's SAVE / SAVE AS colours and a third, Connect's GUIDE button type) //
     let below = 0;
     for (const [i, b] of downloads().entries()) {
@@ -874,7 +876,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     // VERSION: under the longest line (the columns are narrow) //
     const y = Math.max(downloads()[0].y + 40 * u + 80 * u, below + 16 * u);
     ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
-    if (RELEASE.version) ctx.fillText(`Version ${RELEASE.version}`, W * 0.5 - pw * 0.5, y);
+    if (RELEASE.version && !App.SettingsPhone) ctx.fillText(`Version ${RELEASE.version}`, W * 0.5 - pw * 0.5, y);  // a phone: About has the build (owner, 2026-11-18)
   };
   // Tempo (web) / nothing (plugin) in place of Tour, v1's last row (drawn at +156 units).
   const tempoRow = () => (p.Options as any[]).findIndex(o => o.Type === 'tempo');

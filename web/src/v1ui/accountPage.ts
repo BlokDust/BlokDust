@@ -40,9 +40,12 @@ const COPY = {
 /** Where each part of the stats starts (units from the page's top). Numbers: their tops are 5 units under a row's y,
  * their labels' baselines 52; FAVOURITE BLOCKS' title tops are 2 units under its y. */
 const STATS_Y = { row1: 27, row2: 96, favourites: 168, buttons: 278 } as const;
-/** On a phone (owner, 2026-11-18): two numbers a row (four rows, 69 units apart), then FAVOURITE BLOCKS in two rows of
- * three (100 units apart; the most remixed patch on its own line under the title), then the buttons. */
-const PHONE = { rows: 4, rowGap: 69, favourites: 306, favRow: 100, remixed: 18, buttons: 532 } as const;
+/** On a phone (owner, 2026-11-18): the numbers in two rows of four as on a desktop, with more room between the parts
+ * (the screen is tall); FAVOURITE BLOCKS in two rows of three (the most remixed patch on its own line under the title),
+ * then the buttons. */
+const PHONE = { row1: 40, row2: 130, favourites: 232, favRow: 110, remixed: 18, buttons: 506 } as const;
+/** The account page's top, in units under Settings' tabs' top (scene.ts accountTop: 35 above v1's 120). */
+export const ACCOUNT_TOP = 85;
 /** Favourite blocks (from FAVOURITE BLOCKS' y): the icons at half v1's menu size (owner, 2026-11-16), centred 31 units
  * down; their names' baselines 62 down (a second line 14 under). */
 const FAV = { scale: 0.5, icon: 42, name: 73 } as const;
@@ -128,7 +131,9 @@ export class AccountPage {
     // The account's buttons under its stats (R15); 35 units under the SIGNED IN line until they arrive. DELETE ACCOUNT
     // sits top right, on the SIGNED IN line (CHG-0027: the stats need its row).
     const below2 = top + this.statsHeight() * u;
-    const signedIn = { add: half(false, below2), out: half(true, below2), del: this.bordered(COPY.deleteAccount, R, top - 4 * u) };
+    // DELETE ACCOUNT at the bottom right of the screen, out of the way (owner, 2026-11-18); it slides with the page.
+    const screenBottom = top - ACCOUNT_TOP * u + App.Height;
+    const signedIn = { add: half(false, below2), out: half(true, below2), del: this.bordered(COPY.deleteAccount, W - 20 * u, screenBottom - 40 * u) };
     const del = { cancel: half(false, top + 75 * u), ok: half(true, top + 75 * u) };
     // Signed in: the ways in on the line under the buttons, then any message.
     const methods = below2 + 62 * u;
@@ -202,8 +207,8 @@ export class AccountPage {
       [played, hours ? COPY.hoursPlayed : COPY.minutesPlayed], [shortNumber(st.blocksAdded + p.blocks), COPY.blocksAdded],
       [shortNumber(Math.floor(st.particles + p.particles)), COPY.particles], [shortNumber(Math.floor(st.laserTurns + p.laserTurns)), COPY.laserTurns]];
     const phone = App.SettingsPhone;
-    if (phone) for (let r = 0; r < PHONE.rows; r++) this.numberRow(cells.slice(r * 2, r * 2 + 2), top + (STATS_Y.row1 + r * PHONE.rowGap) * u, L);
-    else { this.numberRow(cells.slice(0, 4), top + STATS_Y.row1 * u, L); this.numberRow(cells.slice(4), top + STATS_Y.row2 * u, L); }
+    this.numberRow(cells.slice(0, 4), top + (phone ? PHONE.row1 : STATS_Y.row1) * u, L);
+    this.numberRow(cells.slice(4), top + (phone ? PHONE.row2 : STATS_Y.row2) * u, L);
     let y = top + (phone ? PHONE.favourites : STATS_Y.favourites) * u;
     // Favourite blocks: v1's menu icons (BlockSprites, as the blocks menu draws them) at half size over their names.
     App.FillColor(c, txt); c.font = App.Metrics.TxtMid; c.textAlign = 'left';

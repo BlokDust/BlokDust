@@ -128,10 +128,17 @@ export const App: any = {
   DragOffset: new Point(), ScaledDragOffset: new Point(),
   /** Running inside the plugin's WebView (labels and options differ: CHG-0004). */
   IsPlugin: false,
-  /** Settings on a phone (owner, 2026-11-18): the page is the screen's width less 40 units each side (the close cross
-   * sits in the right one), and each row is taller (v1: 4/7 of the width, 48-unit rows). Desktop keeps v1's. */
+  /** Settings on a phone (owner, 2026-11-18): the close cross sits where the header's settings icon is (its centre);
+   * the page is centred and reaches 20 units short of the cross (v1 puts the cross 20 units past the page's right);
+   * the tabs share the width from the left edge to there; each row is taller (v1: 4/7 of the width, 48-unit rows).
+   * Desktop keeps v1's. */
   get SettingsPhone(): boolean { return this.Metrics?.Device === 0; },
-  SettingsMenuWidth(w: number): number { return this.SettingsPhone ? w - 80 * this.Unit : (w / 7) * 4; },
+  SettingsCrossX(w: number): number {
+    const dd = this.MainScene?.Header?.DropDownHeight;
+    return typeof dd === 'number' && dd > 0 ? w - dd * 0.5 * this.Unit + 30 * this.Unit : w - 40 * this.Unit;
+  },
+  SettingsMenuWidth(w: number): number { return this.SettingsPhone ? 2 * (this.SettingsCrossX(w) - 20 * this.Unit - w * 0.5) : (w / 7) * 4; },
+  SettingsTabsWidth(w: number): number { return this.SettingsCrossX(w) - 20 * this.Unit; },
   get SettingsRow(): number { return this.SettingsPhone ? 62 : 48; },
   /** Links can't open here (a plugin inside another iPad app): scene.ts hideLinks. */
   NoLinks: false,
