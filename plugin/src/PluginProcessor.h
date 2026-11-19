@@ -8,10 +8,12 @@
 #include <functional>
 #include <map>
 #include <set>
+#include <tuple>
 #include <memory>
 
 #include "Samples.h"
 #include "SnapshotBuffer.h"
+#include "StageWorlds.h"
 #include "WebViewDrops.h"
 #include "blokdust/engine.hpp"
 #include "blokdust/mpe.hpp"
@@ -98,8 +100,16 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   void syncToggles(const Snapshot& s);
   /// Engine id → patch block id (message thread).
   const std::map<BlockId, std::string>& blockIds() const noexcept { return idToKey_; }
-  /// Apply UI commands ([{type,id,blockType,x,y,param,value}]) to the engine and the patch model.
+  /// Apply UI commands ([{type,id,blockType,x,y,param,value}]) to the engine and the patch model. A command with
+  /// `stage` goes to that Stage block's inner world (CHG-0038); the page then keeps the patch's macros (setMacros).
   void applyUiCommands(const nlohmann::json& commands);
+  /// The world snapshots come from: Stage block `stage`'s inner world (made if it has none), or 0 for the outer one.
+  void setStageView(BlockId stage);
+  /// What is inside each Stage block, from the page (CHG-0038): kept in the patch (the sounds the processor loaded
+  /// kept), and samplers inside that have no audio yet get it.
+  void setMacros(const nlohmann::json& macros);
+  /// The engine ids of each Stage's inner blocks, by the Stage's patch id and theirs (the editor's `innerIds`).
+  nlohmann::json innerIds() const;
   /// Message thread. End the Computer Keyboard notes the page is holding (its window lost the keys, or it closed).
   void releasePageKeys();
   SnapshotBuffer& snapshots() noexcept { return snapshots_; }
@@ -119,28 +129,29 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
 
   // ---- samples (CHG-0004 3.6/3.7): loaded natively, saved as references in the patch (DATA-0005) ----
   /// "Your file" in the sample panel: a native file chooser (a real path is what the DAW project keeps).
-  void pickFile(BlockId id);
+  /// `stage`: the block is inside that Stage block (CHG-0038); 0: the outer world. So for the calls below.
+  void pickFile(BlockId id, BlockId stage = 0);
   /// A file by path (drag and drop onto the editor, or tests).
-  void loadFile(BlockId id, const juce::File& file);
+  void loadFile(BlockId id, const juce::File& file, BlockId stage = 0);
   /// Patches panel (CHG-0005): Open replaces the scene with `part` ({blocks, refs, tempo?}); Insert adds its blocks.
   /// The engine is rebuilt from the merged patch; samples already loaded stay, new ones load; the editor reloads.
   void applyPatch(const nlohmann::json& part, bool open);
   /// A Freesound sound picked in the panel: `ref` as the web keeps it; `display` = {trackName, user, permalink}.
-  void loadFreesound(BlockId id, const nlohmann::json& ref, const nlohmann::json& display, double maxSeconds);
+  void loadFreesound(BlockId id, const nlohmann::json& ref, const nlohmann::json& display, double maxSeconds, BlockId stage = 0);
   /// What the UI shows for every sampler: [{id, track, duration, preview, missing, loading}].
   nlohmann::json sampleInfos() const;
   std::function<void(const nlohmann::json&)> onSampleInfo;  // set by the editor (message thread)
   /// Recorder (owner, Logic): record the plugin's output; stopping writes it to ~/Music/BlokDust/Recordings and loads
   /// it into block `id` as its file (the project references it like any user file, DATA-0005).
-  void setRecording(BlockId id, bool on);
+  void setRecording(BlockId id, bool on, BlockId stage = 0);
   bool isRecording() const noexcept { return recording_.load(); }
   /// SampleGen: the editor generates (v1's generator) and hands over the audio; saved to ~/Music/BlokDust/SampleGen
   /// and loaded as the block's file, so a reopened project plays it without the editor.
-  void useGenerated(BlockId id, const std::vector<float>& mono, double sampleRate);
+  void useGenerated(BlockId id, const std::vector<float>& mono, double sampleRate, BlockId stage = 0);
   /// Recorder's download button in a DAW: show the block's file in Finder / Explorer.
   /// The Recorder's download: the take is already a file, so show it (Finder / Explorer). iPad: export a copy through
   /// the document picker (CHG-0025 task 6), as there is no Finder.
-  void revealSample(BlockId id);
+  void revealSample(BlockId id, BlockId stage = 0);
 
   static constexpr int kDustSlots = 8;  // PLUGIN-0003
 
@@ -153,6 +164,19 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   void markMissing(const std::string& key);
   nlohmann::json sampleInfo(const std::string& key) const;
   std::string keyOf(BlockId id) const { const auto it = idToKey_.find(id); return it == idToKey_.end() ? std::string{} : it->second; }
+  /// A sampler's key: its patch id, or "<Stage's patch id>/<its patch id>" inside a Stage (CHG-0038).
+  std::string keyOf(BlockId stage, BlockId id) const;
+  /// Where a key's block is: its world and engine id there (world null: none now).
+  struct Where { Engine* world = nullptr; BlockId id = kInvalidBlock; BlockId stage = 0; };
+  Where locate(const std::string& key) const;
+  void loadFileKey(const std::string& key, const juce::File& file);
+  void loadFreesoundKey(const std::string& key, const nlohmann::json& ref, const nlohmann::json& display, double maxSeconds);
+  void restoreSample(const std::string& key, const nlohmann::json& block);
+  /// Sampler blocks inside the patch's Stage blocks: (key, block JSON).
+  std::vector<std::pair<std::string, const nlohmann::json*>> innerSamplers() const;
+  EngineConfig childConfig() const;
+  /// What each sample key was last attached to (world, engine id, audio): attachSamples attaches only what changed.
+  std::map<std::string, std::tuple<Engine*, BlockId, const LoadedSample*>> attachedTo_;
   BlockId idOf(const std::string& key) const { for (const auto& [id, k] : idToKey_) if (k == key) return id; return kInvalidBlock; }
   nlohmann::json* blockJson(const std::string& key);
   void rebuildDust();
@@ -176,7 +200,9 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   nlohmann::json patch_;
   std::map<BlockId, std::string> idToKey_;  // engine id → patch block id
   std::unique_ptr<Engine> engine_;          // swapped only while processing is suspended
-  std::vector<std::unique_ptr<Engine>> stageEngines_;  // its Stage blocks' inner worlds (CHG-0021), swapped with it
+  StageWorlds stages_;                      // its Stage blocks' inner worlds (CHG-0021, CHG-0038), replaced with it
+  std::uint64_t seed_ = 1;                  // the patch's seed (inner worlds made later use it too)
+  std::atomic<BlockId> view_{0};            // the Stage whose world snapshots show (0: the outer world)
   MidiRouter midiRouter_;                   // host MIDI → MIDI Input blocks (MPE, PLUGIN-0004)
   double lastBpm_ = 0.0;                    // host tempo last sent to the engine
   bool hostPlaying_ = false;                // the host transport was playing at the last block (audio thread)
@@ -201,7 +227,7 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   void drainRecording();
   struct Drain : juce::Timer { std::function<void()> f; void timerCallback() override { f(); } };
   std::atomic<bool> recording_{false};
-  BlockId recordingBlock_ = kInvalidBlock;
+  BlockId recordingBlock_ = kInvalidBlock, recordingStage_ = 0;
   juce::AbstractFifo recFifo_{1};
   juce::AudioBuffer<float> recFifoBuf_;
   std::array<std::vector<float>, 2> recorded_;

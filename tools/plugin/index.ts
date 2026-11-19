@@ -111,8 +111,8 @@ const expected = (fixture: string) => JSON.parse(readFileSync(join('tests/golden
 /** The native engine's render of a fixture right now (fixtures outside the golden set, e.g. with sample files). */
 const nativeRender = (fixture: string) => JSON.parse(spawnSync('node', ['tools/bd.ts', 'render', fixture], { encoding: 'utf8' }).stdout.trim().split('\n').pop()!);
 /** DAW state for tests/golden/samples/sample-file.json: its patch with the file ref's path made absolute (a project). */
-function sampleState(moved = false): string {
-  const fx = JSON.parse(readFileSync('tests/golden/samples/sample-file.json', 'utf8'));
+function sampleState(moved = false, fixture = 'tests/golden/samples/sample-file.json'): string {
+  const fx = JSON.parse(readFileSync(fixture, 'utf8'));
   for (const r of Object.values(fx.patch.refs) as any[]) if (r.provider === 'file') {
     r.path = resolve(r.path);
     if (moved) {  // the project remembers an old folder; the file now lives in a sibling folder (DATA-0005 relink)
@@ -123,7 +123,7 @@ function sampleState(moved = false): string {
       r.path = join(root, 'old', 'chord.wav');
     }
   }
-  const out = resolve(`.cache/plugin-sample-state${moved ? '-moved' : ''}.json`);
+  const out = resolve(`.cache/plugin-${fixture.split('/').pop()!.replace('.json', '')}-state${moved ? '-moved' : ''}.json`);
   writeFileSync(out, JSON.stringify(fx.patch));
   return out;
 }
@@ -151,6 +151,10 @@ function test() {
     // relinks nothing, and renders like the native engine with the same WAV attached.
     { name: "state: Sample with the user's file", plugin: VST3, fixture: 'tests/golden/samples/sample-file.json', extra: ['--state', sampleState(), '--settle', '2000'], native: true, noRoundTripCheck: true },
     { name: 'state: moved file relinked by name', plugin: VST3, fixture: 'tests/golden/samples/sample-file.json', extra: ['--state', sampleState(true), '--settle', '2000'], native: true, noRoundTripCheck: true },
+    // CHG-0038: a Sample inside a Stage (a website patch in a DAW project): the plugin loads its file into the Stage's
+    // inner world and renders like the native engine with the WAV attached there.
+    { name: 'Stage: a sampler inside plays its file', plugin: VST3, fixture: 'tests/golden/samples/stage-sample-file.json',
+      extra: ['--state', sampleState(false, 'tests/golden/samples/stage-sample-file.json'), '--settle', '2000'], native: true, noRoundTripCheck: true },
     // CHG-0004 3.5: the host's transport (120 BPM, beat each block) ≡ the patch tempo rendered natively.
     { name: 'host tempo + transport', plugin: VST3, fixture: 'tests/golden/tempo-host.json', extra: ['--tempo', '120'] },
     // PLUGIN-0004: a raw MPE stream through the plugin's own parser ≡ the web parser's commands rendered natively.
@@ -224,6 +228,13 @@ function test() {
     const r = hostRender(VST3, 'tests/golden/emitter-tone.json', ['--idle', '--editor', diag], { BLOKDUST_DIAG_FILE: diag });
     const seq = r.editor?.snapshotSeq ?? 0;
     renders.push({ case: 'no audio callbacks: the editor still ticks the world', ok: seq > 0, audioHash: String(seq), expected: '> 0 snapshots' });
+  }
+  // CHG-0038: Stage blocks' inner worlds as the processor keeps them (edits inside go to the Stage's world, made on
+  // first use; a removed Stage's world is freed once the engine let it go; macros keep the processor's sampler fields).
+  {
+    const r = spawnSync(HOST, ['--selftest-stages'], { encoding: 'utf8' });
+    const j = (() => { try { return JSON.parse(r.stdout.trim().split('\n').pop()!); } catch { return {}; } })();
+    renders.push({ case: 'Stage worlds: edits inside reach their own world', ok: j.ok === true, audioHash: JSON.stringify(j.checks ?? r.stderr), expected: 'all checks true' });
   }
   // CHG-0005: patch files (save, list) and the Open / Insert merge the processor applies.
   {

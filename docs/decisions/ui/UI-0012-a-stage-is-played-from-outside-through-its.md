@@ -41,7 +41,7 @@ We will let notes into a Stage (SPEC-SIMULATION-POWER-AND-PARTICLES R13a):
 - The engine keeps, per Stage, the notes each outer controller holds inside, so they end on the key they started on.
 - Web: inner samplers' audio is kept by the app and sent to the inner world (WASM `bd_attach_sample_stage`); MIDI
   Inputs inside Stages get Web MIDI from outside.
-- The plugin plays notes into Stages (the engine does it) but does not yet attach audio to samplers inside a Stage.
+- The plugins play notes into Stages (the engine does it) and attach audio to samplers inside a Stage (CHG-0038).
 - Stage In's look is a placeholder until the owner designs it in the block designer.
 - Tests: `test_stage.cpp` (UI-0012 cases), `pnpm test:new-blocks --only make-stage-button,stage-keys,stage-opens-on-blocks`.
 

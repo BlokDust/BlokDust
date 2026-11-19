@@ -1326,18 +1326,18 @@ Object.assign(tests, {
 } as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
 
 /** The plugin page with a fake JUCE backend: the processor sends `patch`; what the page sends is recorded (__sent). */
-async function openPlugin(patch: unknown, errors: string[], ids?: Record<string, number>, standalone = false): Promise<{ pg: Page; close: () => Promise<void> }> {
+async function openPlugin(patch: unknown, errors: string[], ids?: Record<string, number>, standalone = false, extra: Record<string, unknown> = {}): Promise<{ pg: Page; close: () => Promise<void> }> {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
-  await ctx.addInitScript(([p, ids, standalone]) => {
+  await ctx.addInitScript(([p, ids, standalone, extra]) => {
     const listeners: Record<string, ((x: unknown) => void)[]> = {};
     const sent: { id: string; v: any }[] = [];
     (window as any).__sent = sent;
     (window as any).__fire = (id: string, v: unknown) => listeners[id]?.forEach(f => f(v));
     (window as any).__JUCE__ = { backend: {
       addEventListener: (id: string, fn: (x: unknown) => void) => { (listeners[id] ??= []).push(fn); },
-      emitEvent: (id: string, v: unknown) => { sent.push({ id, v }); if (id === 'bd_hello') setTimeout(() => listeners.bd_patch?.forEach(f => f({ patch: JSON.stringify(p), ...(ids ? { ids } : {}), ...(standalone ? { standalone } : {}) })), 50); },
+      emitEvent: (id: string, v: unknown) => { sent.push({ id, v }); if (id === 'bd_hello') setTimeout(() => listeners.bd_patch?.forEach(f => f({ patch: JSON.stringify(p), ...(ids ? { ids } : {}), ...(standalone ? { standalone } : {}), ...extra })), 50); },
     } };
-  }, [patch, ids, standalone] as const);
+  }, [patch, ids, standalone, extra] as const);
   const pg = await ctx.newPage();
   pg.on('pageerror', e => errors.push(e.message));
   await pg.goto(`${url}/index.html`);
@@ -1394,6 +1394,77 @@ Object.assign(tests, {
       && hint === "USE THE HOST'S PLAY BUTTON" && againSent.length === 0 && afterHint === 'POWER · HOST PLAYING'
       && JSON.stringify(backOn) === '["mode1","power1"]' && onLabel === 'POWER' && JSON.stringify(offSent) === '["mode0","power0"]' && offLabel === 'POWER OFF' && appCells === false;
     return [ok, { hostCell, toHost, hostStopped, hostPlaying, hint, againSent, afterHint, backOn, onLabel, offSent, offLabel, appCells }];
+  },
+} as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
+
+// ---- Stage in the plugins (CHG-0038, owner 2026-11-19) ----
+Object.assign(tests, {
+  /** The plugins have Stage in the menu and open one as the web does: the page asks the processor for the Stage's
+   * world (bd_stageView) and uses the inner ids it was given (innerIds); edits inside go to that world (`stage` on the
+   * commands); frames of a world not on show are dropped; leaving sends what is inside (bd_macros) for the DAW's
+   * state. */
+  async 'plugin-stage'(errors: string[]) {
+    const patch = { ...plugPatch([{ id: 's', type: 'source.stage', x: 0, y: 0 }, { id: 'o', type: 'source.tone', x: 0, y: 8 }]),
+      macros: [{ block: 's', blocks: [{ id: 't', type: 'source.tone', x: 0, y: 0, params: {} }, { id: 'pw', type: 'power.power', x: -4, y: 0, params: {} }] }] };
+    const { pg, close } = await openPlugin(patch, errors, { s: 1, o: 2 }, false, { innerIds: { s: { t: 5, pw: 6 } } });
+    const menu = await pg.evaluate(() => ((window as any).__bd_probe.v1App.BlockCreator.MenuJson.categories as any[]).find(c => c.name === 'Source').items.map((i: any) => i.name));
+    await pg.evaluate(() => { (window as any).__sent.length = 0; });
+    await pg.evaluate(() => (window as any).__bd_stage.enter(1)); await pg.waitForTimeout(700);
+    const inside = await pg.evaluate(() => (window as any).__bd_probe.inside?.stage ?? null);
+    const sent = (id: string) => pg.evaluate(k => ((window as any).__sent as { id: string; v: any }[]).filter(e => e.id === k).map(e => e.v), id);
+    const views = (await sent('bd_stageView')).map((v: any) => v.stage);
+    const innerTone = await pg.evaluate(() => (window as any).__bd_probe.idOf('t'));
+    // drag the inner Tone: its move goes to the Stage's world
+    const at = await pg.evaluate(i => (window as any).__bd_probe.blockPoint(i), innerTone) as [number, number] | null;
+    if (at) { await pg.mouse.move(at[0], at[1]); await pg.mouse.down(); await pg.mouse.move(at[0] + 200, at[1] + 40, { steps: 8 }); await pg.mouse.up(); await pg.waitForTimeout(400); }
+    const moves = (await sent('bd_commands')).flatMap((v: any) => v.commands).filter((c: any) => c.type === 2);
+    const movedInside = moves.length > 0 && moves.every((c: any) => c.stage === 1 && c.id === innerTone);
+    // a frame of the outer world is dropped while inside; one of this Stage's world shows
+    const frame = (view: number, n: number) => pg.evaluate(([v, k]) => (window as any).__fire('bd_snapshot', { view: v, particles: Array.from({ length: k * 3 }, () => 1), connections: [], powered: [], beams: [] }), [view, n] as const);
+    const before = await pg.evaluate(() => (window as any).__bd_probe.state.particles);
+    await frame(0, 4); await pg.waitForTimeout(100);
+    const afterOuter = await pg.evaluate(() => (window as any).__bd_probe.state.particles);
+    await frame(1, 2); await pg.waitForTimeout(100);
+    const afterInner = await pg.evaluate(() => (window as any).__bd_probe.state.particles);
+    await pg.keyboard.press('Escape'); await pg.waitForTimeout(500);
+    const out = await pg.evaluate(() => (window as any).__bd_probe.inside === null);
+    const back = (await sent('bd_stageView')).map((v: any) => v.stage).slice(1);
+    const macros = (await sent('bd_macros')).pop()?.macros ?? [];
+    const t = macros.find((m: any) => m.block === 's')?.blocks.find((b: any) => b.id === 't');
+    await close();
+    const ok = menu.includes('Stage') && inside === 1 && JSON.stringify(views) === '[1]' && innerTone === 5 && movedInside
+      && afterOuter === before && afterInner === 2 && out && JSON.stringify(back) === '[0]' && !!t && t.x !== 0;
+    return [ok, { menu, inside, views, innerTone, moves: moves.length, movedInside, before, afterOuter, afterInner, out, back, saved: t }];
+  },
+  /** MAKE STAGE from a selection and Cmd/Ctrl+D on a Stage work in the plugins: what goes inside is built in the new
+   * Stage's own world (commands carry `stage`), never the outer one, and the processor is told what is inside it
+   * (bd_macros), so the DAW project keeps it. */
+  async 'plugin-stage-make-and-copy'(errors: string[]) {
+    const { pg, close } = await openPlugin(plugPatch([{ id: 'a', type: 'source.tone', x: -2, y: 0 }, { id: 'b', type: 'power.power', x: -6, y: 0 }]), errors, { a: 1, b: 2 });
+    await pg.evaluate(() => { (window as any).__sent.length = 0; });
+    const made = await pg.evaluate(() => (window as any).__bd_stage.wrap([1, 2], 0, 0));
+    await pg.waitForTimeout(400);
+    const all = () => pg.evaluate(() => ((window as any).__sent as { id: string; v: any }[]));
+    const sent1 = await all();
+    const cmds1 = sent1.filter(e => e.id === 'bd_commands').flatMap(e => e.v.commands);
+    const innerAdds1 = cmds1.filter((c: any) => c.type === 0 && c.stage === made);
+    const stray1 = cmds1.filter((c: any) => c.type === 0 && !c.stage && c.blockType !== undefined && c.id !== made);
+    const m1 = sent1.filter(e => e.id === 'bd_macros').pop()?.v.macros ?? [];
+    const uid = await pg.evaluate(i => (window as any).__bd_probe.state.patch.blocks.find((b: any) => b.type === 'source.stage')?.id, made);
+    // copy it
+    await pg.evaluate(() => { (window as any).__sent.length = 0; });
+    await pg.evaluate(i => (window as any).__bd_probe.select([i]), made);
+    await pg.keyboard.press(process.platform === 'darwin' ? 'Meta+d' : 'Control+d'); await pg.waitForTimeout(400);
+    const sent2 = await all();
+    const cmds2 = sent2.filter(e => e.id === 'bd_commands').flatMap(e => e.v.commands);
+    const copy = cmds2.find((c: any) => c.type === 0 && !c.stage && c.id !== made)?.id;
+    const innerAdds2 = cmds2.filter((c: any) => c.type === 0 && c.stage === copy);
+    const stray2 = cmds2.filter((c: any) => c.type === 0 && !c.stage && c.id !== copy);
+    const m2 = sent2.filter(e => e.id === 'bd_macros').pop()?.v.macros ?? [];
+    await close();
+    const ok = typeof made === 'number' && innerAdds1.length === 2 && stray1.length === 0 && m1.some((m: any) => m.block === uid && m.blocks.length === 2)
+      && typeof copy === 'number' && innerAdds2.length === 2 && stray2.length === 0 && m2.length === 2;
+    return [ok, { made, innerAdds1: innerAdds1.length, stray1, macros1: m1.map((m: any) => [m.block, m.blocks.length]), copy, innerAdds2: innerAdds2.length, stray2, macros2: m2.map((m: any) => [m.block, m.blocks.length]) }];
   },
 } as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
 

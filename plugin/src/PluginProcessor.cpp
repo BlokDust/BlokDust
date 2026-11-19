@@ -86,12 +86,18 @@ void BlokDustProcessor::rebuildEngine() {
   for (const auto& c : loaded.commands) next->push(c);
   next->prime();  // blocks exist now, so samples attach before the first audio block (CHG-0004 3.6)
   // Stage blocks' inner worlds (CHG-0021): made here, off the audio thread, and kept for as long as the engine.
-  auto nextStages = patch::attachStages(*next, loaded, static_cast<int>(sampleRate_ + 0.5));
+  auto nextStages = patch::attachStagesById(*next, loaded, static_cast<int>(sampleRate_ + 0.5));
+  std::map<BlockId, std::map<BlockId, std::string>> innerKeys;  // each world's blocks' patch ids (CHG-0038)
+  for (const auto& [stage, inner] : loaded.stages)
+    if (nextStages.count(stage)) for (const auto& [k, id] : inner->ids) innerKeys[stage][id] = k;
+  seed_ = loaded.seed;
   idToKey_.clear();
   for (const auto& [key, id] : loaded.ids) idToKey_[id] = key;
   suspendProcessing(true);  // takes the callback lock: the audio thread is not inside processBlock while we swap
   engine_.swap(next);
-  stageEngines_.swap(nextStages);  // the old worlds go with the old engine, after the swap
+  stages_.reset(std::move(nextStages), std::move(innerKeys));  // the old worlds go with the old engine, after the swap
+  view_.store(0);
+  attachedTo_.clear();
   suspendProcessing(false);
   rebuildDust();
   attachSamples();
@@ -174,6 +180,7 @@ void BlokDustProcessor::flushDust() {
 }
 
 void BlokDustProcessor::syncToggles(const Snapshot& s) {
+  if (s.view != 0) return;  // a Stage's inner world: the page keeps what is inside (setMacros)
   // Edge-triggered: only a change the engine made since the last snapshot is written, so a switch the user just set
   // (already in the patch, not yet in the engine) is never undone by a snapshot from before it applied.
   std::map<BlockId, bool> now;
@@ -303,14 +310,18 @@ void BlokDustProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
 void BlokDustProcessor::publishSnapshot() noexcept {
   auto& s = snapshots_.writeBuffer();
   s.seq = ++snapshotSeq_;
-  const auto parts = engine_->particles();
+  // The world on show (CHG-0038): a Stage block's inner world while the editor looks into it, else the outer one.
+  const Engine* w = engine_.get();
+  s.view = 0;
+  if (const BlockId v = view_.load(); v != 0) if (const Engine* in = w->stage(v)) { w = in; s.view = v; }
+  const auto parts = w->particles();
   s.particleCount = static_cast<int>(std::min<std::size_t>(parts.size(), kMaxParticles));
   for (int i = 0; i < s.particleCount; ++i) {
     s.particles[static_cast<std::size_t>(i * 3)] = static_cast<float>(parts[static_cast<std::size_t>(i)].x);
     s.particles[static_cast<std::size_t>(i * 3 + 1)] = static_cast<float>(parts[static_cast<std::size_t>(i)].y);
     s.particles[static_cast<std::size_t>(i * 3 + 2)] = parts[static_cast<std::size_t>(i)].size;
   }
-  const auto& blocks = engine_->blocks();
+  const auto& blocks = w->blocks();
   s.poweredCount = 0;
   for (int i = 0; i < kMaxBlocks; ++i) {
     if (!blocks[static_cast<std::size_t>(i)].alive) continue;
@@ -323,13 +334,13 @@ void BlokDustProcessor::publishSnapshot() noexcept {
     s.toggleOn[static_cast<std::size_t>(s.toggleCount++)] = b.params[gen::param::PowerToggle::logic] != 0.0 ? 1 : 0;
   }
   s.beamCount = 0;
-  for (const auto& b : engine_->beams()) {
+  for (const auto& b : w->beams()) {
     const auto k = static_cast<std::size_t>(s.beamCount++ * 4);
     s.beams[k] = static_cast<float>(b.x0); s.beams[k + 1] = static_cast<float>(b.y0); s.beams[k + 2] = static_cast<float>(b.x1); s.beams[k + 3] = static_cast<float>(b.y1);
   }
   {
     std::array<Engine::Playhead, 64> ph{};
-    s.playheadCount = engine_->playheads(ph.data(), 64);
+    s.playheadCount = w->playheads(ph.data(), 64);
     for (int i = 0; i < s.playheadCount; ++i) {
       s.playheads[static_cast<std::size_t>(i * 2)] = static_cast<float>(ph[static_cast<std::size_t>(i)].block);
       s.playheads[static_cast<std::size_t>(i * 2 + 1)] = ph[static_cast<std::size_t>(i)].seconds;
@@ -337,13 +348,13 @@ void BlokDustProcessor::publishSnapshot() noexcept {
   }
   {
     std::array<Engine::Monitor, 64> mon{};
-    s.monitorCount = engine_->monitors(mon.data(), 64);
+    s.monitorCount = w->monitors(mon.data(), 64);
     for (int i = 0; i < s.monitorCount; ++i) {
       s.monitors[static_cast<std::size_t>(i * 5)] = static_cast<float>(mon[static_cast<std::size_t>(i)].block);
       for (int k = 0; k < 4; ++k) s.monitors[static_cast<std::size_t>(i * 5 + 1 + k)] = mon[static_cast<std::size_t>(i)].v[k];
     }
   }
-  s.pairCount = engine_->connections(s.pairs.data(), static_cast<int>(s.pairs.size() / 2));  // oldest first (R4a)
+  s.pairCount = w->connections(s.pairs.data(), static_cast<int>(s.pairs.size() / 2));  // oldest first (R4a)
   snapshots_.publish();
 }
 
@@ -397,6 +408,18 @@ void BlokDustProcessor::applyUiCommands(const nlohmann::json& commands) {
     c.blockType = static_cast<BlockType>(j.value("blockType", 0));
     c.x = j.value("x", 0.0); c.y = j.value("y", 0.0);
     c.param = static_cast<std::uint8_t>(j.value("param", 0)); c.value = j.value("value", 0.0);
+    // Inside Stage block `st` (CHG-0038): its inner world, made on first use. The page sends what is inside (setMacros).
+    if (const BlockId st = j.value("stage", 0u); st != 0) {
+      Engine* w = engine_ ? stages_.world(*engine_, st, childConfig(), [this](bool on) { suspendProcessing(on); }) : nullptr;
+      if (!w) continue;
+      w->push(c);
+      auto& keys = stages_.keys(st);
+      if (c.type == Command::Type::AddBlock) keys[c.id] = j.value("key", "b" + std::to_string(c.id));
+      else if (c.type == Command::Type::RemoveBlock) keys.erase(c.id);
+      else if ((c.type == Command::Type::NoteOn || c.type == Command::Type::NoteOff) && c.blockType == BlockType::InputComputerKeyboard && c.param < 128)
+        pageKeys_.set(c.param, c.type == Command::Type::NoteOn);
+      continue;
+    }
     if (c.type == Command::Type::WorldPower && powerMode_.load() == 2) continue;  // the transport has the power
     if (engine_) engine_->push(c);
     // keep the patch model (host state) in step with the engine
@@ -412,6 +435,7 @@ void BlokDustProcessor::applyUiCommands(const nlohmann::json& commands) {
       }
       case Command::Type::MoveBlock: if (auto* b = find(c.id)) { (*b)["x"] = c.x; (*b)["y"] = c.y; } break;
       case Command::Type::RemoveBlock: {
+        if (stages_.find(c.id)) { stages_.retire(c.id); if (view_.load() == c.id) view_.store(0); }  // a Stage: its world goes too
         const auto it = idToKey_.find(c.id);
         if (it != idToKey_.end()) {
           for (auto b = blocks.begin(); b != blocks.end(); ++b) if ((*b)["id"] == it->second) { blocks.erase(b); break; }
@@ -498,33 +522,112 @@ void BlokDustProcessor::applyPatch(const nlohmann::json& part, bool open) {
   if (auto* ed = dynamic_cast<BlokDustEditor*>(getActiveEditor())) ed->reloadPatch();
 }
 
-nlohmann::json* BlokDustProcessor::blockJson(const std::string& key) {
-  for (auto& b : patch_["blocks"]) if (b.value("id", std::string{}) == key) return &b;
+namespace {
+/// The block saved as `key` in `patch`: an outer block, or "<stage>/<block>" inside a Stage's macro (CHG-0038).
+template <typename J> J* findBlock(J& patch, const std::string& key) {
+  const auto slash = key.find('/');
+  if (slash == std::string::npos) {
+    if (!patch.contains("blocks")) return nullptr;
+    for (auto& b : patch["blocks"]) if (b.value("id", std::string{}) == key) return &b;
+    return nullptr;
+  }
+  if (!patch.contains("macros") || !patch["macros"].is_array()) return nullptr;
+  const auto stage = key.substr(0, slash), block = key.substr(slash + 1);
+  for (auto& m : patch["macros"])
+    if (m.value("block", std::string{}) == stage && m.contains("blocks"))
+      for (auto& b : m["blocks"]) if (b.value("id", std::string{}) == block) return &b;
   return nullptr;
 }
+}  // namespace
 
-void BlokDustProcessor::pickFile(BlockId id) {
-  const auto key = keyOf(id);
+nlohmann::json* BlokDustProcessor::blockJson(const std::string& key) { return findBlock(patch_, key); }
+
+EngineConfig BlokDustProcessor::childConfig() const {
+  EngineConfig c;
+  c.sampleRate = static_cast<int>(sampleRate_ + 0.5); c.seed = seed_; c.hostInput = true;
+  return c;
+}
+
+std::string BlokDustProcessor::keyOf(BlockId stage, BlockId id) const {
+  if (stage == 0) return keyOf(id);
+  const auto sk = keyOf(stage);
+  const auto it = stages_.allKeys().find(stage);
+  if (sk.empty() || it == stages_.allKeys().end()) return {};
+  const auto k = it->second.find(id);
+  return k == it->second.end() ? std::string{} : sk + "/" + k->second;
+}
+
+BlokDustProcessor::Where BlokDustProcessor::locate(const std::string& key) const {
+  const auto slash = key.find('/');
+  if (slash == std::string::npos) return {engine_.get(), idOf(key), 0};
+  const BlockId st = idOf(key.substr(0, slash));
+  Engine* w = stages_.find(st);
+  const auto it = stages_.allKeys().find(st);
+  if (!w || it == stages_.allKeys().end()) return {};
+  for (const auto& [id, k] : it->second) if (k == key.substr(slash + 1)) return {w, id, st};
+  return {};
+}
+
+std::vector<std::pair<std::string, const nlohmann::json*>> BlokDustProcessor::innerSamplers() const {
+  std::vector<std::pair<std::string, const nlohmann::json*>> out;
+  if (!patch_.contains("macros") || !patch_["macros"].is_array()) return out;
+  for (const auto& m : patch_["macros"]) {
+    const auto stage = m.value("block", std::string{});
+    // A Stage block of the patch (its world may not exist yet: the DAW restores state before audio starts; the sound is
+    // attached once it does).
+    const auto* sb = findBlock(patch_, stage);
+    if (!sb || sb->value("type", std::string{}) != "source.stage" || !m.contains("blocks")) continue;
+    for (const auto& b : m["blocks"]) if (isSampler(b.value("type", std::string{}))) out.emplace_back(stage + "/" + b.value("id", std::string{}), &b);
+  }
+  return out;
+}
+
+void BlokDustProcessor::setStageView(BlockId stage) {
+  if (stage != 0 && (!engine_ || !stages_.world(*engine_, stage, childConfig(), [this](bool on) { suspendProcessing(on); }))) stage = 0;
+  view_.store(stage);
+}
+
+void BlokDustProcessor::setMacros(const nlohmann::json& macros) {
+  auto merged = mergeMacros(patch_.contains("macros") ? patch_["macros"] : nlohmann::json::array(), macros);
+  if (merged.empty()) patch_.erase("macros"); else patch_["macros"] = std::move(merged);
+  for (const auto& [key, b] : innerSamplers())
+    if (!samples_.count(key) && !loading_.count(key) && !missing_.count(key)) restoreSample(key, *b);
+  attachSamples();  // blocks made again inside (moved in, a copy, a reloaded Stage) take the audio they have
+}
+
+nlohmann::json BlokDustProcessor::innerIds() const {
+  auto out = nlohmann::json::object();
+  for (const auto& [stage, keys] : stages_.allKeys()) {
+    if (!stages_.find(stage)) continue;
+    auto& o = out[keyOf(stage)] = nlohmann::json::object();
+    for (const auto& [id, k] : keys) o[k] = id;
+  }
+  return out;
+}
+
+void BlokDustProcessor::pickFile(BlockId id, BlockId stage) {
+  const auto key = keyOf(stage, id);
   if (key.empty()) return;
   chooser_ = std::make_unique<juce::FileChooser>("Choose an audio file for BlokDust", juce::File{}, "*.wav;*.aif;*.aiff;*.flac;*.ogg;*.mp3;*.m4a;*.caf", true, false,
                                                  pickerParent(getActiveEditor()));
-  chooser_->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this, id](const juce::FileChooser& fc) {
+  chooser_->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this, key](const juce::FileChooser& fc) {
 #if JUCE_IOS
     // iPad (CHG-0025 task 6): the picked file is copied into the shared Samples folder and the copy is what the patch
     // references, so the app and the extension in any host can read it later.
     if (const auto url = fc.getURLResult(); !url.isEmpty())
-      loader_.copyIn(url, patchfiles::root().getChildFile("Samples"), [this, id](juce::File f, std::string err) {
+      loader_.copyIn(url, patchfiles::root().getChildFile("Samples"), [this, key](juce::File f, std::string err) {
         systemLog(f.existsAsFile() ? juce::String("sample: copied in, ") + juce::String(f.getSize()) + " bytes" : juce::String("sample: copy failed: ") + err);
-        if (f.existsAsFile()) loadFile(id, f);
+        if (f.existsAsFile()) loadFileKey(key, f);
       });
 #else
-    if (const auto f = fc.getResult(); f.existsAsFile()) loadFile(id, f);
+    if (const auto f = fc.getResult(); f.existsAsFile()) loadFileKey(key, f);
 #endif
   });
 }
 
-void BlokDustProcessor::loadFile(BlockId id, const juce::File& file) {
-  const auto key = keyOf(id);
+void BlokDustProcessor::loadFile(BlockId id, const juce::File& file, BlockId stage) { loadFileKey(keyOf(stage, id), file); }
+
+void BlokDustProcessor::loadFileKey(const std::string& key, const juce::File& file) {
   if (key.empty()) return;
   const bool fresh = missing_.count(key) == 0;  // relinking a missing file keeps its region
   loading_.insert(key);
@@ -539,8 +642,11 @@ void BlokDustProcessor::loadFile(BlockId id, const juce::File& file) {
   });
 }
 
-void BlokDustProcessor::loadFreesound(BlockId id, const nlohmann::json& ref, const nlohmann::json& display, double maxSeconds) {
-  const auto key = keyOf(id);
+void BlokDustProcessor::loadFreesound(BlockId id, const nlohmann::json& ref, const nlohmann::json& display, double maxSeconds, BlockId stage) {
+  loadFreesoundKey(keyOf(stage, id), ref, display, maxSeconds);
+}
+
+void BlokDustProcessor::loadFreesoundKey(const std::string& key, const nlohmann::json& ref, const nlohmann::json& display, double maxSeconds) {
   auto* b = blockJson(key);
   if (!b || !ref.contains("preview")) return;
   loading_.insert(key);
@@ -580,15 +686,18 @@ void BlokDustProcessor::useSample(const std::string& key, std::shared_ptr<Loaded
     params["region"] = s->duration * 0.5;
   // Drop refs no block uses any more.
   std::set<std::string> used;
-  for (const auto& blk : patch_["blocks"]) if (blk.contains("params") && blk["params"].contains("track") && blk["params"]["track"].is_string()) used.insert(blk["params"]["track"].get<std::string>());
+  const auto uses = [&](const nlohmann::json& blk) { if (blk.contains("params") && blk["params"].contains("track") && blk["params"]["track"].is_string()) used.insert(blk["params"]["track"].get<std::string>()); };
+  for (const auto& blk : patch_["blocks"]) uses(blk);
+  if (patch_.contains("macros") && patch_["macros"].is_array())  // samplers inside Stages use refs too (CHG-0038)
+    for (const auto& m : patch_["macros"]) if (m.contains("blocks")) for (const auto& blk : m["blocks"]) uses(blk);
   for (auto it = patch_["refs"].begin(); it != patch_["refs"].end();) { if (used.count(it.key())) ++it; else it = patch_["refs"].erase(it); }
-  if (const auto id = idOf(key); id != kInvalidBlock && engine_) {
+  if (const auto at = locate(key); at.world && at.id != kInvalidBlock) {
     BlockType t{};
     if (gen::findBlockType(b->value("type", std::string{}), t)) {
       const auto& inf = gen::info(t);
       for (std::uint8_t p = 0; p < inf.paramCount; ++p)
         if (const auto v = params.find(std::string(inf.params[p].key)); v != params.end() && (v->is_number() || v->is_boolean()))
-          engine_->push(Command::setParam(id, p, v->is_boolean() ? (v->get<bool>() ? 1.0 : 0.0) : v->get<double>()));
+          at.world->push(Command::setParam(at.id, p, v->is_boolean() ? (v->get<bool>() ? 1.0 : 0.0) : v->get<double>()));
     }
   }
   attachSamples();
@@ -597,12 +706,23 @@ void BlokDustProcessor::useSample(const std::string& key, std::shared_ptr<Loaded
 
 void BlokDustProcessor::attachSamples() {
   if (!engine_) return;
-  suspendProcessing(true);  // the audio thread is not inside processBlock while buffers change hands
+  // Only what changed since it was attached (a new sound, a new engine, a block made again inside a Stage), so edits
+  // inside a Stage (setMacros) don't hold the audio off each time.
+  std::vector<std::pair<std::string, Where>> due;
   for (const auto& [key, s] : samples_) {
-    const auto id = idOf(key);
-    if (id == kInvalidBlock) continue;
-    engine_->attachSample(id, SampleBuffer{s->audio.getReadPointer(0), s->audio.getNumChannels() > 1 ? s->audio.getReadPointer(1) : nullptr,
-                                           static_cast<std::uint32_t>(s->audio.getNumSamples()), s->sampleRate});
+    const auto at = locate(key);
+    if (!at.world || at.id == kInvalidBlock) continue;
+    const auto was = attachedTo_.find(key);
+    if (was == attachedTo_.end() || was->second != std::make_tuple(at.world, at.id, s.get())) due.emplace_back(key, at);
+  }
+  if (due.empty()) return;
+  suspendProcessing(true);  // the audio thread is not inside processBlock while buffers change hands
+  for (const auto& [key, at] : due) {
+    const auto& s = samples_.at(key);
+    at.world->prime();  // a block just added inside a Stage exists before its audio arrives
+    at.world->attachSample(at.id, SampleBuffer{s->audio.getReadPointer(0), s->audio.getNumChannels() > 1 ? s->audio.getReadPointer(1) : nullptr,
+                                               static_cast<std::uint32_t>(s->audio.getNumSamples()), s->sampleRate});
+    attachedTo_[key] = std::make_tuple(at.world, at.id, s.get());
   }
   suspendProcessing(false);
 }
@@ -617,54 +737,71 @@ void BlokDustProcessor::restoreSamples() {
   for (const auto& b : patch_["blocks"]) {
     const auto type = b.value("type", std::string{}), key = b.value("id", std::string{});
     if (!isSampler(type) || samples_.count(key)) continue;  // already loaded (an Insert keeps the scene's samples)
-    const auto track = b.contains("params") ? b["params"].value("track", nlohmann::json()) : nlohmann::json();
-    const auto id = idOf(key);
-    if (isDeadDefault(track)) {
-      if (auto d = defaultSound(type); !d.is_null())
-        loadFreesound(id, d, {{"trackName", juce::String(d["name"].get<std::string>()).toUpperCase().substring(0, 30).toStdString()}, {"user", d["username"]}, {"permalink", d["url"]}}, 0);
-      continue;
-    }
-    const auto t = track.get<std::string>();
-    const auto ref = patch_.contains("refs") && patch_["refs"].contains(t) ? patch_["refs"][t] : nlohmann::json();
-    if (ref.value("provider", std::string{}) == "freesound") {
-      nlohmann::json display = {{"trackName", b["params"].value("trackName", std::string{})}, {"user", b["params"].value("user", std::string{})}, {"permalink", b["params"].value("permalink", std::string{})}};
-      loading_.insert(key);
-      const int gen = ++loadGen_[key];
-      loader_.loadUrl(ref.value("preview", std::string{}), ref, rangeFor(type, 0), [this, key, display, gen](std::shared_ptr<LoadedSample> s, const std::string&) {
-        if (loadGen_[key] != gen) return;
-        loading_.erase(key);
-        if (s) useSample(key, s, false, display); else markMissing(key);
-      });
-    } else if (ref.value("provider", std::string{}) == "file") {
-#if JUCE_IOS
-      const auto f = SampleLoader::relink(ref, patchfiles::root().getChildFile("Samples"));
-      if (f.existsAsFile() && f.getFullPathName().toStdString() != ref.value("path", std::string{}) && f.isAChildOf(patchfiles::root().getChildFile("Samples")))
-        systemLog("sample: relinked from Samples");
-#else
-      const auto f = SampleLoader::relink(ref);
-#endif
-      if (!f.existsAsFile()) { missing_.insert(key); continue; }
-      loading_.insert(key);
-      nlohmann::json display = {{"trackName", b["params"].value("trackName", std::string{})}, {"user", "Local file"}, {"permalink", ""}};
-      const int gen = ++loadGen_[key];
-      loader_.loadFile(f, [this, key, display, gen](std::shared_ptr<LoadedSample> s, const std::string&) {
-        if (loadGen_[key] != gen) return;
-        loading_.erase(key);
-        if (s) useSample(key, s, false, display); else markMissing(key);
-      });
-    } else missing_.insert(key);
+    restoreSample(key, b);
   }
+  for (const auto& [key, b] : innerSamplers()) if (!samples_.count(key)) restoreSample(key, *b);  // inside Stages (CHG-0038)
+}
+
+void BlokDustProcessor::restoreSample(const std::string& key, const nlohmann::json& b) {
+  const auto type = b.value("type", std::string{});
+  const auto track = b.contains("params") ? b["params"].value("track", nlohmann::json()) : nlohmann::json();
+  if (isDeadDefault(track)) {
+    if (auto d = defaultSound(type); !d.is_null())
+      loadFreesoundKey(key, d, {{"trackName", juce::String(d["name"].get<std::string>()).toUpperCase().substring(0, 30).toStdString()}, {"user", d["username"]}, {"permalink", d["url"]}}, 0);
+    return;
+  }
+  const auto t = track.get<std::string>();
+  // A block that went into a Stage, or a copy of a Stage, brings the sound it had: the loaded audio is reused (CHG-0038).
+  if (key.find('/') != std::string::npos) {
+    std::shared_ptr<LoadedSample> had;
+    for (const auto& [k, smp] : samples_) if (smp && smp->track == t) { had = smp; break; }
+    if (had) {
+      const auto& ps = b.contains("params") ? b["params"] : nlohmann::json::object();
+      useSample(key, had, false, {{"trackName", ps.value("trackName", std::string{})}, {"user", ps.value("user", std::string{})}, {"permalink", ps.value("permalink", std::string{})}});
+      return;
+    }
+  }
+  const auto ref = patch_.contains("refs") && patch_["refs"].contains(t) ? patch_["refs"][t] : nlohmann::json();
+  if (ref.value("provider", std::string{}) == "freesound") {
+    nlohmann::json display = {{"trackName", b["params"].value("trackName", std::string{})}, {"user", b["params"].value("user", std::string{})}, {"permalink", b["params"].value("permalink", std::string{})}};
+    loading_.insert(key);
+    const int gen = ++loadGen_[key];
+    loader_.loadUrl(ref.value("preview", std::string{}), ref, rangeFor(type, 0), [this, key, display, gen](std::shared_ptr<LoadedSample> s, const std::string&) {
+      if (loadGen_[key] != gen) return;
+      loading_.erase(key);
+      if (s) useSample(key, s, false, display); else markMissing(key);
+    });
+  } else if (ref.value("provider", std::string{}) == "file") {
+#if JUCE_IOS
+    const auto f = SampleLoader::relink(ref, patchfiles::root().getChildFile("Samples"));
+    if (f.existsAsFile() && f.getFullPathName().toStdString() != ref.value("path", std::string{}) && f.isAChildOf(patchfiles::root().getChildFile("Samples")))
+      systemLog("sample: relinked from Samples");
+#else
+    const auto f = SampleLoader::relink(ref);
+#endif
+    if (!f.existsAsFile()) { missing_.insert(key); return; }
+    loading_.insert(key);
+    nlohmann::json display = {{"trackName", b["params"].value("trackName", std::string{})}, {"user", "Local file"}, {"permalink", ""}};
+    const int gen = ++loadGen_[key];
+    loader_.loadFile(f, [this, key, display, gen](std::shared_ptr<LoadedSample> s, const std::string&) {
+      if (loadGen_[key] != gen) return;
+      loading_.erase(key);
+      if (s) useSample(key, s, false, display); else markMissing(key);
+    });
+  } else missing_.insert(key);
 }
 
 nlohmann::json BlokDustProcessor::sampleInfo(const std::string& key) const {
-  nlohmann::json j = {{"id", idOf(key)}, {"key", key}, {"missing", missing_.count(key) > 0}, {"loading", loading_.count(key) > 0}};
+  const auto at = locate(key);
+  nlohmann::json j = {{"id", at.id}, {"key", key}, {"missing", missing_.count(key) > 0}, {"loading", loading_.count(key) > 0}};
+  if (at.stage != 0) j["stage"] = at.stage;  // inside that Stage block (CHG-0038)
   if (const auto it = samples_.find(key); it != samples_.end()) {
     j["track"] = it->second->track; j["duration"] = it->second->duration; j["sampleRate"] = it->second->sampleRate;
     j["preview"] = it->second->preview;
   }
-  for (const auto& b : patch_["blocks"]) if (b.value("id", std::string{}) == key && b.contains("params")) {
+  if (const auto* b = findBlock(patch_, key); b && b->contains("params")) {
     for (const char* k : {"track", "trackName", "user", "permalink", "startPosition", "endPosition", "loopStart", "loopEnd", "reverse", "region"})
-      if (b["params"].contains(k)) j["params"][k] = b["params"][k];
+      if ((*b)["params"].contains(k)) j["params"][k] = (*b)["params"][k];
   }
   if (patch_.contains("refs") && j.contains("track") && patch_["refs"].contains(j["track"].get<std::string>())) j["ref"] = patch_["refs"][j["track"].get<std::string>()];
   return j;
@@ -673,6 +810,7 @@ nlohmann::json BlokDustProcessor::sampleInfo(const std::string& key) const {
 nlohmann::json BlokDustProcessor::sampleInfos() const {
   auto all = nlohmann::json::array();
   for (const auto& b : patch_["blocks"]) if (isSampler(b.value("type", std::string{}))) all.push_back(sampleInfo(b.value("id", std::string{})));
+  for (const auto& [key, b] : innerSamplers()) all.push_back(sampleInfo(key));  // inside Stages (CHG-0038)
   return all;
 }
 
@@ -726,12 +864,12 @@ void BlokDustProcessor::drainRecording() {
   recFifo_.finishedRead(n1 + n2);
 }
 
-void BlokDustProcessor::setRecording(BlockId id, bool on) {
+void BlokDustProcessor::setRecording(BlockId id, bool on, BlockId stage) {
   if (on) {
     if (recording_.load() || sampleRate_ <= 0.0) return;
     recorded_[0].clear(); recorded_[1].clear();
     recFifo_.reset();
-    recordingBlock_ = id;
+    recordingBlock_ = id; recordingStage_ = stage;
     recording_.store(true);
     recDrain_.startTimerHz(20);
     return;
@@ -741,16 +879,16 @@ void BlokDustProcessor::setRecording(BlockId id, bool on) {
   drainRecording();
   const auto file = writeWav(blokdustFolder("Recordings"), "BlokDust Recording", {recorded_[0], recorded_[1]}, sampleRate_);
   recorded_[0].clear(); recorded_[1].clear();
-  if (file.existsAsFile()) loadFile(recordingBlock_, file);
+  if (file.existsAsFile()) loadFile(recordingBlock_, file, recordingStage_);
 }
 
-void BlokDustProcessor::useGenerated(BlockId id, const std::vector<float>& mono, double sampleRate) {
+void BlokDustProcessor::useGenerated(BlockId id, const std::vector<float>& mono, double sampleRate, BlockId stage) {
   const auto file = writeWav(blokdustFolder("SampleGen"), "BlokDust SampleGen", {mono}, sampleRate);
-  if (file.existsAsFile()) loadFile(id, file);
+  if (file.existsAsFile()) loadFile(id, file, stage);
 }
 
-void BlokDustProcessor::revealSample(BlockId id) {
-  const auto key = keyOf(id);
+void BlokDustProcessor::revealSample(BlockId id, BlockId stage) {
+  const auto key = keyOf(stage, id);
   const auto it = samples_.find(key);
   if (it == samples_.end()) return;
   const juce::File f(juce::String(it->second->ref.value("path", std::string{})));

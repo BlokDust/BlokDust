@@ -99,7 +99,7 @@ function(blokdust_plugin target)
   if(IOS)
     target_compile_definitions(${target} PUBLIC BLOKDUST_APP_GROUP="${BLOKDUST_APP_GROUP}")
   endif()
-  target_sources(${target} PRIVATE src/PluginProcessor.cpp src/PluginEditor.cpp src/Samples.cpp src/PatchFiles.cpp src/Telemetry.cpp)
+  target_sources(${target} PRIVATE src/PluginProcessor.cpp src/PluginEditor.cpp src/Samples.cpp src/PatchFiles.cpp src/StageWorlds.cpp src/Telemetry.cpp)
   if(APPLE)
     target_sources(${target} PRIVATE src/WebViewDrops.mm)
   else()
@@ -143,9 +143,9 @@ blokdust_plugin(BlokDustFX PRODUCT "BlokDust FX" CODE Bdfx FX TRUE FORMATS VST3 
 
 # Headless host test: loads the built plugin binary like a DAW.
 juce_add_console_app(blokdust_host_test PRODUCT_NAME "blokdust_host_test")
-target_sources(blokdust_host_test PRIVATE tests/host_render.cpp src/PatchFiles.cpp)
+target_sources(blokdust_host_test PRIVATE tests/host_render.cpp src/PatchFiles.cpp src/StageWorlds.cpp)
 target_include_directories(blokdust_host_test PRIVATE src)
 target_compile_definitions(blokdust_host_test PRIVATE JUCE_PLUGINHOST_VST3=1 JUCE_PLUGINHOST_AU=1 JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0
   JUCE_MODAL_LOOPS_PERMITTED=1)
-target_link_libraries(blokdust_host_test PRIVATE juce::juce_audio_processors juce::juce_audio_utils blokdust_engine nlohmann_json::nlohmann_json
+target_link_libraries(blokdust_host_test PRIVATE juce::juce_audio_processors juce::juce_audio_utils blokdust_engine blokdust_patch nlohmann_json::nlohmann_json
   juce::juce_recommended_config_flags)

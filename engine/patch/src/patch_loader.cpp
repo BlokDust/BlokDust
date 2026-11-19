@@ -92,17 +92,23 @@ bool load(const nlohmann::json& patch, Loaded& out, std::string& err) {
   return true;
 }
 
-std::vector<std::unique_ptr<Engine>> attachStages(Engine& root, const Loaded& loaded, int sampleRate) {
-  std::vector<std::unique_ptr<Engine>> made;
+std::map<BlockId, std::unique_ptr<Engine>> attachStagesById(Engine& root, const Loaded& loaded, int sampleRate) {
+  std::map<BlockId, std::unique_ptr<Engine>> made;
   root.prime();
   for (const auto& [block, inner] : loaded.stages) {
     EngineConfig cfg;
     cfg.sampleRate = sampleRate; cfg.seed = loaded.seed; cfg.child = true; cfg.parent = &root;
     auto e = std::make_unique<Engine>(cfg);
     for (const auto& c : inner->commands) e->push(c);
-    if (root.attachStage(block, e.get())) made.push_back(std::move(e));
+    if (root.attachStage(block, e.get())) made[block] = std::move(e);
   }
   return made;
+}
+
+std::vector<std::unique_ptr<Engine>> attachStages(Engine& root, const Loaded& loaded, int sampleRate) {
+  std::vector<std::unique_ptr<Engine>> out;
+  for (auto& [block, e] : attachStagesById(root, loaded, sampleRate)) out.push_back(std::move(e));
+  return out;
 }
 
 bool loadScript(const nlohmann::json& script, Loaded& io, std::string& err) {

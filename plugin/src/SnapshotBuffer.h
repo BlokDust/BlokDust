@@ -11,6 +11,7 @@ namespace blokdust::plugin {
 
 struct Snapshot {
   std::uint64_t seq = 0;
+  std::uint32_t view = 0;                    // the world it shows: a Stage block's inner world, or 0 (CHG-0038)
   int particleCount = 0;
   std::array<float, kMaxParticles * 3> particles{};
   int pairCount = 0;

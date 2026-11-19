@@ -31,6 +31,8 @@ bool load(const nlohmann::json& patch, Loaded& out, std::string& err);
 /// the patch's commands; they are applied here, as `prime()` does). The caller keeps the returned engines alive for as
 /// long as `root` is.
 std::vector<std::unique_ptr<Engine>> attachStages(Engine& root, const Loaded& loaded, int sampleRate);
+/// The same, by the Stage block each world belongs to (the plugin edits them later, CHG-0038).
+std::map<BlockId, std::unique_ptr<Engine>> attachStagesById(Engine& root, const Loaded& loaded, int sampleRate);
 /// Append timeline edits: [{atSample, op: add|move|remove|set, block, ...}]. Test/offline-render only.
 bool loadScript(const nlohmann::json& script, Loaded& io, std::string& err);
 

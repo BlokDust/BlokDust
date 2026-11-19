@@ -20,6 +20,9 @@
 #include "blokdust/hash.hpp"
 #include "blokdust/test_signal.hpp"
 #include "PatchFiles.h"
+#include "StageWorlds.h"
+#include "blokdust/patch_loader.hpp"
+#include <cmath>
 
 // --selftest-patches (CHG-0005): the plugin's patch files and Open/Insert merge, without a plugin. Prints JSON.
 static int selftestPatches() {
@@ -63,7 +66,63 @@ static int selftestPatches() {
   return ok ? 0 : 1;
 }
 
+
+/// CHG-0038: Stage blocks' inner worlds as the processor keeps them (StageWorlds): the page's edits inside a Stage go
+/// to its own world (made on first use), never the outer one; a removed Stage's world is freed only once the engine
+/// let it go; macros from the page keep the processor's sampler fields.
+static int selftestStages() {
+  using namespace blokdust;
+  using namespace blokdust::plugin;
+  nlohmann::json checks = nlohmann::json::object();
+  const nlohmann::json patch = {{"format", "blokdust.patch"}, {"version", 2}, {"seed", 1},
+    {"blocks", {{{"id", "st"}, {"type", "source.stage"}, {"x", 0}, {"y", 0}}, {{"id", "p"}, {"type", "power.power"}, {"x", -3}, {"y", 0}}}}};
+  patch::Loaded loaded; std::string err;
+  if (!patch::load(patch, loaded, err)) { std::cerr << err << "\n"; return 1; }
+  EngineConfig cfg; cfg.sampleRate = 48000; cfg.seed = loaded.seed;
+  auto rootOwner = std::make_unique<Engine>(cfg);  // an Engine is large: not on the stack
+  Engine& root = *rootOwner;
+  for (const auto& c : loaded.commands) root.push(c);
+  StageWorlds worlds;
+  worlds.reset(patch::attachStagesById(root, loaded, 48000), {});
+  checks["noWorldWithoutMacro"] = worlds.size() == 0;
+  int suspends = 0;
+  const auto suspend = [&](bool on) { if (on) ++suspends; };
+  const BlockId st = loaded.ids.at("st");
+  // the page's commands inside the Stage: a Tone and a Power, ids 1 and 2 of the inner world (the outer has 1 and 2 too)
+  Engine* w = worlds.world(root, st, cfg, suspend);
+  checks["madeOnFirstUse"] = w != nullptr && worlds.size() == 1 && suspends == 1 && worlds.world(root, st, cfg, suspend) == w && suspends == 1;
+  checks["notAStage"] = worlds.world(root, loaded.ids.at("p"), cfg, suspend) == nullptr;
+  w->push(Command::add(1, BlockType::SourceTone, 0, 0));
+  w->push(Command::add(2, BlockType::PowerPower, -3, 0));
+  worlds.keys(st)[1] = "t"; worlds.keys(st)[2] = "pw";
+  std::vector<float> l(48000), r(48000);
+  root.process(l.data(), r.data(), 48000);
+  float peak = 0; for (const float x : l) peak = std::max(peak, std::abs(x));
+  int outer = 0, inner = 0;
+  for (const auto& b : root.blocks()) outer += b.alive ? 1 : 0;
+  for (const auto& b : w->blocks()) inner += b.alive ? 1 : 0;
+  checks["innerSounds"] = peak > 0.001f;
+  checks["outerUntouched"] = outer == 2 && inner == 2;
+  // removing the Stage: its world waits until the engine has let it go
+  root.push(Command::remove(st));
+  worlds.retire(st);
+  checks["retiredKept"] = worlds.retired() == 1 && worlds.find(st) == nullptr && worlds.allKeys().count(st) == 0;
+  worlds.collect(root);
+  checks["retiredFreed"] = worlds.retired() == 0;
+  // macros: the page's fields win, except the sound the processor loaded
+  const nlohmann::json was = {{{"block", "st"}, {"blocks", {{{"id", "s"}, {"type", "source.sample"}, {"params", {{"track", "file:a.wav"}, {"trackName", "a.wav"}, {"startPosition", 0}}}}}}}};
+  const nlohmann::json now = {{{"block", "st"}, {"blocks", {{{"id", "s"}, {"type", "source.sample"}, {"x", 4}, {"params", {{"startPosition", 0.2}}}}}}}};
+  const auto merged = mergeMacros(was, now);
+  const auto& p0 = merged[0]["blocks"][0]["params"];
+  checks["macrosMerge"] = p0["track"] == "file:a.wav" && p0["trackName"] == "a.wav" && p0["startPosition"] == 0.2 && merged[0]["blocks"][0]["x"] == 4;
+  bool ok = true;
+  for (const auto& [k, v] : checks.items()) ok = ok && v.get<bool>();
+  std::cout << nlohmann::json{{"selftest", "stages"}, {"ok", ok}, {"checks", checks}}.dump() << "\n";
+  return ok ? 0 : 1;
+}
+
 int main(int argc, char** argv) {
+  if (argc >= 2 && juce::String(argv[1]) == "--selftest-stages") return selftestStages();
   if (argc >= 2 && juce::String(argv[1]) == "--selftest-patches") { juce::ScopedJuceInitialiser_GUI juceInit; return selftestPatches(); }
   if (argc < 3) { std::cerr << "usage: blokdust_host_test <plugin> <fixture.json> [--editor <diag.json>]\n"; return 2; }
   juce::ScopedJuceInitialiser_GUI juceInit;

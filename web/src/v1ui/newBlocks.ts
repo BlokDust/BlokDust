@@ -34,7 +34,6 @@ export function installNewBlockMenu(): void {
   for (const cat of (App.BlockCreator.MenuJson as { categories: { name: string; items: { name: string; id: string; description: string }[] }[] }).categories) {
     for (const id of MENU[cat.name] ?? []) {
       const def = BLOCKS_BY_ID.get(id);
-      if ((id === 'source.stage' || id === 'input.stage-in') && App.IsPlugin) continue;  // the plugin plays Stage blocks; making and opening them is the website's for now
       if (def && !cat.items.some(i => i.id === def.menuId)) cat.items.push({ name: def.name, id: def.menuId, description: def.description });
     }
     // Label (CHG-0020): not a block, but it is made from the Interaction menu like one.

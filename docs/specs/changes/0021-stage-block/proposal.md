@@ -39,7 +39,7 @@ Condense a patch into one source block, enter it to edit, and hear both levels r
   The `stage-nested` golden pins two Stages (one held by a Power, one struck by particles); "same as flattened" is an
   engine test instead (`test_stage.cpp`).
 - Limits: inside a Stage the menu has no Stage, samplers or Microphone (an inner world takes no audio files or input
-  yet). Plugins play Stages in a patch but cannot make or open one (no menu item, no inside view). Keyboards and note
+  yet). The plugins make, open and fill Stages as the web does (CHG-0038). Keyboards and note
   effects outside do not reach blocks inside.
 
 ## Risks and unknowns

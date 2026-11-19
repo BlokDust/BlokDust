@@ -5,6 +5,7 @@
 // Prints a JSON summary: hashes (see blokdust/hash.hpp) + simple descriptors used by golden tests and MCP validation.
 #include <chrono>
 #include <iterator>
+#include <map>
 #include <cstring>
 #include <cmath>
 #include <cstdio>
@@ -113,15 +114,25 @@ int main(int argc, char** argv) {
     for (const auto& s : fx["samples"]) {
       std::vector<float> l, r; double rate = 0;
       if (!readWav(s.value("wav", std::string{}), l, r, rate)) { std::cerr << "error: cannot read " << s.value("wav", std::string{}) << "\n"; return 1; }
-      const auto it = loaded.ids.find(s.value("block", std::string{}));
-      if (it == loaded.ids.end()) { std::cerr << "error: no block " << s.value("block", std::string{}) << "\n"; return 1; }
+      // "stage": "<Stage block's patch id>": the block is inside that Stage (CHG-0038), attached to its inner world.
+      Engine* world = engine.get();
+      const std::map<std::string, BlockId>* ids = &loaded.ids;
+      if (const auto st = s.value("stage", std::string{}); !st.empty()) {
+        const auto sid = loaded.ids.find(st);
+        world = sid == loaded.ids.end() ? nullptr : engine->stage(sid->second);
+        for (const auto& [b, inner] : loaded.stages) if (sid != loaded.ids.end() && b == sid->second) ids = &inner->ids;
+        if (!world || ids == &loaded.ids) { std::cerr << "error: no Stage " << st << " with a world\n"; return 1; }
+        world->prime();
+      }
+      const auto it = ids->find(s.value("block", std::string{}));
+      if (it == ids->end()) { std::cerr << "error: no block " << s.value("block", std::string{}) << "\n"; return 1; }
       const bool stereo = !r.empty();
       const auto frames = static_cast<std::uint32_t>(l.size());
       sampleData.reserve(sampleData.size() + 2);  // pointers below must stay valid
       sampleData.push_back(std::move(l)); if (stereo) sampleData.push_back(std::move(r));
       const float* L = sampleData[sampleData.size() - (stereo ? 2 : 1)].data();
       const float* R = stereo ? sampleData.back().data() : nullptr;
-      if (!engine->attachSample(it->second, SampleBuffer{L, R, frames, rate})) {
+      if (!world->attachSample(it->second, SampleBuffer{L, R, frames, rate})) {
         std::cerr << "error: attach failed for " << it->first << "\n"; return 1;
       }
     }

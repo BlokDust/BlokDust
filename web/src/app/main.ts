@@ -258,6 +258,21 @@ async function main() {
   let inside: { stageId: number; stageUid: string; outer: Outer; image: HTMLCanvasElement; blockX: number; blockY: number; grid: number } | null = null;
   /** Commands for the world on screen: inside a Stage, they go to its inner world. */
   const send = (cmds: Command[]) => sendRaw(inside ? cmds.map(c => ({ ...c, stage: inside!.stageId })) : cmds);
+  /** Which world the snapshots come from: Stage block `id`'s inner world, or 0 for the outer one (the plugin: its
+   * processor, CHG-0038). */
+  const viewWorld = (id: number) => { engine?.setView(id); juce?.emitEvent('bd_stageView', { stage: id }); };
+  /** Plugin messages about a block name the world it is in: `stage` while looking into a Stage (CHG-0038). */
+  const atStage = () => (inside ? { stage: inside.stageId } : {});
+  /** The plugin's processor keeps the DAW project's patch: what is inside each Stage goes to it when that changes. */
+  let sentMacros = '[]', macrosTimer: ReturnType<typeof setTimeout> | undefined;
+  const syncMacros = () => {
+    if (!juce) return;
+    clearTimeout(macrosTimer);
+    macrosTimer = setTimeout(() => {
+      const ms = JSON.stringify(toPatch().macros ?? []);
+      if (ms !== sentMacros) { sentMacros = ms; juce.emitEvent('bd_macros', { macros: JSON.parse(ms) }); }
+    }, 50);
+  };
   /** Sample references by `track` key (DATA-0005): the patch keeps the ones its blocks use. */
   const refs = new Map<string, SampleRef>();
   /** R4a (owner, 2026-11-12): the order the connected pairs connected in, as patch ids, oldest first. A source's
@@ -314,13 +329,15 @@ async function main() {
     try {
       const loaded = loadPatch({ blocks, connectionOrder: m!.connectionOrder });
       innerIds.set(uid, { ids: Object.fromEntries(loaded.ids), nextId: loaded.nextId });
-      return loaded.commands.map(c => ({ ...c, stage: id }));
+      const keyOf = new Map([...loaded.ids].map(([k, v]) => [v, k]));  // the plugin keeps the inner blocks' patch ids
+      return loaded.commands.map(c => ({ ...c, stage: id, ...(c.type === CommandType.AddBlock && keyOf.has(c.id) ? { key: keyOf.get(c.id) } : {}) }));
     } catch (e) { console.warn('BlokDust: a Stage block could not be filled', e); return []; }
   }
   /** Build Stage block `id`'s inner world from its macro, then give its samplers their audio (and the Microphone its input). */
   function buildStage(id: number, uid: string): void {
     sendRaw(stageCommands(id, uid));
     void fillStageSamples(id, uid);
+    syncMacros();
   }
   /** Audio for the samplers inside Stage block `id`: what was loaded already, else from their references (a sound, a
    * remembered file, a SampleGen's recipe). Runs from outside; looking in shows the same audio (enterStage). */
@@ -405,7 +422,8 @@ async function main() {
   /** The autosave holds the patch on screen (it was restored from it, or edited since). */
   let autosaveIsThis = !params.has('c') && !params.has('v1') && !params.has('demo') && !embedId;
   const changed = () => {
-    if (embedId || juce) return;  // the embed player never autosaves; in the plugin the DAW project keeps the patch
+    if (juce) { syncMacros(); return; }  // in the plugin the DAW project keeps the patch (the processor has it)
+    if (embedId) return;  // the embed player never autosaves
     clearTimeout(saveTimer);
     autosaveIsThis = true;
     saveTimer = setTimeout(() => { saveLocal(toPatch()); if (session.id && !session.dirty) { session.dirty = true; saveSession(session); } checkOwnDirty(); }, 300);
@@ -458,7 +476,7 @@ async function main() {
     loadFreesound: (id, sound, display) => {
       const ref: FreesoundRef = { provider: 'freesound', ...sound };
       // Plugin: the processor downloads and decodes it for its native engine (CHG-0004 3.6).
-      if (juce) { juce.emitEvent('bd_loadUrl', { id, ref, display, maxSeconds: maxSecondsFor(id) ?? 0 }); return; }
+      if (juce) { juce.emitEvent('bd_loadUrl', { id, ref, display, maxSeconds: maxSecondsFor(id) ?? 0, ...atStage() }); return; }
       void whileLoading(id, async () => useSample(id, ref, await fetchFreesound(ref, maxSecondsFor(id)), true, display))
         .catch(err => { console.warn('BlokDust: Freesound sound unavailable', err); markMissing(id); });
     },
@@ -831,7 +849,7 @@ async function main() {
   const MAKE_STAGE = 'MAKE STAGE';
   let makeStageAt: ButtonBox | null = null, makeStageHover = false;
   // (stage.selected is the selection; tested first, as this runs from draws made before the pointer state below exists)
-  const offerMakeStage = () => stage.selected.size > 0 && !inside && !juce && !placing && !drag && canGoInside(stage.selected);
+  const offerMakeStage = () => stage.selected.size > 0 && !inside && !placing && !drag && canGoInside(stage.selected);
   /** The selected blocks go inside a new Stage block where they were (as Cmd/Ctrl+G); it is then the one selected. */
   function makeStage(): void {
     const bs = [...selection].map(id => model.get(id)!).filter(Boolean);
@@ -916,10 +934,10 @@ async function main() {
     samples.clear(); missing.clear(); labels.length = 0;
     stage.selected.clear(); selectedLabels.clear(); stage.held.clear();
   }
-  /** Look into Stage block `id`: its inner world takes the page (in a window over the outer stage). Web only. */
+  /** Look into Stage block `id`: its inner world takes the page (in a window over the outer stage). The plugins too (CHG-0038). */
   function enterStage(id: number): void {
     const b = model.get(id);
-    if (inside || juce || embedId || !b || b.type !== 'source.stage') return;
+    if (inside || embedId || !b || b.type !== 'source.stage') return;
     endLabelEdit(true); endPlacing(false);
     (scene.OptionsPanel as any).CancelOpen();  // a double click's first click set the panel on its way open: it stays shut
     scene.OptionsPanel.Close();
@@ -941,7 +959,8 @@ async function main() {
     for (const [iid, blk] of model) { const buf = audio?.get(blk.uid); if (buf) showBuffer(iid, buf); else void resolveSample(iid); }
     connectionOrder = [...(macro.connectionOrder ?? [])];
     addLabels(readLabels(macro.labels));
-    engine?.setView(id);
+    viewWorld(id);
+    if (juce) juce.emitEvent('bd_samplesHello', {});  // the processor reports the inner samplers' sounds
     const m = stage.metrics;  // opening it shows its blocks (owner, 2026-11-14)
     applyView(frameBlocks([...model.values()], macro.view, { width: m.width, height: m.height, unit: m.unit, area: insideFrame() }));
     setMenuHidden(INSIDE_HIDDEN);
@@ -962,7 +981,7 @@ async function main() {
     }
     clearWorld();
     inside = null;
-    engine?.setView(0);
+    viewWorld(0);
     const o = i.outer;
     for (const [id, b] of o.model) { model.set(id, b); stage.upsertBlock({ id, type: b.type, x: b.x, y: b.y, starPos: b.type === 'power.void' ? starPos(id) : undefined }); }
     for (const [id, v] of o.v1Blocks) v1Blocks.set(id, v);
@@ -981,7 +1000,7 @@ async function main() {
   function exitStage(): void { if (!inside) return; leaveStage(true); changed(); }
   /** Can blocks `ids` go inside a Stage? All of them or none: not with a Stage among them (one level, SCOPE-0006), so
    * no block is left behind with its connections cut (owner, 2026-11-14). */
-  const canGoInside = (ids: Iterable<number>, except?: number) => !inside && !juce && [...ids].every(id => id === except || model.get(id)?.type !== 'source.stage');
+  const canGoInside = (ids: Iterable<number>, except?: number) => !inside && [...ids].every(id => id === except || model.get(id)?.type !== 'source.stage');
   /** The audio of blocks going inside a Stage, by the patch id each has in there. */
   const audioOf = (ids: number[], uidOf: (b: ModelBlock) => string) =>
     new Map(ids.flatMap(id => { const b = model.get(id), buf = samples.get(id); return b && buf ? [[uidOf(b), buf] as [string, AudioBuffer]] : []; }));
@@ -1073,6 +1092,7 @@ async function main() {
   /** The Stage panel's LOAD PATCH: a patch file's blocks become what is inside (the file's own Stage blocks are left
    * out: one level). The block is made again, so its inner world starts fresh. */
   function loadStagePatch(id: number): void {
+    if (juce) { juce.emitEvent('bd_patchPick', { stage: id }); return; }  // the native picker; the reply names the Stage (bd_patchFile)
     const input = document.createElement('input');
     input.type = 'file'; input.accept = `.${PATCH_EXT},.json,application/json`;
     input.onchange = async () => {
@@ -1163,7 +1183,11 @@ async function main() {
   if (juce) window.open = (u?: string | URL) => { juce.emitEvent('bd_openUrl', { url: String(u ?? '').replace(/^http:\/\//, 'https://') }); return null; };
   if (juce) for (const ev of ['bd_patchList', 'bd_patchSaved', 'bd_patchFile', 'bd_patchDeleted']) juce.addEventListener(ev, (e: { req?: number }) => {
     const f = e.req !== undefined ? pendingReplies.get(e.req) : undefined;
-    if (f) { pendingReplies.delete(e.req!); f(e); } else if (ev === 'bd_patchFile') { const r = e as { text: string; name: string; file?: string }; showPicked(r.text, r.file ?? `${r.name}.${PATCH_EXT}`); }
+    if (f) { pendingReplies.delete(e.req!); f(e); } else if (ev === 'bd_patchFile') {
+      const r = e as { text: string; name: string; file?: string; stage?: number };
+      if (r.stage) { const patch = parsePatchFile(r.text), b = model.get(r.stage); if (patch && b?.type === 'source.stage' && !inside) useStagePatch(r.stage, patch); return; }  // a Stage's LOAD PATCH
+      showPicked(r.text, r.file ?? `${r.name}.${PATCH_EXT}`);
+    }
   });
   const savedOn = (ms: number) => `Saved ${new Date(ms).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`;
   async function nativePatches() {
@@ -1502,7 +1526,7 @@ async function main() {
   }
   /** "Your file" (sample panel), drag-and-drop, or relinking a missing file: never uploaded (DATA-0005). */
   async function pickSample(id: number): Promise<void> {
-    if (juce) { juce.emitEvent('bd_pickFile', { id }); return; }  // plugin: a native chooser keeps the file's path
+    if (juce) { juce.emitEvent('bd_pickFile', { id, ...atStage() }); return; }  // plugin: a native chooser keeps the file's path
     const t = model.get(id)?.params.track, ref = typeof t === 'string' ? refs.get(t) : undefined;
     // A missing remembered file: this click is the user gesture the browser needs to allow reading it again.
     if (missing.has(id) && ref?.provider === 'file' && ref.hash) {
@@ -1575,7 +1599,7 @@ async function main() {
   /** A sampler's new audio (v1 SamplerBase.SetBuffers / Recorder.SetBuffers / SampleGen.PopulateBuffer). */
   function useBuffer(id: number, buffer: AudioBuffer, region: 'keep' | 'reset' | 'half', waveDetail = 5): void {
     // Plugin: the processor plays it, from a file it saves (a reopened project needs no editor); its report shows it.
-    if (juce) { juce.emitEvent('bd_sampleData', { id, sampleRate: buffer.sampleRate, data: Array.from(buffer.getChannelData(0)) }); return; }
+    if (juce) { juce.emitEvent('bd_sampleData', { id, sampleRate: buffer.sampleRate, data: Array.from(buffer.getChannelData(0)), ...atStage() }); return; }
     samples.set(id, buffer);
     const v = v1Blocks.get(id), dur = buffer.duration;
     if (region === 'reset') setParams(id, { startPosition: 0, endPosition: dur, loopStart: 0, loopEnd: dur, reverse: false });
@@ -1590,7 +1614,7 @@ async function main() {
     // Plugin: the processor records its own output and loads the take into the block (as a file the project keeps).
     // v1 Recorder.StartRecording / StopRecording: a one-second line in the message bar each way.
     const say = (on: boolean) => scene.message(on ? 'Started Recording' : 'Stopped Recording', { seconds: 1 });
-    if (v && juce) { v.IsRecording = !v.IsRecording; juce.emitEvent('bd_record', { id, on: v.IsRecording }); say(v.IsRecording); stage.redraw(); return; }
+    if (v && juce) { v.IsRecording = !v.IsRecording; juce.emitEvent('bd_record', { id, on: v.IsRecording, ...atStage() }); say(v.IsRecording); stage.redraw(); return; }
     if (!v || !engine) return;
     if (!v.IsRecording) { v.IsRecording = true; engine.startRecording(); say(true); stage.redraw(); return; }
     v.IsRecording = false; say(false);
@@ -1603,7 +1627,7 @@ async function main() {
     useBuffer(id, buf, 'half', 2);  // v1 Recorder.UpdateWaveform: detail 2, loop from half way
   }
   function downloadRecording(id: number): void {
-    if (juce) { juce.emitEvent('bd_reveal', { id }); return; }  // plugin: the take is already a file; show it
+    if (juce) { juce.emitEvent('bd_reveal', { id, ...atStage() }); return; }  // plugin: the take is already a file; show it
     const buf = samples.get(id);
     if (!buf) return;  // v1: "This block doesn't have a recording to download yet."
     const a = document.createElement('a');
@@ -1957,9 +1981,10 @@ async function main() {
   });
 
   // ---- plugin samples: shown from the processor's reports (the UI never holds the audio there) ----
-  interface PluginSampleInfo { id: number; loading: boolean; missing: boolean; duration?: number; sampleRate?: number; preview?: number[];
+  interface PluginSampleInfo { id: number; stage?: number; loading: boolean; missing: boolean; duration?: number; sampleRate?: number; preview?: number[];
     params?: Record<string, unknown>; ref?: SampleRef; track?: string }
   function applyPluginSample(s: PluginSampleInfo): void {
+    if ((s.stage ?? 0) !== (inside?.stageId ?? 0)) return;  // a sampler of a world not on show (CHG-0038)
     const b = model.get(s.id), v = v1Blocks.get(s.id);
     if (!b || !v) return;
     if (s.loading) { scene.AnimationsLayer.AddToList(v); v.WaveForm = []; v._WaveForm = []; }  // v1: the loading square until it arrives
@@ -2117,7 +2142,7 @@ async function main() {
   if (juce) {
     overlay.remove();
     sendRaw = cmds => juce.emitEvent('bd_commands', { commands: cmds });
-    juce.addEventListener('bd_patch', (e: { patch: string; ids?: Record<string, number>; standalone?: boolean; ios?: boolean; powerMode?: number; hostPlaying?: boolean }) => {
+    juce.addEventListener('bd_patch', (e: { patch: string; ids?: Record<string, number>; innerIds?: Record<string, Record<string, number>>; standalone?: boolean; ios?: boolean; powerMode?: number; hostPlaying?: boolean }) => {
       standalone = !!e.standalone;
       ios = !!e.ios;
       // DAW plugins: the power switch's HOST cell (a standalone app has no transport; CHG-0025).
@@ -2127,6 +2152,9 @@ async function main() {
       if (ios) PATCH_COPY.shareLinePlugin = 'Send a link to this patch from the share menu: Messages, WhatsApp, Mail and more.';
       const p = JSON.parse(e.patch) as Patch & { automation?: { slot: number; block: string; param: string; cc?: number }[] };
       showPatch(p, e.ids);
+      // The engine ids of the blocks inside each Stage (CHG-0038): a reopened editor edits the blocks the processor has.
+      for (const [uid, ids] of Object.entries(e.innerIds ?? {})) innerIds.set(uid, { ids, nextId: Math.max(0, ...Object.values(ids)) + 1 });
+      sentMacros = JSON.stringify(toPatch().macros ?? []);
       const after = pluginAfterLoad; pluginAfterLoad = null;
       if (after && 'open' in after) setBaseline();
       else if (after) startPlacing([...model].filter(([, b]) => after.place.has(b.uid)).map(([id]) => id), after.touch, after.at);
@@ -2145,8 +2173,9 @@ async function main() {
     juce.addEventListener('bd_paramValues', (e: { values: { id: number; param: string; value: number }[] }) => {
       const open = scene.OptionsPanel.Scale > 0 ? scene.OptionsPanel.SelectedBlock : null;
       let refresh = false;
+      const mdl = inside ? inside.outer.model : model, v1s = inside ? inside.outer.v1Blocks : v1Blocks;  // Dust moves outer blocks
       for (const u of e.values ?? []) {
-        const m = model.get(u.id), b = v1Blocks.get(u.id);
+        const m = mdl.get(u.id), b = v1s.get(u.id);
         if (!m || !b) continue;
         m.params[u.param] = u.value; b.Params[u.param] = u.value;
         if (open === b) refresh = true;
@@ -2165,7 +2194,7 @@ async function main() {
       const hit = stage.hitTest(x, y);
       let id = hit && SAMPLERS.has(hit.type) ? hit.id : null;
       if (id === null) { const [gx, gy] = stage.cssToGrid(x, y); id = addBlock('source.sample', Math.round(gx), Math.round(gy), {}); }
-      juce.emitEvent('bd_dropTarget', { token: d.token, id });
+      juce.emitEvent('bd_dropTarget', { token: d.token, id, ...atStage() });
     });
     // Frame and snapshot rates, every 5 s, for the plugin's log (an iPad has no devtools; CHG-0025).
     let frames = 0, snaps = 0, since = performance.now();
@@ -2179,8 +2208,8 @@ async function main() {
       requestAnimationFrame(count);
     };
     requestAnimationFrame(count);
-    juce.addEventListener('bd_snapshot', (e: { particles: number[]; connections: number[]; powered: number[]; beams: number[]; playheads?: number[]; monitors?: number[] }) =>
-      (++snaps, onSnapshot({ type: 'snapshot', frame: 0, rms: 0, events: [], particles: new Float32Array(e.particles),
+    juce.addEventListener('bd_snapshot', (e: { view?: number; particles: number[]; connections: number[]; powered: number[]; beams: number[]; playheads?: number[]; monitors?: number[] }) =>
+      (e.view ?? 0) !== (inside?.stageId ?? 0) ? undefined : (++snaps, onSnapshot({ type: 'snapshot', frame: 0, rms: 0, events: [], particles: new Float32Array(e.particles),
         connections: new Uint32Array(e.connections), powered: new Uint32Array(e.powered), beams: new Float32Array(e.beams ?? []), playheads: new Float32Array(e.playheads ?? []), monitors: new Float32Array(e.monitors ?? []) })));
     juce.emitEvent('bd_hello', {});
     juce.emitEvent('bd_samplesHello', {});
@@ -2837,7 +2866,7 @@ async function main() {
   // ---- Dust 1–8 (plugin only, PLUGIN-0003): right-click an options-panel slider to map a host parameter to it ----
   app.canvas.addEventListener('contextmenu', e => {
     if (!juce && !embedId && reportCredit(e.offsetX * dpr(), e.offsetY * dpr())) { e.preventDefault(); return; }
-    if (!juce) return;
+    if (!juce || inside) return;  // Dust 1–8 move the outer world's blocks (CHG-0038)
     const hit = scene.sliderAt(e.offsetX * dpr(), e.offsetY * dpr());
     if (!hit) return;
     e.preventDefault();

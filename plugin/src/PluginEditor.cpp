@@ -114,26 +114,31 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                .withEventListener("bd_connectionOrder", [this](const juce::var& v) {
                  proc_.setConnectionOrder(nlohmann::json::parse(juce::JSON::toString(v.getProperty("order", juce::var()), true).toStdString()));
                })
+               // Stage blocks (CHG-0038): which world the snapshots show, and what is inside each Stage (the DAW's state).
+               .withEventListener("bd_stageView", [this](const juce::var& v) { proc_.setStageView(static_cast<BlockId>(static_cast<int>(v.getProperty("stage", 0)))); })
+               .withEventListener("bd_macros", [this](const juce::var& v) {
+                 proc_.setMacros(nlohmann::json::parse(juce::JSON::toString(v.getProperty("macros", juce::var()), true).toStdString()));
+               })
                .withEventListener("bd_commands", [this](const juce::var& v) {
                  proc_.applyUiCommands(nlohmann::json::parse(juce::JSON::toString(v.getProperty("commands", juce::var()), true).toStdString()));
                })
                // Samples (CHG-0004 3.6/3.7): loaded natively; the UI only shows them.
-               .withEventListener("bd_pickFile", [this](const juce::var& v) { proc_.pickFile(static_cast<BlockId>(static_cast<int>(v.getProperty("id", 0)))); })
+               .withEventListener("bd_pickFile", [this](const juce::var& v) { proc_.pickFile(static_cast<BlockId>(static_cast<int>(v.getProperty("id", 0))), static_cast<BlockId>(static_cast<int>(v.getProperty("stage", 0)))); })
                .withEventListener("bd_loadUrl", [this](const juce::var& v) {
                  const auto j = nlohmann::json::parse(juce::JSON::toString(v, true).toStdString());
-                 proc_.loadFreesound(j.value("id", 0u), j.value("ref", nlohmann::json::object()), j.value("display", nlohmann::json::object()), j.value("maxSeconds", 0.0));
+                 proc_.loadFreesound(j.value("id", 0u), j.value("ref", nlohmann::json::object()), j.value("display", nlohmann::json::object()), j.value("maxSeconds", 0.0), j.value("stage", 0u));
                })
                .withEventListener("bd_samplesHello", [this](const juce::var&) { for (const auto& s : proc_.sampleInfos()) sendSampleInfo(s); })
                // Recorder and SampleGen (owner, Logic): the processor records / keeps their audio as files.
                .withEventListener("bd_record", [this](const juce::var& v) {
-                 proc_.setRecording(static_cast<BlockId>(static_cast<int>(v.getProperty("id", 0))), static_cast<bool>(v.getProperty("on", false)));
+                 proc_.setRecording(static_cast<BlockId>(static_cast<int>(v.getProperty("id", 0))), static_cast<bool>(v.getProperty("on", false)), static_cast<BlockId>(static_cast<int>(v.getProperty("stage", 0))));
                })
                .withEventListener("bd_sampleData", [this](const juce::var& v) {
                  std::vector<float> mono;
                  if (const auto* a = v.getProperty("data", juce::var()).getArray()) { mono.reserve(static_cast<std::size_t>(a->size())); for (const auto& x : *a) mono.push_back(static_cast<float>(static_cast<double>(x))); }
-                 proc_.useGenerated(static_cast<BlockId>(static_cast<int>(v.getProperty("id", 0))), mono, static_cast<double>(v.getProperty("sampleRate", 44100.0)));
+                 proc_.useGenerated(static_cast<BlockId>(static_cast<int>(v.getProperty("id", 0))), mono, static_cast<double>(v.getProperty("sampleRate", 44100.0)), static_cast<BlockId>(static_cast<int>(v.getProperty("stage", 0))));
                })
-               .withEventListener("bd_reveal", [this](const juce::var& v) { proc_.revealSample(static_cast<BlockId>(static_cast<int>(v.getProperty("id", 0)))); })
+               .withEventListener("bd_reveal", [this](const juce::var& v) { proc_.revealSample(static_cast<BlockId>(static_cast<int>(v.getProperty("id", 0))), static_cast<BlockId>(static_cast<int>(v.getProperty("stage", 0)))); })
                .withEventListener("bd_learnCC", [this](const juce::var& v) { proc_.learnCc(static_cast<int>(v.getProperty("slot", 0))); })
                // Patches panel (CHG-0005): `.blokdust` files in ~/Music/BlokDust/Patches; replies carry the request's `req`.
                .withEventListener("bd_patchList", [this](const juce::var& v) {
@@ -172,18 +177,20 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                  sendPatchFile(f, "open", static_cast<int>(v.getProperty("req", 0)));
                })
                // FROM YOUR COMPUTER: one picker; the page then asks Open or Insert.
-               .withEventListener("bd_patchPick", [this](const juce::var&) {
+               .withEventListener("bd_patchPick", [this](const juce::var& v) {
+                 // `stage`: a Stage panel's LOAD PATCH (CHG-0038); the reply names it, and the page fills that Stage.
+                 const int stage = static_cast<int>(v.getProperty("stage", 0));
                  patchChooser_ = std::make_unique<juce::FileChooser>("Choose a BlokDust patch", patchfiles::folder(), "*.blokdust;*.json", true, false, pickerParent(this));
-                 patchChooser_->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this](const juce::FileChooser& fc) {
+                 patchChooser_->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this, stage](const juce::FileChooser& fc) {
 #if JUCE_IOS
                    // iPad: a document-picker URL outside our sandbox; JUCE's stream holds its security-scoped access.
                    if (const auto url = fc.getURLResult(); !url.isEmpty())
                      if (auto in = url.createInputStream(juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress))) {
                        const auto name = juce::URL::removeEscapeChars(url.getFileName());
-                       sendPatchText(in->readEntireStreamAsString(), name.upToLastOccurrenceOf(".", false, false), name, "choose", -1);
+                       sendPatchText(in->readEntireStreamAsString(), name.upToLastOccurrenceOf(".", false, false), name, "choose", -1, stage);
                      }
 #else
-                   if (const auto f = fc.getResult(); f.existsAsFile()) sendPatchFile(f, "choose", -1);
+                   if (const auto f = fc.getResult(); f.existsAsFile()) sendPatchFile(f, "choose", -1, stage);
 #endif
                  });
                })
@@ -233,7 +240,7 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                })
                .withEventListener("bd_dropTarget", [this](const juce::var& v) {
                  if (static_cast<int>(v.getProperty("token", -1)) != dropToken_ || pendingDrop_.isEmpty()) return;
-                 proc_.loadFile(static_cast<BlockId>(static_cast<int>(v.getProperty("id", 0))), juce::File(pendingDrop_));
+                 proc_.loadFile(static_cast<BlockId>(static_cast<int>(v.getProperty("id", 0))), juce::File(pendingDrop_), static_cast<BlockId>(static_cast<int>(v.getProperty("stage", 0))));
                  pendingDrop_.clear();
                })) {
   proc_.onSampleInfo = [this](const nlohmann::json& s) { sendSampleInfo(s); };
@@ -264,14 +271,15 @@ void BlokDustEditor::sendSampleInfo(const nlohmann::json& s) {
   web_.emitEventIfBrowserIsVisible("bd_sampleInfo", juce::JSON::parse(juce::String(s.dump())));
 }
 
-void BlokDustEditor::sendPatchFile(const juce::File& f, const juce::String& mode, int req) {
+void BlokDustEditor::sendPatchFile(const juce::File& f, const juce::String& mode, int req, int stage) {
   if (!f.existsAsFile()) return;
-  sendPatchText(f.loadFileAsString(), f.getFileNameWithoutExtension(), f.getFileName(), mode, req);
+  sendPatchText(f.loadFileAsString(), f.getFileNameWithoutExtension(), f.getFileName(), mode, req, stage);
 }
 
-void BlokDustEditor::sendPatchText(const juce::String& text, const juce::String& name, const juce::String& file, const juce::String& mode, int req) {
+void BlokDustEditor::sendPatchText(const juce::String& text, const juce::String& name, const juce::String& file, const juce::String& mode, int req, int stage) {
   auto* obj = new juce::DynamicObject();
   if (req >= 0) obj->setProperty("req", req);
+  if (stage > 0) obj->setProperty("stage", stage);
   obj->setProperty("text", text);
   obj->setProperty("name", name);
   obj->setProperty("file", file);
@@ -287,6 +295,7 @@ void BlokDustEditor::reloadPatch() {
   auto* ids = new juce::DynamicObject();
   for (const auto& [id, key] : proc_.blockIds()) ids->setProperty(juce::Identifier(juce::String(key)), static_cast<int>(id));
   obj->setProperty("ids", juce::var(ids));
+  obj->setProperty("innerIds", juce::JSON::parse(juce::String(proc_.innerIds().dump())));  // each Stage's inner blocks (CHG-0038)
   // The standalone app has no DAW to pass keys on to: the page keeps every plain key, or macOS sounds its alert for
   // each one nobody takes (owner, 2026-11-13, CHG-0013).
   obj->setProperty("standalone", proc_.wrapperType == juce::AudioProcessor::wrapperType_Standalone);
@@ -365,6 +374,7 @@ void BlokDustEditor::tick() {
   for (int i = 0; i < s->pairCount * 2; ++i) pairs.add(static_cast<int>(s->pairs[static_cast<std::size_t>(i)]));
   for (int i = 0; i < s->poweredCount; ++i) powered.add(static_cast<int>(s->powered[static_cast<std::size_t>(i)]));
   auto* obj = new juce::DynamicObject();
+  obj->setProperty("view", static_cast<int>(s->view));  // the world it shows (CHG-0038): the page drops another world's
   obj->setProperty("particles", particles);
   obj->setProperty("connections", pairs);
   obj->setProperty("powered", powered);
