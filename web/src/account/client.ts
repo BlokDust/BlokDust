@@ -4,6 +4,7 @@
 import { apiUrl } from '../patch/site.ts';
 import { accountOwned, allEditTokens, serverConfig, turnstileToken } from '../patch/server.ts';
 import { activity } from './activity.ts';
+import { keyHeader } from './appKey.ts';
 
 const api = apiUrl;
 
@@ -22,7 +23,7 @@ export interface Me { user: Account | null; google: boolean; apple?: boolean }
 export interface AccountPatch { id: string; title: string; rev: number; created: number; updated: number }
 
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const r = await fetch(api(path), { method, credentials: 'same-origin', headers: body === undefined ? {} : { 'content-type': 'application/json' },
+  const r = await fetch(api(path), { method, credentials: 'same-origin', headers: { ...keyHeader(), ...(body === undefined ? {} : { 'content-type': 'application/json' }) },
     body: body === undefined ? undefined : JSON.stringify(body) });
   const j = await r.json().catch(() => ({})) as { error?: string };
   if (!r.ok) throw Object.assign(new Error(j.error ?? `HTTP ${r.status}`), { status: r.status });
@@ -75,6 +76,13 @@ export function signInWith(provider: 'google' | 'apple'): void {
 export const signInWithGoogle = () => signInWith('google');
 
 export const signOut = (everywhere = false) => call('POST', 'auth/logout', { everywhere });
+/** A plugin signed in to this account (SHARING-0011), for SIGN-IN METHODS' list. */
+export interface SignedInApp { id: string; name: string; created: number; lastUsed: number | null }
+export const listApps = async () => (await call<{ apps: SignedInApp[] }>('GET', 'me/apps')).apps;
+export const removeApp = (id: string) => call('DELETE', 'me/apps', { id });
+/** A plugin's code waiting to be approved: what it calls itself (404 when it isn't waiting). */
+export const deviceInfo = (code: string) => call<{ name: string; created: number }>('GET', `device/code?code=${encodeURIComponent(code)}`);
+export const approveDevice = (code: string, approve: boolean) => call<{ ok: boolean; approved: boolean; name: string }>('POST', 'device/approve', { code, approve });
 /** R7c: one way in goes (never the last: the server refuses with 409). */
 export const removeMethod = (m: SignInMethod) => call('DELETE', 'me/methods', { kind: m.kind, ...(m.id ? { id: m.id } : {}) });
 /** Back from Google or Apple (R7a, R7b): what `?account=` says, as a line for SIGN-IN METHODS. */

@@ -48,7 +48,7 @@ tier, no passwords to store, only trusted and well maintained libraries, and AGP
 - Google sign-in needs an OAuth client from Google Cloud Console. `GOOGLE_CLIENT_ID` is a var; `GOOGLE_CLIENT_SECRET`
   is a Worker secret. Without them, only passkeys are offered.
 - Personal data is minimal (a handle, a Google subject id, public keys). Account deletion is self-service.
-- The plugin has no ACCOUNT tab yet (a device-code flow could add it later).
+- The plugins sign in with their own key, approved on the website or by Apple and passkeys on iPad (SHARING-0011).
 
 ## Alternatives considered
 - **Passwords**: storage, reset flows by email, breach risk; no.

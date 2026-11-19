@@ -829,8 +829,10 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   const populate = p.Populate.bind(p);
   // DOWNLOAD (web only) is tab 3: v1 draws nothing for it, so its page is drawn here, following its tab's YOffset.
   const withDownload = !App.IsPlugin;
-  // SIGN IN / ACCOUNT (web only, CHG-0023, owner review 2026-11-15) is tab 4, drawn here the same way.
-  const account: AccountPage | null = withDownload && host.account ? new AccountPage(host.account, () => p.Ctx) : null;
+  // SIGN IN / ACCOUNT (CHG-0023, owner review 2026-11-15) is the last tab, drawn here the same way: tab 4 on the web,
+  // tab 3 in the plugins, which have no DOWNLOAD (they sign in with a code: SHARING-0011, CHG-0039).
+  const account: AccountPage | null = host.account ? new AccountPage(host.account, () => p.Ctx) : null;
+  const AT = withDownload ? 4 : 3;
   p.accountPage = account;
   p.Populate = () => {
     populate({ categories: [{ name: 'settings' }, { name: 'connect' }, { name: 'about' }, ...(withDownload ? [{ name: 'download' }] : []), ...(account ? [{ name: account.tabName }] : [])] });
@@ -849,14 +851,14 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     p.ClosePanel = () => { if (account?.View === 'delete') account.View = 'main'; closeSettings(); };
     /** Open Settings on SIGN IN / ACCOUNT (back from Google, the signed-in mark on the stage). */
     p.openAccount = () => {
-      p._OpenTab = 4;
-      (p.MenuItems as any[]).forEach((m, i) => { m.Selected = i === 4 ? 1 : 0; m.YOffset = i === 4 ? 0 : -p.DrawTo.Height; });
+      p._OpenTab = AT;
+      (p.MenuItems as any[]).forEach((m, i) => { m.Selected = i === AT ? 1 : 0; m.YOffset = i === AT ? 0 : -p.DrawTo.Height; });
       void account.refresh();
       p.OpenPanel();
     };
   }
   // 35 units higher than the other pages (owner, 2026-11-18: the stats left too much room under the tabs).
-  const accountTop = () => p.OffsetY + ACCOUNT_TOP * App.Unit + (p.MenuItems[4]?.YOffset ?? -p.DrawTo.Height);
+  const accountTop = () => p.OffsetY + ACCOUNT_TOP * App.Unit + (p.MenuItems[AT]?.YOffset ?? -p.DrawTo.Height);
   /** Tests: an account control's centre in CSS px. */
   p.accountCentre = (name: string) => account?.centreOf(name, accountTop()) ?? null;
   /** The DOWNLOAD page's two buttons (v1 SharePanel's halves, 420u wide) and their state. */
@@ -1033,8 +1035,8 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     linkHover = p._OpenTab !== 2 ? -1 : f.links.findIndex(l => Dimensions.hitRect(l.x - 5 * f.u, f.y - 20 * f.u, l.w + 10 * f.u, 30 * f.u, pt.x, pt.y));
     const sb = statsBox();
     statsHover = !!sb && Dimensions.hitRect(sb.x - 4 * sb.u, sb.y - 14 * sb.u, sb.w + 8 * sb.u, 20 * sb.u, pt.x, pt.y);
-    downloadHover = p._OpenTab === 3 ? downloads().findIndex(b => !!b.release && Dimensions.hitRect(b.x, b.y, b.w, b.h, pt.x, pt.y)) : -1;
-    if (account) { if (p._OpenTab === 4) account.hit(pt, accountTop()); else account.hit({ x: -1e9, y: -1e9 }, accountTop()); }
+    downloadHover = withDownload && p._OpenTab === 3 ? downloads().findIndex(b => !!b.release && Dimensions.hitRect(b.x, b.y, b.w, b.h, pt.x, pt.y)) : -1;
+    if (account) { if (p._OpenTab === AT) account.hit(pt, accountTop()); else account.hit({ x: -1e9, y: -1e9 }, accountTop()); }
     const i = tempoRow();
     if (i >= 0) p._OptionsRoll[i] = Dimensions.hitRect(p.Margin - 10 * f.u, p.OffsetY + 120 * f.u + p.MenuItems[0].YOffset + (60 + 2 * App.SettingsRow) * f.u, p.Range + 20 * f.u, App.SettingsRow * App.Unit, pt.x, pt.y);
     const k = tourRow();  // v1 hit-tests an action button at its own row (156): the tour's is lower
@@ -1057,12 +1059,12 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   p.MouseDown = (pt: { x: number; y: number }) => {
     const before = p._OpenTab;
     mouseDown(pt);
-    if (account && p._OpenTab === 4 && before !== 4) { account.View = account.View === 'delete' ? 'main' : account.View; void account.refresh(); }
+    if (account && p._OpenTab === AT && before !== AT) { account.View = account.View === 'delete' ? 'main' : account.View; void account.refresh(); }
     if (!p.Open) return;
     if (linkHover >= 0) { window.open(footerLinks()[linkHover].url, '_blank'); return; }
     if (statsHover && host.usageStats) { host.usageStats.set(!host.usageStats.get()); return; }
     if (downloadHover >= 0) { const r = downloads()[downloadHover].release; if (r) window.open(r.store ? r.url : `${r.url}?source=download-page`, '_blank'); return; }
-    if (account && p._OpenTab === 4) { account.hit(pt, accountTop()); account.press(); }
+    if (account && p._OpenTab === AT) { account.hit(pt, accountTop()); account.press(); }
     const i = tempoRow();
     if (i >= 0 && p._OpenTab === 0 && p._OptionsRoll[i]) setTempo(pt.x);  // v1 sliders jump to the press, as Volume does
   };
@@ -1091,7 +1093,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
       PEOPLE.forEach((k, i) => Object.assign(p._Attribution[k], kept[i]));
       rolls.forEach((r, i) => { p._RollOvers[i] = r; });
     }
-    account?.placeField(accountTop(), p.Open && p._OpenTab === 4 && (p.MenuItems[4]?.YOffset ?? -1) > -p.DrawTo.Height * 0.5);
+    account?.placeField(accountTop(), p.Open && p._OpenTab === AT && (p.MenuItems[AT]?.YOffset ?? -1) > -p.DrawTo.Height * 0.5);
     if (!p.Open) { host.feedback?.draw(p); return; }
     // DOWNLOAD, ACCOUNT and CONNECT slide in and out under the tabs, as SETTINGS and ABOUT do: v1's clipping box, from 60 units
     // below the tabs' top to the bottom (owner, 2026-11-16: they drew over the tabs while sliding).
@@ -1101,9 +1103,9 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     try {
       const k = tourRow();  // SETTINGS' TOUR row, sliding with its tab as v1's rows do
       if (k >= 0 && p.MenuItems[0].YOffset > -p.DrawTo.Height) p.Options[k].Draw(cctx, App.Unit, k, p, p.OffsetY + 120 * App.Unit + p.MenuItems[0].YOffset + tourY() * App.Unit);
-      drawDownload();
+      if (withDownload) drawDownload();  // the plugins: tab 3 is the account (SHARING-0011)
       drawPeoplePhone();
-      if (account && (p.MenuItems[4]?.YOffset ?? -p.DrawTo.Height) > -p.DrawTo.Height) account.draw(accountTop());
+      if (account && (p.MenuItems[AT]?.YOffset ?? -p.DrawTo.Height) > -p.DrawTo.Height) account.draw(accountTop());
       host.feedback?.draw(p);  // CONNECT's form slides in under the tabs too (owner, 2026-11-18)
     } finally { cctx.restore(); }
     if (!about) return;

@@ -90,6 +90,13 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   reports, names the account and signs itself out (`POST /api/auth/logout`); it can't delete the account, change sign-in
   methods, approve a device or list or remove keys. `GET /api/me/apps` and `DELETE /api/me/apps {id}` (the website)
   list and sign out the plugins. Codes last 10 minutes.
+  In the plugins Settings' last tab (after ABOUT) is SIGN IN: SIGN IN WITH YOUR BROWSER shows the code large, a QR
+  code of the address (black on white) and, where the plugin can, opens the website at it, then waits (v1's spinner,
+  BACK, OPEN BROWSER AGAIN). The website opened at `?link=CODE` asks "Sign in BlokDust on another device?" with what
+  asks and the code, CANCEL · APPROVE (signed out: sign in first, then it asks; the code waits in the tab for 10
+  minutes). Signed in, the plugin shows the stats, ON THE WEBSITE · SIGN OUT (no SIGN-IN METHODS, no DELETE ACCOUNT);
+  OPEN lists the account's patches first and SAVE saves to the account as on the website. SIGN-IN METHODS on the
+  website lists APPS SIGNED IN, each with REMOVE.
 - **R13.** Settings has a tab after ABOUT and DOWNLOAD (owner review 2026-11-15), named SIGN IN until someone is
   signed in, then ACCOUNT, drawn with v1 panel pieces (web/src/v1ui/accountPage.ts):
   - signed out: "Sign in to keep your patches on every device.", then one full-width button each for GOOGLE, APPLE

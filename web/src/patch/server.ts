@@ -3,6 +3,7 @@
 import { apiUrl } from './site.ts';
 import type { Patch } from './loadPatch.ts';
 import { activity } from '../account/activity.ts';
+import { appKey } from '../account/appKey.ts';
 
 /** Where the API lives: the Worker serving this page (relative to the page; embeds pin <base>). */
 const api = apiUrl;
@@ -82,6 +83,7 @@ export async function turnstileToken(siteKey: string): Promise<string> {
 
 async function call<T>(method: string, path: string, body?: unknown, token?: string | null): Promise<T> {
   const headers: Record<string, string> = { 'content-type': 'application/json' };
+  token ??= appKey();  // a signed-in plugin is its account (SHARING-0011)
   if (token) headers.authorization = `Bearer ${token}`;
   const r = await fetch(api(path), { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
   const j = await r.json().catch(() => ({})) as { error?: string };
@@ -97,7 +99,9 @@ export interface SaveInput { patch: Patch; title: string; thumb: string | null; 
 export async function save(mode: 'save' | 'saveAs', currentId: string | null, input: SaveInput): Promise<Saved | null> {
   const cfg = await serverConfig();
   if (!cfg?.saving) return null;
-  const turnstile = await turnstileToken(cfg.turnstileSiteKey);
+  // A signed-in plugin saves with its key and no bot check (its page can't run Turnstile; SHARING-0011).
+  const bot = () => (appKey() ? Promise.resolve(undefined) : turnstileToken(cfg.turnstileSiteKey));
+  const turnstile = await bot();
   const token = editToken(currentId);
   // R16 of accounts: the running totals go with the save (added when signed in; otherwise they keep waiting here).
   const sending = activity.toSend(), credit = <T extends { activity?: boolean }>(r: T) => { if (r.activity && sending) activity.sent(sending); return r; };
@@ -110,7 +114,7 @@ export async function save(mode: 'save' | 'saveAs', currentId: string | null, in
       // Not ours any more (token lost or patch deleted): save as new, as v1 did when it had no SessionId.
     }
   }
-  const fresh = mode === 'save' && currentId && canOverwrite(currentId) ? await turnstileToken(cfg.turnstileSiteKey) : turnstile;
+  const fresh = mode === 'save' && currentId && canOverwrite(currentId) ? await bot() : turnstile;
   const r = credit(await call<Saved & { editToken: string; activity?: boolean }>('POST', 'patches', { ...input, parent: currentId ?? undefined, turnstile: fresh }));
   keepToken(r.id, r.editToken);
   return { id: r.id, rev: r.rev, url: r.url, parent: r.parent, gallery: r.gallery };

@@ -20,6 +20,7 @@ function check(name: string, ok: boolean, detail?: unknown) {
 
 const mocks = await startMockServices();
 const server = await startLocal({ name: 'accounts', vars: {
+  ACCOUNTS_PER_DAY: '100',  // every test's accounts come from one address (new-account-limit has its own Worker)
   TURNSTILE_SECRET: 'test-secret', TURNSTILE_VERIFY_URL: `${mocks.url}/siteverify`,
   GOOGLE_CLIENT_ID: 'test-google-client', GOOGLE_CLIENT_SECRET: 'test-google-secret',
   GOOGLE_AUTH_URL: `${mocks.url}/google/auth`, GOOGLE_TOKEN_URL: `${mocks.url}/google/token`,
@@ -58,7 +59,8 @@ const pp = (p: Page) => p.evaluate(() => {
     methods: x.Account ? x.methods() as string[] : [], addLabel: x.addLabel as string, rows: x.Account ? x.methodRows().map((r: any) => r.label) as string[] : [] };
 });
 const ACCOUNT_CONTROLS = new Set(['passkey', 'google', 'apple', 'back', 'submit', 'addPasskey', 'signOut', 'deleteAccount', 'deleteCancel', 'deleteOk',
-  'methods', 'addGoogle', 'addApple', 'methodsBack', 'remove0', 'remove1', 'remove2', 'remove3']);
+  'methods', 'addGoogle', 'addApple', 'methodsBack', 'remove0', 'remove1', 'remove2', 'remove3',
+  'browser', 'codeBack', 'openAgain', 'website', 'approveOk', 'approveCancel', 'submitCode', 'approveBack', 'app0', 'app1']);
 async function press(p: Page, name: string, wait = 400): Promise<void> {
   const at = await p.evaluate(([n, inSettings]) => { const s = (window as any).__bd_probe.scene; return inSettings ? s.SettingsPanel.accountCentre(n) : s.PatchesPanel.centreOf(n); }, [name, ACCOUNT_CONTROLS.has(name)] as const);
   if (!at) throw new Error(`no control ${name}`);
@@ -73,6 +75,22 @@ async function openAccount(p: Page): Promise<void> {
 }
 const settled = (p: Page) => p.waitForFunction(() => !(window as any).__bd_probe.scene.SettingsPanel.accountPage.Busy, null, { timeout: 30000 });
 const corners = (p: Page) => p.evaluate(() => (window as any).__bd_probe.corners);
+/** A new Google account named `handle` on device `d` (the mock's next user `user`). Sign-in starts share a per-minute
+ * limit (SAVE_LIMIT 'auth'), which the tests before may have used up: refused (429), wait it out and try again. */
+async function googleAccount(d: Device, user: string, handle: string): Promise<void> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await fetch(`${mocks.url}/google/next?user=${user}`);
+    await openApp(d); await openAccount(d.page);
+    await Promise.all([d.page.waitForURL(/account=|auth\/google/, { timeout: 20000 }).catch(() => {}), press(d.page, 'google', 0)]);
+    await d.page.waitForLoadState('load').catch(() => {});
+    if (/too many requests/.test(await d.page.content())) { await new Promise(r => setTimeout(r, 61_000)); continue; }
+    await d.page.waitForFunction(() => (window as any).__bd_probe?.scene.SettingsPanel.accountPage.View === 'name', null, { timeout: 20000 }).catch(() => {});
+    await d.page.waitForTimeout(800);
+    await d.page.fill('#accountHandleInput', handle); await press(d.page, 'submit'); await settled(d.page);
+    return;
+  }
+  throw new Error('Google sign-in refused twice (rate limit)');
+}
 const api = (d: Device, method: string, path: string, body?: unknown, headers: Record<string, string> = {}) =>
   d.page.evaluate(async ([m, url, b, h]) => {
     const r = await fetch(url as string, { method: m as string, headers: { 'content-type': 'application/json', ...(h as object) }, body: b === undefined ? undefined : JSON.stringify(b) });
@@ -260,20 +278,10 @@ const tests: Record<string, () => Promise<void>> = {
   async 'link-and-remove-methods'() {
     // Mia's account owns the Google identity "mia" (another device).
     const m = await device();
-    await fetch(`${mocks.url}/google/next?user=mia`);
-    await openApp(m); await openAccount(m.page);
-    await Promise.all([m.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}), press(m.page, 'google', 0)]);
-    await m.page.waitForFunction(() => (window as any).__bd_probe?.scene.SettingsPanel.accountPage.View === 'name', null, { timeout: 20000 }).catch(() => {});
-    await m.page.waitForTimeout(800);
-    await m.page.fill('#accountHandleInput', 'mia_g'); await press(m.page, 'submit'); await settled(m.page);
+    await googleAccount(m, 'mia', 'mia_g');
     // Lena: a Google account.
     const l = await device();
-    await fetch(`${mocks.url}/google/next?user=lena`);
-    await openApp(l); await openAccount(l.page);
-    await Promise.all([l.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}), press(l.page, 'google', 0)]);
-    await l.page.waitForFunction(() => (window as any).__bd_probe?.scene.SettingsPanel.accountPage.View === 'name', null, { timeout: 20000 }).catch(() => {});
-    await l.page.waitForTimeout(800);
-    await l.page.fill('#accountHandleInput', 'lena_g'); await press(l.page, 'submit'); await settled(l.page);
+    await googleAccount(l, 'lena', 'lena_g');
     await press(l.page, 'methods');
     const one = await pp(l.page);
     const noRemove = await l.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.accountCentre('remove0'));
@@ -322,12 +330,7 @@ const tests: Record<string, () => Promise<void>> = {
     };
     // Nora: a website account (Google).
     const n = await device();
-    await fetch(`${mocks.url}/google/next?user=nora`);
-    await openApp(n); await openAccount(n.page);
-    await Promise.all([n.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}), press(n.page, 'google', 0)]);
-    await n.page.waitForFunction(() => (window as any).__bd_probe?.scene.SettingsPanel.accountPage.View === 'name', null, { timeout: 20000 }).catch(() => {});
-    await n.page.waitForTimeout(800);
-    await n.page.fill('#accountHandleInput', 'nora_g'); await press(n.page, 'submit'); await settled(n.page);
+    await googleAccount(n, 'nora', 'nora_g');
     const start = await plug('POST', 'device/start', { name: 'BlokDust on Mac (Logic)\u0007' });
     const code: string = start.json?.userCode ?? '';
     check('SHARING-0011: a plugin gets a code (XXXX-XXXX, no vowels), where to enter it, and its poll interval', start.status === 200 && /^[B-DF-HJ-NP-TV-XZ2-9]{4}-[B-DF-HJ-NP-TV-XZ2-9]{4}$/.test(code)
@@ -384,6 +387,81 @@ const tests: Record<string, () => Promise<void>> = {
     const link = await fetch(`${base}/link?code=${code}`, { redirect: 'manual' });
     check('SHARING-0011: /link?code= opens the app at the code', link.status === 302 && new URL(link.headers.get('location')!).searchParams.get('link') === code, link.headers.get('location'));
     await n.ctx.close();
+  },
+  /** SHARING-0011 (CHG-0039) through the apps: the plugin's SIGN IN shows a code and opens the website at it; signed
+   * in there, the website asks and APPROVE signs the plugin in; the plugin keeps its key, lists the account's patches
+   * in OPEN and saves to the account; the website lists it under SIGN-IN METHODS; SIGN OUT drops the key. */
+  async 'plugin-sign-in'() {
+    const w = await device();
+    await googleAccount(w, 'pia', 'pia_g');
+    // The plugin's page (a fake JUCE backend; its server is this one).
+    const pctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    await pctx.addInitScript(([site]) => {
+      const listeners: Record<string, ((x: unknown) => void)[]> = {}, sent: { id: string; v: any }[] = [];
+      (window as any).__sent = sent; (window as any).__bd_pluginSite = site;
+      (window as any).__JUCE__ = { backend: {
+        addEventListener: (id: string, fn: (x: unknown) => void) => { (listeners[id] ??= []).push(fn); },
+        emitEvent: (id: string, v: unknown) => {
+          sent.push({ id, v });
+          // The patch files' folder: empty (the real plugin answers with its files).
+          if (id === 'bd_patchList') setTimeout(() => listeners.bd_patchList?.forEach(f => f({ req: (v as { req: number }).req, items: [] })), 10);
+          if (id === 'bd_hello') setTimeout(() => {
+            listeners.bd_patch?.forEach(f => f({ patch: JSON.stringify({ format: 'blokdust.patch', version: 2, seed: 1, blocks: [{ id: 't', type: 'source.tone', x: 0, y: 0, params: {} }] }), ids: { t: 1 } }));
+            listeners.bd_account?.forEach(f => f({ name: 'BlokDust on Mac (Logic Pro)', browser: true }));
+          }, 50);
+        },
+      } };
+    }, [`${base}/`] as const);
+    const pg = await pctx.newPage();
+    pg.on('pageerror', e => console.error(`  plugin page error: ${e.message}`));
+    await pg.goto(`${base}/index.html`);
+    await pg.waitForFunction(() => (window as any).__bd_probe?.state.started, null, { timeout: 20000 });
+    await pg.waitForTimeout(1200);
+    await openAccount(pg);
+    const ways = await pg.evaluate(() => ['browser', 'passkey', 'google'].map(k => !!(window as any).__bd_probe.scene.SettingsPanel.accountCentre(k)));
+    const tab = await pg.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.MenuItems[3]?.Name);
+    check('SHARING-0011: the plugin\'s Settings has SIGN IN (after ABOUT), with SIGN IN WITH YOUR BROWSER only', JSON.stringify(ways) === '[true,false,false]' && /sign in/i.test(tab ?? ''), { ways, tab });
+    await press(pg, 'browser', 800);
+    await pg.waitForFunction(() => (window as any).__bd_probe.scene.SettingsPanel.accountPage.View === 'code', null, { timeout: 10000 }).catch(() => {});
+    const opened = await pg.evaluate(() => ((window as any).__sent as { id: string; v: any }[]).filter(e => e.id === 'bd_openUrl').map(e => e.v.url).pop() as string | undefined);
+    const shown = await pg.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.accountPage.Device?.userCode as string | undefined);
+    await pg.mouse.move(5, 5); await pg.waitForTimeout(200); await pg.screenshot({ path: `${OUT}/plugin-code.png` });
+    check('… it shows a code and a QR code, and opens the website at it', !!shown && !!opened && opened.includes(`/link?code=${shown}`), { shown, opened });
+    // The website at that address: signed in, it asks.
+    await w.page.goto(opened!.replace('127.0.0.1', 'localhost'));
+    await w.page.waitForFunction(() => { const s = (window as any).__bd_probe?.scene.SettingsPanel; return s?.OffsetY === 0 && s.accountPage.View === 'approve' && !!s.accountPage.ApproveName; }, null, { timeout: 20000 }).catch(() => {});
+    await w.page.waitForTimeout(500);
+    const asks = await w.page.evaluate(() => { const x = (window as any).__bd_probe.scene.SettingsPanel.accountPage; return { view: x.View, code: x.ApproveCode, name: x.ApproveName }; });
+    await w.page.mouse.move(5, 5); await w.page.waitForTimeout(200); await w.page.screenshot({ path: `${OUT}/website-approve.png` });
+    check('… the website asks: which device, the same code, CANCEL · APPROVE', asks.view === 'approve' && asks.code?.toUpperCase() === shown && asks.name === 'BlokDust on Mac (Logic Pro)', asks);
+    await press(w.page, 'approveOk'); await settled(w.page);
+    const said = (await pp(w.page)).message;
+    await pg.waitForFunction(() => (window as any).__bd_probe.scene.SettingsPanel.accountPage.Account?.handle === 'pia_g', null, { timeout: 20000 }).catch(() => {});
+    const kept = await pg.evaluate(() => ((window as any).__sent as { id: string; v: any }[]).filter(e => e.id === 'bd_accountSave').map(e => e.v).pop());
+    const inPlugin = await pg.evaluate(() => { const x = (window as any).__bd_probe.scene.SettingsPanel.accountPage; return { handle: x.Account?.handle, view: x.View, message: x.Message, stats: !!x.Account?.stats }; });
+    await pg.waitForTimeout(600); await pg.mouse.move(5, 5); await pg.waitForTimeout(200); await pg.screenshot({ path: `${OUT}/plugin-signed-in.png` });
+    check('… APPROVE signs the plugin in; it keeps its key (bd_accountSave)', /is signed in/.test(said) && inPlugin.handle === 'pia_g' && /^bdk_/.test(kept?.key ?? '') && kept?.handle === 'pia_g', { said, inPlugin, kept: kept && { ...kept, key: String(kept.key).slice(0, 6) } });
+    const pluginControls = await pg.evaluate(() => ['website', 'signOut', 'deleteAccount', 'methods'].map(k => !!(window as any).__bd_probe.scene.SettingsPanel.accountCentre(k)));
+    check('… signed in, the plugin has ON THE WEBSITE · SIGN OUT (no DELETE ACCOUNT, no SIGN-IN METHODS)', JSON.stringify(pluginControls) === '[true,true,false,false]', pluginControls);
+    // SAVE in the plugin saves to the account (no bot check), and OPEN lists the account's patches.
+    await pg.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel()); await pg.waitForTimeout(800);
+    await pg.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.OpenPanel(0)); await pg.waitForTimeout(1200);
+    const id = await saveLink(pg);
+    const theirs = await api(w, 'GET', 'me/patches');
+    const listed = await pg.evaluate(async () => ((await (window as any).__bd_probe.scene.host.listPatches()) as { key: string }[]).map(i => i.key));
+    check('… SAVE in the plugin saves to the account, and OPEN lists the account\'s patches', theirs.json?.patches?.some((x: any) => x.id === id) && listed.includes(`acct:${id}`), { id, listed: listed.slice(0, 4) });
+    // The website lists it under SIGN-IN METHODS; SIGN OUT in the plugin drops its key.
+    await w.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.accountPage.showMethods(''));
+    await w.page.waitForTimeout(800);
+    const apps = await w.page.evaluate(() => ((window as any).__bd_probe.scene.SettingsPanel.accountPage.Apps as { name: string }[]).map(a => a.name));
+    await w.page.mouse.move(5, 5); await w.page.waitForTimeout(200); await w.page.screenshot({ path: `${OUT}/website-apps.png` });
+    check('SHARING-0011: SIGN-IN METHODS lists the plugin signed in', apps.includes('BlokDust on Mac (Logic Pro)'), apps);
+    await openAccount(pg);
+    await press(pg, 'signOut'); await pg.waitForTimeout(1000);
+    const cleared = await pg.evaluate(() => ((window as any).__sent as { id: string }[]).some(e => e.id === 'bd_accountClear'));
+    const after = await fetch(`${base}/api/me`, { headers: { authorization: `Bearer ${kept?.key}` } }).then(r => r.json()) as any;
+    check('… SIGN OUT in the plugin forgets its key here and on the server', cleared && after.user === null && (await pg.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.accountPage.Account)) === null, { cleared, after: after.user });
+    await pctx.close(); await w.ctx.close();
   },
   /** R1b (CHG-0035): a network makes ACCOUNTS_PER_DAY new accounts a day (a second local Worker, 2 a day); the next
    * is refused, by passkey and by Google; known accounts still sign in; back from Google the app says why. */

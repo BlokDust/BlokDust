@@ -1,5 +1,6 @@
 // The public gallery, browser side (SPEC-SHARING-GALLERY, SHARING-0009).
 import { apiUrl } from '../patch/site.ts';
+import { keyHeader } from '../account/appKey.ts';
 const api = apiUrl;
 
 export interface GalleryItem { id: string; title: string; by: string; likes: number; remixes: number; views: number; published: number; liked: boolean; mine: boolean }
@@ -8,6 +9,7 @@ export interface GalleryPage { items: GalleryItem[]; page: number; more: boolean
 async function call<T>(method: string, path: string, body?: unknown, token?: string | null): Promise<T> {
   const headers: Record<string, string> = body === undefined ? {} : { 'content-type': 'application/json' };
   if (token) headers.authorization = `Bearer ${token}`;
+  else Object.assign(headers, keyHeader());  // a signed-in plugin (SHARING-0011)
   const r = await fetch(api(path), { method, credentials: 'same-origin', headers,
     body: body === undefined ? undefined : JSON.stringify(body) });
   const j = await r.json().catch(() => ({})) as { error?: string };

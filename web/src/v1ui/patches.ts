@@ -73,6 +73,25 @@ export interface AccountHost {
   deleteAccount(): Promise<void>;
   /** The passkey dialog was closed by the user: nothing to report. */
   cancelled(e: unknown): boolean;
+  /** The plugins (SHARING-0011): sign in with a device code, approved on the website. Absent on the website. */
+  plugin?: {
+    /** It can open the browser (an AUv3 on iPad can't: the QR code and the address do). */
+    canOpenBrowser: boolean;
+    start(): Promise<import('../account/device.ts').DeviceCode>;
+    poll(deviceCode: string): Promise<import('../account/device.ts').DevicePoll>;
+    open(url: string): void;
+    /** Keep the key (the plugin's file) and use it from now on. */
+    keep(key: string, handle: string | null): void;
+    /** The account on the website (sign-in methods, deleting it). */
+    website(): void;
+  };
+  /** The website (SHARING-0011): the plugins signed in to this account, and approving a plugin's code. */
+  apps?: {
+    list(): Promise<import('../account/client.ts').SignedInApp[]>;
+    remove(id: string): Promise<void>;
+    info(code: string): Promise<{ name: string }>;
+    approve(code: string, yes: boolean): Promise<{ name: string }>;
+  };
 }
 /** The gallery (CHG-0024). */
 /** The like control (owner review 3, 2026-11-16: chosen from three; the star didn't read as an up vote and its angles

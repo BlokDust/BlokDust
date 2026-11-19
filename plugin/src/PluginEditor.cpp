@@ -1,4 +1,5 @@
 #include "PluginEditor.h"
+#include "AccountStore.h"
 #include "PatchFiles.h"
 #include "Telemetry.h"
 
@@ -52,7 +53,13 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                  auto* a = new juce::DynamicObject();
                  a->setProperty("on", telemetry::enabled());
                  web_.emitEventIfBrowserIsVisible("bd_analytics", juce::var(a));
+                 sendAccount();
                })
+               // Plugin sign-in (CHG-0039, SHARING-0011): the page keeps the key it was given; signing out drops it.
+               .withEventListener("bd_accountSave", [](const juce::var& v) {
+                 account::write(v.getProperty("key", "").toString().toStdString(), v.getProperty("handle", "").toString().toStdString());
+               })
+               .withEventListener("bd_accountClear", [](const juce::var&) { account::clear(); })
                // Power: off, on, or host (the DAW's transport has it). The page draws the mode; the processor owns it.
                .withEventListener("bd_powerMode", [this](const juce::var& v) { proc_.setPowerMode(static_cast<int>(v.getProperty("mode", 1))); })
                .withEventListener("bd_stats", [this](const juce::var& v) {
@@ -265,6 +272,20 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
   startTimerHz(30);
   // Usage stats (SHARING-0010 R8): BlokDust's window opening counts as using it today; at most one ping a day.
   telemetry::dailyPing(telemetryPool_, proc_.wrapperType, proc_.isFx());
+}
+
+/// The key this plugin signed in with (if any), what it calls itself, and whether it can open a browser (an AUv3
+/// can't open Safari: the page shows a QR code instead).
+void BlokDustEditor::sendAccount() {
+  const bool standalone = proc_.wrapperType == juce::AudioProcessor::wrapperType_Standalone;
+  auto j = account::read();
+  j["name"] = account::deviceName(standalone).toStdString();
+#if JUCE_IOS
+  j["browser"] = standalone;
+#else
+  j["browser"] = true;
+#endif
+  web_.emitEventIfBrowserIsVisible("bd_account", juce::JSON::parse(juce::String(j.dump())));
 }
 
 void BlokDustEditor::sendSampleInfo(const nlohmann::json& s) {

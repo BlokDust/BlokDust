@@ -19,6 +19,9 @@ import { loadPatch, relinks, targetCommands, type Macro, type Patch, type PatchB
 import { decodePatch, encodePatch, loadLocal, loadSession, saveLocal, saveSession } from '../patch/share.ts';
 import { type GalleryState, type Missing, MISSING_TEXT, accountOwned, canOverwrite, editToken, isServerId, load as loadShared, loadOrWhy, remove as removeShared, save as saveShared } from '../patch/server.ts';
 import * as account from '../account/client.ts';
+import { appKey, setAppKey } from '../account/appKey.ts';
+import { pollDevice, startDevice } from '../account/device.ts';
+import { PLUGIN_SITE } from '../patch/site.ts';
 import { activity } from '../account/activity.ts';
 import * as gallery from '../gallery/client.ts';
 import { DEFAULT_SOUNDS, PUBLIC_SITE, isDeadDefault, fetchFreesound, fingerprint, isPortable, openRemembered, pickAudioFile, refKey, rememberHandle, searchFreesound, type FileRef, type FreesoundRef, type SampleRef } from '../patch/samples.ts';
@@ -131,6 +134,20 @@ async function main() {
   const juce = (window as unknown as { __JUCE__?: { backend: JuceBackend } }).__JUCE__?.backend;
   applyHostLabels(!!juce);
   const embedId = embedIdFromPage();
+  // A plugin's code to approve (SHARING-0011): `?link=CODE` (the site's /link?code= sends people here). It is kept
+  // for this tab while the person signs in (Google and Apple leave the page and come back), for 10 minutes.
+  const LINK_KEY = 'blokdust2.link';
+  const linkArrival = !juce && !embedId ? params.get('link') : null;
+  if (linkArrival !== null) {
+    try { sessionStorage.setItem(LINK_KEY, JSON.stringify({ code: linkArrival.slice(0, 16), at: Date.now() })); } catch { /* private window: the code goes with this page only */ }
+    params.delete('link');
+    history.replaceState(null, '', `${location.pathname}${params.size ? `?${params.toString()}` : ''}`);
+  }
+  const pendingLink = (): string | null => {
+    try { const v = JSON.parse(sessionStorage.getItem(LINK_KEY) ?? 'null') as { code: string; at: number } | null; return v && Date.now() - v.at < 600_000 ? v.code : null; }
+    catch { return linkArrival; }
+  };
+  const forgetLink = () => { try { sessionStorage.removeItem(LINK_KEY); } catch { /* nothing kept */ } };
   // START has nothing to wait for (owner, 2026-11-12: it took seconds): the AudioContext (suspended until a press
   // resumes it), the worklet and the WASM are made now, alongside the patch, fonts and stage. The context's creation
   // also blocks the page for a moment, which now falls before the start screen shows. An embed (several may share a
@@ -429,6 +446,9 @@ async function main() {
     saveTimer = setTimeout(() => { saveLocal(toPatch()); if (session.id && !session.dirty) { session.dirty = true; saveSession(session); } checkOwnDirty(); }, 300);
   };
 
+  /** SAVE's two ways (SHARING-0011): made once each, so a page holding one keeps it. */
+  type LinkWay = NonNullable<import('../v1ui/patches.ts').PatchesHost['links']>;
+  const linkWays: { plugin?: LinkWay; web?: LinkWay } = {};
   const scene = new V1Scene({
     openStage: id => enterStage(id),
     loadStagePatch: id => loadStagePatch(id),
@@ -511,7 +531,7 @@ async function main() {
         if (r) {
           lastGallery = r.gallery ?? null;
           App.CompositionId = r.id; App.SessionId = sessionFor(r.id);
-          session = { id: r.id, dirty: false }; saveSession(session); saveLocal(patch);
+          session = { id: r.id, dirty: false }; saveSession(session); if (!juce) saveLocal(patch);
           return r.id;
         }
       } catch (e) { console.warn('BlokDust: saving to the server failed; sharing as a link instead', e); track('save_failed', { kind: 'link' }); }
@@ -543,8 +563,8 @@ async function main() {
     // ---- Patches panel (CHG-0005; SAVE / OPEN tabs, owner 2026-11-10): `.blokdust` files ----
     // OPEN lists only the user's own patches on the web (owner review 3, 2026-11-16): the built-in presets are
     // @blokdust's EXAMPLES in the gallery. The plugin has no gallery, so it keeps them under its own.
-    listPatches: async () => juce
-      ? [...await nativePatches(), ...PRESETS.map(p => ({ name: p.name, detail: 'Preset', key: `preset:${p.file}` }))]
+    listPatches: async () => juce  // signed in (SHARING-0011): the account's patches first, as on the website
+      ? [...(appKey() ? await accountItems() : []), ...await nativePatches(), ...PRESETS.map(p => ({ name: p.name, detail: 'Preset', key: `preset:${p.file}` }))]
       : await (async () => {
         // One list (owner, 2026-11-18): the account's patches once each, then this browser's own copies that aren't
         // among them (saves to the computer, links made signed out). A copy remembers its link; older ones without it
@@ -584,10 +604,11 @@ async function main() {
     },
     // Plugin: CREATE SHARE LINK opens the patch on the public site, which makes the link (its page runs the bot check
     // the plugin's own page can't: Turnstile only runs on the site's own address). Nothing is uploaded until then.
-    links: juce ? {
+    // Signed in (SHARING-0011), the plugin saves to the account as the website does: its key needs no bot check.
+    get links() { return juce && !appKey() ? (linkWays.plugin ??= {
       external: true,
       current: () => null,
-      make: async (_mode, title) => {
+      make: async (_mode: 'save' | 'saveAs', title: string) => {
         const link = `${PUBLIC_SITE}?c=${await encodePatch(toPatch())}&t=${encodeURIComponent(title)}`;
         // iPad: the share menu sends the link itself (the patch is in it, so it opens with no server; owner,
         // 2026-11-16, CHG-0025). A short link needs the site's bot check, which the plugin can't run.
@@ -599,11 +620,11 @@ async function main() {
         juce.emitEvent('bd_openUrl', { url: `${link}&share=1` });
       },
       warning: () => shareWarning(),
-    } : {
+    }) : (linkWays.web ??= {
       current: () => shareLink ? { url: shareLink.url, owned: shareLink.owned, stale: contentOf(toPatch()) !== shareLink.at } : null,
-      make: (mode, title, gallery) => makeLink(mode, title, gallery),
+      make: (mode: 'save' | 'saveAs', title: string, gallery?: boolean) => makeLink(mode, title, gallery),
       warning: () => shareWarning(),
-    },
+    }); },
     // The public gallery (CHG-0024); the plugins too, from their server (CHG-0039, site.ts).
     gallery: embedId ? null : {
       browse: async (sort, q, page) => { try { return await gallery.browse(sort, q, page); } catch (e) { if ((e as { status?: number }).status === undefined) return null; throw e; } },
@@ -618,12 +639,17 @@ async function main() {
       try { sessionStorage.setItem(AFTER_SIGN_IN, JSON.stringify({ to: 'save', title, at: Date.now() })); } catch { /* private window: no way back */ }
       (scene.SettingsPanel as any).openAccount?.();
     },
-    // Accounts (CHG-0023): web only. Signing in claims the patches this browser made (R9).
-    account: juce || embedId ? null : {
+    // Accounts (CHG-0023). Signing in claims the patches this browser made (R9). The plugins sign in with their own key
+    // (SHARING-0011, CHG-0039): a code approved on the website.
+    account: embedId ? null : juce ? pluginAccountHost(juce) : {
       me: stats => account.me(stats),
       signUp: async handle => { await account.signUpWithPasskey(handle); await account.claimMine().catch(() => {}); refreshOwnership(); backToSave(); },
       // Signed in: back to the stage (owner, 2026-11-15); the name in the corner says so. From SAVE: back to SAVE.
-      signIn: async () => { await account.signInWithPasskey(); await account.claimMine().catch(() => {}); refreshOwnership(); (scene.SettingsPanel as any).ClosePanel(); backToSave(); },
+      signIn: async () => {
+        await account.signInWithPasskey(); await account.claimMine().catch(() => {}); refreshOwnership();
+        if (accountPage()?.ApproveCode) return;  // signing in to approve a plugin (SHARING-0011): the question stays
+        (scene.SettingsPanel as any).ClosePanel(); backToSave();
+      },
       google: () => account.signInWith('google'),
       apple: () => account.signInWith('apple'),
       addPasskey: () => account.addPasskey(),
@@ -632,6 +658,13 @@ async function main() {
       signOut: async everywhere => { await account.signOut(everywhere); refreshOwnership(true); scene.PatchesPanel.galleryKnown(null); },
       deleteAccount: async () => { await account.deleteAccount(); refreshOwnership(true); },
       cancelled: e => account.cancelled(e),
+      // The plugins signed in to this account, and a plugin's code to approve (SHARING-0011).
+      apps: {
+        list: () => account.listApps(),
+        remove: async id => { await account.removeApp(id); },
+        info: code => account.deviceInfo(code),
+        approve: async (code, yes) => { const r = await account.approveDevice(code, yes); forgetLink(); return r; },
+      },
     },
     // Video export (CHG-0022): web only (R16). Hidden for now (owner, 2026-11-17, CHG-0035: it needs work of its own);
     // the code stays, behind VIDEO_EXPORT.
@@ -646,6 +679,30 @@ async function main() {
       seconds: () => videoSeconds([...model.values()], tempo ?? 120, (type, key) => BLOCKS_BY_ID.get(type)?.params.find(q => q.key === key)?.default),
     },
   });
+  /** The plugins' account (SHARING-0011): signed in with a key the plugin keeps (bd_account / bd_accountSave). */
+  function pluginAccountHost(j: JuceBackend): import('../v1ui/patches.ts').AccountHost {
+    const none = async () => {};
+    return {
+      me: async stats => (appKey() ? account.me(stats) : { user: null, google: false, apple: false }),
+      signUp: none, signIn: none, google: () => {}, apple: () => {}, addPasskey: none, removeMethod: none, deleteAccount: none,
+      setHandle: async h => { await account.setHandle(h); },
+      signOut: async () => {
+        await account.signOut(false).catch(() => {});  // its key goes on the server (offline: it is forgotten here anyway)
+        j.emitEvent('bd_accountClear', {}); setAppKey(null); refreshOwnership(true); scene.PatchesPanel.galleryKnown(null);
+      },
+      cancelled: () => false,
+      plugin: {
+        get canOpenBrowser() { return pluginBrowser; },
+        start: () => startDevice(pluginName),
+        poll: code => pollDevice(code),
+        open: url => j.emitEvent('bd_openUrl', { url }),
+        keep: (key, handle) => { setAppKey(key); j.emitEvent('bd_accountSave', { key, handle: handle ?? '' }); refreshOwnership(); },
+        website: () => j.emitEvent('bd_openUrl', { url: `${PLUGIN_SITE}?account=open` }),
+      },
+    };
+  }
+  /** What this plugin calls itself on the website, and whether it can open a browser (from bd_account). */
+  let pluginName = 'BlokDust', pluginBrowser = true;
   /** After signing in or out: whether this device may save over the open composition (R9). */
   function refreshOwnership(out = false): void {
     if (out) accountOwnedClear();
@@ -1267,8 +1324,9 @@ async function main() {
   }
   /** Saved to the link `id` (`at`: the content saved): the address bar shows it and the patch counts as saved. */
   function linkSaved(id: string, title: string, at = contentOf(toPatch())): void {
-    const url = `${location.origin}${location.pathname}?c=${id}&t=${encodeURIComponent(title)}`;
-    history.replaceState(null, '', url);  // v1 AddressBarManager.UpdateURL
+    // The plugins' page isn't on the site: the link is the site's, and there is no address bar to update.
+    const url = `${juce ? PLUGIN_SITE : `${location.origin}${location.pathname}`}?c=${id}&t=${encodeURIComponent(title)}`;
+    if (!juce) history.replaceState(null, '', url);  // v1 AddressBarManager.UpdateURL
     shareLink = { url, owned: isServerId(id) && !!App.SessionId, at, title };
     setBaseline(at);  // a shared patch counts as saved
     keepMine(title, id);
@@ -1962,6 +2020,12 @@ async function main() {
     }
     // Back from Google sign-in (CHG-0023): claim this browser's patches (R9) and show the account (a new one picks
     // its name). The flag is dropped so a reload doesn't do it again.
+    // A plugin's code to approve (SHARING-0011): Settings › ACCOUNT asks (signed out: sign in first, then it asks).
+    const link = !juce && !embedId && signInReturn !== 'new' ? pendingLink() : null;
+    if (link !== null && (linkArrival !== null || signInReturn)) requestAnimationFrame(() => {
+      (scene.SettingsPanel as any).openAccount?.();
+      (scene.SettingsPanel as any).accountPage?.showApprove(link);
+    });
     if (signInReturn && !juce && !embedId) {
       params.delete('account');
       history.replaceState(null, '', `${location.pathname}${params.size ? `?${params.toString()}` : ''}`);
@@ -1974,6 +2038,9 @@ async function main() {
         (scene.SettingsPanel as any).accountPage?.showMethods(linked);
       });
       else if (signInReturn === 'new') requestAnimationFrame(() => (scene.SettingsPanel as any).openAccount?.());
+      // A plugin's ON THE WEBSITE (SHARING-0011): the account, where its sign-in methods are.
+      else if (signInReturn === 'open') requestAnimationFrame(() => (scene.SettingsPanel as any).openAccount?.());
+      else if (pendingLink() !== null) { /* approving a plugin's code: below */ }
       // No new account today from this network (R1b): Settings › SIGN IN says why.
       else if (signInReturn === 'limit') requestAnimationFrame(() => {
         (scene.SettingsPanel as any).openAccount?.();
@@ -2195,6 +2262,14 @@ async function main() {
     juce.addEventListener('bd_hostState', (h: { mode: number; playing: boolean }) => { scene.setHostState(h.mode, h.playing); stage.redraw(); });
     juce.addEventListener('bd_ccLearned', (e: { slot: number; cc: number }) => { ccBySlot.set(e.slot, e.cc); });
     juce.addEventListener('bd_analytics', (e: { on: boolean }) => { pluginStats = !!e.on; });
+    // Signed in (SHARING-0011): the key the plugin keeps; what it calls itself; whether it can open a browser.
+    juce.addEventListener('bd_account', (e: { key?: string; name?: string; browser?: boolean }) => {
+      setAppKey(e.key ?? null);
+      if (e.name) pluginName = e.name;
+      pluginBrowser = e.browser !== false;
+      if (appKey()) void account.accountPatches().then(() => refreshOwnership()).catch(() => {});
+      void (scene.SettingsPanel as any).accountPage?.refresh(false);
+    });
     juce.addEventListener('bd_sampleInfo', (s: PluginSampleInfo) => applyPluginSample(s));
     // A file dropped on the plugin editor (CHG-0004 3.7): which sampler is under it, or a new Sample there.
     juce.addEventListener('bd_dropAt', (d: { x: number; y: number; token: number }) => {
@@ -2226,7 +2301,7 @@ async function main() {
   // The start button is v1's Splash, drawn by the scene (owner, 2026-11-11); #start is a clear layer over it that takes
   // the click (an AudioContext must start in one) and holds input back until the intro has shown the stage, as v1 did.
   // Automated browsers skip the intro (their screenshots expect the stage) unless the URL asks for it (`splash=1`).
-  const splash = !juce && !embedId && !signInReturn && (!navigator.webdriver || params.get('splash') === '1');
+  const splash = !juce && !embedId && !signInReturn && linkArrival === null && (!navigator.webdriver || params.get('splash') === '1');
   if (splash) { scene.showSplash(); stage.redraw(); requestAnimationFrame(() => requestAnimationFrame(() => { overlay.style.background = 'transparent'; })); }
   else if (!embedId) overlay.style.background = 'transparent';
   // START begins on the press (v1 Splash.MouseDown), not the release: the intro starts at once and the engine is built
@@ -2244,7 +2319,7 @@ async function main() {
   overlay.addEventListener('click', () => { if (!begun) void begin(); else resume(); });
   // Back from Google sign-in (owner, 2026-11-15): no start screen and no intro. The stage takes input at once and the
   // first press or key starts the sound (browsers start audio only in a user gesture); that press still does its job.
-  if (signInReturn && !juce && !embedId) {
+  if ((signInReturn || linkArrival !== null) && !juce && !embedId) {
     overlay.remove();
     const first = () => { for (const t of ['pointerdown', 'keydown'] as const) window.removeEventListener(t, first, true); if (!begun) void begin(); };
     for (const t of ['pointerdown', 'keydown'] as const) window.addEventListener(t, first, true);

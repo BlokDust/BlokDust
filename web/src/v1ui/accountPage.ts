@@ -14,13 +14,21 @@
 //               account signs in under them, and a bordered DELETE ACCOUNT, which asks first with CANCEL · DELETE;
 //   methods:    SIGN-IN METHODS (CHG-0039, owner 2026-11-19): the heading, a row per way in (its name, when it was
 //               added, a bordered REMOVE at the right while there is more than one; v1 Open's rows and rules), then
-//               the GUIDE buttons for ADD GOOGLE / ADD APPLE (those not linked yet) and ADD PASSKEY, and BACK.
+//               the GUIDE buttons for ADD GOOGLE / ADD APPLE (those not linked yet) and ADD PASSKEY, and BACK. Under
+//               the ways in, APPS SIGNED IN: each plugin signed in to the account, with REMOVE (SHARING-0011);
+//   approve:    (website, `?link=CODE` from a plugin) "Sign in BlokDust on another device?", what asks and the code,
+//               CANCEL · APPROVE; with no code, the name field takes it;
+//   plugins:    (SHARING-0011) signed out, SIGN IN WITH YOUR BROWSER: the code large, a QR code of the address, the
+//               browser opened where it can be, waiting with v1's spinner, BACK. Signed in: the stats, then ON THE
+//               WEBSITE (methods and deleting live there) · SIGN OUT.
 import { App, Dimensions, Point } from './shim.ts';
 import { BLOCKS_BY_ID } from '../generated/blocks.gen.ts';
 import { activity } from '../account/activity.ts';
 import { Device } from './ported/Device';
 import type { AccountHost, AccountInfo } from './patches.ts';
-import type { SignInMethod } from '../account/client.ts';
+import type { SignInMethod, SignedInApp } from '../account/client.ts';
+import type { DeviceCode } from '../account/device.ts';
+import qrcode from 'qrcode-generator';
 
 /** v1 SettingsPanel's menuWidth, About's text column: 4/7 of the panel; on a phone the width less 80 units (owner,
  * 2026-11-18). Settings › DOWNLOAD and ACCOUNT use it too (CHG-0035). */
@@ -35,7 +43,18 @@ const COPY = {
   addPasskey: 'Add Passkey', addAnother: 'Add Another Passkey', signOut: 'Sign Out', methodsButton: 'Sign-in Methods',
   methodsTitle: 'Sign-in methods', methodsLine: 'Any of these signs in to this account. Keep at least one.',
   addGoogle: 'Add Google', addApple: 'Add Apple', remove: 'Remove', passkey1: 'Passkey', added: (d: string) => `Added ${d}`,
-  removed: (n: string) => `${n} removed.`, deleteAccount: 'Delete Account', cancel: 'Cancel', deleteButton: 'Delete',
+  removed: (n: string) => `${n} removed.`,
+  apps: 'Apps signed in', lastUsed: (d: string) => `Last used ${d}`,
+  pluginLine: 'Sign in to open the patches you saved on the website, and to save to them from here.',
+  browser: 'Sign In With Your Browser', codeTitle: 'Sign in with your browser',
+  codeOpened: 'Your browser has opened. Sign in there, check it shows this code, and press APPROVE.',
+  codeGo: (at: string) => `On your phone or computer, go to ${at} and enter this code, or scan the QR code with your phone's camera.`,
+  waiting: 'Waiting for you to approve it…', openAgain: 'Open Browser Again', website: 'On The Website',
+  signedIn: 'Signed in.', denied: 'Sign-in was turned down on the website.', expired: 'The code expired. Try again.',
+  approveTitle: 'Sign in BlokDust on another device?', approveLine: (name: string, handle: string) => `${name} asks to sign in as @${handle}. Check it shows this code, then press APPROVE.`,
+  enterTitle: 'Enter the code BlokDust shows', continue: 'Continue', approve: 'Approve',
+  approved: (name: string) => `${name} is signed in. You can go back to it now.`, turnedDown: (name: string) => `${name} was not signed in.`,
+  signInToApprove: 'Sign in to approve BlokDust on your other device.', deleteAccount: 'Delete Account', cancel: 'Cancel', deleteButton: 'Delete',
   deleteTitle: 'Delete your account?', deleteLine: 'This will permanently delete your account and all patches. Shared links to your patches will stop working.',
   noAccounts: 'Accounts are not available here.', working: 'one moment',
   methods: 'Sign-in methods', google1: 'Google', apple1: 'Apple', passkeyN: (n: number) => `${n} ${n === 1 ? 'passkey' : 'passkeys'}`,
@@ -75,7 +94,15 @@ type Bordered = { label: string; x: number; y: number; w: number; h: number; tex
 
 export class AccountPage {
   Account: AccountInfo | null | undefined = undefined;
-  View: 'main' | 'create' | 'name' | 'delete' | 'methods' = 'main';
+  View: 'main' | 'create' | 'name' | 'delete' | 'methods' | 'code' | 'approve' = 'main';
+  /** The plugin's code waiting for approval (SHARING-0011). */
+  Device: DeviceCode | null = null;
+  /** The website: plugins signed in to this account (SIGN-IN METHODS). */
+  Apps: SignedInApp[] = [];
+  /** The website: a plugin's code to approve, and what it calls itself once known. */
+  ApproveCode: string | null = null;
+  ApproveName: string | null = null;
+  private pollTimer: ReturnType<typeof setTimeout> | undefined;
   Busy = false;
   Message = '';
   private google = false;
@@ -93,12 +120,32 @@ export class AccountPage {
   }
 
   /** Back from Google or Apple having added it, or refused because it belongs to another account (R7a, R7b). */
-  showMethods(message: string): void { this.View = 'methods'; this.Message = message; this.mark(); }
+  showMethods(message: string): void { this.View = 'methods'; this.Message = message; void this.loadApps(); this.mark(); }
+  /** The website, opened at a plugin's code (`?link=CODE`, SHARING-0011): ask to approve it (signed out: sign in first;
+   * the code waits). */
+  showApprove(code: string): void {
+    this.ApproveCode = code || null; this.ApproveName = null; this.Message = '';
+    this.View = 'approve';
+    if (!code) { this.input.value = ''; setTimeout(() => this.input.focus(), 0); }
+    void this.lookUpCode();
+    this.mark();
+  }
+  private async lookUpCode(): Promise<void> {
+    const c = this.ApproveCode, apps = this.host.apps;
+    if (!c || !apps || !this.Account) return;
+    try { this.ApproveName = (await apps.info(c)).name; } catch (e) { this.Message = (e as Error).message; this.ApproveCode = null; }
+    this.mark();
+  }
+  private async loadApps(): Promise<void> {
+    if (!this.host.apps || !this.Account) { this.Apps = []; return; }
+    try { this.Apps = await this.host.apps.list(); } catch { this.Apps = []; }
+    this.mark();
+  }
   /** Back from Google or Apple when this network has made its new accounts for the day (R1b): say so. */
   refused(message: string): void { this.View = 'main'; this.Message = message; this.mark(); }
   /** The Settings tab's name: SIGN IN until signed in. */
   get tabName(): string { return this.Account ? 'account' : 'sign in'; }
-  get animating(): boolean { return this.Busy || this.Account === undefined || performance.now() < this.settle; }
+  get animating(): boolean { return this.Busy || this.Account === undefined || this.View === 'code' || (this.View === 'approve' && !!this.ApproveCode && !this.ApproveName) || performance.now() < this.settle; }
   /** Keep drawing a moment after something async lands, so its last state is drawn. */
   private settle = 0;
   private mark(): void { this.settle = performance.now() + 300; }
@@ -113,7 +160,8 @@ export class AccountPage {
     if (this.Account && !this.Account.stats && was?.stats && was.handle === this.Account.handle) this.Account.stats = was.stats;
     // A new Google account has no name yet: ask for one (SPEC-SHARING-ACCOUNTS R6).
     if (this.Account && !this.Account.handle && this.View === 'main') { this.View = 'name'; this.input.value = ''; }
-    if (!this.Account && this.View !== 'create') this.View = 'main';
+    if (!this.Account && this.View !== 'create' && this.View !== 'code' && this.View !== 'approve') this.View = 'main';
+    if (this.View === 'approve' && this.Account && this.ApproveCode && !this.ApproveName) void this.lookUpCode();
     if (was === undefined || (this.Account?.handle ?? null) !== before || !!was !== !!this.Account) this.onChange();
     this.mark();
   }
@@ -149,13 +197,26 @@ export class AccountPage {
     const rows = this.methodRows(), rowTop = top + 52 * u, rowH = 40 * u;
     const removable = rows.length > 1;
     const list = rows.map((m, i) => ({ ...m, y: rowTop + i * rowH, remove: removable ? this.bordered(COPY.remove, R, rowTop + i * rowH + 10 * u) : null }));
+    // APPS SIGNED IN (SHARING-0011): its heading 20 units under the ways in, then a row per plugin.
+    const appsTop = rowTop + rows.length * rowH + 20 * u, appRows = this.Apps.length ? this.Apps.map((a, i) => ({ app: a, y: appsTop + 22 * u + i * rowH,
+      remove: this.bordered(COPY.remove, R, appsTop + 22 * u + i * rowH + 10 * u) })) : [];
+    const addsTop = appRows.length ? appsTop + (22 + 20) * u + appRows.length * rowH : rowTop + rows.length * rowH + 20 * u;
     const adds: Record<string, Box> = {};
-    this.addable().forEach((k, i) => { adds[k] = full(rowTop + rows.length * rowH + (20 + i * 55) * u); });
-    const addsEnd = rowTop + rows.length * rowH + (20 + this.addable().length * 55) * u;
+    this.addable().forEach((k, i) => { adds[k] = full(addsTop + i * 55 * u); });
+    const addsEnd = addsTop + this.addable().length * 55 * u;
     const methodsBack = this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * u, addsEnd + 5 * u);
+    // A plugin's code (SHARING-0011): the code large under the line, the QR code at the right, BACK (and OPEN BROWSER
+    // AGAIN) under them.
+    const qrSize = 130 * u, code = { text: top + 118 * u, qr: { x: R - qrSize, y: top + 70 * u, s: qrSize }, waiting: top + 160 * u,
+      back: this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * u, top + 220 * u),
+      again: this.bordered(COPY.openAgain, L + this.textW(COPY.back) + 30 * u + this.textW(COPY.openAgain) + 10 * u, top + 220 * u) };
+    // The website approving a code: the code large, then CANCEL · APPROVE; typing one: the name field, CONTINUE, BACK.
+    const approve = { code: top + 118 * u, cancel: half(false, top + 150 * u), ok: half(true, top + 150 * u), submit: full(top + 85 * u),
+      back: this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * u, top + 145 * u) };
     const message = this.View === 'methods' ? addsEnd + 50 * u
+      : this.View === 'code' ? top + 270 * u : this.View === 'approve' ? top + 210 * u
       : this.View === 'main' && !this.Account ? below + 10 * u : this.View === 'main' ? methods + 24 * u : top + 190 * u;
-    return { L, R, out, naming, signedIn, del, methods, message, list, rowH, adds, methodsBack };
+    return { L, R, out, naming, signedIn, del, methods, message, list, rowH, adds, methodsBack, appsTop, appRows, code, approve };
   }
   /** SIGN-IN METHODS' rows (R7a): the account's ways in, from the server's list (older servers: from the counts). */
   methodRows(): { label: string; detail: string; method: SignInMethod | null }[] {
@@ -172,7 +233,8 @@ export class AccountPage {
     return [...(this.google && !p.includes('google') ? ['addGoogle' as const] : []), ...(this.apple && !p.includes('apple') ? ['addApple' as const] : []), 'addPasskey'];
   }
   /** The ways to sign in, in the owner's order: Google, Apple, then a passkey (always offered). */
-  private ways(): ('google' | 'apple' | 'passkey')[] {
+  private ways(): ('google' | 'apple' | 'passkey' | 'browser')[] {
+    if (this.host.plugin) return ['browser'];  // the plugins: a code approved on the website (SHARING-0011)
     return [...(this.google ? ['google' as const] : []), ...(this.apple ? ['apple' as const] : []), 'passkey'];
   }
 
@@ -207,6 +269,22 @@ export class AccountPage {
     App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtMid;
     c.fillText(title.toUpperCase(), L, top + 10 * u);
     if (line) { c.font = App.Metrics.TxtItalic2; this.wrap(line, L, top + 32 * u, 14 * u, this.pageW()); }
+  }
+
+  /** A QR code of `url` in the square `b`: black on white whatever the theme (phone cameras read that), two
+   * modules of quiet zone. */
+  private qrCache: { url: string; n: number; dark: boolean[] } | null = null;
+  private drawQr(url: string, b: { x: number; y: number; s: number }): void {
+    if (this.qrCache?.url !== url) {
+      const q = qrcode(0, 'M'); q.addData(url); q.make();
+      const n = q.getModuleCount(), dark: boolean[] = [];
+      for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) dark.push(q.isDark(y, x));
+      this.qrCache = { url, n, dark };
+    }
+    const { n, dark } = this.qrCache, c = this.ctx(), cell = b.s / (n + 4);
+    c.fillStyle = '#ffffff'; c.fillRect(b.x, b.y, b.s, b.s);
+    c.fillStyle = '#000000';
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (dark[y * n + x]) c.fillRect(b.x + (x + 2) * cell, b.y + (y + 2) * cell, Math.ceil(cell), Math.ceil(cell));
   }
 
   // ---- stats (R15) ----
@@ -284,6 +362,32 @@ export class AccountPage {
       App.StrokeColor(c, txt); c.lineWidth = 2; c.beginPath(); c.moveTo(Lo.L, Lo.naming.rule); c.lineTo(Lo.R, Lo.naming.rule); c.stroke();
       this.filled(Lo.naming.submit, App.Palette[busy ? 1 : menu[3]], busy ? COPY.working : create ? COPY.createButton : COPY.saveName, !busy && !!r.submit);
       if (create) this.drawBordered(Lo.naming.back, App.Palette[1]);
+    } else if (this.View === 'code' && this.Device) {
+      // A plugin's code (SHARING-0011).
+      const d = this.Device, plug = this.host.plugin!;
+      this.heading(COPY.codeTitle, plug.canOpenBrowser ? COPY.codeOpened : COPY.codeGo(d.verifyAt), top, Lo.L);
+      App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtSlider;
+      c.fillText(d.userCode, Lo.L, Lo.code.text);
+      this.drawQr(d.verifyUrl, Lo.code.qr);
+      App.AnimationsLayer.DrawSprite(c, 'loading', Lo.L + 8 * u, Lo.code.waiting - 5 * u, 16, true);
+      App.FillColor(c, txt); c.font = App.Metrics.TxtItalic2; c.textAlign = 'left'; c.fillText(COPY.waiting, Lo.L + 24 * u, Lo.code.waiting);
+      this.drawBordered(Lo.code.back, App.Palette[1]);
+      if (plug.canOpenBrowser) this.drawBordered(Lo.code.again, App.Palette[r.openAgain ? menu[3] : 1]);
+    } else if (this.View === 'approve' && this.Account) {
+      // The website approving a plugin's code (SHARING-0011).
+      if (this.ApproveCode) {
+        this.heading(COPY.approveTitle, this.ApproveName ? COPY.approveLine(this.ApproveName, this.Account.handle ?? '') : '', top, Lo.L);
+        App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtSlider; c.fillText(this.ApproveCode.toUpperCase(), Lo.L, Lo.approve.code);
+        if (this.ApproveName) {
+          this.filled(Lo.approve.cancel, App.Palette[1], COPY.cancel, !busy && !!r.approveCancel);
+          this.filled(Lo.approve.ok, App.Palette[busy ? 1 : menu[3]], busy ? COPY.working : COPY.approve, !busy && !!r.approveOk);
+        } else App.AnimationsLayer.DrawSprite(c, 'loading', W * 0.5, Lo.approve.ok.y + 20 * u, 16, true);
+      } else {
+        this.heading(COPY.enterTitle, '', top, Lo.L);
+        App.StrokeColor(c, txt); c.lineWidth = 2; c.beginPath(); c.moveTo(Lo.L, Lo.naming.rule); c.lineTo(Lo.R, Lo.naming.rule); c.stroke();
+        this.filled(Lo.naming.submit, App.Palette[busy ? 1 : menu[3]], busy ? COPY.working : COPY.continue, !busy && !!r.submitCode);
+        this.drawBordered(Lo.naming.back, App.Palette[1]);
+      }
     } else if (this.View === 'methods' && this.Account) {
       this.heading(COPY.methodsTitle, COPY.methodsLine, top, Lo.L);
       const line = App.Palette[1];
@@ -294,6 +398,18 @@ export class AccountPage {
         if (row.remove) this.drawBordered(row.remove, App.Palette[r[`remove${i}`] ? menu[3] : 1]);
         App.StrokeColor(c, line); c.lineWidth = 1; c.beginPath(); c.moveTo(Lo.L, row.y + Lo.rowH); c.lineTo(Lo.R, row.y + Lo.rowH); c.stroke();
       });
+      if (Lo.appRows.length) {
+        App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtMid; c.fillText(COPY.apps.toUpperCase(), Lo.L, Lo.appsTop + 10 * u);
+        const when = (t: number | null) => (t ? new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
+        Lo.appRows.forEach((row, i) => {
+          App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtMid;
+          const name = row.app.name.toUpperCase(), max = Lo.R - Lo.L - 250 * u;
+          c.fillText(c.measureText(name).width > max ? `${name.slice(0, 28)}…` : name, Lo.L, row.y + 25 * u);
+          c.font = App.Metrics.TxtItalic2; c.textAlign = 'right'; c.fillText(COPY.lastUsed(when(row.app.lastUsed ?? row.app.created)), row.remove.x - 15 * u, row.y + 25 * u);
+          this.drawBordered(row.remove, App.Palette[r[`app${i}`] ? menu[3] : 1]);
+          App.StrokeColor(c, App.Palette[1]); c.lineWidth = 1; c.beginPath(); c.moveTo(Lo.L, row.y + Lo.rowH); c.lineTo(Lo.R, row.y + Lo.rowH); c.stroke();
+        });
+      }
       const colours = { addGoogle: menu[3], addApple: menu[1], addPasskey: menu[2 % menu.length] } as const;
       const labels = { addGoogle: COPY.addGoogle, addApple: COPY.addApple, addPasskey: this.addLabel } as const;
       for (const [k, b] of Object.entries(Lo.adds) as [keyof typeof colours, Box][]) this.filled(b, App.Palette[busy ? 1 : colours[k]], busy && k === 'addPasskey' ? COPY.working : labels[k], !busy && !!r[k]);
@@ -306,18 +422,19 @@ export class AccountPage {
       App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtMid;
       c.fillText(COPY.stats.toUpperCase(), Lo.L, top + 10 * u);  // the corner already says who (owner, 2026-11-18)
       this.drawStats(top, Lo.L, Lo.R);
-      this.filled(Lo.signedIn.add, App.Palette[busy ? 1 : menu[1]], COPY.methodsButton, !busy && !!r.methods, true);
+      const plugin = !!this.host.plugin;  // the plugins: methods and deleting are the website's (SHARING-0011)
+      this.filled(Lo.signedIn.add, App.Palette[busy ? 1 : menu[1]], plugin ? COPY.website : COPY.methodsButton, !busy && !!(plugin ? r.website : r.methods), true);
       this.filled(Lo.signedIn.out, App.Palette[busy ? 1 : menu[3]], COPY.signOut, !busy && !!r.signOut, true);
-      this.drawBordered(Lo.signedIn.del, App.Palette[1]);
+      if (!plugin) this.drawBordered(Lo.signedIn.del, App.Palette[1]);
       App.FillColor(c, txt); c.font = App.Metrics.TxtItalic2; c.textAlign = 'left';
       c.fillText(`${COPY.methods}: ${this.methods().join(' · ')}`, Lo.L, Lo.methods);
     } else {
       App.FillColor(c, txt); c.font = App.Metrics.TxtMid; c.textAlign = 'left';
-      c.fillText(this.noBackend ? COPY.noAccounts : COPY.line, Lo.L, top + 10 * u);
+      c.fillText(this.noBackend ? COPY.noAccounts : this.View === 'approve' ? COPY.signInToApprove : this.host.plugin ? COPY.pluginLine : COPY.line, Lo.L, top + 10 * u);
       if (this.Account === undefined && !this.noBackend) App.AnimationsLayer.DrawSprite(c, 'loading', W * 0.5, top + 55 * u, 16, true);
       else if (!this.noBackend) {
         // Each its own menu colour, as Connect's GUIDE buttons and the Patches panel's.
-        const colours = { google: menu[3], apple: menu[1], passkey: menu[2 % menu.length] } as const;
+        const colours = { google: menu[3], apple: menu[1], passkey: menu[2 % menu.length], browser: menu[3] } as const;
         for (const k of this.ways()) this.filled(Lo.out[k], App.Palette[busy ? 1 : colours[k]], COPY[k], !busy && !!r[k]);
       }
     }
@@ -326,7 +443,7 @@ export class AccountPage {
 
   /** The name field follows the page (it slides with the tab); shown only while naming. */
   placeField(top: number, shown: boolean): void {
-    const on = shown && (this.View === 'create' || this.View === 'name');
+    const on = shown && (this.View === 'create' || this.View === 'name' || (this.View === 'approve' && !!this.Account && !this.ApproveCode));
     this.field.style.display = on ? 'block' : 'none';
     if (!on) return;
     const u = App.Unit, pr = App.Metrics.PixelRatio;
@@ -341,11 +458,18 @@ export class AccountPage {
     const Lo = this.layout(top), pad = (b: Bordered) => ({ x: b.x - 5 * App.Unit, y: b.y - 10 * App.Unit, w: b.w + 10 * App.Unit, h: 40 * App.Unit });
     if (this.View === 'create' || this.View === 'name') return { submit: Lo.naming.submit, ...(this.View === 'create' ? { back: pad(Lo.naming.back) } : {}) };
     if (this.View === 'delete') return { deleteCancel: Lo.del.cancel, deleteOk: Lo.del.ok };
+    if (this.View === 'code' && this.Device) return { codeBack: pad(Lo.code.back), ...(this.host.plugin?.canOpenBrowser ? { openAgain: pad(Lo.code.again) } : {}) };
+    if (this.View === 'approve' && this.Account) {
+      if (!this.ApproveCode) return { submitCode: Lo.naming.submit, approveBack: pad(Lo.naming.back) };
+      return this.ApproveName ? { approveCancel: Lo.approve.cancel, approveOk: Lo.approve.ok } : {};
+    }
     if (this.View === 'methods' && this.Account) {
       const out: Record<string, { x: number; y: number; w: number; h: number }> = { ...Lo.adds, methodsBack: pad(Lo.methodsBack) };
       Lo.list.forEach((row, i) => { if (row.remove) out[`remove${i}`] = pad(row.remove); });
+      Lo.appRows.forEach((row, i) => { out[`app${i}`] = pad(row.remove); });
       return out;
     }
+    if (this.Account && this.host.plugin) return { website: Lo.signedIn.add, signOut: Lo.signedIn.out };
     if (this.Account) return { methods: Lo.signedIn.add, signOut: Lo.signedIn.out, deleteAccount: pad(Lo.signedIn.del) };
     if (this.Account === null && !this.noBackend) return { ...Lo.out };
     return {};
@@ -370,7 +494,20 @@ export class AccountPage {
     if (r.apple) { a.apple(); return; }
     if (r.back) { this.View = 'main'; this.Message = ''; return; }
     if (r.submit) { void this.submit(); return; }
-    if (r.methods) { this.View = 'methods'; this.Message = ''; return; }
+    if (r.browser) { void this.startCode(); return; }
+    if (r.codeBack) { this.stopCode(); this.View = 'main'; this.Message = ''; return; }
+    if (r.openAgain) { if (this.Device) this.host.plugin?.open(this.Device.verifyUrl); return; }
+    if (r.website) { this.host.plugin?.website(); return; }
+    if (r.approveOk || r.approveCancel) { void this.answer(!!r.approveOk); return; }
+    if (r.submitCode) { this.ApproveCode = this.input.value.trim() || null; this.Message = ''; void this.lookUpCode(); return; }
+    if (r.approveBack) { this.View = 'main'; this.ApproveCode = null; this.Message = ''; return; }
+    const app = Object.keys(r).find(k => r[k] && /^app\d+$/.test(k));
+    if (app) {
+      const a = this.Apps[Number(app.slice(3))];
+      if (a && this.host.apps) void this.action(async () => { await this.host.apps!.remove(a.id); await this.loadApps(); }, true).then(ok => { if (ok) this.Message = COPY.removed(a.name); });
+      return;
+    }
+    if (r.methods) { this.View = 'methods'; this.Message = ''; void this.loadApps(); return; }
     if (r.methodsBack) { this.View = 'main'; this.Message = ''; return; }
     if (r.addGoogle) { a.google(); return; }  // signed in, Google or Apple joins this account (R7a)
     if (r.addApple) { a.apple(); return; }
@@ -401,13 +538,51 @@ export class AccountPage {
    * dialog or had no passkey, so both lead to the name step, which has BACK. */
   private async continueWithPasskey(): Promise<void> {
     this.Busy = true; this.Message = '';
-    try { await this.host.signIn(); this.View = 'main'; await this.refresh(); }
+    try { await this.host.signIn(); this.View = this.ApproveCode ? 'approve' : 'main'; await this.refresh(); }
     catch (e) {
       if (this.host.cancelled(e) || (e as { status?: number }).status === 401) {
         this.View = 'create'; this.Message = COPY.noPasskey; this.input.value = ''; setTimeout(() => this.input.focus(), 0);
       } else this.Message = (e as Error).message || 'That did not work. Try again.';
     } finally { this.Busy = false; this.mark(); }
   }
+  // ---- a plugin's code (SHARING-0011) ----
+  private deviceUntil = 0;
+  private async startCode(): Promise<void> {
+    const plug = this.host.plugin;
+    if (!plug) return;
+    this.Busy = true; this.Message = '';
+    try {
+      this.Device = await plug.start(); this.deviceUntil = Date.now() + this.Device.expiresIn * 1000; this.View = 'code';
+      if (plug.canOpenBrowser) plug.open(this.Device.verifyUrl);
+      this.schedulePoll(this.Device.interval);
+    } catch (e) { this.Message = (e as { status?: number }).status === undefined ? 'BlokDust couldn’t be reached. Check your connection and try again.' : (e as Error).message; }
+    finally { this.Busy = false; this.mark(); }
+  }
+  private schedulePoll(seconds: number): void { clearTimeout(this.pollTimer); this.pollTimer = setTimeout(() => void this.pollOnce(seconds), seconds * 1000); }
+  private stopCode(): void { clearTimeout(this.pollTimer); this.Device = null; }
+  private async pollOnce(interval: number): Promise<void> {
+    const d = this.Device, plug = this.host.plugin;
+    if (!d || !plug || this.View !== 'code') return;
+    if (Date.now() > this.deviceUntil) { this.stopCode(); this.View = 'main'; this.Message = COPY.expired; this.mark(); return; }
+    let r: Awaited<ReturnType<typeof plug.poll>>;
+    try { r = await plug.poll(d.deviceCode); } catch { this.schedulePoll(interval); return; }  // offline a moment: keep asking until it expires
+    if (this.Device !== d) return;  // BACK meanwhile
+    if (r.status === 'approved') { plug.keep(r.key, r.user.handle); this.stopCode(); this.View = 'main'; this.Message = COPY.signedIn; await this.refresh(); }
+    else if (r.status === 'pending') this.schedulePoll(interval);
+    else if (r.status === 'slow_down') this.schedulePoll(interval + 5);
+    else { this.stopCode(); this.View = 'main'; this.Message = r.status === 'denied' ? COPY.denied : COPY.expired; }
+    this.mark();
+  }
+  /** The website: APPROVE or CANCEL a plugin's code. */
+  private async answer(yes: boolean): Promise<void> {
+    const code = this.ApproveCode, apps = this.host.apps;
+    if (!code || !apps || this.Busy) return;
+    this.Busy = true; this.Message = '';
+    try { const r = await apps.approve(code, yes); this.Message = yes ? COPY.approved(r.name) : COPY.turnedDown(r.name); this.ApproveCode = null; this.ApproveName = null; this.View = 'main'; }
+    catch (e) { this.Message = (e as Error).message || 'That did not work. Try again.'; }
+    finally { this.Busy = false; this.mark(); }
+  }
+
   /** `stay`: keep the page on show (SIGN-IN METHODS) rather than going back to the account. */
   private async action(run: () => Promise<void>, stay = false): Promise<boolean> {
     this.Busy = true; this.Message = '';

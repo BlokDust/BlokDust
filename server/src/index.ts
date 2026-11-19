@@ -113,10 +113,10 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
   if (path === '/api/auth/apple/callback' && m === 'GET') return appleCallback(env, req, url);
   // ---- plugin sign-in (CHG-0039, SHARING-0011): a device code, approved on the website ----
   if (path.startsWith('/api/device/')) {
-    if (path === '/api/device/start' && m === 'POST') { await limit(env.SAVE_LIMIT, req, 'auth'); return deviceStart(env, req); }
+    if (path === '/api/device/start' && m === 'POST') { await limit(env.SAVE_LIMIT, req, 'device'); return deviceStart(env, req); }
     if (path === '/api/device/poll' && m === 'POST') { await limit(env.SEARCH_LIMIT, req, 'poll'); return devicePoll(env, req); }
     if (path === '/api/device/code' && m === 'GET') return deviceInfo(env, req, url);
-    if (path === '/api/device/approve' && m === 'POST') { sameOrigin(env, req); await limit(env.SAVE_LIMIT, req, 'auth'); return deviceApprove(env, req); }
+    if (path === '/api/device/approve' && m === 'POST') { sameOrigin(env, req); await limit(env.SAVE_LIMIT, req, 'device'); return deviceApprove(env, req); }
     throw new HttpError(404, 'no such endpoint');
   }
   if (path.startsWith('/api/auth/') || path.startsWith('/api/me')) {
