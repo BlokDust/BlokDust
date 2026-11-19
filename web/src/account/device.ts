@@ -12,6 +12,13 @@ export async function startDevice(name: string): Promise<DeviceCode> {
   if (!r.ok) throw Object.assign(new Error(j.error ?? `HTTP ${r.status}`), { status: r.status });
   return j;
 }
+/** The iPad app's native sign-in (SHARING-0011): POST to `/api/app/…` (no cookie; the answer carries the key). */
+export async function appPost<T>(path: string, body: unknown = {}): Promise<T> {
+  const r = await fetch(apiUrl(path), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({})) as T & { error?: string };
+  if (!r.ok) throw Object.assign(new Error(j.error ?? `HTTP ${r.status}`), { status: r.status });
+  return j;
+}
 export async function pollDevice(deviceCode: string): Promise<DevicePoll> {
   const r = await fetch(apiUrl('device/poll'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ deviceCode }) });
   const j = await r.json().catch(() => null) as DevicePoll | null;

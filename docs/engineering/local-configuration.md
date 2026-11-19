@@ -16,6 +16,12 @@ Tools fail with the missing variable's name when an operation needs an unconfigu
 - iPad (CHG-0025): `BLOKDUST_IOS_SIMULATOR` (a Simulator name for `bd plugin ios test`) and `BLOKDUST_IOS_DEVICE` (an
   iPad's name or identifier for `bd plugin ios device`). Device builds sign with `BLOKDUST_APPLE_TEAM_ID` through
   Xcode's automatic signing, which needs the team's Apple account in Xcode → Settings → Accounts.
+  `BLOKDUST_IOS_NATIVE_SIGN_IN=1` builds in Sign in with Apple and the site's passkeys (SHARING-0011) once the App ID
+  has the Sign in with Apple and Associated Domains capabilities; the sites come from the public URLs below.
+- Plugin sign-in (CHG-0039): `bd plugin deploy` and `bd plugin ios device` build the plugins' page against
+  `BLOKDUST_STAGING_PUBLIC_URL`, installers against `BLOKDUST_PRODUCTION_PUBLIC_URL` (`BLOKDUST_PLUGIN_SITE_URL`
+  overrides a plain `pnpm web:build`). `BLOKDUST_APPLE_APP_ID` overrides the app id the Worker is given (default: the
+  app's bundle id).
 - Windows tests: `BLOKDUST_VM_DIR`, `BLOKDUST_VM_USER` and optional `BLOKDUST_VM_*` resource settings. Provision a VM
   separately; the test driver does not distribute a personal VM image, login, key or provisioning instructions.
 - Cloudflare: `CLOUDFLARE_ACCOUNT_ID`, `BLOKDUST_WORKERS_SUBDOMAIN`, per-environment public URLs, database IDs and

@@ -16,7 +16,7 @@ const RP_NAME = 'BlokDust';
 const CHALLENGE_MS = 5 * 60_000;
 
 /** The relying party: this site's host and origin (the public one, or this request's in local dev). */
-function rp(env: Env, req: Request): { id: string; origins: string[] } {
+export function rp(env: Env, req: Request): { id: string; origins: string[] } {
   const pub = new URL(publicBase(env, req)), here = new URL(req.url);
   return { id: pub.hostname, origins: [...new Set([pub.origin, here.origin])] };
 }
@@ -116,6 +116,17 @@ export async function loginOptions(env: Env, req: Request): Promise<Response> {
 export async function loginVerify(env: Env, req: Request): Promise<Response> {
   const body = await readJson<{ response?: AuthenticationResponseJSON }>(req);
   const { challenge } = await takeChallenge(env, req, 'login');
+  const cred = await verifyAssertion(env, req, challenge, body.response);
+  const headers = new Headers({ 'cache-control': 'no-store' });
+  headers.append('set-cookie', clearChallenge(req));
+  headers.append('set-cookie', await startSession(env, req, cred.user_id));
+  return withCookies({ user: { id: cred.user_id, handle: cred.handle } }, headers);
+}
+
+/** A passkey's answer to `challenge` checked against the credential it names; whose it is. (The website, and the iPad
+ * app through the site's domain: SHARING-0011.) */
+export async function verifyAssertion(env: Env, req: Request, challenge: string, response: AuthenticationResponseJSON | undefined): Promise<{ user_id: string; handle: string | null }> {
+  const body = { response };
   const id = body.response?.id;
   if (typeof id !== 'string') throw new HttpError(400, 'no passkey');
   const cred = await env.DB.prepare('SELECT c.id, c.user_id, c.public_key, c.counter, c.transports, u.handle FROM credentials c JOIN users u ON u.id = c.user_id WHERE c.id = ?')
@@ -129,10 +140,24 @@ export async function loginVerify(env: Env, req: Request): Promise<Response> {
   } catch (e) { throw new HttpError(401, `passkey not accepted: ${(e as Error).message}`); }
   if (!v.verified) throw new HttpError(401, 'passkey not accepted');
   await env.DB.prepare('UPDATE credentials SET counter = ?, last_used = ? WHERE id = ?').bind(v.authenticationInfo.newCounter, Date.now(), cred.id).run();
-  const headers = new Headers({ 'cache-control': 'no-store' });
-  headers.append('set-cookie', clearChallenge(req));
-  headers.append('set-cookie', await startSession(env, req, cred.user_id));
-  return withCookies({ user: { id: cred.user_id, handle: cred.handle } }, headers);
+  return { user_id: cred.user_id, handle: cred.handle };
+}
+
+/** A one-time challenge kept by id, for a caller without cookies (the iPad app, SHARING-0011). */
+export async function keepChallengeById(env: Env, challenge: string, kind: string, data = ''): Promise<string> {
+  const id = b64urlBytes(18), now = Date.now();
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM challenges WHERE expires < ?').bind(now),
+    env.DB.prepare('INSERT INTO challenges (id, challenge, kind, data, expires) VALUES (?, ?, ?, ?, ?)').bind(id, challenge, kind, data, now + CHALLENGE_MS),
+  ]);
+  return id;
+}
+/** Take (and delete) challenge `id` of `kind`. */
+export async function takeChallengeById(env: Env, id: unknown, kind: string): Promise<{ challenge: string; data: string }> {
+  if (typeof id !== 'string' || id.length > 64) throw new HttpError(400, 'no sign-in in progress; try again');
+  const row = await env.DB.prepare('DELETE FROM challenges WHERE id = ? RETURNING challenge, kind, data, expires').bind(id).first<{ challenge: string; kind: string; data: string; expires: number }>();
+  if (!row || row.kind !== kind || row.expires < Date.now()) throw new HttpError(400, 'sign-in expired; try again');
+  return row;
 }
 
 /** JSON with several Set-Cookie headers (a plain object can hold only one). */

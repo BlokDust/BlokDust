@@ -30,6 +30,9 @@ export function remoteConfig(env: EnvName): string {
   if (google) target.vars.GOOGLE_CLIENT_ID = google;
   // Sign in with Apple (R2b): optional; the Services ID, team id and key id are vars, the .p8 key a Worker secret.
   for (const k of ['CLIENT_ID', 'TEAM_ID', 'KEY_ID']) { const v = setting(`BLOKDUST_APPLE_${k}`).trim(); if (v) target.vars[`APPLE_${k}`] = v; }
+  // The iPad app (SHARING-0011): Sign in with Apple in the app, and the site's apple-app-site-association. Its id is
+  // the app's bundle id (plugin/CMakeLists.txt); BLOKDUST_APPLE_APP_ID overrides it.
+  if (target.vars.APPLE_TEAM_ID) target.vars.APPLE_APP_ID = setting('BLOKDUST_APPLE_APP_ID', 'com.funputs.blokdust').trim();
   // Usage analytics (SHARING-0010): optional, per environment, from local config. Access protects /admin/*; Sentry's
   // DSN is public (it's in the page) but stays out of the repo with the rest; ANALYTICS_RATE overrides the committed
   // default (production's is "0", off). The dashboard's account id and query token are secrets (`bd server secret`).

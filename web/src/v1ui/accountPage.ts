@@ -36,7 +36,7 @@ export function pageWidth(): number { return App.SettingsMenuWidth(App.MainScene
 
 const COPY = {
   line: 'Sign in to keep your patches on every device.',
-  passkey: 'Continue With Passkey', google: 'Sign In With Google', apple: 'Sign In With Apple',
+  passkey: 'Continue With Passkey', google: 'Sign In With Google', apple: 'Sign In With Apple', passkeyApp: 'Sign In With Passkey',
   createTitle: 'New here? Choose your name', nameTitle: 'Choose your name', name: 'Name',
   noPasskey: 'No passkey was chosen. Choose a name to make a new account with a passkey on this device, or go back to try again.',
   createButton: 'Create With Passkey', saveName: 'Save Name', back: 'Back', stats: 'Stats',
@@ -234,7 +234,8 @@ export class AccountPage {
   }
   /** The ways to sign in, in the owner's order: Google, Apple, then a passkey (always offered). */
   private ways(): ('google' | 'apple' | 'passkey' | 'browser')[] {
-    if (this.host.plugin) return ['browser'];  // the plugins: a code approved on the website (SHARING-0011)
+    // The plugins: a code approved on the website; the iPad app also Apple and passkeys natively (SHARING-0011).
+    if (this.host.plugin) return this.host.plugin.native ? ['apple', 'passkey', 'browser'] : ['browser'];
     return [...(this.google ? ['google' as const] : []), ...(this.apple ? ['apple' as const] : []), 'passkey'];
   }
 
@@ -435,7 +436,7 @@ export class AccountPage {
       else if (!this.noBackend) {
         // Each its own menu colour, as Connect's GUIDE buttons and the Patches panel's.
         const colours = { google: menu[3], apple: menu[1], passkey: menu[2 % menu.length], browser: menu[3] } as const;
-        for (const k of this.ways()) this.filled(Lo.out[k], App.Palette[busy ? 1 : colours[k]], COPY[k], !busy && !!r[k]);
+        for (const k of this.ways()) this.filled(Lo.out[k], App.Palette[busy ? 1 : colours[k]], k === 'passkey' && this.host.plugin ? COPY.passkeyApp : COPY[k], !busy && !!r[k]);
       }
     }
     if (this.Message) { App.FillColor(c, txt); c.font = App.Metrics.TxtItalic2; c.textAlign = 'left'; this.wrap(this.Message, Lo.L, Lo.message, 14 * u, this.pageW()); }
@@ -489,6 +490,7 @@ export class AccountPage {
     const r = this.roll, a = this.host;
     if (this.Busy) return;
     this.mark();
+    if (this.host.plugin?.native && (r.apple || r.passkey)) { void this.nativeSignIn(r.apple ? 'apple' : 'passkey'); return; }
     if (r.passkey) { void this.continueWithPasskey(); return; }
     if (r.google) { a.google(); return; }
     if (r.apple) { a.apple(); return; }
@@ -545,6 +547,19 @@ export class AccountPage {
       } else this.Message = (e as Error).message || 'That did not work. Try again.';
     } finally { this.Busy = false; this.mark(); }
   }
+  /** The iPad app: Apple or a passkey, natively; a new Apple account then picks its name (refresh asks). */
+  private async nativeSignIn(kind: 'apple' | 'passkey'): Promise<void> {
+    const plug = this.host.plugin!;
+    this.Busy = true; this.Message = '';
+    try {
+      const r = await (kind === 'apple' ? plug.native!.apple() : plug.native!.passkey());
+      plug.keep(r.key, r.user.handle); this.View = 'main'; await this.refresh();
+    } catch (e) {
+      if ((e as Error).name !== 'AbortError') this.Message = kind === 'passkey' && (e as { status?: number }).status === 401
+        ? 'This passkey is not known here. Make an account on the website first, or sign in with your browser.' : (e as Error).message || 'That did not work. Try again.';
+    } finally { this.Busy = false; this.mark(); }
+  }
+
   // ---- a plugin's code (SHARING-0011) ----
   private deviceUntil = 0;
   private async startCode(): Promise<void> {

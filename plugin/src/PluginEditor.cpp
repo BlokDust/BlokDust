@@ -1,5 +1,8 @@
 #include "PluginEditor.h"
 #include "AccountStore.h"
+#if JUCE_IOS
+#include "ios/NativeSignIn.h"
+#endif
 #include "PatchFiles.h"
 #include "Telemetry.h"
 
@@ -60,6 +63,19 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                  account::write(v.getProperty("key", "").toString().toStdString(), v.getProperty("handle", "").toString().toStdString());
                })
                .withEventListener("bd_accountClear", [](const juce::var&) { account::clear(); })
+#if JUCE_IOS
+               // The iPad app signs in natively (SHARING-0011): the system's sheet over this window; the answer to the page.
+               .withEventListener("bd_nativeApple", [this](const juce::var& v) {
+                 nativesignin::apple(getPeer() != nullptr ? getPeer()->getNativeHandle() : nullptr, v.getProperty("nonce", "").toString(), [safe = juce::Component::SafePointer<BlokDustEditor>(this)](juce::var r) {
+                   juce::MessageManager::callAsync([safe, r] { if (safe != nullptr) safe->web_.emitEventIfBrowserIsVisible("bd_nativeAppleDone", r); });
+                 });
+               })
+               .withEventListener("bd_nativePasskey", [this](const juce::var& v) {
+                 nativesignin::passkey(getPeer() != nullptr ? getPeer()->getNativeHandle() : nullptr, v.getProperty("rpId", "").toString(), v.getProperty("challenge", "").toString(), [safe = juce::Component::SafePointer<BlokDustEditor>(this)](juce::var r) {
+                   juce::MessageManager::callAsync([safe, r] { if (safe != nullptr) safe->web_.emitEventIfBrowserIsVisible("bd_nativePasskeyDone", r); });
+                 });
+               })
+#endif
                // Power: off, on, or host (the DAW's transport has it). The page draws the mode; the processor owns it.
                .withEventListener("bd_powerMode", [this](const juce::var& v) { proc_.setPowerMode(static_cast<int>(v.getProperty("mode", 1))); })
                .withEventListener("bd_stats", [this](const juce::var& v) {
@@ -282,6 +298,9 @@ void BlokDustEditor::sendAccount() {
   j["name"] = account::deviceName(standalone).toStdString();
 #if JUCE_IOS
   j["browser"] = standalone;
+#if BLOKDUST_NATIVE_SIGN_IN
+  j["native"] = standalone;  // Sign in with Apple and passkeys: the app's own (in a host they'd be the host's)
+#endif
 #else
   j["browser"] = true;
 #endif

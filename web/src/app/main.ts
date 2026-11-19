@@ -20,7 +20,7 @@ import { decodePatch, encodePatch, loadLocal, loadSession, saveLocal, saveSessio
 import { type GalleryState, type Missing, MISSING_TEXT, accountOwned, canOverwrite, editToken, isServerId, load as loadShared, loadOrWhy, remove as removeShared, save as saveShared } from '../patch/server.ts';
 import * as account from '../account/client.ts';
 import { appKey, setAppKey } from '../account/appKey.ts';
-import { pollDevice, startDevice } from '../account/device.ts';
+import { appPost, pollDevice, startDevice } from '../account/device.ts';
 import { PLUGIN_SITE } from '../patch/site.ts';
 import { activity } from '../account/activity.ts';
 import * as gallery from '../gallery/client.ts';
@@ -690,7 +690,7 @@ async function main() {
         await account.signOut(false).catch(() => {});  // its key goes on the server (offline: it is forgotten here anyway)
         j.emitEvent('bd_accountClear', {}); setAppKey(null); refreshOwnership(true); scene.PatchesPanel.galleryKnown(null);
       },
-      cancelled: () => false,
+      cancelled: e => (e as Error).name === 'AbortError',
       plugin: {
         get canOpenBrowser() { return pluginBrowser; },
         start: () => startDevice(pluginName),
@@ -698,11 +698,34 @@ async function main() {
         open: url => j.emitEvent('bd_openUrl', { url }),
         keep: (key, handle) => { setAppKey(key); j.emitEvent('bd_accountSave', { key, handle: handle ?? '' }); refreshOwnership(); },
         website: () => j.emitEvent('bd_openUrl', { url: `${PLUGIN_SITE}?account=open` }),
+        // The iPad app (SHARING-0011): Apple and passkeys through the system; the server gives the key.
+        get native() { return pluginNative ? nativeSignIn : undefined; },
       },
     };
   }
-  /** What this plugin calls itself on the website, and whether it can open a browser (from bd_account). */
-  let pluginName = 'BlokDust', pluginBrowser = true;
+  /** What this plugin calls itself on the website, whether it can open a browser, and whether it signs in natively
+   * (the iPad app; from bd_account). */
+  let pluginName = 'BlokDust', pluginBrowser = true, pluginNative = false;
+  /** The iPad app's answer from the system's sign-in sheet (bd_nativeAppleDone / bd_nativePasskeyDone). */
+  let nativeAnswer: ((v: Record<string, string | boolean>) => void) | null = null;
+  const askNative = (event: string, body: object) => new Promise<Record<string, string | boolean>>(resolve => { nativeAnswer = resolve; juce?.emitEvent(event, body); });
+  const nativeFailed = (r: Record<string, string | boolean>) => Object.assign(new Error(String(r.error ?? 'That did not work. Try again.')), { name: r.cancelled ? 'AbortError' : 'Error' });
+  const nativeSignIn = {
+    apple: async () => {
+      const n = await appPost<{ id: string; nonce: string }>('app/apple/nonce');
+      const r = await askNative('bd_nativeApple', { nonce: n.nonce });
+      if (typeof r.code !== 'string') throw nativeFailed(r);
+      return appPost<{ key: string; user: { handle: string | null }; fresh?: boolean }>('app/apple', { id: n.id, code: r.code, name: pluginName });
+    },
+    passkey: async () => {
+      const o = await appPost<{ id: string; rpId: string; options: { challenge: string } }>('app/passkey/options');
+      const r = await askNative('bd_nativePasskey', { rpId: o.rpId, challenge: o.options.challenge });
+      if (typeof r.id !== 'string') throw nativeFailed(r);
+      const response = { id: r.id, rawId: r.rawId, type: 'public-key', clientExtensionResults: {}, authenticatorAttachment: 'platform',
+        response: { clientDataJSON: r.clientDataJSON, authenticatorData: r.authenticatorData, signature: r.signature, ...(r.userHandle ? { userHandle: r.userHandle } : {}) } };
+      return appPost<{ key: string; user: { handle: string | null } }>('app/passkey', { id: o.id, response, name: pluginName });
+    },
+  };
   /** After signing in or out: whether this device may save over the open composition (R9). */
   function refreshOwnership(out = false): void {
     if (out) accountOwnedClear();
@@ -2262,11 +2285,13 @@ async function main() {
     juce.addEventListener('bd_hostState', (h: { mode: number; playing: boolean }) => { scene.setHostState(h.mode, h.playing); stage.redraw(); });
     juce.addEventListener('bd_ccLearned', (e: { slot: number; cc: number }) => { ccBySlot.set(e.slot, e.cc); });
     juce.addEventListener('bd_analytics', (e: { on: boolean }) => { pluginStats = !!e.on; });
+    for (const ev of ['bd_nativeAppleDone', 'bd_nativePasskeyDone']) juce.addEventListener(ev, (v: Record<string, string | boolean>) => { const f = nativeAnswer; nativeAnswer = null; f?.(v); });
     // Signed in (SHARING-0011): the key the plugin keeps; what it calls itself; whether it can open a browser.
-    juce.addEventListener('bd_account', (e: { key?: string; name?: string; browser?: boolean }) => {
+    juce.addEventListener('bd_account', (e: { key?: string; name?: string; browser?: boolean; native?: boolean }) => {
       setAppKey(e.key ?? null);
       if (e.name) pluginName = e.name;
       pluginBrowser = e.browser !== false;
+      pluginNative = !!e.native;
       if (appKey()) void account.accountPatches().then(() => refreshOwnership()).catch(() => {});
       void (scene.SettingsPanel as any).accountPage?.refresh(false);
     });

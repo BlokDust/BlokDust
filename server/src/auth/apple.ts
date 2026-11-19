@@ -23,10 +23,10 @@ function pkcs8(pem: string): Uint8Array {
 }
 const b64url = (b: Uint8Array | string) => btoa(typeof b === 'string' ? b : String.fromCharCode(...b)).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 /** Apple's client secret: an ES256 JWT from the team, about the Services ID, for five minutes. */
-async function clientSecret(env: Env): Promise<string> {
+export async function clientSecret(env: Env, clientId = env.APPLE_CLIENT_ID!): Promise<string> {
   const key = await crypto.subtle.importKey('pkcs8', pkcs8(env.APPLE_PRIVATE_KEY!), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
   const now = Math.floor(Date.now() / 1000);
-  const msg = `${b64url(JSON.stringify({ alg: 'ES256', kid: env.APPLE_KEY_ID }))}.${b64url(JSON.stringify({ iss: env.APPLE_TEAM_ID, iat: now, exp: now + 300, aud: ISSUER, sub: env.APPLE_CLIENT_ID }))}`;
+  const msg = `${b64url(JSON.stringify({ alg: 'ES256', kid: env.APPLE_KEY_ID }))}.${b64url(JSON.stringify({ iss: env.APPLE_TEAM_ID, iat: now, exp: now + 300, aud: ISSUER, sub: clientId }))}`;
   const sig = new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, new TextEncoder().encode(msg)));
   return `${msg}.${b64url(sig)}`;
 }

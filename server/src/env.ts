@@ -30,6 +30,9 @@ export interface Env {
   /** Sign in with Apple (SPEC-SHARING-ACCOUNTS R2b): the Services ID, team and key ids (vars) and the .p8 key (a secret). */
   APPLE_CLIENT_ID?: string;
   APPLE_TEAM_ID?: string;
+  /** The iPad app's id (its bundle id), for Sign in with Apple in the app and the site's apple-app-site-association
+   * (SHARING-0011). */
+  APPLE_APP_ID?: string;
   APPLE_KEY_ID?: string;
   APPLE_PRIVATE_KEY?: string;
   /** Overridable for tests (a local mock); default to Apple's endpoints and issuer. */

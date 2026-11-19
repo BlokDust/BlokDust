@@ -92,17 +92,19 @@ export async function startMockServices(): Promise<MockServices> {
       let body = '';
       req.on('data', c => (body += c));
       req.on('end', () => {
-        const f = new URLSearchParams(body), code = f.get('code') ?? '', [h, p, sig] = (f.get('client_secret') ?? '').split('.');
+        // The website's Services ID or the iPad app's id (SHARING-0011): the client secret is about whichever asks.
+        // An app's code carries the nonce Apple would have put in its token: "<user>~<nonce>".
+        const f = new URLSearchParams(body), client = f.get('client_id') ?? '', [user, nonce] = (f.get('code') ?? '').split('~'), code = user, [h, p, sig] = (f.get('client_secret') ?? '').split('.');
         let ok = false;
         try {
           const claims = JSON.parse(Buffer.from(p, 'base64url').toString()), head = JSON.parse(Buffer.from(h, 'base64url').toString());
           ok = createVerify('SHA256').update(`${h}.${p}`).verify({ key: apple.publicKey, dsaEncoding: 'ieee-p1363' }, Buffer.from(sig, 'base64url'))
-            && head.alg === 'ES256' && head.kid === 'test-key-id' && claims.iss === 'test-team' && claims.sub === 'test-apple-client' && claims.aud === 'https://appleid.apple.com' && claims.exp > Date.now() / 1000;
+            && head.alg === 'ES256' && head.kid === 'test-key-id' && claims.iss === 'test-team' && (client === 'test-apple-client' || client === 'test.app.id') && claims.sub === client && claims.aud === 'https://appleid.apple.com' && claims.exp > Date.now() / 1000;
         } catch { ok = false; }
         appleSecrets.push(ok);
         if (!ok || code.endsWith('-bad')) return send(400, { error: 'invalid_client' });
         const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url');
-        const id = `${b64({ alg: 'RS256' })}.${b64({ iss: 'https://appleid.apple.com', aud: 'test-apple-client', sub: `apple-sub-${code}`, exp: Math.floor(Date.now() / 1000) + 600 })}.sig`;
+        const id = `${b64({ alg: 'RS256' })}.${b64({ iss: 'https://appleid.apple.com', aud: client, sub: `apple-sub-${code}`, exp: Math.floor(Date.now() / 1000) + 600, ...(nonce ? { nonce } : {}) })}.sig`;
         send(200, { access_token: 'at', token_type: 'Bearer', expires_in: 600, id_token: id });
       });
       return;

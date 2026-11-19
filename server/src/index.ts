@@ -13,6 +13,7 @@ import { appleCallback, appleStart } from './auth/apple.ts';
 import { loginOptions, loginVerify, registerOptions, registerVerify } from './auth/passkey.ts';
 import { appKeyOf, sameOrigin } from './auth/session.ts';
 import { deviceApprove, deviceInfo, devicePoll, deviceStart, listApps, removeApp } from './auth/appKeys.ts';
+import { appSiteAssociation, appleApp, appleNonce, passkeyApp, passkeyOptions } from './auth/native.ts';
 import { like, list as galleryList, report, unpublish } from './gallery.ts';
 import { clientConfig, ingest, record } from './analytics.ts';
 import { admin } from './admin.ts';
@@ -29,6 +30,8 @@ const corsFor = (origin: string) => ({ 'access-control-allow-origin': origin, va
 async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(req.url);
   const base = basePath(env);
+  // The iPad app may use this site's passkeys (SHARING-0011): Apple reads this at the domain's root.
+  if (url.pathname === '/.well-known/apple-app-site-association' && (req.method === 'GET' || req.method === 'HEAD')) return appSiteAssociation(env);
   const m = req.method;
   const canonical = (env.PUBLIC_BASE_URL ?? '').trim().replace(/\/+$/, '');
   // A former base path (SHARING-0006: funputs.com/blokdust, and staging's old …/blokdust/): its pages go to the same
@@ -112,6 +115,15 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
   if (path === '/api/auth/apple/start' && m === 'GET') { await limit(env.SAVE_LIMIT, req, 'auth'); return appleStart(env, req, url); }
   if (path === '/api/auth/apple/callback' && m === 'GET') return appleCallback(env, req, url);
   // ---- plugin sign-in (CHG-0039, SHARING-0011): a device code, approved on the website ----
+  // The iPad app's native sign-in (SHARING-0011): keys in the body, no cookies, so no Origin check.
+  if (path.startsWith('/api/app/')) {
+    await limit(env.SAVE_LIMIT, req, 'device');
+    if (path === '/api/app/apple/nonce' && m === 'POST') return appleNonce(env);
+    if (path === '/api/app/apple' && m === 'POST') return appleApp(env, req);
+    if (path === '/api/app/passkey/options' && m === 'POST') return passkeyOptions(env, req);
+    if (path === '/api/app/passkey' && m === 'POST') return passkeyApp(env, req);
+    throw new HttpError(404, 'no such endpoint');
+  }
   if (path.startsWith('/api/device/')) {
     if (path === '/api/device/start' && m === 'POST') { await limit(env.SAVE_LIMIT, req, 'device'); return deviceStart(env, req); }
     if (path === '/api/device/poll' && m === 'POST') { await limit(env.SEARCH_LIMIT, req, 'poll'); return devicePoll(env, req); }

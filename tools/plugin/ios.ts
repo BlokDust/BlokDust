@@ -260,6 +260,12 @@ export function iosDevice(noBuild: boolean): void {
     requiredSetting('BLOKDUST_APPLE_TEAM_ID');
     const env = configEnvironment();
     webBuildFor('staging');  // the owner reviews against staging (CHG-0039)
+    // The sites whose passkeys the app may use (SHARING-0011): the live site and the review site (local config).
+    env.BLOKDUST_WEBCREDENTIALS = ['BLOKDUST_PRODUCTION_PUBLIC_URL', 'BLOKDUST_STAGING_PUBLIC_URL']
+      .map(k => setting(k)).filter(Boolean).map(u => new URL(u).hostname).join(';');
+    // Once the App ID has Sign in with Apple and Associated Domains (the developer portal, or Xcode signed in to the
+    // team): BLOKDUST_IOS_NATIVE_SIGN_IN=1 in local config builds them in.
+    env.BLOKDUST_IOS_NATIVE_SIGN_IN = setting('BLOKDUST_IOS_NATIVE_SIGN_IN', '0');
     must(spawnSync('cmake', ['--preset', 'plugin-ios'], { stdio: ['ignore', 'inherit', 'inherit'], env }), 'configure (plugin-ios)');
     // xcodebuild with the CMake-generated scheme and this iPad as the destination, so automatic signing registers the iPad
     // in the team's profile (a plain target build signs for whatever devices the profile already lists).

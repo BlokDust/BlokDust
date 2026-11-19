@@ -97,6 +97,11 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   minutes). Signed in, the plugin shows the stats, ON THE WEBSITE · SIGN OUT (no SIGN-IN METHODS, no DELETE ACCOUNT);
   OPEN lists the account's patches first and SAVE saves to the account as on the website. SIGN-IN METHODS on the
   website lists APPS SIGNED IN, each with REMOVE.
+  The iPad app also signs in natively: SIGN IN WITH APPLE (`POST /api/app/apple/nonce`, then `/api/app/apple {id, code,
+  name}`: Apple's code exchanged with the app's id, the token's nonce the one issued, once; a new Apple account is made
+  and names itself in the app) and SIGN IN WITH PASSKEY (`/api/app/passkey/options`, `/api/app/passkey {id, response,
+  name}`: the site's passkey, through Associated Domains). Both answer with a key. The site serves
+  `/.well-known/apple-app-site-association` (webcredentials for the app).
 - **R13.** Settings has a tab after ABOUT and DOWNLOAD (owner review 2026-11-15), named SIGN IN until someone is
   signed in, then ACCOUNT, drawn with v1 panel pieces (web/src/v1ui/accountPage.ts):
   - signed out: "Sign in to keep your patches on every device.", then one full-width button each for GOOGLE, APPLE
