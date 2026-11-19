@@ -7,7 +7,9 @@
 //    (adsrPanel.ts): "F# 35%", "D MINOR 7TH". A bar whose note just played is drawn in the text colour.
 //  - The bars show the pattern after the Key slider: bar n shows stored value (n − key) mod 12.
 import { App } from './shim.ts';
-import { KEYS } from './newBlocks.ts';
+import { KEYS, monitorOf } from './newBlocks.ts';
+
+const LIT_MS = 250;
 
 /** Chord qualities, bottom to top (SPEC-SIMULATION-POWER-AND-PARTICLES R10f). */
 export const CHORD_QUALITIES = ['NONE', 'SUS2', 'MINOR', 'MAJOR', 'SUS4', 'MINOR 7TH', '7TH', 'MAJOR 7TH'];
@@ -40,7 +42,7 @@ function setBar(block: any, n: number, value: number): void {
   if (!k) return;
   const i = (n - keyOf(block) + 12) % 12, key = `${prefix(k)}${i}`;
   block.Params[key] = value;
-  App.MainScene.setParam(block, key, value);  // a no-op until the engine has the param (CHG-0040 task 3)
+  App.MainScene.setParam(block, key, value);
 }
 const barText = (k: Kind, n: number, v: number) => `${KEYS[n]}  ${k === 'weights' ? `${Math.round(v * 100)}%` : CHORD_QUALITIES[v]}`;
 
@@ -58,6 +60,9 @@ export function drawNoteBars(this: any, ctx: CanvasRenderingContext2D, units: nu
   const block = panel.SelectedBlock, k = kindOf(block);
   if (!k) return;
   const L = layout(panel, this, units), colours = panel.SliderColours, col = colours[i % colours.length];
+  // LIGHT-UP: the engine counts its picks (monitor [note, count]); a new one lights its bar for a moment.
+  const m = monitorOf(block.Id);
+  if (m && m[1] !== block.__bdSeen) { if (block.__bdSeen !== undefined) block.__bdLit = { note: Math.round(m[0]), until: performance.now() + LIT_MS }; block.__bdSeen = m[1]; }
   const txt = App.Palette[App.ThemeManager.Txt], lit = block.__bdLit as { note: number; until: number } | undefined;
   const steps = CHORD_QUALITIES.length - 1, dataType = Math.round(units * 10);
   // DIVIDER (v1 OptionSlider) //
@@ -106,11 +111,7 @@ export function drawNoteBars(this: any, ctx: CanvasRenderingContext2D, units: nu
 
 /** Random Note's Range: v1's slider track with two handles (by semitone). */
 let rangeHeld: 'low' | 'high' | null = null;
-export function rangeOf(block: any): [number, number] {
-  const lo = Number(block?.Params?.low ?? 60), hi = Number(block?.Params?.high ?? 71);
-  // Until the migration (CHG-0040 task 5) a block may still hold octaves (−3…3): read them as that octave's notes.
-  return [lo < RANGE_MIN ? 60 + 12 * lo : lo, hi < RANGE_MIN ? 71 + 12 * hi : hi];
-}
+export const rangeOf = (block: any): [number, number] => [Number(block?.Params?.low ?? 60), Number(block?.Params?.high ?? 71)];
 export function drawRange(this: any, ctx: CanvasRenderingContext2D, units: number, i: number, panel: any): void {
   const block = panel.SelectedBlock, x = panel.Margin, w = panel.Range, y = this.Position.y, h = this.Size.height, mid = y + h * 0.5;
   const [lo, hi] = rangeOf(block), at = (m: number) => x + ((m - RANGE_MIN) / (RANGE_MAX - RANGE_MIN)) * w;
@@ -168,7 +169,7 @@ function setRangeFromX(panel: any, row: any, mx: number): void {
   }
   if (rangeHeld === 'low') lo = Math.min(m, hi); else hi = Math.max(m, lo);
   const was = rangeOf(block);
-  for (const [key, v, w] of [['low', lo, was[0]], ['high', hi, was[1]]] as const) if (w !== v || Number(block.Params[key]) !== v) { block.Params[key] = v; App.MainScene.setParam(block, key, v); }
+  for (const [key, v, w] of [['low', lo, was[0]], ['high', hi, was[1]]] as const) if (w !== v) { block.Params[key] = v; App.MainScene.setParam(block, key, v); }
   void row;
   panel._DrawReady = true;
 }

@@ -292,6 +292,9 @@ interface LfoTarget { id: number; param: string; label: string }
 function modulatable(block: any): { param: string; label: string }[] {
   const def = block.def as BlockDef, out: { param: string; label: string }[] = [];
   if (def.id === 'fx.filter') return [{ param: 'frequency', label: 'Frequency' }, { param: 'gain', label: 'Gain' }, { param: 'Q', label: 'Width' }];
+  // CHG-0040: Random Note's bars and range ends (its Key is a slider row); a Chord's Key only, not its chord bars.
+  if (def.id === 'fx.random-note') return [...KEYS.map((k, i) => ({ param: `w${i}`, label: `Weight ${k}` })), { param: 'key', label: 'Key' }, { param: 'low', label: 'Range Low' }, { param: 'high', label: 'Range High' }];
+  if (def.id === 'fx.chord') return [{ param: 'key', label: 'Key' }];
   block.UpdateOptionsForm();
   for (const row of (block.OptionsForm?.parameters ?? []) as any[]) {
     if (row.type !== 'slider' || isSelector(row.setting) || (LIVE_ROWS[row.setting] && !METER_ROWS.has(row.setting))) continue;

@@ -110,14 +110,21 @@ struct Block {
   // ---- arranged sources (CHG-0017, AUDIO-0002): a source with a note effect in its chain, or a keyboard with Keys
   // set pitch connected, takes its notes from here instead of v1's voice rules. Keys held by its controllers, oldest
   // first; the note Random Note picked for the current trigger; where its Arpeggiator is. ----
-  struct ArrKey { std::int16_t key; std::int16_t channel; BlockId controller; bool pitchOnly; bool poly; double bend = 0.0; };  // bend: a slide (semitones)
-  struct ArrNote { BlockId controller = 0; std::int16_t key = -1; std::int16_t channel = 0; double offset = 0.0; double bend = 0.0; };
+  /// A Chord's notes for one note in (CHG-0040): kept while its root and chord stay, so re-arranging never moves them.
+  struct Voicing { std::int16_t root = -1000; std::int8_t quality = -1; std::int8_t count = 0; std::array<std::int8_t, 4> off{}; };
+  // bend: a slide (semitones). rnd: the note Random Note picked for this key (−1: none yet; CHG-0040).
+  struct ArrKey { std::int16_t key; std::int16_t channel; BlockId controller; bool pitchOnly; bool poly; double bend = 0.0; std::int16_t rnd = -1; Voicing voicing{}; };
+  // src: the held key it came from (index into arrKeys), or −1 for the source's own note.
+  struct ArrNote { BlockId controller = 0; std::int16_t key = -1; std::int16_t channel = 0; double offset = 0.0; double bend = 0.0; std::int16_t src = -1; };
   bool arranged = false;
   bool arrGate = false;             // sounding (power or a sounding key) at the last arrange
   std::array<ArrKey, 16> arrKeys{};
   int arrKeyCount = 0;
   ArrNote randomNote{};
   bool randomValid = false;
+  Voicing ownVoicing{};             // the Chord on the source's own note
+  std::array<double, 4> lastChord{};  // Smooth (CHG-0040): the newest chord's notes (semitones, as key + offset)
+  int lastChordCount = 0;
   int arpStep = -1;                 // which of its notes the Arpeggiator is on (−1: none yet)
   std::uint32_t arpRand = 0;        // its pick for the random pattern
   int arpTicks = 0;                 // not synced: ticks since the last step

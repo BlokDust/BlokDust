@@ -857,15 +857,46 @@ void Engine::releaseVoice(int slot, int v) noexcept {
 // ---------------------------------------------------------------------------------------------------------------
 
 namespace {
-/// Scales shared by Random Note and the Touchpad: major, minor, dorian, lydian, mixolydian, pentatonic.
-constexpr int kScaleCount = 6;
-constexpr int kScaleSize[kScaleCount] = {7, 7, 7, 7, 7, 5};
-constexpr int kScales[kScaleCount][7] = {
-  {0, 2, 4, 5, 7, 9, 11}, {0, 2, 3, 5, 7, 8, 10}, {0, 2, 3, 5, 7, 9, 10}, {0, 2, 4, 6, 7, 9, 11}, {0, 2, 4, 5, 7, 9, 10}, {0, 2, 4, 7, 9, 0, 0}};
-/// Chord: octave, fifth, major, minor, sus2, sus4, seventh, major 7th, minor 7th.
+/// Chord qualities (CHG-0040, R10f), bottom to top: none, sus2, minor, major, sus4, minor 7th, 7th, major 7th.
 constexpr int kChordCount = 8;
-constexpr int kChordSize[kChordCount] = {2, 3, 3, 3, 3, 4, 4, 4};
-constexpr int kChords[kChordCount][4] = {{0, 7, 0, 0}, {0, 4, 7, 0}, {0, 3, 7, 0}, {0, 2, 7, 0}, {0, 5, 7, 0}, {0, 4, 7, 10}, {0, 4, 7, 11}, {0, 3, 7, 10}};
+constexpr int kChordSize[kChordCount] = {1, 3, 3, 3, 3, 4, 4, 4};
+constexpr int kChords[kChordCount][4] = {{0, 0, 0, 0}, {0, 2, 7, 0}, {0, 3, 7, 0}, {0, 4, 7, 0}, {0, 5, 7, 0}, {0, 3, 7, 10}, {0, 4, 7, 10}, {0, 4, 7, 11}};
+/// Random Note's range (MIDI): C1…B7.
+constexpr int kRandomLow = 24, kRandomHigh = 107;
+/// A source's own tuning in whole semitones (its Note or playback rate), so a Chord picks by the note heard.
+int tuningOf(const Block& b) noexcept {
+  if (b.type == BlockType::SourceTone) return static_cast<int>(std::lround(b.params[P::SourceTone::transpose]));
+  if (b.type == BlockType::SourceWavetable) return static_cast<int>(std::lround(b.params[P::SourceWavetable::transpose]));
+  if (b.type == BlockType::SourceSample || b.type == BlockType::SourceGranular) return static_cast<int>(std::lround(b.params[P::SourceSample::playbackRate]));
+  return 0;
+}
+/// Random Note's pick (R10h): every note in its range, weighted by its note's bar after Key; `fallback` when no note
+/// has weight.
+int pickRandom(Block& rn, int fallback) noexcept {
+  namespace R = P::FxRandomNote;
+  const int key = ((static_cast<int>(std::lround(rn.params[R::key])) % 12) + 12) % 12;
+  int lo = std::clamp(static_cast<int>(std::lround(rn.params[R::low])), kRandomLow, kRandomHigh);
+  int hi = std::clamp(static_cast<int>(std::lround(rn.params[R::high])), kRandomLow, kRandomHigh);
+  if (hi < lo) std::swap(lo, hi);
+  const auto weight = [&](int m) { return std::clamp(rn.params[static_cast<std::size_t>(R::w0 + (m % 12 - key + 12) % 12)], 0.0, 1.0); };
+  double total = 0.0;
+  for (int m = lo; m <= hi; ++m) total += weight(m);
+  if (!(total > 0.0)) return fallback;
+  double r = static_cast<double>(rn.grainRng.next()) * (1.0 / 4294967296.0) * total;
+  int last = fallback;
+  for (int m = lo; m <= hi; ++m) {
+    const double w = weight(m);
+    if (w <= 0.0) continue;
+    last = m;
+    if ((r -= w) < 0.0) return m;
+  }
+  return last;
+}
+/// The panel's light-up (UI-0016): the note a Random Note picked or a Chord voiced, and how many so far.
+void noteShown(Block& fx, int midi) noexcept {
+  fx.mon[0] = static_cast<float>(((midi % 12) + 12) % 12);
+  fx.mon[1] += 1.0f;
+}
 }  // namespace
 
 bool Engine::keysSetPitch(const Block& ctrl) noexcept {
@@ -913,16 +944,16 @@ void Engine::arrangedKey(int slot, const Block& ctrl, int key, int channel, bool
     b.arrKeys[static_cast<std::size_t>(n++)] = {static_cast<std::int16_t>(key), static_cast<std::int16_t>(channel), ctrl.id, pitchOnly, polyOf(ctrl)};
   }
   b.arrKeyCount = n;
-  arrange(slot, on && !pitchOnly);
+  arrange(slot, on && !pitchOnly, true);
   updateNotePower(b);
 }
 
 /// Work out the notes an arranged source should be sounding and make its voices match (AUDIO-0002).
 /// Notes in: the keys held on its keyboards (a mono keyboard that sounds counts only its newest; with Keys set pitch
 /// every held key counts), or, with none, the source's own note. They sound while the source has power or a sounding
-/// key is held. Then Random Note picks one per trigger, Chord adds its intervals, and an Arpeggiator plays one at a
-/// time. `trigger`: power arrived, or a sounding key was pressed.
-void Engine::arrange(int slot, bool trigger) noexcept {
+/// key is held. Then Random Note picks a note for each (CHG-0040), Chord plays each note's chord, and an Arpeggiator
+/// plays one at a time. `trigger`: power arrived, a hit, or (`keyPress`) a sounding key was pressed.
+void Engine::arrange(int slot, bool trigger, bool keyPress) noexcept {
   Block& b = blocks_[static_cast<std::size_t>(slot)];
   using Note = Block::ArrNote;
   bool soundingKey = false;
@@ -945,38 +976,75 @@ void Engine::arrange(int slot, bool trigger) noexcept {
       for (int j = i + 1; j < b.arrKeyCount; ++j) newer = newer || (b.arrKeys[static_cast<std::size_t>(j)].controller == h.controller && !b.arrKeys[static_cast<std::size_t>(j)].pitchOnly);
       if (newer) continue;
     }
-    notes[static_cast<std::size_t>(n++)] = Note{h.controller, h.key, h.channel, 0.0, h.bend};
+    notes[static_cast<std::size_t>(n++)] = Note{h.controller, h.key, h.channel, 0.0, h.bend, static_cast<std::int16_t>(i)};
   }
   const bool fromKeys = n > 0;
   if (!fromKeys) notes[static_cast<std::size_t>(n++)] = Note{};  // the source's own note
   if (fx.random >= 0) {
-    if (trigger || !b.randomValid) {
-      Block& rn = blocks_[static_cast<std::size_t>(fx.random)];
-      if (fromKeys) b.randomNote = notes[static_cast<std::size_t>(rn.grainRng.next() % static_cast<std::uint32_t>(n))];
-      else {
-        const int scale = std::clamp(static_cast<int>(std::lround(rn.params[P::FxRandomNote::scale])), 0, kScaleCount - 1);
-        const int root = std::clamp(static_cast<int>(std::lround(rn.params[P::FxRandomNote::key])), 0, 11);
-        int lo = std::clamp(static_cast<int>(std::lround(rn.params[P::FxRandomNote::low])), -3, 3), hi = std::clamp(static_cast<int>(std::lround(rn.params[P::FxRandomNote::high])), -3, 3);
-        if (hi < lo) std::swap(lo, hi);
-        const int size = kScaleSize[scale], count = (hi - lo + 1) * size;
-        const int pick = static_cast<int>(rn.grainRng.next() % static_cast<std::uint32_t>(count));
-        b.randomNote = Note{0, static_cast<std::int16_t>(60 + root + 12 * (lo + pick / size) + kScales[scale][pick % size]), 0, 0.0};
+    // R10h: keys only trigger. Each held key keeps its own pick until a trigger other than a key press (power, a
+    // hit) picks again for all; the source's own note picks at each trigger.
+    Block& rn = blocks_[static_cast<std::size_t>(fx.random)];
+    if (fromKeys) {
+      const bool all = trigger && !keyPress;
+      for (int i = 0; i < n; ++i) {
+        Note& x = notes[static_cast<std::size_t>(i)];
+        auto& h = b.arrKeys[static_cast<std::size_t>(x.src)];
+        if (all || h.rnd < 0) { h.rnd = static_cast<std::int16_t>(pickRandom(rn, h.key)); noteShown(rn, h.rnd); }
+        x.offset = static_cast<double>(h.rnd - h.key);
       }
-      b.randomValid = true;
+    } else {
+      if (trigger || !b.randomValid) {
+        const int m = pickRandom(rn, -1);
+        b.randomNote = m < 0 ? Note{} : Note{0, static_cast<std::int16_t>(m), 0, 0.0};
+        b.randomValid = true;
+        noteShown(rn, m < 0 ? 60 : m);
+      }
+      notes[0] = b.randomNote;
     }
-    notes[0] = b.randomNote; n = 1;
   }
   if (fx.chord >= 0) {
-    const Block& ch = blocks_[static_cast<std::size_t>(fx.chord)];
-    const int type = std::clamp(static_cast<int>(std::lround(ch.params[P::FxChord::chord])), 0, kChordCount - 1), size = kChordSize[type];
-    const int inv = std::clamp(static_cast<int>(std::lround(ch.params[P::FxChord::inversion])), 0, size - 1);
-    const int in = n;
+    // R10f: each note in plays the chord on its own note's bar (after Key). Smooth: the note in stays and the others
+    // go to the octave nearest the previous chord's notes, within an octave of it. A note's voicing is kept while its
+    // root and chord stay, so arranging again never moves a sounding chord.
+    namespace C = P::FxChord;
+    Block& ch = blocks_[static_cast<std::size_t>(fx.chord)];
+    const int key = ((static_cast<int>(std::lround(ch.params[C::key])) % 12) + 12) % 12, tuning = tuningOf(b);
+    const bool smooth = ch.params[C::smooth] != 0.0;
     std::array<Note, 64> out;
     int m = 0;
-    for (int i = 0; i < in; ++i) for (int k = 0; k < size && m < static_cast<int>(out.size()); ++k) {
-      Note x = notes[static_cast<std::size_t>(i)];
-      x.offset += kChords[type][k] + (k < inv ? 12 : 0);
-      out[static_cast<std::size_t>(m++)] = x;
+    for (int i = 0; i < n; ++i) {
+      const Note& x = notes[static_cast<std::size_t>(i)];
+      Block::Voicing& vc = x.src >= 0 ? b.arrKeys[static_cast<std::size_t>(x.src)].voicing : b.ownVoicing;
+      const int root = static_cast<int>(std::lround((x.key >= 0 ? x.key : 60) + x.offset));
+      const int pc = (((root + tuning) % 12) + 12) % 12;
+      const int q = std::clamp(static_cast<int>(std::lround(ch.params[static_cast<std::size_t>(C::q0 + (pc - key + 12) % 12)])), 0, kChordCount - 1);
+      const int tag = q + (smooth ? kChordCount : 0);
+      if (vc.root != root || vc.quality != tag) {
+        vc.root = static_cast<std::int16_t>(root); vc.quality = static_cast<std::int8_t>(tag); vc.count = static_cast<std::int8_t>(kChordSize[q]);
+        for (int k = 0; k < kChordSize[q]; ++k) {
+          int best = kChords[q][k];
+          if (smooth && k > 0 && b.lastChordCount > 0) {
+            double bestD = 1e9;
+            for (int c = kChords[q][k] - 24; c <= kChords[q][k] + 12; c += 12) {
+              if (c < -12 || c > 12) continue;
+              double d = 1e9;
+              for (int j = 0; j < b.lastChordCount; ++j) d = std::min(d, std::abs(root + c - b.lastChord[static_cast<std::size_t>(j)]));
+              if (d < bestD || (d == bestD && std::abs(c - kChords[q][k]) < std::abs(best - kChords[q][k]))) { bestD = d; best = c; }
+            }
+          }
+          vc.off[static_cast<std::size_t>(k)] = static_cast<std::int8_t>(best);
+        }
+        noteShown(ch, root + tuning);
+        if (vc.count > 1) {  // a chord (not a lone note) is what the next one leads from
+          b.lastChordCount = vc.count;
+          for (int k = 0; k < vc.count; ++k) b.lastChord[static_cast<std::size_t>(k)] = root + vc.off[static_cast<std::size_t>(k)];
+        }
+      }
+      for (int k = 0; k < vc.count && m < static_cast<int>(out.size()); ++k) {
+        Note y = x;
+        y.offset += vc.off[static_cast<std::size_t>(k)];
+        out[static_cast<std::size_t>(m++)] = y;
+      }
     }
     notes = out; n = m;
   }
@@ -1218,6 +1286,7 @@ void Engine::refreshVoices(int slot) noexcept {
   if (const bool arr = wantsArranged(slot); arr != b.arranged) {
     for (int v = 0; v < kVoices; ++v) if (b.voices[static_cast<std::size_t>(v)].active) releaseVoice(slot, v);
     b.monoVoice = b.lastMonoVoice = -1; b.monoHeldCount = 0; b.arrKeyCount = 0; b.randomValid = false; b.arrGate = false;
+    b.ownVoicing = {}; b.lastChordCount = 0;
     b.powerOn = false;  // power takes the source again on the next gate update
     b.arranged = arr;
   }
@@ -2275,6 +2344,7 @@ int Engine::monitors(Monitor* out, int max) const noexcept {
     else if (b.type == BlockType::PowerChance) out[n++] = {b.id, {0.0f, b.counterFired ? 1.0f : 0.0f, 0.0f, 0.0f}};
     else if (b.type == BlockType::PowerCounter) out[n++] = {b.id, {static_cast<float>(b.counterStep), b.counterFired ? 1.0f : 0.0f, 0.0f, 0.0f}};
     else if (b.type == BlockType::PowerGate) out[n++] = {b.id, {gateOpen(b) ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f}};
+    else if (b.type == BlockType::FxRandomNote || b.type == BlockType::FxChord) out[n++] = {b.id, {b.mon[0], b.mon[1], 0.0f, 0.0f}};
     else if (b.type == BlockType::PowerPrism) out[n++] = {b.id, {static_cast<float>(b.params[P::PowerPrism::angle]), 0.0f, 0.0f, 0.0f}};
   }
   return n;
