@@ -86,7 +86,7 @@ export async function unpublish(env: Env, id: string, mayEdit: (id: string) => P
  * new patches get a chance. Top (all time, CHG-0035): likes + 2·remixes, with no decay; newest first among equals.
  */
 export async function list(env: Env, req: Request, url: URL): Promise<Response> {
-  const me = await currentUser(env, req), now = Date.now();
+  const me = await currentUser(env, req, { app: true }), now = Date.now();
   const s = url.searchParams.get('sort'), sort: Sort = s === 'top' || s === 'new' || s === 'examples' || s === 'tutorials' ? s : 'popular';
   const kind = sort === 'examples' ? 'example' : sort === 'tutorials' ? 'tutorial' : null;
   const page = Math.max(1, Math.min(500, Number(url.searchParams.get('page')) || 1));
@@ -114,7 +114,7 @@ export async function list(env: Env, req: Request, url: URL): Promise<Response> 
 
 /** POST /api/gallery/:id/like {on} — signed in; one like per person (R8; no down votes). */
 export async function like(env: Env, req: Request, id: string): Promise<Response> {
-  const u = await requireUser(env, req);
+  const u = await requireUser(env, req, { app: true });  // a plugin's key too (SHARING-0011)
   const { on } = await body<{ on?: unknown }>(req);
   if (!(await env.DB.prepare('SELECT 1 FROM gallery WHERE patch_id = ? AND hidden = 0').bind(id).first())) throw new HttpError(404, 'not in the gallery');
   const stmt = on === false
@@ -128,7 +128,7 @@ export async function like(env: Env, req: Request, id: string): Promise<Response
 /** POST /api/gallery/:id/report {reason} — signed in; once per person; hidden at REPORTS_TO_HIDE (R9), except
  * @blokdust's own patches (the EXAMPLES and TUTORIALS), whose reports are kept for `bd gallery reports` only. */
 export async function report(env: Env, req: Request, id: string): Promise<Response> {
-  const u = await requireUser(env, req);
+  const u = await requireUser(env, req, { app: true });
   const { reason } = await body<{ reason?: unknown }>(req);
   if (!(await env.DB.prepare('SELECT 1 FROM gallery WHERE patch_id = ?').bind(id).first())) throw new HttpError(404, 'not in the gallery');
   await env.DB.batch([

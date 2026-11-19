@@ -11,7 +11,8 @@ import { claim, deleteAccount, logout, me, myPatches, postActivity, removeMethod
 import { googleCallback, googleStart } from './auth/google.ts';
 import { appleCallback, appleStart } from './auth/apple.ts';
 import { loginOptions, loginVerify, registerOptions, registerVerify } from './auth/passkey.ts';
-import { sameOrigin } from './auth/session.ts';
+import { appKeyOf, sameOrigin } from './auth/session.ts';
+import { deviceApprove, deviceInfo, devicePoll, deviceStart, listApps, removeApp } from './auth/appKeys.ts';
 import { like, list as galleryList, report, unpublish } from './gallery.ts';
 import { clientConfig, ingest, record } from './analytics.ts';
 import { admin } from './admin.ts';
@@ -64,6 +65,11 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
   const embed = path.match(/^\/embed\/([^/]+)\/?$/);
   if (embed && m === 'GET') return page(env, req, url, embed[1]);
   if (path === '/oembed' && m === 'GET') return oembed(env, req, url);
+  // Where a plugin sends people to approve its code (SHARING-0011): the app, which asks (Settings › ACCOUNT).
+  if (path === '/link' && (m === 'GET' || m === 'HEAD')) {
+    const code = url.searchParams.get('code');
+    return Response.redirect(`${url.origin}${base}/?link=${code ? encodeURIComponent(code.slice(0, 16)) : ''}`, 302);
+  }
 
   // The plugins' preflight (above): GET/POST/PUT/DELETE with a key and JSON; no credentials.
   const plugin = pluginOrigin(req);
@@ -105,8 +111,20 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
   if (path === '/api/auth/google/callback' && m === 'GET') return googleCallback(env, req, url);
   if (path === '/api/auth/apple/start' && m === 'GET') { await limit(env.SAVE_LIMIT, req, 'auth'); return appleStart(env, req, url); }
   if (path === '/api/auth/apple/callback' && m === 'GET') return appleCallback(env, req, url);
+  // ---- plugin sign-in (CHG-0039, SHARING-0011): a device code, approved on the website ----
+  if (path.startsWith('/api/device/')) {
+    if (path === '/api/device/start' && m === 'POST') { await limit(env.SAVE_LIMIT, req, 'auth'); return deviceStart(env, req); }
+    if (path === '/api/device/poll' && m === 'POST') { await limit(env.SEARCH_LIMIT, req, 'poll'); return devicePoll(env, req); }
+    if (path === '/api/device/code' && m === 'GET') return deviceInfo(env, req, url);
+    if (path === '/api/device/approve' && m === 'POST') { sameOrigin(env, req); await limit(env.SAVE_LIMIT, req, 'auth'); return deviceApprove(env, req); }
+    throw new HttpError(404, 'no such endpoint');
+  }
   if (path.startsWith('/api/auth/') || path.startsWith('/api/me')) {
-    if (m !== 'GET') sameOrigin(env, req);  // R5: cookie-authenticated changes only from this site
+    // R5: cookie-authenticated changes only from this site. A plugin's key is no cookie (no CSRF); endpoints that don't
+    // take keys read no user from such a request (session.ts currentUser).
+    if (m !== 'GET' && !appKeyOf(req)) sameOrigin(env, req);
+    if (path === '/api/me/apps' && m === 'GET') return listApps(env, req);
+    if (path === '/api/me/apps' && m === 'DELETE') { if (appKeyOf(req)) sameOrigin(env, req); return removeApp(env, req); }
     if (path.startsWith('/api/auth/passkey/')) await limit(env.SAVE_LIMIT, req, 'auth');
     if (path === '/api/auth/passkey/register/options' && m === 'POST') return registerOptions(env, req);
     if (path === '/api/auth/passkey/register/verify' && m === 'POST') return registerVerify(env, req);
@@ -125,7 +143,7 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
   if (path === '/api/gallery' && m === 'GET') { await limit(env.SEARCH_LIMIT, req, 'gallery'); return galleryList(env, req, url); }
   const gal = path.match(/^\/api\/gallery\/([^/]+)(\/like|\/report)?$/);
   if (gal) {
-    if (m !== 'GET') sameOrigin(env, req);
+    if (m !== 'GET' && !appKeyOf(req)) sameOrigin(env, req);  // a plugin's key: no cookie, no CSRF (SHARING-0011)
     await limit(env.SAVE_LIMIT, req, 'gallery');
     if (!gal[2] && m === 'DELETE') return unpublish(env, gal[1], id => mayEdit(env, req, id));
     if (gal[2] === '/like' && m === 'POST') return like(env, req, gal[1]);

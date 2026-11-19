@@ -3,7 +3,7 @@
 import { LIMITS, type Env } from './env.ts';
 import { HttpError, b64urlBytes, json, publicBase, sameDigest, sha256Hex } from './http.ts';
 import { verifyTurnstile } from './turnstile.ts';
-import { currentUser, sameOrigin } from './auth/session.ts';
+import { appKeyOf, currentUser, sameOrigin } from './auth/session.ts';
 import { afterSave } from './gallery.ts';
 import { blockTally } from './stats.ts';
 import { addActivity, readActivity } from './activity.ts';
@@ -88,7 +88,9 @@ async function authorise(env: Env, req: Request, r: Row): Promise<void> {
   const auth = req.headers.get('authorization') ?? '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
   if (token && sameDigest(await sha256Hex(token), r.edit_hash)) return;
-  if (r.owner_id) {
+  // A signed-in plugin's key (SHARING-0011): the owning account, from the plugin (no cookie, so no Origin check).
+  if (r.owner_id && appKeyOf(req)) { if ((await currentUser(env, req, { app: true }))?.id === r.owner_id) return; }
+  else if (r.owner_id) {
     const u = await currentUser(env, req);
     if (u?.id === r.owner_id) { sameOrigin(env, req); return; }
   }
@@ -112,8 +114,10 @@ export async function createPatch(env: Env, req: Request): Promise<Response> {
     if (typeof body.parent !== 'string' || !(await row(env, body.parent))) throw new HttpError(400, 'unknown parent');
     parent = body.parent;
   }
-  await verifyTurnstile(env, req, body.turnstile);
-  const owner = (await currentUser(env, req))?.id ?? null;  // signed in: the account's patch (R9)
+  // A signed-in plugin (SHARING-0011) saves with its key and no bot check: its account passed one when it was made.
+  const viaKey = appKeyOf(req) ? await currentUser(env, req, { app: true }) : null;
+  if (!viaKey) await verifyTurnstile(env, req, body.turnstile);
+  const owner = viaKey?.id ?? (await currentUser(env, req))?.id ?? null;  // signed in: the account's patch (R9)
   const editToken = b64urlBytes(24), editHash = await sha256Hex(editToken), now = Date.now();
   for (let attempt = 0; attempt < 5; attempt++) {
     const id = newId();
@@ -141,7 +145,8 @@ export async function savePatch(env: Env, req: Request, id: string): Promise<Res
   await authorise(env, req, r);
   const body = await readBody(req);
   const patch = validPatch(body.patch), title = validTitle(body.title), thumb = validThumb(body.thumb);
-  await verifyTurnstile(env, req, body.turnstile);
+  const viaKey = appKeyOf(req) ? await currentUser(env, req, { app: true }) : null;  // authorised above as the owner
+  if (!viaKey) await verifyTurnstile(env, req, body.turnstile);
   const now = Date.now(), rev = r.rev + 1, blocks = blockTally(body.patch);
   const res = await env.DB.batch([
     env.DB.prepare('INSERT INTO revisions (patch_id, rev, json, title, thumb, created) VALUES (?, ?, ?, ?, ?, ?)').bind(id, rev, patch, title, thumb, now),
@@ -151,7 +156,7 @@ export async function savePatch(env: Env, req: Request, id: string): Promise<Res
   if (!res[1].meta.changes) throw new HttpError(409, 'saved elsewhere at the same time; try again');
   // SPEC-SHARING-GALLERY R1, R5: in or out of the gallery as asked; published, it shows the latest title and blocks.
   const gallery = await afterSave(env, id, r.owner_id, typeof body.gallery === 'boolean' ? body.gallery : undefined);
-  const activity = body.activity ? await withActivity(env, (await currentUser(env, req))?.id ?? null, body.activity) : false;
+  const activity = body.activity ? await withActivity(env, viaKey?.id ?? (await currentUser(env, req))?.id ?? null, body.activity) : false;
   return json({ id, rev, parent: r.parent, url: shareUrl(env, req, id, title), gallery, activity });
 }
 
@@ -184,7 +189,7 @@ export async function getPatch(env: Env, req: Request, id: string, ctx?: Executi
   const published = !!(await env.DB.prepare('SELECT 1 FROM gallery WHERE patch_id = ? AND hidden = 0').bind(id).first());
   // `mine`: the signed-in account owns it, so this device may save over it without the edit token (R9).
   const owner = (await env.DB.prepare('SELECT owner_id FROM patches WHERE id = ?').bind(id).first<{ owner_id: string | null }>())?.owner_id;
-  const me = await currentUser(env, req), mine = !!owner && me?.id === owner;
+  const me = await currentUser(env, req, { app: true }), mine = !!owner && me?.id === owner;
   // Its likes, and whether the signed-in user has liked it (the star by its credit on the stage, owner review 2).
   const likes = published ? (await env.DB.prepare('SELECT likes FROM gallery WHERE patch_id = ?').bind(id).first<{ likes: number }>())?.likes ?? 0 : 0;
   const liked = !!me && published && !!(await env.DB.prepare('SELECT 1 FROM likes WHERE patch_id = ? AND user_id = ?').bind(id, me.id).first());

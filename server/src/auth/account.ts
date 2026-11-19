@@ -6,6 +6,7 @@ import { handleProblem } from '../moderation.ts';
 import { ID_RE } from '../patches.ts';
 import { withCookies } from './passkey.ts';
 import { currentUser, endSession, requireUser } from './session.ts';
+import { endKey } from './appKeys.ts';
 import { accountStats } from '../stats.ts';
 import { addActivity, beaconOn, parseBody, readActivity } from '../activity.ts';
 
@@ -21,7 +22,7 @@ async function body<T>(req: Request): Promise<T> {
 /** GET /api/me — who is signed in, how, and whether Google and Apple sign-in are offered here. `?stats=1` (Settings ›
  * ACCOUNT) adds the account's stats (R15) to the same answer. */
 export async function me(env: Env, req: Request, url?: URL): Promise<Response> {
-  const u = await currentUser(env, req);
+  const u = await currentUser(env, req, { app: true });  // a signed-in plugin too (SHARING-0011)
   const google = !!env.GOOGLE_CLIENT_ID && !!env.GOOGLE_CLIENT_SECRET, apple = appleConfigured(env);
   if (!u) return json({ user: null, google, apple }, 200, { 'cache-control': 'no-store' });
   const [pks, ids, stats] = await Promise.all([
@@ -59,7 +60,7 @@ export async function removeMethod(env: Env, req: Request): Promise<Response> {
 
 /** PUT /api/me/handle {handle} (R6). */
 export async function setHandle(env: Env, req: Request): Promise<Response> {
-  const u = await requireUser(env, req);
+  const u = await requireUser(env, req, { app: true });  // a new account made in the iPad app names itself there
   const { handle: raw } = await body<{ handle?: unknown }>(req);
   const handle = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
   const problem = handleProblem(handle);
@@ -71,6 +72,7 @@ export async function setHandle(env: Env, req: Request): Promise<Response> {
 
 /** POST /api/auth/logout {everywhere?} (R4). */
 export async function logout(env: Env, req: Request): Promise<Response> {
+  if (await endKey(env, req)) return json({ ok: true });  // a plugin signing out: its key goes (SHARING-0011)
   const { everywhere } = await body<{ everywhere?: unknown }>(req);
   const headers = new Headers({ 'cache-control': 'no-store' });
   headers.append('set-cookie', await endSession(env, req, everywhere === true));
@@ -92,6 +94,8 @@ export async function deleteAccount(env: Env, req: Request): Promise<Response> {
     // The ids stay taken (as a deleted patch's do) so an old link can never open someone else's patch.
     env.DB.prepare('UPDATE patches SET deleted = 1, owner_id = NULL, updated = ? WHERE owner_id = ?').bind(Date.now(), u.id),
     env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(u.id),
+    env.DB.prepare('DELETE FROM app_keys WHERE user_id = ?').bind(u.id),
+    env.DB.prepare('DELETE FROM device_codes WHERE user_id = ?').bind(u.id),
     env.DB.prepare('DELETE FROM credentials WHERE user_id = ?').bind(u.id),
     env.DB.prepare('DELETE FROM identities WHERE user_id = ?').bind(u.id),
     env.DB.prepare('DELETE FROM users WHERE id = ?').bind(u.id),
@@ -125,7 +129,7 @@ export async function claim(env: Env, req: Request): Promise<Response> {
 
 /** GET /api/me/patches — the account's patches, newest first (R8). */
 export async function myPatches(env: Env, req: Request): Promise<Response> {
-  const u = await requireUser(env, req);
+  const u = await requireUser(env, req, { app: true });
   const r = await env.DB.prepare('SELECT id, title, rev, created, updated FROM patches WHERE owner_id = ? AND deleted = 0 ORDER BY updated DESC LIMIT 500').bind(u.id).all();
   return json({ patches: r.results }, 200, { 'cache-control': 'no-store' });
 }
@@ -134,7 +138,7 @@ export async function myPatches(env: Env, req: Request): Promise<Response> {
  * (ACTIVITY_BEACON=off): answered without a write, and the browser keeps it for its next save. */
 export async function postActivity(env: Env, req: Request): Promise<Response> {
   if (!beaconOn(env)) return json({ added: false });  // off: no session lookup, no write
-  const u = await requireUser(env, req);
+  const u = await requireUser(env, req, { app: true });
   const a = readActivity(await parseBody(req));
   if (a) await addActivity(env, u.id, a).run();
   return json({ added: !!a });

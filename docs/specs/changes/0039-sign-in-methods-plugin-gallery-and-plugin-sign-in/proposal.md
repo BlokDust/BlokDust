@@ -4,7 +4,7 @@ title: Sign-in methods, plugin gallery and plugin sign-in
 status: in-progress
 date: 2026-11-19
 specs: [SPEC-SHARING-ACCOUNTS, SPEC-SHARING-GALLERY]
-adrs: [SHARING-0008, SHARING-0009]
+adrs: [SHARING-0008, SHARING-0009, SHARING-0011]
 ---
 # CHG-0039: Sign-in methods, plugin gallery and plugin sign-in
 

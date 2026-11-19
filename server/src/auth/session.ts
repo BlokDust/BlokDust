@@ -39,8 +39,34 @@ export async function startSession(env: Env, req: Request, userId: string): Prom
   return cookie(req, 'bd_session', token, SESSION_DAYS * 86_400);
 }
 
-/** The signed-in user, or null. A session past half its life is extended (sliding expiry, R3). */
-export async function currentUser(env: Env, req: Request): Promise<User | null> {
+/** A plugin's key in this request (CHG-0039, SHARING-0011): `Authorization: Bearer bdk_…`, else null. Patches' edit
+ * tokens travel in the same header without the prefix. */
+export function appKeyOf(req: Request): string | null {
+  const m = (req.headers.get('authorization') ?? '').match(/^Bearer (bdk_[A-Za-z0-9_-]{20,64})$/);
+  return m ? m[1] : null;
+}
+export const APP_KEY_DAYS = 180;
+const HOUR = 3_600_000;
+/** The account a plugin key belongs to; a key past its life is deleted. Used, it lives 180 days more (written at most
+ * hourly). */
+async function userForKey(env: Env, key: string): Promise<User | null> {
+  const hash = await sha256Hex(key), now = Date.now();
+  const row = await env.DB.prepare('SELECT u.id, u.handle, u.created, k.expires, k.last_used FROM app_keys k JOIN users u ON u.id = k.user_id WHERE k.key_hash = ?')
+    .bind(hash).first<User & { expires: number; last_used: number | null }>();
+  if (!row) return null;
+  if (row.expires <= now) { await env.DB.prepare('DELETE FROM app_keys WHERE key_hash = ?').bind(hash).run(); return null; }
+  if (!row.last_used || now - row.last_used > HOUR)
+    await env.DB.prepare('UPDATE app_keys SET last_used = ?, expires = ? WHERE key_hash = ?').bind(now, now + APP_KEY_DAYS * DAY, hash).run();
+  return { id: row.id, handle: row.handle, created: row.created };
+}
+
+/**
+ * The signed-in user, or null. A session past half its life is extended (sliding expiry, R3). `app`: this endpoint
+ * also takes a plugin's key (SHARING-0011 lists which). A request with a key is never read as the cookie's user.
+ */
+export async function currentUser(env: Env, req: Request, opts: { app?: boolean } = {}): Promise<User | null> {
+  const key = appKeyOf(req);
+  if (key) return opts.app ? userForKey(env, key) : null;
   const token = readCookie(req, 'bd_session');
   if (!token || token.length > 64) return null;
   const hash = await sha256Hex(token), now = Date.now();
@@ -53,8 +79,8 @@ export async function currentUser(env: Env, req: Request): Promise<User | null> 
   return { id: row.id, handle: row.handle, created: row.created };
 }
 
-export async function requireUser(env: Env, req: Request): Promise<User> {
-  const u = await currentUser(env, req);
+export async function requireUser(env: Env, req: Request, opts: { app?: boolean } = {}): Promise<User> {
+  const u = await currentUser(env, req, opts);
   if (!u) throw new HttpError(401, 'sign in first');
   return u;
 }

@@ -82,7 +82,14 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   handle) when it has one.
 
 **Panel**
-- **R12.** The plugin and embeds have no ACCOUNT tab.
+- **R12.** Embeds have no ACCOUNT tab. The plugins sign in with their own key (SHARING-0011, CHG-0039):
+  `POST /api/device/start {name}` gives a code `XXXX-XXXX` (no vowels, no 0/O/1/I) and `…/link?code=`; signed in on
+  the website, `GET /api/device/code` says what asks and `POST /api/device/approve {code, approve}` (this site's
+  Origin) answers; the plugin's `POST /api/device/poll` (every 5 s, faster refused) takes the key once (`bdk_…`, 180
+  days from its last use; only its hash kept). A key reads the account and its patches, saves (no bot check), likes,
+  reports, names the account and signs itself out (`POST /api/auth/logout`); it can't delete the account, change sign-in
+  methods, approve a device or list or remove keys. `GET /api/me/apps` and `DELETE /api/me/apps {id}` (the website)
+  list and sign out the plugins. Codes last 10 minutes.
 - **R13.** Settings has a tab after ABOUT and DOWNLOAD (owner review 2026-11-15), named SIGN IN until someone is
   signed in, then ACCOUNT, drawn with v1 panel pieces (web/src/v1ui/accountPage.ts):
   - signed out: "Sign in to keep your patches on every device.", then one full-width button each for GOOGLE, APPLE

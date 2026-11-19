@@ -310,6 +310,81 @@ const tests: Record<string, () => Promise<void>> = {
     check('R5: removing needs this site\'s Origin', cross.status === 403, cross.status);
     await m.ctx.close(); await l.ctx.close();
   },
+  /** SHARING-0011 (CHG-0039): a plugin signs in with a device code approved on the website, then uses its own key:
+   * it reads the account and saves to it (no bot check); it can't delete the account, change its sign-in methods,
+   * approve another device or list the others. The website lists it and can sign it out; it can sign itself out. */
+  async 'plugin-device-code'() {
+    const J = 'juce://juce.backend';
+    const plug = async (method: string, path: string, body?: unknown, key?: string) => {
+      const r = await fetch(`${base}/api/${path}`, { method, headers: { origin: J, 'content-type': 'application/json', ...(key ? { authorization: `Bearer ${key}` } : {}) },
+        body: body === undefined ? undefined : JSON.stringify(body) });
+      return { status: r.status, json: await r.json().catch(() => null) as any, acao: r.headers.get('access-control-allow-origin') };
+    };
+    // Nora: a website account (Google).
+    const n = await device();
+    await fetch(`${mocks.url}/google/next?user=nora`);
+    await openApp(n); await openAccount(n.page);
+    await Promise.all([n.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}), press(n.page, 'google', 0)]);
+    await n.page.waitForFunction(() => (window as any).__bd_probe?.scene.SettingsPanel.accountPage.View === 'name', null, { timeout: 20000 }).catch(() => {});
+    await n.page.waitForTimeout(800);
+    await n.page.fill('#accountHandleInput', 'nora_g'); await press(n.page, 'submit'); await settled(n.page);
+    const start = await plug('POST', 'device/start', { name: 'BlokDust on Mac (Logic)\u0007' });
+    const code: string = start.json?.userCode ?? '';
+    check('SHARING-0011: a plugin gets a code (XXXX-XXXX, no vowels), where to enter it, and its poll interval', start.status === 200 && /^[B-DF-HJ-NP-TV-XZ2-9]{4}-[B-DF-HJ-NP-TV-XZ2-9]{4}$/.test(code)
+      && /\/link\?code=/.test(start.json.verifyUrl) && start.json.interval === 5 && start.acao === J, start.json);
+    const p1 = await plug('POST', 'device/poll', { deviceCode: start.json.deviceCode });
+    const p2 = await plug('POST', 'device/poll', { deviceCode: start.json.deviceCode });
+    check('… pending until approved; polling faster than the interval is refused', p1.status === 202 && p1.json.status === 'pending' && p2.status === 429 && p2.json.status === 'slow_down', [p1, p2]);
+    const anon = await fetch(`${base}/api/device/code?code=${code}`);
+    const info = await api(n, 'GET', `device/code?code=${code.toLowerCase().replace('-', '')}`);
+    check('… the website shows what asks (signed in only; the code read loosely)', anon.status === 401 && info.status === 200 && info.json.name === 'BlokDust on Mac (Logic)', { anon: anon.status, info });
+    const cross = await fetch(`${base}/api/device/approve`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code, approve: true }) });
+    const ok = await api(n, 'POST', 'device/approve', { code, approve: true });
+    check('… approving needs this site\'s Origin; signed in, it approves', cross.status === 403 && ok.status === 200 && ok.json.approved === true, { cross: cross.status, ok });
+    await new Promise(r => setTimeout(r, 4200));
+    const got = await plug('POST', 'device/poll', { deviceCode: start.json.deviceCode });
+    const again = await plug('POST', 'device/poll', { deviceCode: start.json.deviceCode });
+    const key: string = got.json?.key ?? '';
+    check('… the next poll takes the key, once', got.status === 200 && /^bdk_[A-Za-z0-9_-]{40,}$/.test(key) && got.json.user.handle === 'nora_g' && again.status === 410, { got: { ...got.json, key: key.slice(0, 6) }, again });
+    // The key: the account, its patches, saving (no bot check), opening as its owner.
+    const me = await plug('GET', 'me?stats=1', undefined, key);
+    const saved = await plug('POST', 'patches', { patch: { format: 'blokdust.patch', version: 2, seed: 1, blocks: [{ id: 'a', type: 'source.tone', x: 0, y: 0 }] }, title: 'From Logic' }, key);
+    const mine = await plug('GET', 'me/patches', undefined, key);
+    const over = await plug('PUT', `patches/${saved.json?.id}`, { patch: { format: 'blokdust.patch', version: 2, seed: 1, blocks: [] }, title: 'From Logic 2' }, key);
+    const opened = await plug('GET', `patches/${saved.json?.id}`, undefined, key);
+    check('SHARING-0011: with its key a plugin reads the account and saves to it (no bot check) and over it', me.status === 200 && me.json.user?.handle === 'nora_g' && !!me.json.user.stats
+      && saved.status === 201 && mine.json?.patches?.some((x: any) => x.id === saved.json.id) && over.status === 200 && opened.json?.mine === true, { me: me.status, saved: saved.status, over: over.status, mine: opened.json?.mine });
+    const noBot = await plug('POST', 'patches', { patch: { format: 'blokdust.patch', version: 2, seed: 1, blocks: [] }, title: 'x' }, 'bdk_' + 'A'.repeat(43));
+    check('… a wrong key gets no free pass (the bot check is asked for)', noBot.status === 400 || noBot.status === 403, noBot);
+    const del = await plug('DELETE', 'me', undefined, key), meth = await plug('DELETE', 'me/methods', { kind: 'google' }, key);
+    const apps = await plug('GET', 'me/apps', undefined, key), appr = await plug('POST', 'device/approve', { code: 'BCDF-GHJK', approve: true }, key);
+    check('SHARING-0011: a key can\'t delete the account, change sign-in methods, list apps or approve a device', [del, meth, apps, appr].every(r => r.status === 401 || r.status === 403)
+      && (await plug('GET', 'me', undefined, key)).json?.user?.handle === 'nora_g', [del.status, meth.status, apps.status, appr.status]);
+    // The website lists it, and signs it out.
+    const listed = await api(n, 'GET', 'me/apps');
+    const app = listed.json?.apps?.find((x: any) => x.name === 'BlokDust on Mac (Logic)');
+    check('SHARING-0011: the website lists the plugin (its name cleaned)', listed.status === 200 && !!app && !!app.lastUsed, listed.json);
+    const out = await api(n, 'DELETE', 'me/apps', { id: app?.id });
+    const after = await plug('GET', 'me', undefined, key);
+    check('… and signs it out: the key reads nobody', out.status === 200 && after.status === 200 && after.json.user === null, { out, after: after.json });
+    // A second plugin signs itself out; a third is turned away; an expired code.
+    const s2 = await plug('POST', 'device/start', { name: 'BlokDust on iPad' });
+    await api(n, 'POST', 'device/approve', { code: s2.json.userCode, approve: true });
+    const k2 = (await plug('POST', 'device/poll', { deviceCode: s2.json.deviceCode })).json?.key;
+    const so = await plug('POST', 'auth/logout', {}, k2);
+    check('SHARING-0011: a plugin signs itself out (its key goes)', !!k2 && so.status === 200 && (await plug('GET', 'me', undefined, k2)).json.user === null, so);
+    const s3 = await plug('POST', 'device/start', { name: 'Someone else' });
+    await api(n, 'POST', 'device/approve', { code: s3.json.userCode, approve: false });
+    const denied = await plug('POST', 'device/poll', { deviceCode: s3.json.deviceCode });
+    const s4 = await plug('POST', 'device/start', { name: 'Late' });
+    await server.sql('UPDATE device_codes SET expires = 0');
+    const late = await plug('POST', 'device/poll', { deviceCode: s4.json.deviceCode });
+    const lateApprove = await api(n, 'POST', 'device/approve', { code: s4.json.userCode, approve: true });
+    check('… CANCEL turns a plugin away; a code expires after 10 minutes', denied.status === 403 && late.status === 410 && lateApprove.status === 404, { denied, late, lateApprove });
+    const link = await fetch(`${base}/link?code=${code}`, { redirect: 'manual' });
+    check('SHARING-0011: /link?code= opens the app at the code', link.status === 302 && new URL(link.headers.get('location')!).searchParams.get('link') === code, link.headers.get('location'));
+    await n.ctx.close();
+  },
   /** R1b (CHG-0035): a network makes ACCOUNTS_PER_DAY new accounts a day (a second local Worker, 2 a day); the next
    * is refused, by passkey and by Google; known accounts still sign in; back from Google the app says why. */
   async 'new-account-limit'() {
