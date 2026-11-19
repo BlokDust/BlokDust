@@ -26,8 +26,11 @@ async function sql<T>(db: string[], command: string): Promise<T[]> {
   if (long) writeFileSync(file, command);
   const r = await run([WRANGLER, 'd1', 'execute', ...db, '--json', ...(long ? ['--file', file] : ['--command', command])], { quiet: true });
   if (r.code) throw new Error(`d1 execute failed:\n${r.out}`);
+  // The JSON starts on a line of its own (wrangler's warnings before it can contain brackets too).
+  const at = r.out.search(/^\[/m);
   let j: { results?: T[] }[] = [];
-  try { j = JSON.parse(r.out.slice(r.out.indexOf('['))); } catch { /* a --file import answers without rows */ }
+  if (at >= 0) j = JSON.parse(r.out.slice(at));
+  else if (!long) throw new Error(`d1 execute answered without JSON:\n${r.out}`);
   return j.map(x => x.results ?? []).filter(x => x.length).pop() ?? [];
 }
 const q = (v: string) => `'${v.replace(/'/g, "''")}'`;
