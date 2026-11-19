@@ -445,6 +445,43 @@ try {
   const back = await newbie.page.evaluate(() => { const s = (window as any).__bd_probe.scene; return { patches: s.PatchesPanel.Open, tab: s.PatchesPanel.Tab, settings: s.SettingsPanel.Open, gallery: s.PatchesPanel.GalleryOn, signedIn: s.host.signedIn(), title: s.PatchesPanel.Title, signIn: s.PatchesPanel.centreOf('signIn') }; });
   check('Signed out, SAVE / SHARE has SIGN IN; it opens Settings › SIGN IN, and once signed in SAVE opens again with ADD TO GALLERY on and the name kept (CHG-0035)',
     !!asked.settings && asked.tab === 4 && !asked.patches && back.patches && back.tab === 0 && !back.settings && back.gallery && back.signedIn && back.title === 'Newbie Song' && back.signIn === null, { asked, back });
+  // ---- CHG-0039 (owner, 2026-11-19): the plugins have GALLERY, from their server; a patch opened there goes to the
+  // processor (the DAW project keeps it). The server answers the plugins' origin only, never with credentials. ----
+  {
+    const pctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    await pctx.addInitScript(([site]) => {
+      const listeners: Record<string, ((x: unknown) => void)[]> = {}, sent: { id: string; v: any }[] = [];
+      (window as any).__sent = sent; (window as any).__bd_pluginSite = site;
+      (window as any).__JUCE__ = { backend: {
+        addEventListener: (id: string, fn: (x: unknown) => void) => { (listeners[id] ??= []).push(fn); },
+        emitEvent: (id: string, v: unknown) => { sent.push({ id, v }); if (id === 'bd_hello') setTimeout(() => listeners.bd_patch?.forEach(f => f({ patch: JSON.stringify({ format: 'blokdust.patch', version: 2, seed: 1, blocks: [] }), ids: {} })), 50); },
+      } };
+    }, [`${base}/`] as const);
+    const plug: Device = { ctx: pctx, page: await pctx.newPage() };
+    plug.page.on('pageerror', e => console.error(`  page error: ${e.message}`));
+    await plug.page.goto(`${base}/index.html`);
+    await plug.page.waitForFunction(() => (window as any).__bd_probe?.state.started, null, { timeout: 20000 });
+    await plug.page.waitForTimeout(1200);
+    await tab(plug, GALLERY); await idle(plug);
+    await press(plug, 'sort_examples', 300); await idle(plug);
+    const listed = (await P(plug)).items.map((r: { title: string }) => r.title);
+    await press(plug, 'gopen0', 600);
+    if (await plug.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View) === 'confirm') await press(plug, 'openAnyway', 600);
+    await plug.page.waitForFunction(() => ((window as any).__sent as { id: string }[]).some(e => e.id === 'bd_patchApply'), null, { timeout: 15000 }).catch(() => {});
+    const applied = await plug.page.evaluate(() => { const e = ((window as any).__sent as { id: string; v: any }[]).find(x => x.id === 'bd_patchApply'); return e ? { mode: e.v.mode, blocks: JSON.parse(e.v.patch).blocks.length } : null; });
+    check('CHG-0039: the plugins have GALLERY (from their server); OPEN hands the patch to the processor', listed.length > 0 && applied?.mode === 'open' && applied.blocks > 0, { listed, applied });
+    await pctx.close();
+    const pre = await fetch(`${base}/api/gallery?sort=new`, { method: 'OPTIONS', headers: { origin: 'juce://juce.backend', 'access-control-request-method': 'GET', 'access-control-request-headers': 'authorization' } });
+    const get = await fetch(`${base}/api/gallery?sort=new`, { headers: { origin: 'juce://juce.backend' } });
+    const win = await fetch(`${base}/api/gallery?sort=new`, { headers: { origin: 'https://juce.backend' } });
+    const evil = await fetch(`${base}/api/gallery?sort=new`, { headers: { origin: 'https://evil.example' } });
+    const evilPre = await fetch(`${base}/api/me`, { method: 'OPTIONS', headers: { origin: 'https://evil.example', 'access-control-request-method': 'DELETE' } });
+    const h = (r: Response) => ({ status: r.status, acao: r.headers.get('access-control-allow-origin'), creds: r.headers.get('access-control-allow-credentials'), headers: r.headers.get('access-control-allow-headers') });
+    check('CHG-0039: the API allows the plugins\' origins (juce://, https://juce.backend), with a key header, never credentials; no other origin',
+      pre.status === 204 && h(pre).acao === 'juce://juce.backend' && /authorization/.test(h(pre).headers ?? '') && !h(pre).creds
+      && h(get).acao === 'juce://juce.backend' && !h(get).creds && h(win).acao === 'https://juce.backend' && !h(evil).acao && !h(evilPre).acao,
+      { pre: h(pre), get: h(get), win: h(win), evil: h(evil), evilPre: h(evilPre) });
+  }
 } catch (e) {
   check('gallery run', false, String((e as Error).stack ?? e).slice(0, 800));
 } finally {

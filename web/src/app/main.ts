@@ -604,8 +604,8 @@ async function main() {
       make: (mode, title, gallery) => makeLink(mode, title, gallery),
       warning: () => shareWarning(),
     },
-    // The public gallery (CHG-0024): web only.
-    gallery: juce || embedId ? null : {
+    // The public gallery (CHG-0024); the plugins too, from their server (CHG-0039, site.ts).
+    gallery: embedId ? null : {
       browse: async (sort, q, page) => { try { return await gallery.browse(sort, q, page); } catch (e) { if ((e as { status?: number }).status === undefined) return null; throw e; } },
       open: (row, mode) => openShared(row.id, mode),
       like: row => wantLike(row.id, row.liked, row.likes),
@@ -1325,6 +1325,8 @@ async function main() {
     if ('missing' in r) return MISSING_TEXT[r.missing];
     usePatch(r.patch, r.title, mode, { id, rev: r.rev, ...(r.title ? { title: r.title } : {}), ...(r.by ? { by: r.by } : {}) });
     if (mode !== 'open') return true;
+    // The plugins (CHG-0039): the processor has the patch now; the DAW project keeps it, so no link or session here.
+    if (juce) { credit = r.by && !r.mine ? { id, title: r.title || 'Untitled', by: r.by, published: !!r.published, liked: !!r.liked, likes: r.likes ?? 0, views: r.views ?? 0 } : null; return true; }
     App.CompositionId = id; App.SessionId = sessionFor(id);
     session = { id, dirty: false }; saveSession(session);
     const url = `${location.origin}${location.pathname}?c=${id}${r.title ? `&t=${encodeURIComponent(r.title)}` : ''}`;

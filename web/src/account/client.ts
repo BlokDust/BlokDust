@@ -1,10 +1,11 @@
 // Optional accounts, browser side (SPEC-SHARING-ACCOUNTS, SHARING-0008): passkeys through SimpleWebAuthn's browser
 // helpers (loaded only when used), Google through a redirect, and the account's patches. The session is an HttpOnly
 // cookie the page never sees.
+import { apiUrl } from '../patch/site.ts';
 import { accountOwned, allEditTokens, serverConfig, turnstileToken } from '../patch/server.ts';
 import { activity } from './activity.ts';
 
-const api = (path: string) => new URL(`api/${path}`, document.baseURI).toString();
+const api = apiUrl;
 
 /** Settings › ACCOUNT's numbers (SPEC-SHARING-ACCOUNTS R15), from `GET /api/me?stats=1`. */
 export interface AccountStats {

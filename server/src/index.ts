@@ -16,6 +16,15 @@ import { like, list as galleryList, report, unpublish } from './gallery.ts';
 import { clientConfig, ingest, record } from './analytics.ts';
 import { admin } from './admin.ts';
 
+/**
+ * The plugins' page (JUCE's WebView: juce:// on macOS and iPadOS, https://juce.backend elsewhere) may call the API
+ * (CHG-0039): its origin, and only its, is allowed, never with credentials, so the site's cookies never go with
+ * such a request; a plugin signs in with its own key (Authorization: Bearer bdk_…, auth/appKeys.ts).
+ */
+const PLUGIN_ORIGINS = new Set(['juce://juce.backend', 'https://juce.backend']);
+export const pluginOrigin = (req: Request): string | null => { const o = req.headers.get('origin'); return o && PLUGIN_ORIGINS.has(o) ? o : null; };
+const corsFor = (origin: string) => ({ 'access-control-allow-origin': origin, vary: 'Origin' });
+
 async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(req.url);
   const base = basePath(env);
@@ -56,6 +65,11 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
   if (embed && m === 'GET') return page(env, req, url, embed[1]);
   if (path === '/oembed' && m === 'GET') return oembed(env, req, url);
 
+  // The plugins' preflight (above): GET/POST/PUT/DELETE with a key and JSON; no credentials.
+  const plugin = pluginOrigin(req);
+  if (plugin && m === 'OPTIONS' && path.startsWith('/api/') && path !== '/api/support')
+    return new Response(null, { status: 204, headers: { ...corsFor(plugin), 'access-control-allow-methods': 'GET, POST, PUT, DELETE',
+      'access-control-allow-headers': 'authorization, content-type', 'access-control-max-age': '86400' } });
   if (path === '/api/support' && m === 'OPTIONS') return new Response(null, { status: 204, headers: { ...supportHeaders, 'access-control-allow-methods': 'POST, OPTIONS', 'access-control-allow-headers': 'content-type', 'access-control-max-age': '86400' } });
   if (path === '/api/support' && m === 'POST') return submitSupport(env, req);
 
@@ -141,11 +155,18 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
 
 export default {
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    try { return await route(req, env, ctx); } catch (e) {
-      const response = errorResponse(e);
+    let response: Response;
+    try { response = await route(req, env, ctx); } catch (e) {
+      response = errorResponse(e);
       if (new URL(req.url).pathname.endsWith('/api/support')) for (const [k, v] of Object.entries(supportHeaders)) response.headers.set(k, v);
-      return response;
     }
+    // The plugins' page reads the answer (CHG-0039); a response can be immutable (an asset fetch): copy it then.
+    const plugin = pluginOrigin(req);
+    if (plugin && new URL(req.url).pathname.includes('/api/') && !response.headers.has('access-control-allow-origin')) {
+      response = new Response(response.body, response);
+      for (const [k, v] of Object.entries(corsFor(plugin))) response.headers.set(k, v);
+    }
+    return response;
   },
   async scheduled(_controller: ScheduledController, env: Env): Promise<void> { await expireSupport(env); },
 } satisfies ExportedHandler<Env>;

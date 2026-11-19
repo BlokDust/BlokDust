@@ -13,6 +13,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { requiredSetting, setting } from '../lib/local-config.ts';
 import { iosBuild, iosDevice, iosLog, iosTest } from './ios.ts';
+import { webBuildFor } from './web.ts';
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -59,7 +60,7 @@ function resignAdHoc(): void {
 /** Deploy to the externally configured SSH test host. See docs/engineering/local-configuration.md. */
 function deploy(noBuild: boolean, force = false): void {
   const host = requiredSetting('BLOKDUST_TEST_HOST');
-  if (!noBuild) build(); else resignAdHoc();
+  if (!noBuild) { webBuildFor('staging'); build(); } else resignAdHoc();  // the owner reviews against staging (CHG-0039)
   for (const b of BUNDLES()) if (!existsSync(b)) throw new Error(`no ${b}: build first (pnpm bd plugin build)`);
   const ssh = (cmd: string) => run('ssh', ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10', host, cmd], true);
   if (ssh('true').status !== 0) throw new Error(`cannot reach ${host} over SSH (Remote Login on, this machine's key in its authorized_keys?)`);
@@ -363,7 +364,7 @@ const VERSION = (JSON.parse(readFileSync('package.json', 'utf8')) as { version: 
 function packageMac(profile: string, appId: string, installerId: string, noBuild: boolean) {
   if (process.platform !== 'darwin') throw new Error('macOS only');
   if (!noBuild) {
-    if (run('pnpm', ['web:build']).status !== 0) throw new Error('web build failed');
+    webBuildFor('production');  // installers talk to the live site (CHG-0039)
     if (run('cmake', ['--preset', 'plugin-release']).status !== 0) throw new Error('configure failed');
     if (run('cmake', ['--build', '--preset', 'plugin-release', '-j', '8']).status !== 0) throw new Error('build failed');
   }

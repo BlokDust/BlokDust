@@ -1,10 +1,11 @@
 // Sharing backend client (CHG-0003, SPEC-SHARING-BACKEND): v1's SAVE / SAVE_AS against the Worker API.
 // v1 kept a composition's SessionId (the right to overwrite it) in localStorage; v2 keeps the edit token the same way.
+import { apiUrl } from './site.ts';
 import type { Patch } from './loadPatch.ts';
 import { activity } from '../account/activity.ts';
 
 /** Where the API lives: the Worker serving this page (relative to the page; embeds pin <base>). */
-const api = (path: string) => new URL(`api/${path}`, document.baseURI).toString();
+const api = apiUrl;
 const TOKENS_KEY = 'blokdust2.editTokens';
 
 export interface ServerConfig { turnstileSiteKey: string; saving: boolean; freesound: boolean;

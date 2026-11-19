@@ -62,7 +62,9 @@ saving, browsed in the Patches panel's GALLERY tab (search, popular or new, like
   ends 10 units above the window's foot, and with more to fetch the row after the last reads SHOW MORE (a spinner while
   they come; scrolling near the end fetches them too). OPEN's list is laid out the same way (CHG-0035). Rows read `by @name · N remixes · N views` and have OPEN and INSERT (owner
   review 3: INSERT adds the patch's blocks to yours, as OPEN's INSERT, without asking and without a credit). The
-  plugin and embeds have no GALLERY tab.
+  plugins have GALLERY too (CHG-0039): their page reaches the public site (`web/src/patch/site.ts`; the API allows the
+  plugins' origins `juce://juce.backend` and `https://juce.backend`, never with credentials), and a patch opened there
+  goes to the processor, which the DAW project keeps. Embeds have no GALLERY tab.
 - **R14.** Opening a patch in the app (`GET /api/patches/:id`) counts a view, roughly (pages and previews don't).
 - **R15.** Someone else's patch, opened from the gallery or a link, shows "TITLE BY @NAME" at the stage's top left
   (the 8-unit size of About's build line, in capitals, owner review 3), with the like control when it is published (R8).

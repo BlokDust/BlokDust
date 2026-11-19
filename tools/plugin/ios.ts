@@ -20,6 +20,7 @@ import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { configEnvironment, requiredSetting, setting } from '../lib/local-config.ts';
+import { webBuildFor } from './web.ts';
 
 const ART = 'build/plugin-ios-sim/plugin/BlokDust_artefacts/Release';
 const APP = `${ART}/Standalone/BlokDust.app`;
@@ -258,7 +259,7 @@ export function iosDevice(noBuild: boolean): void {
   if (!noBuild) {
     requiredSetting('BLOKDUST_APPLE_TEAM_ID');
     const env = configEnvironment();
-    if (!existsSync('web/dist/index.html')) must(run('pnpm', ['web:build']), 'web build');
+    webBuildFor('staging');  // the owner reviews against staging (CHG-0039)
     must(spawnSync('cmake', ['--preset', 'plugin-ios'], { stdio: ['ignore', 'inherit', 'inherit'], env }), 'configure (plugin-ios)');
     // xcodebuild with the CMake-generated scheme and this iPad as the destination, so automatic signing registers the iPad
     // in the team's profile (a plain target build signs for whatever devices the profile already lists).

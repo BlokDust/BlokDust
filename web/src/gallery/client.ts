@@ -1,5 +1,6 @@
 // The public gallery, browser side (SPEC-SHARING-GALLERY, SHARING-0009).
-const api = (path: string) => new URL(`api/${path}`, document.baseURI).toString();
+import { apiUrl } from '../patch/site.ts';
+const api = apiUrl;
 
 export interface GalleryItem { id: string; title: string; by: string; likes: number; remixes: number; views: number; published: number; liked: boolean; mine: boolean }
 export interface GalleryPage { items: GalleryItem[]; page: number; more: boolean }

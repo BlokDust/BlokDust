@@ -2,6 +2,7 @@
 //   freesound:<id>  portable: anyone can fetch the preview from Freesound's CDN (search goes through our Worker)
 //   file:<name>     the user's own file: a fingerprint to recognise it, and on Chromium a File System Access handle
 //                   kept in IndexedDB so it reloads next visit without asking again
+import { PLUGIN_SITE, apiUrl } from './site.ts';
 export interface FreesoundSound {
   id: number; name: string; username: string; license: 'CC0' | 'CC-BY' | 'CC-BY-NC'; licenseUrl: string;
   duration: number; preview: string; url: string;
@@ -30,9 +31,9 @@ export const refKey = (r: SampleRef) => (r.provider === 'freesound' ? `freesound
 export const isPortable = (track: unknown) => typeof track !== 'string' || !track.startsWith('file:');
 
 /** The sharing API: this page's Worker, or (inside the plugin's WebView, whose page it doesn't serve) the public site. */
-export const PUBLIC_SITE = 'https://blokdust.funputs.com/';
-const inPlugin = () => !!(window as unknown as { __JUCE__?: unknown }).__JUCE__;
-const api = (path: string) => new URL(`api/${path}`, inPlugin() ? PUBLIC_SITE : document.baseURI).toString();
+/** Where the plugins' links and requests go (site.ts). */
+export const PUBLIC_SITE = PLUGIN_SITE;
+const api = apiUrl;
 
 // ---- Freesound ----
 export async function searchFreesound(query: string, maxSeconds: number): Promise<FreesoundSound[]> {
