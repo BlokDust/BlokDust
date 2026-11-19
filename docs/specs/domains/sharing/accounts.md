@@ -51,7 +51,19 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   contains no blocked word. The word check (server/src/moderation.ts) folds look-alike characters, and refuses short
   roots only as whole words, so names like grape or Scunthorpe stay allowed.
 - **R7.** ADD PASSKEY (ADD ANOTHER PASSKEY once the account has one) adds a passkey on this device to the signed-in
-  account, beside its Google, Apple and other passkeys. No message: the "Sign-in methods" line shows it (R13).
+  account, beside its Google, Apple and other passkeys. No message: its row in SIGN-IN METHODS shows it (R7a).
+- **R7a.** *(CHG-0039, owner 2026-11-19)* Signed in, ACCOUNT's SIGN-IN METHODS lists every way into the account
+  (`GET /api/me` → `methods`: Google, Apple, then each passkey, with when it was added) and adds one: ADD GOOGLE and
+  ADD APPLE (where the server offers them and the account hasn't got them) go to Google or Apple and back, and that
+  account joins this one ("Google added."); ADD PASSKEY as R7. A Google or Apple account joins only while signed in
+  and on purpose; accounts are never merged by matching emails (none are kept).
+- **R7b.** A Google or Apple account that already belongs to another BlokDust account is refused while signed in
+  ("That Google account is already used by another BlokDust account…"): nothing is added, the session stays as it
+  was (it never switches accounts behind the user's back). Back from the provider the page reads `?account=`
+  `linked-<provider>` or `taken-<provider>`.
+- **R7c.** REMOVE (beside each way in, while there is more than one) takes it off the account:
+  `DELETE /api/me/methods {kind, id?}` (this site's Origin, R5). The last way in is never removed (409); the count and
+  the delete are one statement, so two removals at once can't leave none.
 
 - **R8.** `GET /api/me/patches` lists the account's patches, newest first. The OPEN tab lists them first ("Saved …":
   every patch there is the user's, so no "Your account"; owner, 2026-11-18), once each: this browser's own copies are
@@ -78,13 +90,13 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   - creating an account or naming one: a small heading in the tab type with no rule and no explanation (owner review
     2: the large heading over a rule read as a text field), a NAME field, the main button and BACK;
   - signed in: STATS in the tab type, no rule (the stage's corner already says who: owner, 2026-11-18), the page
-    35 units higher than the other tabs' pages, the stats (R15, R16), then ADD PASSKEY · SIGN OUT, and under them
+    35 units higher than the other tabs' pages, the stats (R15, R16), then SIGN-IN METHODS · SIGN OUT (R7a), and under them
     "Sign-in methods: Google · Apple · 2 passkeys" (the ones it has; CHG-0035); DELETE ACCOUNT (asked first) at the bottom right of
     the screen, out of the way (owner, 2026-11-18).
   Signing in with a passkey closes Settings: back to the stage.
 - **R13a.** Back from Google or Apple there is no start screen and no intro: the stage takes input at once and the first press
   or key starts the sound. A new account opens Settings at the name step; a known one stays on the stage.
-- **R15.** (CHG-0027) Signed in, ACCOUNT shows the account's stats between STATS and ADD PASSKEY · SIGN
+- **R15.** (CHG-0027) Signed in, ACCOUNT shows the account's stats between STATS and SIGN-IN METHODS · SIGN
   OUT, all in the one `GET /api/me?stats=1` the tab already makes (loading the page asks `/api/me` without them):
   - PATCHES (the account's), REMIXES (its patches made from someone else's: `parent` owned by another or nobody),
     LIKES (on its gallery patches) and PLAYS (its patches opened in the app, by anyone; owner, 2026-11-16: was OPENS), each a number in the Settings sliders'

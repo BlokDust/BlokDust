@@ -24,12 +24,37 @@ export async function me(env: Env, req: Request, url?: URL): Promise<Response> {
   const u = await currentUser(env, req);
   const google = !!env.GOOGLE_CLIENT_ID && !!env.GOOGLE_CLIENT_SECRET, apple = appleConfigured(env);
   if (!u) return json({ user: null, google, apple }, 200, { 'cache-control': 'no-store' });
-  const [pk, ids, stats] = await Promise.all([
-    env.DB.prepare('SELECT COUNT(*) AS n FROM credentials WHERE user_id = ?').bind(u.id).first<{ n: number }>(),
-    env.DB.prepare('SELECT provider FROM identities WHERE user_id = ?').bind(u.id).all<{ provider: string }>(),
+  const [pks, ids, stats] = await Promise.all([
+    env.DB.prepare('SELECT id, created, last_used FROM credentials WHERE user_id = ? ORDER BY created').bind(u.id).all<{ id: string; created: number; last_used: number | null }>(),
+    env.DB.prepare('SELECT provider, created FROM identities WHERE user_id = ? ORDER BY created').bind(u.id).all<{ provider: string; created: number }>(),
     url?.searchParams.get('stats') === '1' ? accountStats(env, u.id, u.created) : undefined,
   ]);
-  return json({ user: { id: u.id, handle: u.handle, passkeys: pk?.n ?? 0, providers: ids.results.map(r => r.provider), ...(stats ? { stats } : {}) }, google, apple }, 200, { 'cache-control': 'no-store' });
+  // R7a: every way in, for SIGN-IN METHODS: Google, Apple, then the passkeys (oldest first).
+  const order = (p: string) => (p === 'google' ? 0 : p === 'apple' ? 1 : 2);
+  const methods = [...ids.results.sort((a, b) => order(a.provider) - order(b.provider)).map(r => ({ kind: r.provider, created: r.created })),
+    ...pks.results.map(c => ({ kind: 'passkey', id: c.id, created: c.created, lastUsed: c.last_used }))];
+  return json({ user: { id: u.id, handle: u.handle, passkeys: pks.results.length, providers: ids.results.map(r => r.provider), methods, ...(stats ? { stats } : {}) }, google, apple },
+    200, { 'cache-control': 'no-store' });
+}
+
+/**
+ * DELETE /api/me/methods {kind: google|apple|passkey, id?} (R7c): one way in goes, never the last. The check and the
+ * delete are one statement, so two at once can't leave an account with none.
+ */
+export async function removeMethod(env: Env, req: Request): Promise<Response> {
+  const u = await requireUser(env, req);
+  const { kind, id } = await body<{ kind?: unknown; id?: unknown }>(req);
+  const others = '((SELECT COUNT(*) FROM identities WHERE user_id = ?1) + (SELECT COUNT(*) FROM credentials WHERE user_id = ?1)) > 1';
+  let r: D1Result, exists: unknown;
+  if (kind === 'google' || kind === 'apple') {
+    r = await env.DB.prepare(`DELETE FROM identities WHERE user_id = ?1 AND provider = ?2 AND ${others}`).bind(u.id, kind).run();
+    exists = !r.meta.changes && await env.DB.prepare('SELECT 1 FROM identities WHERE user_id = ? AND provider = ?').bind(u.id, kind).first();
+  } else if (kind === 'passkey' && typeof id === 'string' && id.length <= 1024) {
+    r = await env.DB.prepare(`DELETE FROM credentials WHERE user_id = ?1 AND id = ?2 AND ${others}`).bind(u.id, id).run();
+    exists = !r.meta.changes && await env.DB.prepare('SELECT 1 FROM credentials WHERE user_id = ? AND id = ?').bind(u.id, id).first();
+  } else throw new HttpError(400, 'kind must be google, apple or passkey (with its id)');
+  if (!r.meta.changes) throw exists ? new HttpError(409, 'This is your only way to sign in. Add another first.') : new HttpError(404, 'no such sign-in method');
+  return json({ ok: true });
 }
 
 /** PUT /api/me/handle {handle} (R6). */

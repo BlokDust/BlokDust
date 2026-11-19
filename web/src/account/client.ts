@@ -14,7 +14,9 @@ export interface AccountStats {
   /** R16: running totals the server has (this browser may have more waiting: see activity.ts). */
   playMs: number; blocksAdded: number; particles: number; laserTurns: number;
 }
-export interface Account { id: string; handle: string | null; passkeys: number; providers: string[]; stats?: AccountStats }
+/** A way into the account (R7a): Google, Apple, or one passkey (by its credential id). */
+export interface SignInMethod { kind: 'google' | 'apple' | 'passkey'; id?: string; created: number; lastUsed?: number | null }
+export interface Account { id: string; handle: string | null; passkeys: number; providers: string[]; methods?: SignInMethod[]; stats?: AccountStats }
 export interface Me { user: Account | null; google: boolean; apple?: boolean }
 export interface AccountPatch { id: string; title: string; rev: number; created: number; updated: number }
 
@@ -72,6 +74,15 @@ export function signInWith(provider: 'google' | 'apple'): void {
 export const signInWithGoogle = () => signInWith('google');
 
 export const signOut = (everywhere = false) => call('POST', 'auth/logout', { everywhere });
+/** R7c: one way in goes (never the last: the server refuses with 409). */
+export const removeMethod = (m: SignInMethod) => call('DELETE', 'me/methods', { kind: m.kind, ...(m.id ? { id: m.id } : {}) });
+/** Back from Google or Apple (R7a, R7b): what `?account=` says, as a line for SIGN-IN METHODS. */
+export function linkMessage(account: string): string | null {
+  const m = account.match(/^(linked|taken)-(google|apple)$/);
+  if (!m) return null;
+  const name = m[2] === 'google' ? 'Google' : 'Apple';
+  return m[1] === 'linked' ? `${name} added.` : `That ${name} account is already used by another BlokDust account. Sign in with it to use that account instead.`;
+}
 export const deleteAccount = () => call('DELETE', 'me');
 export const setHandle = async (handle: string) => (await call<{ user: Account }>('PUT', 'me/handle', { handle })).user;
 

@@ -10,14 +10,17 @@
 //               field (a DOM field like v1's title) over its rule, the GUIDE button, a bordered BACK;
 //   signed in:  SIGNED IN AS NAME on one line in the tab type, the account's stats (R15, CHG-0027: numbers in the
 //               Settings sliders' large light type over mid-type labels, the favourite blocks as v1's menu icons over
-//               their names, as in the blocks menu), then half buttons (ADD PASSKEY, or ADD ANOTHER PASSKEY once there
-//               is one · SIGN OUT), the ways this account signs in under them, and a bordered DELETE ACCOUNT, which
-//               asks first with CANCEL · DELETE.
+//               their names, as in the blocks menu), then half buttons (SIGN-IN METHODS · SIGN OUT), the ways this
+//               account signs in under them, and a bordered DELETE ACCOUNT, which asks first with CANCEL · DELETE;
+//   methods:    SIGN-IN METHODS (CHG-0039, owner 2026-11-19): the heading, a row per way in (its name, when it was
+//               added, a bordered REMOVE at the right while there is more than one; v1 Open's rows and rules), then
+//               the GUIDE buttons for ADD GOOGLE / ADD APPLE (those not linked yet) and ADD PASSKEY, and BACK.
 import { App, Dimensions, Point } from './shim.ts';
 import { BLOCKS_BY_ID } from '../generated/blocks.gen.ts';
 import { activity } from '../account/activity.ts';
 import { Device } from './ported/Device';
 import type { AccountHost, AccountInfo } from './patches.ts';
+import type { SignInMethod } from '../account/client.ts';
 
 /** v1 SettingsPanel's menuWidth, About's text column: 4/7 of the panel; on a phone the width less 80 units (owner,
  * 2026-11-18). Settings › DOWNLOAD and ACCOUNT use it too (CHG-0035). */
@@ -29,7 +32,10 @@ const COPY = {
   createTitle: 'New here? Choose your name', nameTitle: 'Choose your name', name: 'Name',
   noPasskey: 'No passkey was chosen. Choose a name to make a new account with a passkey on this device, or go back to try again.',
   createButton: 'Create With Passkey', saveName: 'Save Name', back: 'Back', stats: 'Stats',
-  addPasskey: 'Add Passkey', addAnother: 'Add Another Passkey', signOut: 'Sign Out', deleteAccount: 'Delete Account', cancel: 'Cancel', deleteButton: 'Delete',
+  addPasskey: 'Add Passkey', addAnother: 'Add Another Passkey', signOut: 'Sign Out', methodsButton: 'Sign-in Methods',
+  methodsTitle: 'Sign-in methods', methodsLine: 'Any of these signs in to this account. Keep at least one.',
+  addGoogle: 'Add Google', addApple: 'Add Apple', remove: 'Remove', passkey1: 'Passkey', added: (d: string) => `Added ${d}`,
+  removed: (n: string) => `${n} removed.`, deleteAccount: 'Delete Account', cancel: 'Cancel', deleteButton: 'Delete',
   deleteTitle: 'Delete your account?', deleteLine: 'This will permanently delete your account and all patches. Shared links to your patches will stop working.',
   noAccounts: 'Accounts are not available here.', working: 'one moment',
   methods: 'Sign-in methods', google1: 'Google', apple1: 'Apple', passkeyN: (n: number) => `${n} ${n === 1 ? 'passkey' : 'passkeys'}`,
@@ -69,7 +75,7 @@ type Bordered = { label: string; x: number; y: number; w: number; h: number; tex
 
 export class AccountPage {
   Account: AccountInfo | null | undefined = undefined;
-  View: 'main' | 'create' | 'name' | 'delete' = 'main';
+  View: 'main' | 'create' | 'name' | 'delete' | 'methods' = 'main';
   Busy = false;
   Message = '';
   private google = false;
@@ -86,6 +92,8 @@ export class AccountPage {
     this.input.addEventListener('keydown', e => { if (e.key === 'Enter') { this.input.blur(); void this.submit(); } });
   }
 
+  /** Back from Google or Apple having added it, or refused because it belongs to another account (R7a, R7b). */
+  showMethods(message: string): void { this.View = 'methods'; this.Message = message; this.mark(); }
   /** Back from Google or Apple when this network has made its new accounts for the day (R1b): say so. */
   refused(message: string): void { this.View = 'main'; this.Message = message; this.mark(); }
   /** The Settings tab's name: SIGN IN until signed in. */
@@ -137,8 +145,31 @@ export class AccountPage {
     const del = { cancel: half(false, top + 75 * u), ok: half(true, top + 75 * u) };
     // Signed in: the ways in on the line under the buttons, then any message.
     const methods = below2 + 62 * u;
-    const message = this.View === 'main' && !this.Account ? below + 10 * u : this.View === 'main' ? methods + 24 * u : top + 190 * u;
-    return { L, R, out, naming, signedIn, del, methods, message };
+    // SIGN-IN METHODS: the heading and its line, a row per way in (40 units), then the ADD buttons 55 apart, then BACK.
+    const rows = this.methodRows(), rowTop = top + 52 * u, rowH = 40 * u;
+    const removable = rows.length > 1;
+    const list = rows.map((m, i) => ({ ...m, y: rowTop + i * rowH, remove: removable ? this.bordered(COPY.remove, R, rowTop + i * rowH + 10 * u) : null }));
+    const adds: Record<string, Box> = {};
+    this.addable().forEach((k, i) => { adds[k] = full(rowTop + rows.length * rowH + (20 + i * 55) * u); });
+    const addsEnd = rowTop + rows.length * rowH + (20 + this.addable().length * 55) * u;
+    const methodsBack = this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * u, addsEnd + 5 * u);
+    const message = this.View === 'methods' ? addsEnd + 50 * u
+      : this.View === 'main' && !this.Account ? below + 10 * u : this.View === 'main' ? methods + 24 * u : top + 190 * u;
+    return { L, R, out, naming, signedIn, del, methods, message, list, rowH, adds, methodsBack };
+  }
+  /** SIGN-IN METHODS' rows (R7a): the account's ways in, from the server's list (older servers: from the counts). */
+  methodRows(): { label: string; detail: string; method: SignInMethod | null }[] {
+    const a = this.Account;
+    if (!a) return [];
+    const name = (k: string) => (k === 'google' ? COPY.google1 : k === 'apple' ? COPY.apple1 : COPY.passkey1);
+    const when = (t: number) => new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    if (a.methods) return a.methods.map(m => ({ label: name(m.kind), detail: m.created ? COPY.added(when(m.created)) : '', method: m }));
+    return [...a.providers.map(p => ({ label: name(p), detail: '', method: null })), ...Array.from({ length: a.passkeys }, () => ({ label: COPY.passkey1, detail: '', method: null }))];
+  }
+  /** What SIGN-IN METHODS can add: Google and Apple where the server offers them and they aren't linked, and a passkey. */
+  private addable(): ('addGoogle' | 'addApple' | 'addPasskey')[] {
+    const p = this.Account?.providers ?? [];
+    return [...(this.google && !p.includes('google') ? ['addGoogle' as const] : []), ...(this.apple && !p.includes('apple') ? ['addApple' as const] : []), 'addPasskey'];
   }
   /** The ways to sign in, in the owner's order: Google, Apple, then a passkey (always offered). */
   private ways(): ('google' | 'apple' | 'passkey')[] {
@@ -253,6 +284,20 @@ export class AccountPage {
       App.StrokeColor(c, txt); c.lineWidth = 2; c.beginPath(); c.moveTo(Lo.L, Lo.naming.rule); c.lineTo(Lo.R, Lo.naming.rule); c.stroke();
       this.filled(Lo.naming.submit, App.Palette[busy ? 1 : menu[3]], busy ? COPY.working : create ? COPY.createButton : COPY.saveName, !busy && !!r.submit);
       if (create) this.drawBordered(Lo.naming.back, App.Palette[1]);
+    } else if (this.View === 'methods' && this.Account) {
+      this.heading(COPY.methodsTitle, COPY.methodsLine, top, Lo.L);
+      const line = App.Palette[1];
+      Lo.list.forEach((row, i) => {
+        App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtMid;
+        c.fillText(row.label.toUpperCase(), Lo.L, row.y + 25 * u);
+        if (row.detail) { c.font = App.Metrics.TxtItalic2; c.fillText(row.detail, Lo.L + 110 * u, row.y + 25 * u); }
+        if (row.remove) this.drawBordered(row.remove, App.Palette[r[`remove${i}`] ? menu[3] : 1]);
+        App.StrokeColor(c, line); c.lineWidth = 1; c.beginPath(); c.moveTo(Lo.L, row.y + Lo.rowH); c.lineTo(Lo.R, row.y + Lo.rowH); c.stroke();
+      });
+      const colours = { addGoogle: menu[3], addApple: menu[1], addPasskey: menu[2 % menu.length] } as const;
+      const labels = { addGoogle: COPY.addGoogle, addApple: COPY.addApple, addPasskey: this.addLabel } as const;
+      for (const [k, b] of Object.entries(Lo.adds) as [keyof typeof colours, Box][]) this.filled(b, App.Palette[busy ? 1 : colours[k]], busy && k === 'addPasskey' ? COPY.working : labels[k], !busy && !!r[k]);
+      this.drawBordered(Lo.methodsBack, App.Palette[1]);
     } else if (this.View === 'delete') {
       this.heading(COPY.deleteTitle, COPY.deleteLine, top, Lo.L);
       this.filled(Lo.del.cancel, App.Palette[1], COPY.cancel, !!r.deleteCancel);
@@ -261,7 +306,7 @@ export class AccountPage {
       App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtMid;
       c.fillText(COPY.stats.toUpperCase(), Lo.L, top + 10 * u);  // the corner already says who (owner, 2026-11-18)
       this.drawStats(top, Lo.L, Lo.R);
-      this.filled(Lo.signedIn.add, App.Palette[busy ? 1 : menu[1]], this.addLabel, !busy && !!r.addPasskey, true);
+      this.filled(Lo.signedIn.add, App.Palette[busy ? 1 : menu[1]], COPY.methodsButton, !busy && !!r.methods, true);
       this.filled(Lo.signedIn.out, App.Palette[busy ? 1 : menu[3]], COPY.signOut, !busy && !!r.signOut, true);
       this.drawBordered(Lo.signedIn.del, App.Palette[1]);
       App.FillColor(c, txt); c.font = App.Metrics.TxtItalic2; c.textAlign = 'left';
@@ -296,7 +341,12 @@ export class AccountPage {
     const Lo = this.layout(top), pad = (b: Bordered) => ({ x: b.x - 5 * App.Unit, y: b.y - 10 * App.Unit, w: b.w + 10 * App.Unit, h: 40 * App.Unit });
     if (this.View === 'create' || this.View === 'name') return { submit: Lo.naming.submit, ...(this.View === 'create' ? { back: pad(Lo.naming.back) } : {}) };
     if (this.View === 'delete') return { deleteCancel: Lo.del.cancel, deleteOk: Lo.del.ok };
-    if (this.Account) return { addPasskey: Lo.signedIn.add, signOut: Lo.signedIn.out, deleteAccount: pad(Lo.signedIn.del) };
+    if (this.View === 'methods' && this.Account) {
+      const out: Record<string, { x: number; y: number; w: number; h: number }> = { ...Lo.adds, methodsBack: pad(Lo.methodsBack) };
+      Lo.list.forEach((row, i) => { if (row.remove) out[`remove${i}`] = pad(row.remove); });
+      return out;
+    }
+    if (this.Account) return { methods: Lo.signedIn.add, signOut: Lo.signedIn.out, deleteAccount: pad(Lo.signedIn.del) };
     if (this.Account === null && !this.noBackend) return { ...Lo.out };
     return {};
   }
@@ -320,7 +370,17 @@ export class AccountPage {
     if (r.apple) { a.apple(); return; }
     if (r.back) { this.View = 'main'; this.Message = ''; return; }
     if (r.submit) { void this.submit(); return; }
-    if (r.addPasskey) { void this.action(() => a.addPasskey()); return; }  // the methods line shows it (no message: owner, 2026-11-18)
+    if (r.methods) { this.View = 'methods'; this.Message = ''; return; }
+    if (r.methodsBack) { this.View = 'main'; this.Message = ''; return; }
+    if (r.addGoogle) { a.google(); return; }  // signed in, Google or Apple joins this account (R7a)
+    if (r.addApple) { a.apple(); return; }
+    if (r.addPasskey) { void this.action(() => a.addPasskey(), true); return; }  // its row shows it (no message: owner, 2026-11-18)
+    const gone = Object.keys(r).find(k => r[k] && /^remove\d+$/.test(k));
+    if (gone) {
+      const row = this.methodRows()[Number(gone.slice(6))];
+      if (row?.method) void this.action(() => a.removeMethod(row.method!), true).then(ok => { if (ok) this.Message = COPY.removed(row.label); });
+      return;
+    }
     if (r.signOut) { void this.action(() => a.signOut(false)); return; }
     if (r.deleteAccount) { this.View = 'delete'; this.Message = ''; return; }
     if (r.deleteCancel) { this.View = 'main'; return; }
@@ -348,9 +408,10 @@ export class AccountPage {
       } else this.Message = (e as Error).message || 'That did not work. Try again.';
     } finally { this.Busy = false; this.mark(); }
   }
-  private async action(run: () => Promise<void>): Promise<boolean> {
+  /** `stay`: keep the page on show (SIGN-IN METHODS) rather than going back to the account. */
+  private async action(run: () => Promise<void>, stay = false): Promise<boolean> {
     this.Busy = true; this.Message = '';
-    try { await run(); this.View = 'main'; await this.refresh(); return true; }
+    try { await run(); if (!stay) this.View = 'main'; await this.refresh(); return true; }
     catch (e) { if (!this.host.cancelled(e)) this.Message = (e as Error).message || 'That did not work. Try again.'; return false; }
     finally { this.Busy = false; this.mark(); }
   }

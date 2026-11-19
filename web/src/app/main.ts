@@ -627,6 +627,7 @@ async function main() {
       google: () => account.signInWith('google'),
       apple: () => account.signInWith('apple'),
       addPasskey: () => account.addPasskey(),
+      removeMethod: async m => { await account.removeMethod(m); },
       setHandle: async h => { await account.setHandle(h); backToSave(); },  // a new Google/Apple account has its name
       signOut: async everywhere => { await account.signOut(everywhere); refreshOwnership(true); scene.PatchesPanel.galleryKnown(null); },
       deleteAccount: async () => { await account.deleteAccount(); refreshOwnership(true); },
@@ -1965,7 +1966,12 @@ async function main() {
       void account.claimMine().then(() => refreshOwnership()).catch(() => {});
       // A new account picks its name in Settings › ACCOUNT; a known one goes straight to the stage (owner, 2026-11-15),
       // or back to SAVE if that is where the sign-in began (CHG-0035).
-      if (signInReturn === 'new') requestAnimationFrame(() => (scene.SettingsPanel as any).openAccount?.());
+      const linked = account.linkMessage(signInReturn);
+      if (linked) requestAnimationFrame(() => {  // R7a, R7b: back on SIGN-IN METHODS, which says what happened
+        (scene.SettingsPanel as any).openAccount?.();
+        (scene.SettingsPanel as any).accountPage?.showMethods(linked);
+      });
+      else if (signInReturn === 'new') requestAnimationFrame(() => (scene.SettingsPanel as any).openAccount?.());
       // No new account today from this network (R1b): Settings › SIGN IN says why.
       else if (signInReturn === 'limit') requestAnimationFrame(() => {
         (scene.SettingsPanel as any).openAccount?.();

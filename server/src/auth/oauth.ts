@@ -21,33 +21,37 @@ export function safeReturn(r: string | null): string {
   } catch { return '/'; }
 }
 
-/** Sign in as the account linked to `provider`'s `subject`, linking it to the signed-in account (or a new one) first. */
+/**
+ * Back from `provider` with its account `subject`. Signed out: sign in as the BlokDust account it belongs to, or a new
+ * one. Signed in (Settings › ACCOUNT › SIGN-IN METHODS, R7a): add it to this account; if it already belongs to
+ * another BlokDust account it is refused and nothing changes (R7b: never switch accounts behind the user's back).
+ * The page learns what happened from `?account=`: new | in | limit | linked-<provider> | taken-<provider>.
+ */
 export async function finishSignIn(env: Env, req: Request, provider: 'google' | 'apple', subject: string, back: string | undefined): Promise<Response> {
   const now = Date.now();
-  let userId = (await env.DB.prepare('SELECT user_id FROM identities WHERE provider = ? AND subject = ?').bind(provider, subject).first<{ user_id: string }>())?.user_id;
+  const owner = (await env.DB.prepare('SELECT user_id FROM identities WHERE provider = ? AND subject = ?').bind(provider, subject).first<{ user_id: string }>())?.user_id;
   let asked = '/';
   try { asked = decodeURIComponent(back ?? '/'); } catch { /* a mangled cookie: go home */ }
   const target = new URL(safeReturn(asked), publicBase(env, req) + '/');
   const headers = new Headers({ 'cache-control': 'no-store' });
   headers.append('set-cookie', cookie(req, 'bd_oauth', '', 0));
-  let fresh = false;
+  const go = (account: string) => { target.searchParams.set('account', account); headers.set('location', target.toString()); return new Response(null, { status: 302, headers }); };
+  const me = await currentUser(env, req);
+  if (me) {
+    if (owner && owner !== me.id) return go(`taken-${provider}`);
+    if (!owner) await env.DB.prepare('INSERT INTO identities (provider, subject, user_id, created) VALUES (?, ?, ?, ?)').bind(provider, subject, me.id, now).run();
+    return go(owner ? 'in' : `linked-${provider}`);  // the session already there stays
+  }
+  let userId = owner, fresh = false;
   if (!userId) {
-    const me = await currentUser(env, req);  // signed in already: add this provider to the account
-    if (!me && !(await mayCreateAccount(env, req))) {
-      // R1b: no new account today from this network; the app says so in Settings › SIGN IN.
-      target.searchParams.set('account', 'limit');
-      headers.set('location', target.toString());
-      return new Response(null, { status: 302, headers });
-    }
-    userId = me?.id ?? newUserId();
-    fresh = !me;
+    // R1b: no new account today from this network; the app says so in Settings › SIGN IN.
+    if (!(await mayCreateAccount(env, req))) return go('limit');
+    userId = newUserId(); fresh = true;
     await env.DB.batch([
-      ...(fresh ? [env.DB.prepare('INSERT INTO users (id, handle, created) VALUES (?, NULL, ?)').bind(userId, now), ...await countNewAccount(env, req)] : []),
+      env.DB.prepare('INSERT INTO users (id, handle, created) VALUES (?, NULL, ?)').bind(userId, now), ...await countNewAccount(env, req),
       env.DB.prepare('INSERT INTO identities (provider, subject, user_id, created) VALUES (?, ?, ?, ?)').bind(provider, subject, userId, now),
     ]);
   }
-  target.searchParams.set('account', fresh ? 'new' : 'in');  // the app skips its start screen; a new account picks its name
-  headers.set('location', target.toString());
   headers.append('set-cookie', await startSession(env, req, userId));
-  return new Response(null, { status: 302, headers });
+  return go(fresh ? 'new' : 'in');  // the app skips its start screen; a new account picks its name
 }

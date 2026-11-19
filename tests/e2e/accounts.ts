@@ -55,9 +55,10 @@ async function openApp(d: Device, query = ''): Promise<void> {
 const pp = (p: Page) => p.evaluate(() => {
   const s = (window as any).__bd_probe.scene, x = s.SettingsPanel.accountPage;
   return { open: s.PatchesPanel.Open, settings: s.SettingsPanel.Open, tabName: s.SettingsPanel.MenuItems[4]?.Name, view: x.View, account: x.Account, busy: x.Busy, message: x.Message,
-    methods: x.Account ? x.methods() as string[] : [], addLabel: x.addLabel as string };
+    methods: x.Account ? x.methods() as string[] : [], addLabel: x.addLabel as string, rows: x.Account ? x.methodRows().map((r: any) => r.label) as string[] : [] };
 });
-const ACCOUNT_CONTROLS = new Set(['passkey', 'google', 'apple', 'back', 'submit', 'addPasskey', 'signOut', 'deleteAccount', 'deleteCancel', 'deleteOk']);
+const ACCOUNT_CONTROLS = new Set(['passkey', 'google', 'apple', 'back', 'submit', 'addPasskey', 'signOut', 'deleteAccount', 'deleteCancel', 'deleteOk',
+  'methods', 'addGoogle', 'addApple', 'methodsBack', 'remove0', 'remove1', 'remove2', 'remove3']);
 async function press(p: Page, name: string, wait = 400): Promise<void> {
   const at = await p.evaluate(([n, inSettings]) => { const s = (window as any).__bd_probe.scene; return inSettings ? s.SettingsPanel.accountCentre(n) : s.PatchesPanel.centreOf(n); }, [name, ACCOUNT_CONTROLS.has(name)] as const);
   if (!at) throw new Error(`no control ${name}`);
@@ -197,11 +198,13 @@ const tests: Record<string, () => Promise<void>> = {
     check('… and has it', (await pp(c.page)).account?.handle === 'carol_g' && (await pp(c.page)).account?.providers.includes('google'), await pp(c.page));
     const g = await pp(c.page);
     check('R13: a Google account\'s ways in read Google, and its button ADD PASSKEY (CHG-0035)', g.methods.join(',') === 'Google' && g.addLabel === 'Add Passkey', g);
+    await press(c.page, 'methods');
     await press(c.page, 'addPasskey'); await settled(c.page);
     const g2 = await pp(c.page);
     check('R7: ADD PASSKEY adds one to the Google account: no message, the methods line reads Google · 1 passkey, ADD ANOTHER PASSKEY',
       g2.message === '' && g2.methods.join(',') === 'Google,1 passkey' && g2.addLabel === 'Add Another Passkey', g2);
     await c.page.screenshot({ path: `${OUT}/account-methods.png` });
+    await press(c.page, 'methodsBack');
     // The same Google account again, on another device: the same BlokDust account, straight to the stage.
     const d = await device();
     await openApp(d); await openAccount(d.page);
@@ -250,6 +253,63 @@ const tests: Record<string, () => Promise<void>> = {
     await e.ctx.close();
   },
 
+
+  /** R7a–R7c (CHG-0039, owner 2026-11-19): signed in, SIGN-IN METHODS lists the ways in, adds Google, Apple or a
+   * passkey to the same account, and removes one; never the last. A Google or Apple account that already belongs to
+   * another BlokDust account is refused, and you stay signed in as you were. */
+  async 'link-and-remove-methods'() {
+    // Mia's account owns the Google identity "mia" (another device).
+    const m = await device();
+    await fetch(`${mocks.url}/google/next?user=mia`);
+    await openApp(m); await openAccount(m.page);
+    await Promise.all([m.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}), press(m.page, 'google', 0)]);
+    await m.page.waitForFunction(() => (window as any).__bd_probe?.scene.SettingsPanel.accountPage.View === 'name', null, { timeout: 20000 }).catch(() => {});
+    await m.page.waitForTimeout(800);
+    await m.page.fill('#accountHandleInput', 'mia_g'); await press(m.page, 'submit'); await settled(m.page);
+    // Lena: a Google account.
+    const l = await device();
+    await fetch(`${mocks.url}/google/next?user=lena`);
+    await openApp(l); await openAccount(l.page);
+    await Promise.all([l.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}), press(l.page, 'google', 0)]);
+    await l.page.waitForFunction(() => (window as any).__bd_probe?.scene.SettingsPanel.accountPage.View === 'name', null, { timeout: 20000 }).catch(() => {});
+    await l.page.waitForTimeout(800);
+    await l.page.fill('#accountHandleInput', 'lena_g'); await press(l.page, 'submit'); await settled(l.page);
+    await press(l.page, 'methods');
+    const one = await pp(l.page);
+    const noRemove = await l.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.accountCentre('remove0'));
+    check('R7a: SIGN-IN METHODS lists Google; the only way in has no REMOVE', one.view === 'methods' && one.rows.join(',') === 'Google' && noRemove === null, { one, noRemove });
+    await l.page.screenshot({ path: `${OUT}/methods-one.png` });
+    // ADD APPLE: Apple's "lena_apple" joins Lena's account; back on the methods page, it says so.
+    await fetch(`${mocks.url}/google/next?user=lena_apple`);
+    await Promise.all([l.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}), press(l.page, 'addApple', 0)]);
+    await l.page.waitForFunction(() => { const s = (window as any).__bd_probe?.scene.SettingsPanel, x = s?.accountPage; return s?.OffsetY === 0 && x?.View === 'methods' && x.Account?.providers?.includes('apple'); }, null, { timeout: 20000 }).catch(() => {});
+    await l.page.waitForTimeout(400);
+    const two = await pp(l.page);
+    check('R7a: ADD APPLE adds Apple to the same account, and says so', two.account?.handle === 'lena_g' && two.rows.join(',') === 'Google,Apple' && two.message === 'Apple added.', two);
+    // ADD GOOGLE with Mia's Google: refused, still Lena, nothing added.
+    await fetch(`${mocks.url}/google/next?user=mia`);
+    await press(l.page, 'remove0'); await settled(l.page);  // Lena's own Google goes first, so ADD GOOGLE shows
+    await Promise.all([l.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}), press(l.page, 'addGoogle', 0)]);
+    await l.page.waitForFunction(() => { const s = (window as any).__bd_probe?.scene.SettingsPanel; return s?.OffsetY === 0 && s.accountPage.View === 'methods' && s.accountPage.Account; }, null, { timeout: 20000 }).catch(() => {});
+    await l.page.waitForTimeout(800);
+    const taken = await pp(l.page);
+    check('R7b: a Google account used by another BlokDust account is refused; still signed in as Lena; nothing added',
+      taken.account?.handle === 'lena_g' && taken.rows.join(',') === 'Apple' && /already used by another BlokDust account/.test(taken.message), taken);
+    const miaStill = await api(m, 'GET', 'me');
+    check('… and Mia keeps her Google', miaStill.json?.user?.handle === 'mia_g' && miaStill.json?.user?.providers.includes('google'), miaStill.json);
+    // ADD PASSKEY, then REMOVE it again; then the last way in can't be removed (the page hides REMOVE; the API refuses).
+    await press(l.page, 'addPasskey'); await settled(l.page);
+    const withKey = await pp(l.page);
+    await l.page.screenshot({ path: `${OUT}/methods-two.png` });
+    await press(l.page, 'remove1'); await settled(l.page);
+    const back = await pp(l.page);
+    check('R7c: a passkey added and removed', withKey.rows.length === 2 && /^Passkey/.test(withKey.rows[1]) && back.rows.join(',') === 'Apple', { withKey, back });
+    const last = await api(l, 'DELETE', 'me/methods', { kind: 'apple' });
+    check('R7c: the last way in is never removed (409)', last.status === 409 && (await pp(l.page)).rows.join(',') === 'Apple', last);
+    const cross = await fetch(`${base}/api/me/methods`, { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind: 'apple' }) });
+    check('R5: removing needs this site\'s Origin', cross.status === 403, cross.status);
+    await m.ctx.close(); await l.ctx.close();
+  },
   /** R1b (CHG-0035): a network makes ACCOUNTS_PER_DAY new accounts a day (a second local Worker, 2 a day); the next
    * is refused, by passkey and by Google; known accounts still sign in; back from Google the app says why. */
   async 'new-account-limit'() {
@@ -309,7 +369,8 @@ const tests: Record<string, () => Promise<void>> = {
     // A patch from before migration 0006 (blocks not counted yet): counted when the tab next asks.
     await server.sql(`UPDATE patches SET blocks = '' WHERE id = '${mine1.json.id}'`);
     const requests: string[] = [];
-    a.page.on('request', r => { if (r.url().includes('/api/')) requests.push(new URL(r.url()).pathname + new URL(r.url()).search); });
+    // Account requests only: usage analytics flushes on its own 60 s timer (SPEC-SHARING-USAGE-ANALYTICS), whenever.
+    a.page.on('request', r => { if (r.url().includes('/api/') && !r.url().includes('/api/events')) requests.push(new URL(r.url()).pathname + new URL(r.url()).search); });
     await openAccount(a.page);
     await a.page.waitForFunction(() => !!(window as any).__bd_probe.scene.SettingsPanel.accountPage.Account?.stats, null, { timeout: 10000 });
     await a.page.waitForTimeout(400);

@@ -57,7 +57,7 @@ export function uniqueTitle(title: string, taken: Iterable<string>): string {
   for (let n = 2; ; n++) { const t = `${base} (${n})`; if (!used.has(t.toLowerCase())) return t; }
 }
 /** Accounts (CHG-0023): what the ACCOUNT tab shows. */
-export interface AccountInfo { handle: string | null; passkeys: number; providers: string[]; stats?: import('../account/client.ts').AccountStats }
+export interface AccountInfo { handle: string | null; passkeys: number; providers: string[]; methods?: import('../account/client.ts').SignInMethod[]; stats?: import('../account/client.ts').AccountStats }
 export interface AccountHost {
   /** Who is signed in (null: nobody), whether Google and Apple sign-in are offered; null when there is no backend. */
   me(stats?: boolean): Promise<{ user: AccountInfo | null; google: boolean; apple?: boolean } | null>;
@@ -66,6 +66,8 @@ export interface AccountHost {
   google(): void;
   apple(): void;
   addPasskey(): Promise<void>;
+  /** R7c: remove a way in (never the last). */
+  removeMethod(m: import('../account/client.ts').SignInMethod): Promise<void>;
   setHandle(handle: string): Promise<void>;
   signOut(everywhere: boolean): Promise<void>;
   deleteAccount(): Promise<void>;
