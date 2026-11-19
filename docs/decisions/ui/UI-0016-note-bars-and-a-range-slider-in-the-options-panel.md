@@ -17,8 +17,8 @@ vertical bars, no circles: BlokDust's shapes are straight lines at 45° angles.
 
 ## Decision
 We will add two panel rows, drawn only from v1 panel parts (no gradients, no circles):
-- **Note bars:** 12 vertical bars, C to B, the note names under them, black-key notes a darker shade of the same
-  palette colour. Dragging up or down sets one bar; continuous (Random Note's weights) or stepped (Chord's
+- **Note bars:** 12 vertical bars, C to B, the note names under them (sharps). Black-key notes have v1's hatched track,
+  white-key notes none; a Chord's bar also names its chord under the note. Dragging up or down sets one bar; continuous (Random Note's weights) or stepped (Chord's
   qualities). While a bar is held its value shows above the row's top-right corner, as the Envelope's held handle
   does (UI-0014): "F♯ 35%", "D MINOR". The bar of a note that plays lights up briefly.
 - **Range slider:** v1's slider track with two handles, stepped by semitone; the value reads "C2 – G4". The handles

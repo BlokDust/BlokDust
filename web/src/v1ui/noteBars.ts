@@ -2,7 +2,7 @@
 // vertical bars, C to B; and Random Note's Range, one slider with two handles, by semitone. Not in v1; drawn only from
 // v1 OptionSlider's pieces: the hatched track (diagonalFill), the slider colour, the 2-unit line and the 45° grab
 // diamond with its palette 8 half, the divider, the name on the left. No circles, no gradients.
-//  - Black-key notes have a plain track in palette 1 (the divider colour) instead of the hatching.
+//  - Only black-key notes have the hatched track; white-key notes have none (owner, 2026-11-19).
 //  - While a bar is held its value shows above the row's top-right corner, as the Envelope's held handle does
 //    (adsrPanel.ts): "F# 35%", "D MINOR 7TH". A bar whose note just played is drawn in the text colour.
 //  - The bars show the pattern after the Key slider: bar n shows stored value (n − key) mod 12.
@@ -68,9 +68,8 @@ export function drawNoteBars(this: any, ctx: CanvasRenderingContext2D, units: nu
   for (let n = 0; n < 12; n++) {
     const bx = L.x + L.cell * n + L.gap * 0.5, bh = L.bottom - L.top, v = barValue(block, n), f = k === 'weights' ? v : v / steps;
     shown.push(v);
-    // TRACK: v1's hatching; black keys plain palette 1 //
-    if (BLACK.has(n)) { App.FillColor(ctx, App.Palette[1]); ctx.fillRect(bx, L.top, L.bw, bh); }
-    else panel.diagonalFill(bx, L.top, L.bw, bh, 9);
+    // TRACK: black keys v1's hatching, white keys empty (owner, 2026-11-19) //
+    if (BLACK.has(n)) panel.diagonalFill(bx, L.top, L.bw, bh, 9);
     // BAR //
     const on = !!lit && lit.note === n && lit.until > performance.now();
     App.FillColor(ctx, on ? txt : col);

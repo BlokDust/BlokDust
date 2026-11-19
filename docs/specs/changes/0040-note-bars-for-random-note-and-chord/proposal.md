@@ -16,7 +16,7 @@ among them (a chord played by hand flickers between its keys) and a polyphonic k
 
 ## What changes
 1. **Note bars** (UI-0016): a panel row of 12 vertical bars, C to B, drawn from v1 panel parts (straight lines and
-   45° angles only, no circles, no gradients). Black-key notes are a darker shade. While a bar is dragged its value
+   45° angles only, no circles, no gradients). Black-key notes have v1's hatched track, white-key notes none. While a bar is dragged its value
    shows above the row's top-right corner, as the Envelope does ("F♯ 35%", "D MINOR"). The bar of a note that
    plays lights up briefly.
 2. **Key slider** on both blocks (C…B, stepped): it slides the whole bar pattern sideways. The bars always show what
