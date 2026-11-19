@@ -62,4 +62,4 @@
 | [CHG-0035](changes/0035-playtest-tweaks/proposal.md) | Playtest tweaks: tour, menu order, hints, microphone power, SampleGen sound | **proposed** | SPEC-VISUAL-V1-PARITY, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-SHARING-VIDEO-EXPORT, SPEC-SHARING-GALLERY, SPEC-SHARING-ACCOUNTS |
 | [CHG-0036](changes/0036-add-in-app-feedback-and-private-support-reports/proposal.md) | Add in-app feedback and private support reports | **done** | SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS |
 | [CHG-0037](changes/0037-pre-release-polish-particles-save-connect-account/proposal.md) | Pre-release polish: particles, save, Connect, account, patches lists | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2, SPEC-SHARING-ACCOUNTS, SPEC-SHARING-BACKEND, SPEC-VISUAL-V1-PARITY, SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS |
-| [CHG-0038](changes/0038-stage-in-the-plugins/proposal.md) | Stage in the plugins | **in-progress** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |
+| [CHG-0038](changes/0038-stage-in-the-plugins/proposal.md) | Stage in the plugins | **done** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |

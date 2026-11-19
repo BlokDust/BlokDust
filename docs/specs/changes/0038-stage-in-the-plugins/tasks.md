@@ -10,4 +10,4 @@ Check items off as they land. Each task should be independently verifiable.
 - [x] 4. Page: Stage and Stage In in the plugins' menu; open, make, drop into, duplicate, LOAD PATCH; `stage` on
       sample events; frames of another world dropped; no Dust menu inside a Stage.
 - [x] 5. Specs: SPEC-SIMULATION-POWER-AND-PARTICLES R13 (plugins attach inner samples), UI-0012 consequence updated.
-- [ ] 6. Gates, `bd plugin deploy`, `bd plugin ios device`, staging.
+- [x] 6. Gates, `bd plugin deploy`, `bd plugin ios device`, staging.

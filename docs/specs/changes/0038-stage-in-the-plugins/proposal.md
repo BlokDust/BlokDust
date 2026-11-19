@@ -1,7 +1,7 @@
 ---
 id: CHG-0038
 title: Stage in the plugins
-status: in-progress
+status: done
 date: 2026-11-19
 specs: [SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2]
 adrs: [SCOPE-0006, UI-0009, UI-0012, PLUGIN-0001]
