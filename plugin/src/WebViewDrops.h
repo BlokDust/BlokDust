@@ -11,6 +11,11 @@ namespace blokdust::plugin {
 /// editor got on in a host we cannot attach to (Logic hosts AUs out of process). `log stream --predicate
 /// 'subsystem == "com.funputs.blokdust"'` shows them.
 void systemLog(const juce::String& message);
+#if JUCE_IOS
+/// iPad: the share menu for a link, as a popover pointing at `anchor` (in `editor`'s coordinates), the way other apps
+/// show it. JUCE's ContentSharer opens a page sheet the size of the whole view (owner, 2026-11-16, CHG-0025).
+void shareLink(juce::Component& editor, const juce::String& url, juce::Rectangle<int> anchor);
+#endif
 
 /// The parent for a native file picker: the editor on iPad, where an AUv3's picker without one never opens (JUCE);
 /// none on desktop, which keeps its free-standing dialogs.

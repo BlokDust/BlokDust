@@ -74,6 +74,11 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   void setCurrentProgram(int) override {}
   const juce::String getProgramName(int) override { return {}; }
   void changeProgramName(int, const juce::String&) override {}
+  /// World power (owner, 2026-11-16, CHG-0025): 0 off and 1 on (the page's switch), 2 host: on while the DAW plays,
+  /// off while it is stopped. The page's own power commands are ignored in host mode; it is saved with the project.
+  void setPowerMode(int mode) noexcept;
+  int powerMode() const noexcept { return powerMode_.load(); }
+  bool hostIsPlaying() const noexcept { return hostPlayingUi_.load(); }
   void getStateInformation(juce::MemoryBlock& dest) override;
   void setStateInformation(const void* data, int sizeInBytes) override;
 
@@ -175,6 +180,10 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   MidiRouter midiRouter_;                   // host MIDI → MIDI Input blocks (MPE, PLUGIN-0004)
   double lastBpm_ = 0.0;                    // host tempo last sent to the engine
   bool hostPlaying_ = false;                // the host transport was playing at the last block (audio thread)
+  std::atomic<int> powerMode_{1};           // setPowerMode
+  std::atomic<bool> hostPlayingUi_{false};  // hostPlaying_, for the editor
+  std::atomic<bool> powerResync_{false};    // host mode was chosen: apply the transport's power at the next block
+  int hostPower_ = -1;                      // the power host mode last applied (audio thread); -1: not in host mode
   SampleLoader loader_;
   std::map<std::string, std::shared_ptr<LoadedSample>> samples_;  // by patch block id; kept alive while attached
   std::set<std::string> missing_, loading_;

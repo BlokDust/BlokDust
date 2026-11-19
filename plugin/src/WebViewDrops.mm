@@ -5,11 +5,39 @@
 #include <os/log.h>
 #include <mutex>
 #import <Foundation/Foundation.h>
+#if TARGET_OS_IOS
+#import <UIKit/UIKit.h>
+#endif
 #if TARGET_OS_OSX
 #import <AppKit/AppKit.h>
 #endif
 
 namespace blokdust::plugin {
+#if TARGET_OS_IOS
+void shareLink(juce::Component& editor, const juce::String& url, juce::Rectangle<int> anchor) {
+  auto* peer = editor.getPeer();
+  if (peer == nullptr) return;
+  auto* view = static_cast<UIView*>(peer->getNativeHandle());
+  UIResponder* r = view;
+  while (r != nil && ![r isKindOfClass:[UIViewController class]]) r = r.nextResponder;
+  auto* host = r != nil ? static_cast<UIViewController*>(r) : view.window.rootViewController;
+  while (host.presentedViewController != nil) host = host.presentedViewController;
+  if (host == nil) return;
+  NSURL* link = [NSURL URLWithString:[NSString stringWithUTF8String:url.toRawUTF8()]];
+  if (link == nil) return;
+  auto* sheet = [[UIActivityViewController alloc] initWithActivityItems:@[link] applicationActivities:nil];
+  sheet.modalPresentationStyle = UIModalPresentationPopover;
+  const auto at = peer->getComponent().getLocalArea(&editor, anchor);
+  sheet.popoverPresentationController.sourceView = view;
+  sheet.popoverPresentationController.sourceRect = CGRectMake(at.getX(), at.getY(), at.getWidth(), at.getHeight());
+  sheet.completionWithItemsHandler = ^(UIActivityType type, BOOL done, NSArray*, NSError*) {
+    systemLog(done ? "share: sent (" + juce::String(type != nil ? type.UTF8String : "?") + ")" : juce::String("share: closed"));
+  };
+  [host presentViewController:sheet animated:YES completion:nil];
+  [sheet release];
+}
+#endif
+
 void systemLog(const juce::String& message) {
   static os_log_t log = os_log_create("com.funputs.blokdust", "editor");
   os_log(log, "%{public}s", message.toRawUTF8());

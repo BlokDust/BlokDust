@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**69 decisions** · proposed: 17 · accepted: 46 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
+**70 decisions** · proposed: 17 · accepted: 47 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -129,3 +129,4 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [UI-0012](ui/UI-0012-a-stage-is-played-from-outside-through-its.md) | A Stage is played from outside through its controllers and Stage In | **accepted** | 2026-11-14 | stage, controllers, selection |
 | [UI-0013](ui/UI-0013-waveforms-zoom-as-a-view-window-over-v1-s-panel.md) | Waveforms zoom as a view window over v1's panel | **proposed** | 2026-11-15 | ui, options-panel, samples, post-2-0 |
 | [UI-0014](ui/UI-0014-the-envelope-graph-uses-a-curved-time-axis.md) | The Envelope graph uses a curved time axis | **accepted** | 2026-11-17 | ui, options-panel, envelope, post-2-0 |
+| [UI-0015](ui/UI-0015-host-the-power-switch-s-third-cell-hands-power-to.md) | HOST: the power switch's third cell hands power to the DAW transport | **accepted** | 2026-11-16 | power, plugin, ipad |

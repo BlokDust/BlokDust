@@ -53,6 +53,8 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                  a->setProperty("on", telemetry::enabled());
                  web_.emitEventIfBrowserIsVisible("bd_analytics", juce::var(a));
                })
+               // Power: off, on, or host (the DAW's transport has it). The page draws the mode; the processor owns it.
+               .withEventListener("bd_powerMode", [this](const juce::var& v) { proc_.setPowerMode(static_cast<int>(v.getProperty("mode", 1))); })
                .withEventListener("bd_stats", [this](const juce::var& v) {
                  systemLog("page: " + v.getProperty("fps", 0).toString() + " fps, " + v.getProperty("snapshots", 0).toString() + " snapshots/s (sent "
                            + juce::String(juce::roundToInt(sentPerSecond())) + "), " + v.getProperty("w", 0).toString() + "x" + v.getProperty("h", 0).toString()
@@ -223,9 +225,8 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                  if (!url.startsWith("https://")) return;
 #if JUCE_IOS
                  systemLog("share: menu opened");
-                 shareSheet_ = juce::ContentSharer::shareTextScoped(url, [](bool ok, const juce::String& err) {
-                   systemLog(ok ? juce::String("share: sent") : "share: closed " + err);
-                 }, this);
+                 const int x = v.getProperty("x", getWidth() / 2), y = v.getProperty("y", getHeight() / 2);
+                 shareLink(*this, url, {x - 20, y - 20, 40, 40});
 #else
                  juce::URL(url).launchInDefaultBrowser();
 #endif
@@ -292,6 +293,8 @@ void BlokDustEditor::reloadPatch() {
 #if JUCE_IOS
   obj->setProperty("ios", true);  // no Trash, no Finder (CHG-0025)
 #endif
+  obj->setProperty("powerMode", proc_.powerMode());
+  obj->setProperty("hostPlaying", proc_.hostIsPlaying());
   auto* system = new juce::DynamicObject();
   system->setProperty("surface", juce::JUCEApplicationBase::isStandaloneApp() ? "standalone" : "plugin");
   system->setProperty("os", juce::SystemStats::getOperatingSystemName());
@@ -330,6 +333,13 @@ void BlokDustEditor::tick() {
   if (const bool keys = windowHasKeys(*this); keys != hadKeys_) {
     hadKeys_ = keys;
     if (!keys) { web_.emitEventIfBrowserIsVisible("bd_keysLost", juce::var(new juce::DynamicObject())); proc_.releasePageKeys(); }
+  }
+  // The DAW's play state, for the power switch's host mode (it shows playing or stopped).
+  if (const int state = proc_.powerMode() * 2 + (proc_.hostIsPlaying() ? 1 : 0); state != hostState_) {
+    hostState_ = state;
+    auto* h = new juce::DynamicObject();
+    h->setProperty("mode", proc_.powerMode()); h->setProperty("playing", proc_.hostIsPlaying());
+    web_.emitEventIfBrowserIsVisible("bd_hostState", juce::var(h));
   }
   const Snapshot* s = proc_.snapshots().read();
   if (s) proc_.syncToggles(*s);  // Toggles hits switched: into the patch, and onto the page below (CHG-0013)

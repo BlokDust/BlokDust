@@ -1353,6 +1353,50 @@ const waveBox = (p: Page) => p.evaluate(() => {
   return { x: (o.Position.x + o.Margin) / pr, y: (o.Position.y + w.Position.y) / pr, width: o.Range / pr, height: w.Size.height / pr };
 });
 
+// ---- Owner review on iPad (2026-11-16, CHG-0025) ----
+Object.assign(tests, {
+  /** DAW plugins: the power switch has a third cell, HOST, after OFF and ON. HOST hands the power to the DAW's
+   * transport (the processor ignores the page's power commands then): the label says the host is stopped (grey) or
+   * playing, and the icon shows ▷ or ■. A plugin can't press the DAW's play, so HOST again only says where play is.
+   * ON and OFF take the power back, the mode going to the processor before the power command. The standalone app has
+   * no transport: two cells, as on the web. */
+  async 'power-host-mode'(errors: string[]) {
+    const { pg, close } = await openPlugin(plugPatch([{ id: 'e', type: 'power.emitter', x: -3, y: 0 }, { id: 't', type: 'source.tone', x: 3, y: 0 }]), errors);
+    await pg.evaluate(() => {
+      const seen: string[] = ((window as any).__texts = []);
+      const f = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) { seen.push(t); return (f as any).call(this, t, ...a); };
+    });
+    const cell = (i: number) => pg.evaluate(k => { const A = (window as any).__bd_probe.v1App, u = A.Unit, pr = A.Metrics.PixelRatio, w = 90 * u;
+      return [(A.Width / 2 - w / 2 + (w / 3) * (k + 0.5)) / pr, (A.Height - 30 * u) / pr]; }, i);
+    const label = async () => { await pg.evaluate(() => { (window as any).__texts.length = 0; }); await pg.mouse.move(5, 5); await pg.mouse.move(6, 6); await pg.waitForTimeout(250);
+      // The switch's own labels (the header's POWER menu is drawn after it).
+      return pg.evaluate(() => ((window as any).__texts as string[]).filter(t => /^(POWER|POWER OFF|POWER · HOST PLAYING|HOST STOPPED · PRESS PLAY|USE THE HOST'S PLAY BUTTON)$/.test(t))[0] ?? null); };  // first: the switch draws before the header
+    const sent = () => pg.evaluate(() => ((window as any).__sent as { id: string; v: any }[]).filter(e => e.id === 'bd_powerMode' || (e.id === 'bd_commands' && JSON.stringify(e.v).includes('"type":10'))).map(e => e.id === 'bd_powerMode' ? `mode${e.v.mode}` : `power${e.v.commands.find((c: any) => c.type === 10).value}`));
+    const hostCell = await pg.evaluate(() => (window as any).__bd_probe.scene.hostPower);
+    await pg.evaluate(() => { (window as any).__sent.length = 0; });
+    const press = async (i: number) => { const [x, y] = await cell(i); await pg.mouse.click(x, y); await pg.waitForTimeout(250); };
+    await press(2); const hostStopped = await label(); const toHost = await sent();
+    await pg.screenshot({ path: `${OUT}/power-host-stopped.png`, clip: { x: 440, y: 690, width: 400, height: 110 } });
+    await pg.evaluate(() => (window as any).__fire('bd_hostState', { mode: 2, playing: true })); const hostPlaying = await label();
+    await pg.screenshot({ path: `${OUT}/power-host-playing.png`, clip: { x: 440, y: 690, width: 400, height: 110 } });
+    await pg.evaluate(() => { (window as any).__sent.length = 0; });
+    await press(2); const hint = await pg.evaluate(() => ((window as any).__texts as string[]).filter(t => /HOST/.test(t)).pop()); const againSent = await sent();
+    await pg.waitForTimeout(2800); const afterHint = await label();
+    await press(1); const backOn = await sent(); const onLabel = await label();
+    await pg.evaluate(() => { (window as any).__sent.length = 0; });
+    await press(0); const offSent = await sent(); const offLabel = await label();
+    await close();
+    const app = await openPlugin(plugPatch([{ id: 't', type: 'source.tone', x: 0, y: 0 }]), errors, undefined, true);
+    const appCells = await app.pg.evaluate(() => (window as any).__bd_probe.scene.hostPower);
+    await app.close();
+    const ok = hostCell && JSON.stringify(toHost) === '["mode2"]' && hostStopped === 'HOST STOPPED · PRESS PLAY' && hostPlaying === 'POWER · HOST PLAYING'
+      && hint === "USE THE HOST'S PLAY BUTTON" && againSent.length === 0 && afterHint === 'POWER · HOST PLAYING'
+      && JSON.stringify(backOn) === '["mode1","power1"]' && onLabel === 'POWER' && JSON.stringify(offSent) === '["mode0","power0"]' && offLabel === 'POWER OFF' && appCells === false;
+    return [ok, { hostCell, toHost, hostStopped, hostPlaying, hint, againSent, afterHint, backOn, onLabel, offSent, offLabel, appCells }];
+  },
+} as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
+
 // ---- Owner review of Phase 3 (2026-11-07): web + plugin in Logic ----
 Object.assign(tests, {
   /** Holding a note key and switching tab (or app) must not leave the note stuck: held keys are released when the

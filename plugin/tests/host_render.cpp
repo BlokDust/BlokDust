@@ -80,6 +80,7 @@ int main(int argc, char** argv) {
   long bypassUntil = 0;  // --bypass-until: the host bypasses the plugin before this sample (Logic's power button)
   long tailFrom = -1;    // --tail-from: also hash the render from this sample on ("tailHash")
   long stopFrom = -1, playAgainAt = -1;  // --stopped a:b: the transport stops at a, and plays again from bar 1 at b
+  long peakFrom = -1, peakTo = -1;       // --peak a:b: also the peak over samples [a, b) ("windowPeak")
   bool idle = false;     // --idle: never process audio (a disabled plugin); with --editor, the UI must still update
   bool reload = false;  // --reload: save state, zero the parameters, restore the state, report their values
   juce::String wavOut;  // --wav: write the render (diagnosis)  // --settle: let the plugin finish async work (sample loading) on the message thread  // --tempo: a playing host transport from beat 0 (CHG-0004 3.5)
@@ -91,6 +92,7 @@ int main(int argc, char** argv) {
     else if (a == "--reload") reload = true;
     else if (a == "--idle") idle = true;
     else if (a == "--stopped" && i + 1 < argc) { const juce::String r = argv[++i]; stopFrom = r.upToFirstOccurrenceOf(":", false, false).getLargeIntValue(); playAgainAt = r.fromFirstOccurrenceOf(":", false, false).getLargeIntValue(); }
+    else if (a == "--peak" && i + 1 < argc) { const juce::String r = argv[++i]; peakFrom = r.upToFirstOccurrenceOf(":", false, false).getLargeIntValue(); peakTo = r.fromFirstOccurrenceOf(":", false, false).getLargeIntValue(); }
     else if (a == "--bypass-until" && i + 1 < argc) bypassUntil = juce::String(argv[++i]).getLargeIntValue();
     else if (a == "--tail-from" && i + 1 < argc) tailFrom = juce::String(argv[++i]).getLargeIntValue();
     else if (a == "--settle" && i + 1 < argc) settleMs = juce::String(argv[++i]).getIntValue();
@@ -238,7 +240,10 @@ int main(int argc, char** argv) {
   nlohmann::json paramNames = nlohmann::json::array();
   for (auto* p : plugin->getParameters()) paramNames.push_back(p->getName(64).toStdString());
   double peak = 0; for (std::size_t i = 0; i < left.size(); ++i) peak = std::max({peak, std::abs(double(left[i])), std::abs(double(right[i]))});
-  nlohmann::json out = {{"format", types[0]->pluginFormatName.toStdString()}, {"name", types[0]->name.toStdString()}, {"peak", peak}, {"params", paramNames}, {"reloadedValues", reloadedValues},
+  double windowPeak = 0;
+  for (long i = std::max(0L, peakFrom); peakFrom >= 0 && i < std::min<long>(peakTo, static_cast<long>(left.size())); ++i)
+    windowPeak = std::max({windowPeak, std::abs(double(left[static_cast<std::size_t>(i)])), std::abs(double(right[static_cast<std::size_t>(i)]))});
+  nlohmann::json out = {{"format", types[0]->pluginFormatName.toStdString()}, {"name", types[0]->name.toStdString()}, {"peak", peak}, {"windowPeak", windowPeak}, {"params", paramNames}, {"reloadedValues", reloadedValues},
                         {"audioHash", hex}, {"tailHash", tailHex}, {"frames", frames}, {"sampleRate", sr}, {"stateRoundTrips", stateRoundTrips}, {"stateAfter", stateAfter}};
 
   if (editorDiag.isNotEmpty()) {
