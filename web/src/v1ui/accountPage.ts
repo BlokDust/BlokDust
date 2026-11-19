@@ -205,8 +205,8 @@ export class AccountPage {
     const adds: Record<string, Box> = {};
     this.addable().forEach((k, i) => { adds[k] = full(addsTop + i * 55 * u); });
     const addsEnd = addsTop + this.addable().length * 55 * u;
-    // BACK at the top left, on the heading's line (owner, 2026-11-19: a button, not an arrow); the heading after it.
-    const methodsBack = this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * u, top - 4 * u);
+    // BACK at the top right, on the heading's line (owner, 2026-11-19: a button, not an arrow; the heading stays at the left).
+    const methodsBack = this.bordered(COPY.back, R, top - 4 * u);
     // A plugin's code (SHARING-0011): the code large under the line, the QR code at the right, BACK (and OPEN BROWSER
     // AGAIN) under them.
     const qrSize = 130 * u, code = { text: top + 118 * u, qr: { x: R - qrSize, y: top + 70 * u, s: qrSize }, waiting: top + 160 * u,
@@ -267,11 +267,10 @@ export class AccountPage {
     return y;
   }
   /** A sub-heading: the tab type (v1's mid type), no rule under it (owner review 2), and its italic line if any. */
-  /** `titleX`: where the title starts when something sits before it on its line (SIGN-IN METHODS' BACK). */
-  private heading(title: string, line: string, top: number, L: number, titleX = L): void {
+  private heading(title: string, line: string, top: number, L: number): void {
     const c = this.ctx(), u = App.Unit, txt = App.Palette[App.ThemeManager.Txt];
     App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtMid;
-    c.fillText(title.toUpperCase(), titleX, top + 10 * u);
+    c.fillText(title.toUpperCase(), L, top + 10 * u);
     if (line) { c.font = App.Metrics.TxtItalic2; this.wrap(line, L, top + 32 * u, 14 * u, this.pageW()); }
   }
 
@@ -393,7 +392,7 @@ export class AccountPage {
         this.drawBordered(Lo.naming.back, App.Palette[1]);
       }
     } else if (this.View === 'methods' && this.Account) {
-      this.heading(COPY.methodsTitle, COPY.methodsLine, top, Lo.L, Lo.methodsBack.x + Lo.methodsBack.w + 15 * u);
+      this.heading(COPY.methodsTitle, COPY.methodsLine, top, Lo.L);
       const line = App.Palette[1];
       Lo.list.forEach((row, i) => {
         App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtMid;
