@@ -196,17 +196,15 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
     slider('Octave', 'transpose', Number(b.Params.transpose ?? 0), -3, 3, { quantised: true, centered: true }),
     slider('Glide', 'glidePct', Number(b.Params.glide ?? 0.05) * 100, 0, 100),
   ],
-  // CHG-0021: its level, then the two things to do with it. (In the plugin a Stage plays; opening is the website's.)
+  // CHG-0021: its level, then the two things to do with it.
   'source.stage': b => {
     const g = Number(b.Params.gain ?? 1);
     return [
       slider('Volume', 'gainDb', g > 0 ? Math.max(-40, 20 * Math.log10(g)) : -40, -40, 6, { display: v => (v <= -40 ? 'OFF' : `${v >= 0 ? '+' : ''}${v.toFixed(1)} dB`) }),
       // R13b (owner, 2026-11-14): unpowered, the particles inside carry on.
       switches({ name: 'Keep Particles', setting: 'keepParticles', value: !!b.Params.keepParticles }),
-      ...(App.IsPlugin ? [] : [
-        // One row: OPEN STAGE beside LOAD PATCH (owner, 2026-11-14; buttonPair.ts).
-        { type: 'actionbutton', name: '', setting: 'openStage', props: { text: 'Open Stage' } },
-      ]),
+      // One row: OPEN STAGE beside LOAD PATCH (owner, 2026-11-14; buttonPair.ts). The plugins too (CHG-0038).
+      { type: 'actionbutton', name: '', setting: 'openStage', props: { text: 'Open Stage' } },
     ];
   },
   // CHG-0018 (AUDIO-0003): what it moves (a carousel of "Block · Param" over the blocks connected to it), then how.

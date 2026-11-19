@@ -11,3 +11,4 @@ Check items off as they land. Each task should be independently verifiable.
       sample events; frames of another world dropped; no Dust menu inside a Stage.
 - [x] 5. Specs: SPEC-SIMULATION-POWER-AND-PARTICLES R13 (plugins attach inner samples), UI-0012 consequence updated.
 - [x] 6. Gates, `bd plugin deploy`, `bd plugin ios device`, staging.
+- [x] 7. Owner 2026-11-19: the Stage panel's OPEN STAGE / LOAD PATCH row in the plugins (ui-regressions `plugin-stage-panel-buttons`, failed before).

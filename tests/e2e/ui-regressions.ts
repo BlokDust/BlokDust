@@ -1436,6 +1436,22 @@ Object.assign(tests, {
       && afterOuter === before && afterInner === 2 && out && JSON.stringify(back) === '[0]' && !!t && t.x !== 0;
     return [ok, { menu, inside, views, innerTone, moves: moves.length, movedInside, before, afterOuter, afterInner, out, back, saved: t }];
   },
+  /** Owner (2026-11-19): a Stage's panel in the plugins has OPEN STAGE and LOAD PATCH, as on the web, and OPEN
+   * STAGE opens it. */
+  async 'plugin-stage-panel-buttons'(errors: string[]) {
+    const { pg, close } = await openPlugin(plugPatch([{ id: 's', type: 'source.stage', x: 0, y: 0 }]), errors, { s: 1 });
+    const at = await pg.evaluate(() => (window as any).__bd_probe.blockPoint(1)) as [number, number] | null;
+    if (at) { await pg.mouse.move(at[0], at[1]); await pg.mouse.click(at[0], at[1]); }
+    await pg.waitForFunction(() => { const o = (window as any).__bd_probe.scene.OptionsPanel; return o.Scale === 1 && !o.Opening && o.SelectedBlock?.Id === 1; }, null, { timeout: 5000 }).catch(() => {});
+    await pg.waitForTimeout(400);
+    const settings = await pg.evaluate(() => ((window as any).__bd_probe.scene.OptionsPanel.Options as any[]).map(o => o.Setting));
+    await pg.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock?.SetParam('openStage', 1));
+    await pg.waitForTimeout(700);
+    const opened = await pg.evaluate(() => (window as any).__bd_probe.inside?.stage ?? null);
+    await close();
+    const ok = settings.includes('openStage') && opened === 1;
+    return [ok, { settings, opened }];
+  },
   /** MAKE STAGE from a selection and Cmd/Ctrl+D on a Stage work in the plugins: what goes inside is built in the new
    * Stage's own world (commands carry `stage`), never the outer one, and the processor is told what is inside it
    * (bd_macros), so the DAW project keeps it. */
