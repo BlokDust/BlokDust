@@ -63,4 +63,4 @@
 | [CHG-0036](changes/0036-add-in-app-feedback-and-private-support-reports/proposal.md) | Add in-app feedback and private support reports | **done** | SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS |
 | [CHG-0037](changes/0037-pre-release-polish-particles-save-connect-account/proposal.md) | Pre-release polish: particles, save, Connect, account, patches lists | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2, SPEC-SHARING-ACCOUNTS, SPEC-SHARING-BACKEND, SPEC-VISUAL-V1-PARITY, SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS |
 | [CHG-0038](changes/0038-stage-in-the-plugins/proposal.md) | Stage in the plugins | **done** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |
-| [CHG-0039](changes/0039-sign-in-methods-plugin-gallery-and-plugin-sign-in/proposal.md) | Sign-in methods, plugin gallery and plugin sign-in | **in-progress** | SPEC-SHARING-ACCOUNTS, SPEC-SHARING-GALLERY |
+| [CHG-0039](changes/0039-sign-in-methods-plugin-gallery-and-plugin-sign-in/proposal.md) | Sign-in methods, plugin gallery and plugin sign-in | **done** | SPEC-SHARING-ACCOUNTS, SPEC-SHARING-GALLERY |

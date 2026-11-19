@@ -11,4 +11,4 @@ Check items off as they land. Each task should be independently verifiable.
       plugin/src/ios/NativeSignIn.mm); the AUv3 shares the key. Built in with `BLOKDUST_IOS_NATIVE_SIGN_IN=1` once the
       App ID has Sign in with Apple and Associated Domains (owner: developer portal, or the team's Apple account in
       Xcode); until then the iPad signs in with the code. accounts `ipad-native`, `ipad-app-sign-in`.
-- [ ] 6. Gates, deploys (staging, MBP, iPad), push.
+- [x] 6. Gates, deploys (staging, MBP, iPad), push; owner checked Apple and the code on the iPad (2026-11-19).
