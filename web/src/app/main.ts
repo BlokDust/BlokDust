@@ -2622,6 +2622,10 @@ async function main() {
   };
   (window as unknown as { __bd_pads?: unknown }).__bd_pads = padNotes;
   if (!embedId) app.canvas.addEventListener('pointerdown', e => {
+    // Only the main button works the stage (owner, 2026-11-19): a right-click's press began a pan that never ended
+    // (the menu it opened took the release), so moving to the menu dragged the stage away. Right-clicks have their own
+    // handler (contextmenu).
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
     app.canvas.setPointerCapture(e.pointerId);
     if (primaryId === null && cornerPress(e.offsetX * dpr(), e.offsetY * dpr())) { primaryId = e.pointerId; primaryRole = 'gone'; return; }
     if (makeStageAt && primaryId === null && inBox(makeStageAt, e.offsetX * dpr(), e.offsetY * dpr())) { makeStage(); primaryId = e.pointerId; primaryRole = 'gone'; return; }

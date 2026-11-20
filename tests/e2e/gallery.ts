@@ -215,6 +215,16 @@ try {
       await d.page.mouse.move(5, 5); await d.page.waitForTimeout(300); await d.page.screenshot({ path: `${OUT}/report-confirm.png` });
       check('R9: right-click on the credit asks first, without saying how many reports hide a patch', asked.open && asked.view === 'report' && !/three|hidden/i.test(text), text.slice(0, 300));
     }
+    if (d === bob) {  // Owner (2026-11-19): CANCEL there emptied the stage.
+      // Blocks on screen, not just in the patch (it was the view that went: the right-click's press began a pan).
+      const onScreen = () => d.page.evaluate(() => { const s = (window as any).__bd_probe; return s.state.blocks.filter((b: any) => { const p = s.blockPoint(b.id); return p && p[0] > 0 && p[0] < innerWidth && p[1] > 90 && p[1] < innerHeight - 90; }).length; });
+      const before = await onScreen();
+      await press(d, 'reportCancel', 1200);
+      const after = await onScreen();
+      await d.page.mouse.move(5, 5); await d.page.waitForTimeout(300); await d.page.screenshot({ path: `${OUT}/report-cancel.png` });
+      check('Bug (owner, 2026-11-19): CANCEL on REPORT THIS PATCH? keeps the stage', before > 0 && after === before, { before, after });
+      await d.page.mouse.click(c.creditAt[0], c.creditAt[1], { button: 'right' }); await d.page.waitForTimeout(900);
+    }
     await press(d, 'reportOk', 300); await idle(d);
     await d.page.waitForTimeout(2200);
     if (d === bob) check('R9: after REPORT the thanks shows, then the panel closes', !(await P(d)).open);
