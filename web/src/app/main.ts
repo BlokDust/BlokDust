@@ -431,6 +431,14 @@ async function main() {
     scene.pinchEnd();  // the zoom buttons step on from the nearest of v1's levels
     uiSync = true;
   }
+  /** A patch never opens with every block out of sight (owner, 2026-11-19: a saved view far from its blocks played
+   * with an empty stage): then the view frames them, as opening a Stage does (frameBlocks). */
+  function keepBlocksInView(): void {
+    const m = stage.metrics, bs = [...model.values()];
+    if (!bs.length || !m.width || !m.height) return;
+    const seen = bs.some(b => { const [x, y] = gridToPx(m, b.x, b.y); return x > 0 && x < m.width && y > 0 && y < m.height; });
+    if (!seen) applyView(frameBlocks(bs, undefined, { width: m.width, height: m.height, unit: m.unit, area: { x: 0, y: 0, w: m.width, h: m.height } }));
+  }
   const hostSystem: Record<string, unknown> = {};
   juce?.addEventListener<Record<string, unknown>>('bd_supportSystem', value => { Object.assign(hostSystem, value); });
   const supportClient = !embedId ? new SupportClient({ patch: toPatch, plugin: !!juce,
@@ -1512,7 +1520,7 @@ async function main() {
       if (from) sources.push({ ...from, blocks: part.blocks.map(b => b.id).filter((b): b is string => !!b) });
     }
     addLabels(readLabels(mode === 'open' ? p.labels : 'labels' in part ? part.labels : []));
-    if (mode === 'open') { connectionOrder = [...(p.connectionOrder ?? [])]; send(relinks(p, uidToId())); applyView(p.view); }
+    if (mode === 'open') { connectionOrder = [...(p.connectionOrder ?? [])]; send(relinks(p, uidToId())); applyView(p.view); keepBlocksInView(); }
     if (mode === 'open') setBaseline(); else startPlacing(ids, touch, at);
     stage.redraw();
   }
@@ -2042,6 +2050,7 @@ async function main() {
   if (start.view.zoom === undefined && !start.view.drag && start.patch.view) start.view = { ...start.view, zoom: start.patch.view.zoom, drag: { x: start.patch.view.x, y: start.patch.view.y } };
   if (start.view.zoom !== undefined || start.view.drag) stage.setView(start.view.zoom ?? 1, start.view.drag ?? { x: 0, y: 0 });
   showPatch(start.patch);
+  keepBlocksInView();  // its saved view may be far from its blocks (owner, 2026-11-19)
   // Someone else's patch from a link, or an embed (CHG-0041): guarded. One this browser or the account made is not.
   setGuarded(!!embedId || (start.source === 'link' && !(start.id && (start.mine || canOverwrite(start.id)))));
   // Unsaved changes are counted from what was opened: a link, a v1 composition or the demo. Work restored from the last

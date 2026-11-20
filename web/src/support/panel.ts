@@ -122,15 +122,27 @@ export class FeedbackPanel {
     const r = el.getBoundingClientRect();
     return [r.left + r.width / 2, r.top + r.height / 2];
   }
+  /** Lines `text` takes at `width` in the current font (v1 SettingsPanel.WordWrap's rule). */
+  private lines(ctx: CanvasRenderingContext2D, text: string, width: number): number {
+    if (!text) return 0;
+    let n = 1, line = '';
+    for (const word of text.split(' ')) {
+      const t = line ? `${line} ${word}` : word;
+      if (ctx.measureText(t).width > width && line) { n++; line = word; } else line = t;
+    }
+    return n;
+  }
   /** Called with the Settings canvas, clipped under the tabs; it slides in and out with the FEEDBACK tab as the other
-   * tabs' pages do (owner, 2026-11-18), and the inputs follow it, cut off at the tabs' foot. */
+   * tabs' pages do (owner, 2026-11-18), and the inputs follow it, cut off at the tabs' foot. It fits the window
+   * (owner, 2026-11-19: SEND was below a laptop's screen and GarageBand's plugin view): it starts in the gap under the
+   * tabs, and the message box takes what height is left (80 units at most, 30 at least). */
   draw(panel: any): void {
     const tab = panel.MenuItems[1], shown = panel.Open && !!tab && tab.YOffset > -panel.DrawTo.Height;
     this.form.hidden = !shown;
     if (!shown) return;
     const ctx = panel.Ctx as CanvasRenderingContext2D, u = App.Unit, pr = App.Metrics.PixelRatio;
     const w = App.SettingsPhone ? App.SettingsMenuWidth(App.Width) : Math.min(420 * u, App.SettingsMenuWidth(App.Width));  // a phone: the Settings page's width (owner, 2026-11-18)
-    const x = (App.Width - w) / 2, top = panel.OffsetY + 120 * u + tab.YOffset;
+    const x = (App.Width - w) / 2, topU = App.SettingsPhone ? 110 : 90, top = panel.OffsetY + topU * u + tab.YOffset;
     const txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder, clipTop = panel.OffsetY + 60 * u;
     const place = (id: string, px: number, py: number, width: number, height: number, font = App.Metrics.TxtMid, on = true) => {
       const el = this.form.querySelector<HTMLElement>(`#${id}`)!;
@@ -141,6 +153,19 @@ export class FeedbackPanel {
         font: font.replace(/([\d.]+)px/, (_: string, n: string) => `${Number(n) / pr}px`),
         clipPath: hidden > 0 ? `inset(${hidden / pr}px 0 0 0)` : '', visibility: hidden >= height ? 'hidden' : '' });
     };
+    const report = this.Choice === 'report', state = report ? this.reportState() : 'report';
+    const field = !report || state === 'report';  // REPORT A PATCH with nothing to report (or signed out): no fields
+    // HEIGHTS (units): the choices and the intro, then (with fields) its label and the message box, then email and
+    // the switch (not for a report), then the button. The box gets what the window has left.
+    ctx.font = App.Metrics.TxtItalic2;
+    const intro = this.intro(), introH = this.lines(ctx, intro, w) * 16 + 14;
+    const fixed = 30 + introH + (field ? 26 + 12 : 0) + (report ? 0 : 100) + (report ? 20 : 12) + 40 + 12;
+    const room = (App.Height - panel.OffsetY) / u - topU - fixed;
+    const boxH = field ? Math.max(30, Math.min(80, room)) : 0;
+    // POSITIONS //
+    const introY = top + 36 * u, labelY = introY + introH * u, boxY = labelY + 12 * u, ruleY = boxY + (boxH + 4) * u;
+    const emailLabelY = ruleY + 22 * u, emailY = emailLabelY + 6 * u, emailRuleY = emailY + 26 * u, switchY = emailRuleY + 12 * u;
+    const sendY = report ? (field ? ruleY + 20 * u : introY + introH * u) : switchY + 54 * u;
     ctx.save(); ctx.fillStyle = txt; ctx.strokeStyle = App.Palette[1]; ctx.textAlign = 'left';
     // THE CHOICES: words across the page, the chosen one underlined (the gallery's sorts).
     ctx.font = App.Metrics.TxtMid;
@@ -154,30 +179,26 @@ export class FeedbackPanel {
       cx += ws[i] + gap;
     });
     ctx.strokeStyle = App.Palette[1]; ctx.lineWidth = 2;
-    const report = this.Choice === 'report', state = report ? this.reportState() : 'report';
-    const y = top + 36 * u;  // the page under the choices
-    ctx.fillStyle = txt; ctx.font = App.Metrics.TxtItalic2; panel.WordWrap(ctx, this.intro(), x, y, 16 * u, w);
-    const field = !report || state === 'report';  // REPORT A PATCH with nothing to report (or signed out): no fields
-    place('feedback-message', x, y + 46 * u, w, 80 * u, App.Metrics.TxtMid, field);
-    place('feedback-email', x, y + 174 * u, w, 18 * u, App.Metrics.TxtMid, !report);
-    place('feedback-include', x, y + 215 * u, w, 42 * u, App.Metrics.TxtMid, !report);
-    const sendY = report ? y + 160 * u : y + 270 * u;
+    ctx.fillStyle = txt; ctx.font = App.Metrics.TxtItalic2; panel.WordWrap(ctx, intro, x, introY, 16 * u, w);
+    place('feedback-message', x, boxY, w, boxH * u, App.Metrics.TxtMid, field);
+    place('feedback-email', x, emailY, w, 18 * u, App.Metrics.TxtMid, !report);
+    place('feedback-include', x, switchY, w, 42 * u, App.Metrics.TxtMid, !report);
     place('feedback-send', x, sendY, w, 40 * u, App.Metrics.TxtMid, !report || state !== 'none');
     ctx.font = App.Metrics.TxtMid;
     if (field) {
-      ctx.fillText(report ? 'WHY' : 'YOUR MESSAGE', x, y + 32 * u);
-      if (report) { const ww = ctx.measureText('WHY').width; ctx.font = App.Metrics.TxtItalic2; ctx.fillText('(optional)', x + ww + 8 * u, y + 32 * u); ctx.font = App.Metrics.TxtMid; }
-      ctx.beginPath(); ctx.moveTo(x, y + 138 * u); ctx.lineTo(x + w, y + 138 * u); ctx.stroke();
+      ctx.fillText(report ? 'WHY' : 'YOUR MESSAGE', x, labelY);
+      if (report) { const ww = ctx.measureText('WHY').width; ctx.font = App.Metrics.TxtItalic2; ctx.fillText('(optional)', x + ww + 8 * u, labelY); ctx.font = App.Metrics.TxtMid; }
+      ctx.beginPath(); ctx.moveTo(x, ruleY); ctx.lineTo(x + w, ruleY); ctx.stroke();
     }
     if (!report) {
-      ctx.fillText('EMAIL', x, y + 160 * u);
+      ctx.fillText('EMAIL', x, emailLabelY);
       const emailWidth = ctx.measureText('EMAIL').width;
-      ctx.font = App.Metrics.TxtItalic2; ctx.fillText('(optional)', x + emailWidth + 8 * u, y + 160 * u);
+      ctx.font = App.Metrics.TxtItalic2; ctx.fillText('(optional)', x + emailWidth + 8 * u, emailLabelY);
       // SharePanel/Patches title fields: transparent text with a single rule, never a textbox outline.
-      ctx.beginPath(); ctx.moveTo(x, y + 202 * u); ctx.lineTo(x + w, y + 202 * u); ctx.stroke();
-      ctx.font = App.Metrics.TxtMid; ctx.fillText('SHARE PATCH AND DIAGNOSTICS', x, y + 240 * u);
+      ctx.beginPath(); ctx.moveTo(x, emailRuleY); ctx.lineTo(x + w, emailRuleY); ctx.stroke();
+      ctx.font = App.Metrics.TxtMid; ctx.fillText('SHARE PATCH AND DIAGNOSTICS', x, switchY + 25 * u);
       // OptionsPanel switch rows are 60u high. A 48u pair gives each half the same 24u square as its separator.
-      const toggle = new OptionSwitch(new Point(w - 48 * u, y + 215 * u), '', 'includeContext', this.include, new Size(48 * u, 60 * u * .43), false, 'offOn');
+      const toggle = new OptionSwitch(new Point(w - 48 * u, switchY), '', 'includeContext', this.include, new Size(48 * u, 60 * u * .43), false, 'offOn');
       toggle.Draw(ctx, { SliderColours: App.ThemeManager.OptionsOrder.map((i: number) => App.Palette[i]) }, u, x, 60 * u, 0);
     }
     if (!report || state !== 'none') {
@@ -187,7 +208,7 @@ export class FeedbackPanel {
       ctx.fillStyle = txt; ctx.font = App.Metrics.TxtUrl2; ctx.textAlign = 'center'; ctx.fillText(label, x + w / 2, sendY + 29 * u);
     }
     ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; ctx.fillStyle = txt;
-    panel.WordWrap(ctx, this.status, x, sendY + 78 * u, 16 * u, w);
+    panel.WordWrap(ctx, this.status, x, sendY + 60 * u, 16 * u, w);
     ctx.restore();
   }
 }

@@ -81,7 +81,7 @@ export class EngineNode {
     if (on === !!this.guardNodes) return;
     if (on) {
       const loud = ctx.createDynamicsCompressor();
-      loud.threshold.value = -24; loud.knee.value = 12; loud.ratio.value = 4; loud.attack.value = 0.25; loud.release.value = 1.5;
+      loud.threshold.value = -24; loud.knee.value = 12; loud.ratio.value = 4; loud.attack.value = 0.25; loud.release.value = 1;  // Web Audio allows 0–1 s
       const limit = ctx.createDynamicsCompressor();
       limit.threshold.value = -3; limit.knee.value = 0; limit.ratio.value = 20; limit.attack.value = 0.001; limit.release.value = 0.1;
       this.node.disconnect(ctx.destination);

@@ -82,7 +82,7 @@ saving, browsed in the Patches panel's GALLERY tab (search, popular or new, like
   neither this browser's nor the signed-in account's; and every embed) is guarded until you save it as yours: its
   microphone stays off and v1's message bar says "This patch uses your microphone." with TURN ON (a Microphone you put
   down yourself opens it at once), and its sound goes through a safety limit after the engine (a slow compressor:
-  threshold −24 dB, ratio 4, 0.25 s attack, 1.5 s release; then a limiter: −3 dB, ratio 20). Your own patches,
+  threshold −24 dB, ratio 4, 0.25 s attack, 1 s release; then a limiter: −3 dB, ratio 20). Your own patches,
   files, presets and the plugins are neither. On the website a patch's Audio In loads as a Microphone, which needs
   power (the plugins keep Audio In: the DAW track, no power).
 ## Verification

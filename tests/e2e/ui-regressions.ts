@@ -1431,6 +1431,52 @@ Object.assign(tests, {
   },
 } as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
 
+// ---- Owner, 2026-11-19: FEEDBACK didn't fit a laptop (SEND below the screen) or GarageBand's plugin view ----
+Object.assign(tests, {
+  async 'feedback-fits'(errors: string[]) {
+    const out: Record<string, unknown> = {};
+    let ok = true;
+    for (const [name, w, h, choice] of [['laptop', 1000, 528, 'Suggestion'], ['garageband', 1000, 290, 'Suggestion'], ['tall', 1280, 800, 'Suggestion'], ['phone', 390, 844, 'Suggestion'], ['laptop-bug', 1000, 528, 'Bug']] as const) {
+      const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2 });
+      const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
+      await p.goto(`${url}/index.html`); await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start'); await p.waitForTimeout(1500);
+      await p.evaluate(() => { const s = (window as any).__bd_probe.scene.SettingsPanel; s._OpenTab = 1; (s.MenuItems as any[]).forEach((m, k) => { m.Selected = k === 1 ? 1 : 0; m.YOffset = k === 1 ? 0 : -s.DrawTo.Height; }); s.OpenPanel(); });
+      await p.waitForTimeout(1200);
+      if (choice !== 'Suggestion') { await p.getByRole('radio', { name: choice }).click(); await p.waitForTimeout(300); }
+      const r = await p.evaluate(() => {
+        const box = (id: string) => { const b = document.getElementById(id)!.getBoundingClientRect(); return { top: b.top, bottom: b.bottom, height: b.height }; };
+        return { send: box('feedback-send'), email: box('feedback-email'), message: box('feedback-message'), choice: box('feedback-choice-suggestion'), h: innerHeight };
+      });
+      await p.screenshot({ path: `${OUT}/feedback-fits-${name}.png` });
+      await ctx.close();
+      const fits = r.send.bottom <= r.h && r.send.height > 10 && r.email.height < 40 && r.message.height >= 30 && r.choice.top > 0;
+      out[name] = { fits, send: Math.round(r.send.bottom), h: r.h, email: Math.round(r.email.height), message: Math.round(r.message.height) };
+      ok &&= fits;
+    }
+    return [ok, out];
+  },
+} as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
+
+// ---- Owner, 2026-11-19: a patch opened with every block out of view (its saved view far off): sound, no blocks ----
+Object.assign(tests, {
+  async 'blocks-never-all-off-screen'(errors: string[]) {
+    const ctx = await browser.newContext({ viewport: { width: 1000, height: 528 } });
+    await ctx.addInitScript(() => {
+      if (sessionStorage.getItem('seeded')) return;
+      sessionStorage.setItem('seeded', '1');
+      localStorage.setItem('blokdust2.autosave', JSON.stringify({ format: 'blokdust.patch', version: 2, seed: 1, view: { x: 4000, y: -3000, zoom: 1 },
+        blocks: [{ id: 'a', type: 'source.tone', x: 0, y: 0, params: {} }, { id: 'b', type: 'power.power', x: -3, y: 0, params: {} }] }));
+    });
+    const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
+    await p.goto(`${url}/index.html`); await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start'); await p.waitForTimeout(2000);
+    const onScreen = () => p.evaluate(() => { const s = (window as any).__bd_probe; return s.state.blocks.filter((b: any) => { const q = s.blockPoint(b.id); return q && q[0] > 0 && q[0] < innerWidth && q[1] > 0 && q[1] < innerHeight; }).length; });
+    const atStart = await onScreen();
+    await p.screenshot({ path: `${OUT}/blocks-never-all-off-screen.png` });
+    await ctx.close();
+    return [atStart === 2, { atStart }];
+  },
+} as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
+
 // ---- PATCH-V2 R3 (owner, iPad 2026-11-19): a param this build doesn't know is dropped, the rest loads ----
 Object.assign(tests, {
   /** The page's loader (a Stage's inner world on the website) drops an unknown param with a warning instead of
