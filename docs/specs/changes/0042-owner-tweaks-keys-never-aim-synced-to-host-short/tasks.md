@@ -10,5 +10,5 @@
 - [x] 9. Cut By Hits (engine tests first).
 - [x] 10. Stage In follows the outside controller (engine test first).
 - [x] 11. engine.cpp split; bd size with its baseline and pre-commit hook.
-- [ ] 12. Gates, staging, MBP, iPad, push.
+- [x] 12. Gates, staging, MBP, iPad, push.
 - [ ] 8. Owner check.
