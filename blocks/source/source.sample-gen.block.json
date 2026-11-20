@@ -276,7 +276,7 @@
         0,
         999
       ],
-      "description": "v2 (owner, 2026-11-17, CHG-0035): which sound v1's generator makes, 1\u2013999; the same number always makes the same wave (it seeds the generator). 0 = none chosen: v1's saved recipe (`seed`) plays"
+      "description": "Which sound the generator makes, 1\u2013999: the same number always makes the same sound"
     }
   ],
   "review": [

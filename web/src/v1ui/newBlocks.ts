@@ -2,6 +2,7 @@
 // needs: their menu items (in MENU_ORDER), their menu icons (drawn from the manifest geometry, as
 // v1's BlockSprites draws its own), their options forms (built from v1's option types) and the live rows some panels
 // show (a level meter, …), which read the engine's monitors.
+import { flatLayers } from '../render/flatLayers.ts';
 import { BLOCKS, BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
 import { App, PLUGIN_LABELS, Point } from './shim.ts';
 import { addSelector, isSelector } from './selectorOption.ts';
@@ -77,17 +78,21 @@ export function drawNewSprite(ctx: CanvasRenderingContext2D, pos: Point, name: s
   const def = BY_NAME.get(name);
   if (!def) return false;
   const grd = App.GridSize, [ox, oy] = def.geometry.menuOffset ?? [0, 0];
-  for (const l of def.geometry.layers) {
+  // Grid layers flattened as on the stage (render/flatLayers.ts: no hairline of a hidden face at the outer edge).
+  const flat = flatLayers(def.geometry.layers, def.geometry.unitsPerGrid ?? 15);
+  def.geometry.layers.forEach((l, k) => {
     // Pixel layers (the stars: Gate, as v1's Void in its menu) are in v1 units, as v1 BlockSprites.DrawPixel unscaled.
     // The Void's random star has no place in the menu (v1 put it at a fixed one), so anchored layers are left out.
-    if (l.units === 'unit' && l.anchor) continue;
+    if (l.units === 'unit' && l.anchor) return;
     const at = (x: number, y: number): [number, number] => l.units === 'unit' ? [pos.x + ox * grd + x * App.Unit, pos.y + oy * grd + y * App.Unit] : [pos.x + (ox + x) * grd, pos.y + (oy + y) * grd];
     ctx.beginPath();
-    l.points.forEach(([x, y], i) => { const [px, py] = at(x, y); if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py); });
-    ctx.closePath();
+    for (const pts of l.units === 'unit' ? [l.points] : flat[k].paths) {
+      pts.forEach(([x, y], i) => { const [px, py] = at(x, y); if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py); });
+      ctx.closePath();
+    }
     App.FillColor(ctx, App.Palette[l.palette]);
     ctx.fill();
-  }
+  });
   return true;
 }
 

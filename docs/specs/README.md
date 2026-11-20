@@ -66,3 +66,4 @@
 | [CHG-0039](changes/0039-sign-in-methods-plugin-gallery-and-plugin-sign-in/proposal.md) | Sign-in methods, plugin gallery and plugin sign-in | **done** | SPEC-SHARING-ACCOUNTS, SPEC-SHARING-GALLERY |
 | [CHG-0040](changes/0040-note-bars-for-random-note-and-chord/proposal.md) | Note bars for Random Note and Chord | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |
 | [CHG-0041](changes/0041-feedback-tab-reporting-patches-and-other-people-s/proposal.md) | Feedback tab, reporting patches, and other people's patches on the website | **done** | SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS, SPEC-SHARING-GALLERY |
+| [CHG-0042](changes/0042-owner-tweaks-keys-never-aim-synced-to-host-short/proposal.md) | Owner tweaks: keys never aim, SYNCED TO HOST, short menu, clean block edges | **proposed** | SPEC-CONNECTIONS-PROXIMITY, SPEC-VISUAL-V1-PARITY |

@@ -4,6 +4,7 @@
 import type { BlockDef } from '../generated/blocks.gen.ts';
 import type { Theme } from '../generated/palettes.gen.ts';
 import { layerPoints } from '../render/bakeBlock.ts';
+import { flatLayers } from '../render/flatLayers.ts';
 import { routeConnection } from './connectionRoute.ts';
 import { gridToPx, type Metrics } from './metrics.ts';
 
@@ -39,13 +40,27 @@ function poly(ctx: CanvasRenderingContext2D, pts: [number, number][], fill: stri
   ctx.closePath(); ctx.fillStyle = fill; ctx.globalAlpha = alpha; ctx.fill(); ctx.globalAlpha = 1;
 }
 
-/** Every block's layers, in the map's order (last drawn on top). `alpha`: v1 draws a pressed block at 50%. */
+/** One fill of several closed paths (a flattened layer: no seams between its pieces). */
+function paths(ctx: CanvasRenderingContext2D, ps: [number, number][][], fill: string): void {
+  ctx.beginPath();
+  for (const pts of ps) { pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); }
+  ctx.fillStyle = fill; ctx.fill();
+}
+
+/** Every block's layers, in the map's order (last drawn on top). `alpha`: v1 draws a pressed block at 50% (each layer
+ * as v1 drew it, the ones beneath showing through); at full opacity the layers are flattened (render/flatLayers.ts:
+ * no hairline of a hidden face along the outer edge, owner 2026-11-20). */
 export function drawBlocks(ctx: CanvasRenderingContext2D, m: Metrics, theme: Theme, blocks: Iterable<DrawnBlock>, alpha: (id: number) => number = () => 1,
   open: (id: number) => boolean = () => false): void {
   for (const { block, def } of blocks) {
     const upg = def.geometry.unitsPerGrid ?? 15, a = alpha(block.id);
     // An open Gate draws its open look (SIMULATION-0011): no Void colour, no stars.
     const layers = def.geometry.openLayers && open(block.id) ? def.geometry.openLayers : def.geometry.layers;
+    if (a >= 1) {
+      for (const l of flatLayers(layers, upg, block.starPos))
+        paths(ctx, l.paths.map(ps => ps.map(([x, y]) => gridToPx(m, block.x + x, block.y + y))), theme.colors[l.palette]);
+      continue;
+    }
     for (const l of layers)
       poly(ctx, layerPoints(l, upg, block.starPos).map(([x, y]) => gridToPx(m, block.x + x, block.y + y)), theme.colors[l.palette], a);
   }

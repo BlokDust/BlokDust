@@ -195,7 +195,7 @@ class Engine {
   void strikeAgain(Block& b) noexcept;
   void updateGates() noexcept;
   static std::int64_t beatSlotAt(const Block& e, double beat) noexcept;
-  void keyAim(Block& b, int note, bool down, bool poly) noexcept;
+  void keyAim(Block& b, int note, bool down) noexcept;
   void resyncToTransport(double beat) noexcept;
   void runLasers() noexcept;
   void traceBeam(int laserSlot, double angleDeg, double len, std::bitset<kMaxBlocks>& hits, double& firstStop) noexcept;

@@ -137,6 +137,10 @@ export const App: any = {
     const dd = this.MainScene?.Header?.DropDownHeight;
     return typeof dd === 'number' && dd > 0 ? w - dd * 0.5 * this.Unit + 30 * this.Unit : w - 40 * this.Unit;
   },
+  /** The block menu's drop-down height (units) for its width-based `dd`: past MaxAspect the unit follows the height
+   * (Metrics.ts), so the blocks draw smaller; the drop-down shrinks the same way, the blocks still centred in it
+   * (owner, GarageBand 2026-11-20). Views up to MaxAspect keep v1's. */
+  MenuDrop(dd: number): number { return this.Width > 0 && this.Height > 0 ? dd * Math.min(1, (this.Height * this.MaxAspect) / this.Width) : dd; },
   SettingsMenuWidth(w: number): number { return this.SettingsPhone ? 2 * (this.SettingsCrossX(w) - 20 * this.Unit - w * 0.5) : (w / 7) * 4; },
   SettingsTabsWidth(w: number): number { return this.SettingsCrossX(w) - 20 * this.Unit; },
   get SettingsRow(): number { return this.SettingsPhone ? 62 : 48; },

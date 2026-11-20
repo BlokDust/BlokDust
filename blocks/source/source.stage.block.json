@@ -128,7 +128,7 @@
         0,
         1
       ],
-      "description": "v2 (owner, 2026-11-14): on, particles in flight inside keep moving and hitting when the Stage loses power (nothing new is emitted or powered); off, they vanish. The world power switch clears them either way"
+      "description": "Keep particles: when on, particles inside keep moving and hitting when the Stage loses power (nothing new is emitted or powered); when off, they vanish"
     }
   ]
 }

@@ -8,6 +8,8 @@ adrs: [SHARING-0007]
 ---
 # CHG-0022: Video export
 
+**On hold** (owner, 2026-11-19): not convinced this is the right implementation yet; not to be released as it is.
+
 ## Why
 Shared links work well on a user's own social media, but Instagram and TikTok want videos. A button that makes a video
 of the patch (sound and particles) and hands it to the share sheet lets people post what they made, and every video

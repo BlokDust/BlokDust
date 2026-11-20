@@ -75,7 +75,7 @@
         0,
         1
       ],
-      "description": "v2 (owner, 2026-11-14): on, a particle or a laser beam hitting the Power cuts its power for `gap`, so what it powers plays again; off, they pass through it (v1)"
+      "description": "When on, a particle or a laser beam that hits the Power cuts its power for the Gap, and the blocks it powers play again"
     },
     {
       "key": "gap",

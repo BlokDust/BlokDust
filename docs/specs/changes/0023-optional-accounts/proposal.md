@@ -13,14 +13,14 @@ Owner, 2026-11-15, second of video export, user login and the gallery: saves on 
 and hands-on authentication experience. No passwords, nothing paid, only trusted and well maintained libraries.
 
 ## What changes
-- D1 migration 0002: users, passkeys, Google identities, sessions, challenges, and `patches.owner_id`.
-- Worker: passkey sign-up and sign-in (SimpleWebAuthn), Google OIDC with PKCE (Arctic), sessions, `/api/me…`, handle
+- D1 migration 0002: users, passkeys, Google and Apple identities, sessions, challenges, and `patches.owner_id`.
+- Worker: passkey sign-up and sign-in (SimpleWebAuthn), Google OIDC with PKCE (Arctic), Sign in with Apple, sessions, `/api/me…`, handle
   rules and a small word check, claiming patches, and owners saving over their patches from any device
   (SPEC-SHARING-ACCOUNTS R1–R11).
 - Web: `web/src/account/client.ts`, the Patches › ACCOUNT tab (R13), the account's patches in OPEN (R8).
 
 ## Out of scope
-- Plugin sign-in, Apple sign-in, email of any kind.
+- Plugin sign-in (CHG-0039), email of any kind.
 
 ## Acceptance
 - `pnpm test:accounts` passes (20 checks).

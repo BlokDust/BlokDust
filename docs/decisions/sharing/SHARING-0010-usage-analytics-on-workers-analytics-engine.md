@@ -53,4 +53,3 @@ dashboard at `/admin/analytics` behind Cloudflare Access (plus `pnpm bd analytic
   Event names carry over if we switch later.
 - **Cloudflare Web Analytics only**: free and banner-free, but page views only; no custom events.
 - **Opt-in consent prompt in the plugin**: legally safest but undercounts; the owner chose opt-out with a visible switch.
-- **Sentry in the plugins**: a native crash handler would also catch the DAW's own crashes; rejected.

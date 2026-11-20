@@ -138,13 +138,13 @@
       "key": "polyphonic",
       "default": null,
       "unit": null,
-      "description": "v1's switch name for isPolyphonic (as the keyboards)"
+      "description": "Polyphonic: plays several notes at once (the same switch as the keyboards')"
     },
     {
       "key": "keysSetPitch",
       "default": false,
       "unit": "enum",
-      "description": "Keys set pitch (CHG-0017): notes make no sound; they are the notes power plays"
+      "description": "Keys set pitch: notes coming in make no sound; they set the notes that power plays"
     }
   ]
 }

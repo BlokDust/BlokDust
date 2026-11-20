@@ -33,9 +33,6 @@ We will add these blocks, each designed by the owner in `pnpm bd block-designer`
 Labels (CHG-0020) are text on the stage, not a block. Emitter Offset (CHG-0014) and Keys set pitch (CHG-0017) are
 settings on existing blocks.
 
-Not doing: **Touch Keys** (a piano is a poor touchscreen UI; Touchpad replaces it). Parked: **XY Pad** and **Wall**
-(a block that stops connections); the owner is not convinced they should be blocks.
-
 ## Consequences
 - Old patches are unaffected: every addition is a new block type or a setting whose default keeps today's behaviour.
 - New blocks have no v1 reference, so their visual and audio tests are v2 baselines, not v1 diffs.

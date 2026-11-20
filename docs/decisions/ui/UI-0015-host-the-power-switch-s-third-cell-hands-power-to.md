@@ -24,8 +24,8 @@ with the same v1 OptionSwitch pieces.
 
 - OFF and ON are UI-0008's: the world off or running, whatever the transport does.
 - HOST: the world is powered while the DAW plays and off while it is stopped (so particles in flight vanish, as with
-  OFF). Label: POWER · HOST PLAYING, or HOST STOPPED · PRESS PLAY on v1's grey (SAVE AS) fill; underline green when
-  playing, grey when stopped.
+  OFF). Label: POWER · HOST PLAYING, or SYNCED TO HOST on the red of v1's record button (palette 13, as POWER OFF);
+  underline green when playing, that red when stopped.
 - The processor owns the mode (`setPowerMode`): it applies the power on the audio thread after the transport resync,
   ignores the page's power commands while in HOST, and saves HOST with the project (`plugin.powerMode`), so a project
   reopens synced. OFF is never restored (UI-0008: a project opens powered).

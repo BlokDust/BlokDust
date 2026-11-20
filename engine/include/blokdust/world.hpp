@@ -65,11 +65,9 @@ struct Block {
   int notePower = 0;            // 1 while a connected controller holds a note on this source (display only)
   int pressPower = 0;           // 1 while the pointer holds this source (v1 Source.MouseDown → AddPower)
   int keyPower = 0;             // Emitter/Laser: 1 while a connected keyboard holds a key (owner review 2)
-  std::array<std::uint8_t, 16> keysHeld{};  // ... the keys it holds, oldest first (the newest aims it)
+  std::array<std::uint8_t, 16> keysHeld{};  // ... the keys it holds, oldest first
   int keyCount = 0;
-  bool keyPoly = false;         // ... pressed on a polyphonic keyboard: every held key repeats, not just the newest
-  std::array<std::uint8_t, 16> keyPresses{};  // Emitter: keys pressed since the last tick, each fires once (CHG-0009)
-  int keyPressCount = 0;
+  bool keyPressed = false;      // Emitter: a key was pressed since the last tick: it fires once (CHG-0009)
   int emitCounter = 0;          // emitter: ticks since last emission
   std::int64_t beatSlot = -1;   // synced emitter: the beat-grid slot it last saw (CHG-0004 3.5)
   double laserAngle0 = 0.0;     // laser: the Angle set by the user (synced: where it points at beat 0; owner review 2)

@@ -103,7 +103,7 @@
         -500,
         500
       ],
-      "description": "Turns the exit direction, as the Laser's Rotate (v1 units: hundredths of a degree per frame)"
+      "description": "Rotates the exit direction of particles and beams"
     },
     {
       "key": "streams",

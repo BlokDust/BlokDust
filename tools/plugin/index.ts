@@ -166,7 +166,9 @@ function test() {
     const got = hostRender(c.plugin, c.fixture, c.extra, { BLOKDUST_DIAG_FILE: diag });
     const exp = c.native ? nativeRender(c.fixture) : expected(c.fixture);
     const nameOk = !c.paramName || got.params?.[c.paramName[0]] === c.paramName[1];
-    const ok = nameOk && got.audioHash === exp.audioHash && (c.noRoundTripCheck || got.stateRoundTrips === true) && (c.editorBlocks === undefined || (got.editor?.blocks === c.editorBlocks && got.editor?.supportSystem?.format === 'VST3' && got.editor?.supportSystem?.sampleRate > 0 && got.editor?.supportSystem?.bufferSize > 0));
+    const ok = nameOk && got.audioHash === exp.audioHash && (c.noRoundTripCheck || got.stateRoundTrips === true) && (c.editorBlocks === undefined || (got.editor?.blocks === c.editorBlocks && got.editor?.supportSystem?.format === 'VST3' && got.editor?.supportSystem?.sampleRate > 0 && got.editor?.supportSystem?.bufferSize > 0
+      // Owner (iPad, 2026-11-20): the Wavetable's picture is drawn by the engine's wasm; the editor must serve it.
+      && got.editor?.wasm === true));
     return { case: c.name, ok, audioHash: got.audioHash ?? got.error, expected: exp.audioHash, ...(got.editor ? { editor: got.editor } : {}) };
   });
   // CHG-0004 3.10 (found by the REAPER save/reopen check): Dust values are part of the plugin's saved state.

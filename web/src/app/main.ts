@@ -14,6 +14,7 @@ import { App, applyHostLabels } from '../v1ui/shim.ts';
 import { SAMPLE_GEN } from '../v1ui/ported/SampleGenData';
 import { encodeWav } from '../audio/wav.ts';
 import { BLOCKS, BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
+import { drawBlocks } from '../stage/drawWorld.ts';
 import { THEMES, type Theme } from '../generated/palettes.gen.ts';
 import { loadPatch, relinks, targetCommands, type Macro, type Patch, type PatchBlock, type PatchSource } from '../patch/loadPatch.ts';
 import { decodePatch, encodePatch, loadLocal, loadSession, saveLocal, saveSession } from '../patch/share.ts';
@@ -2167,6 +2168,8 @@ async function main() {
   const probe = { started: false, snapshots: 0, rms: 0, particles: 0, connections: [] as number[], gateOns: 0, hits: 0, beams: 0, powered: [] as number[] };
   (window as unknown as { __bd_probe: unknown }).__bd_probe = {
     hideLinks,  // tests: the iPad extension's no-links view (CHG-0025)
+    /** Tests: the stage's block drawing and the manifests (block-edges-clean). */
+    blockDrawing: { drawBlocks, BLOCKS_BY_ID },
     /** The microphone is asked for or open (tests, CHG-0035). */
     get microphoneOpen() { return !!engine?.microphoneOpen; },
     /** Someone else's patch (CHG-0041): the page's flag, and whether the safety limit is on the output (tests). */

@@ -99,14 +99,14 @@
       "default": 0,
       "unit": "enum",
       "range": [0, 3],
-      "description": "Filter type (owner, 2026-11-12, CHG-0010; not in v1): 0 Peak (v1's only type), 1 Low pass, 2 High pass, 3 Band pass. Gain is the Peak's gain, the Low/High pass resonance (dB, as Web Audio's Q) or the Band pass level"
+      "description": "Filter type: Peak, Low pass, High pass or Band pass. Gain is the Peak's gain, the Low and High pass resonance, or the Band pass level"
     },
     {
       "key": "Q",
       "default": 1,
       "unit": null,
       "range": [0.5, 14],
-      "description": "Width of the Peak and Band pass (Web Audio Q; v1's Filter was fixed at 1). Unused by Low and High pass"
+      "description": "Width of the Peak and Band pass. Not used by Low and High pass"
     }
   ],
   "review": [

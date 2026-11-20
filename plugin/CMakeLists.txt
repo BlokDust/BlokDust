@@ -17,6 +17,8 @@ file(GLOB BLOKDUST_WEB_ASSETS CONFIGURE_DEPENDS "${BLOKDUST_WEB_DIST}/assets/*.j
      "${BLOKDUST_WEB_DIST}/fonts/*.woff2")
 juce_add_binary_data(blokdust_plugin_resources
   SOURCES "${BLOKDUST_WEB_DIST}/index.html" ${BLOKDUST_WEB_ASSETS}
+          # The engine as WASM: the page draws the Wavetable's frames with it (owner, iPad 2026-11-20: it spun forever).
+          "${BLOKDUST_WEB_DIST}/blokdust.wasm"
           # Start patches (CHG-0010): the instrument opens an empty scene, FX opens Audio In alone; the standalone app's
           # first launch opens the Rotating Sequencer preset (CHG-0013; later launches restore the last session).
           "${CMAKE_SOURCE_DIR}/web/src/demo/plugin-start.patch.json" "${CMAKE_SOURCE_DIR}/web/src/demo/fx.patch.json"

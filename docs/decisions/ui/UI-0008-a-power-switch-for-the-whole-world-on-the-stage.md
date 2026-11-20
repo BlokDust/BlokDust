@@ -20,7 +20,7 @@ We will add one switch, drawn at the bottom centre of the stage (between the zoo
 off/on switch (OptionSwitch "offOn": a dash and a diamond, the lit side underlined) at v1's own proportions (a 60u
 options row; owner, 2026-11-11: the first, squashed version put the underline too close). The dash and diamond sit level
 with + − and the trash (30u up). Above it, where v1's zoom shows its percentage (50u up): POWER, or, when off, POWER OFF
-on v1's red fill (below would meet the screen edge). Space toggles it on the web (in a DAW, Space belongs to the transport).
+on the red of v1's record button, palette 13, with its underline the same red (below would meet the screen edge). Space toggles it on the web (in a DAW, Space belongs to the transport).
 Off (`Command::WorldPower`): Power and Toggle blocks power nothing, emitters don't emit, lasers go out, and particles
 in flight vanish. What the player does still sounds: a held block, the computer keyboard, MIDI. It is not saved with
 the patch, so a reload starts powered; a reopened plugin editor turns it back on to match its switch.

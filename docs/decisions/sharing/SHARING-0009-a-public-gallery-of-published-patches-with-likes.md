@@ -25,8 +25,7 @@ DATA-0005 means a patch that uses the creator's own audio files can't play for a
 - **What can be published:** the patch must have blocks, a title that passes the word check, and no audio files from
   the user's device or Recorder recordings.
 - **Likes only, no down votes:** one per signed-in person.
-  - Popular = (likes + 2 × remixes + 1) ÷ (hours since published + 2), so new patches get a chance.
-  - Remixes are counted from the `parent` lineage patches already have.
+  - Popular ranks by likes and remixes, weighted towards newer patches so they get a chance.
 - **Search instead of a block picker:** one field matches titles, block types ("laser") and `@name`.
 - **Reports:** signed-in people can report a patch, once each. Three reports hide it until the site owner reviews it
   with `pnpm bd gallery reports|keep|hide|remove`.

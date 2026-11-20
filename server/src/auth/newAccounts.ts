@@ -8,7 +8,7 @@ import { HttpError, sha256Hex } from '../http.ts';
 
 /** New accounts a network may make in a UTC day (`ACCOUNTS_PER_DAY`; a school class shares one address). */
 export const DEFAULT_PER_DAY = 10;
-export const LIMIT_MESSAGE = 'Too many new accounts from this network today. Try again tomorrow, or sign in to an account you already have.';
+export const LIMIT_MESSAGE = 'Cannot create any more new accounts today.';
 
 const today = () => new Date().toISOString().slice(0, 10);
 const perDay = (env: Env) => { const n = Number(env.ACCOUNTS_PER_DAY); return Number.isFinite(n) && n > 0 ? Math.floor(n) : DEFAULT_PER_DAY; };

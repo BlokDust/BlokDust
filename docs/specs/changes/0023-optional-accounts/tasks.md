@@ -11,5 +11,5 @@ Check items off as they land. Each task should be independently verifiable.
 - [x] 7. Delete account (R10)
 - [x] 8. Patches › ACCOUNT tab; OPEN lists the account's patches (R8, R13)
 - [x] 9. `pnpm test:accounts` (20 checks); regression: the panel opened before START never slid in
-- [ ] 10. Google OAuth client + staging migration (owner)
-- [ ] 11. Owner check on real devices
+- [x] 10. Google OAuth client + staging migration (owner)
+- [x] 11. Owner check on real devices (Google and Apple on staging, laptop and iPhone)

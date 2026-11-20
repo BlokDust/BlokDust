@@ -117,8 +117,8 @@ export class Header extends DisplayObject {
                 if (json.categories[i].items[j].description) {
                     description = json.categories[i].items[j].description;
                 }
-                var point = new Point(0,((this.Height + (this.DropDownHeight*0.5))*units) + rowOffset);
-                var size = new Size(this.DropDownHeight*units,this.DropDownHeight*units);
+                var point = new Point(0,((this.Height + (App.MenuDrop(this.DropDownHeight)*0.5))*units) + rowOffset);
+                var size = new Size(this.DropDownHeight*units,App.MenuDrop(this.DropDownHeight)*units);
 
                 menuCats[i].Items.push(new MenuItem(point,size,name,id,description, <MainScene>this.DrawTo));
             }
@@ -419,7 +419,7 @@ export class Header extends DisplayObject {
                     cat.Items[j].InfoOffset = 0;
                 }
 
-                this.DelayTo(this,this.DropDownHeight,500,0,"DropDown");
+                this.DelayTo(this,App.MenuDrop(this.DropDownHeight),500,0,"DropDown");
                 this.DelayTo(cat,1,400,0,"Selected");
                 this.DelayTo(cat,0,600,250,"YOffset");
                 if (this.IsPaginated(cat,units)) {
@@ -448,7 +448,7 @@ export class Header extends DisplayObject {
 
                 if (item.InfoOffset==0) { // PANEL 1
                     if (item.InfoHover) {
-                        this.DelayTo(item,this.DropDownHeight,350,0,"InfoOffset");
+                        this.DelayTo(item,App.MenuDrop(this.DropDownHeight),350,0,"InfoOffset");
 
                         // RESET OTHERS INFO PANEL
                         for (var j = 0; j<cat.Items.length; j++) {
@@ -538,7 +538,7 @@ export class Header extends DisplayObject {
 
                     item.Hover = Dimensions.hitRect(item.Position.x - (2*grd), item.Position.y - (2*grd), 4*grd, 4*grd, point.x, point.y);
                     item.InfoHover = Dimensions.hitRect(item.Position.x - (52*units), item.Position.y - (42*units), 24*units, 24*units, point.x, point.y);
-                    item.BackHover = Dimensions.hitRect(item.Position.x - ((this.DropDownHeight*0.5)*units), item.Position.y - ((this.DropDownHeight*0.5)*units), this.DropDownHeight*units, this.DropDownHeight*units, point.x, point.y);
+                    item.BackHover = Dimensions.hitRect(item.Position.x - ((this.DropDownHeight*0.5)*units), item.Position.y - ((App.MenuDrop(this.DropDownHeight)*0.5)*units), this.DropDownHeight*units, App.MenuDrop(this.DropDownHeight)*units, point.x, point.y);
                     item.MouseMove(point, this, (this.Height + this.DropDown - 20)*units ); // could narrow to just dragged?
 
                 }

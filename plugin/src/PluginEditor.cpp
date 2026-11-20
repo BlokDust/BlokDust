@@ -18,6 +18,7 @@ juce::String mimeFor(const juce::String& name) {
   if (name.endsWithIgnoreCase(".json")) return "application/json";
   if (name.endsWithIgnoreCase(".png")) return "image/png";
   if (name.endsWithIgnoreCase(".woff2")) return "font/woff2";
+  if (name.endsWithIgnoreCase(".wasm")) return "application/wasm";
   return "application/octet-stream";
 }
 }  // namespace
@@ -87,7 +88,10 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                .withEventListener("bd_ready", [this](const juce::var& v) {
                  uiReadyBlocks_ = static_cast<int>(v.getProperty("blocks", -1));
                  systemLog("page: ready, " + juce::String(uiReadyBlocks_) + " blocks");
-                 if (auto* o = v.getDynamicObject()) o->setProperty("snapshotSeq", static_cast<juce::int64>(proc_.snapshotSeq()));
+                 if (auto* o = v.getDynamicObject()) {
+                   o->setProperty("snapshotSeq", static_cast<juce::int64>(proc_.snapshotSeq()));
+                   o->setProperty("wasm", resource("blokdust.wasm").has_value());  // host tests: the Wavetable's picture needs it
+                 }
                  // Test hook: report the UI round-trip to a file when BLOKDUST_DIAG_FILE is set (host tests only).
                  if (juce::SystemStats::getEnvironmentVariable("BLOKDUST_SUPPORT_SMOKE", {}) == "1") {
                    // Explicit test-host mode: exercise the actual WebView form and its cross-origin HTTP submission.

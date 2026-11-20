@@ -28,10 +28,10 @@ saving, browsed in the Patches panel's GALLERY tab (search, popular or new, like
 - **R6.** Switching ADD TO GALLERY off and saving takes the patch out (`DELETE /api/gallery/:id` too: the account, or
   the browser with the edit token). The link keeps working.
 - **R7.** `GET /api/gallery?sort=popular|top|new|examples|tutorials&q=&page=` returns 20 a page (EXAMPLES and
-  TUTORIALS: R16). TOP (all time, CHG-0035) orders by likes + 2·remixes with no decay, newest first among equals.
+  TUTORIALS: R16). TOP (all time, CHG-0035) ranks by likes and remixes with no decay, newest first among equals.
   - Each row: title, `by @handle`, remixes, likes, and whether you liked it.
   - `q` words match titles, block types and names; `@name` matches exactly one person.
-  - Popular = (likes + 2 × remixes + 1) ÷ (hours since published + 2).
+  - POPULAR ranks by likes and remixes, weighted towards newer patches.
   - Hidden patches are never listed.
 - **R7a.** The tab's rows are one list that scrolls (mouse wheel, or a drag, which never opens the row it started
   on) and fetches the next page as it nears its end, with v1's spinner where the next row will go (owner review 2:

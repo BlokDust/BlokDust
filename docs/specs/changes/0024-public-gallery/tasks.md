@@ -9,4 +9,4 @@ Check items off as they land. Each task should be independently verifiable.
 - [x] 5. `pnpm bd gallery` (R10)
 - [x] 6. Patches › GALLERY tab; tab ids apart from display order (R11, R13)
 - [x] 7. `pnpm test:gallery` (16 checks)
-- [ ] 8. Owner check (phone + laptop)
+- [x] 8. Owner check (phone + laptop)

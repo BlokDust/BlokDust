@@ -132,7 +132,7 @@
       "key": "sync",
       "default": false,
       "unit": "enum",
-      "description": "Tempo sync (owner): while powered, the beam turns at the tempo, one full turn every |turnBeats| (Rotate is not used)"
+      "description": "Tempo sync: while powered, the beam turns with the tempo, one full turn every Turn length (Rotate is not used)"
     },
     {
       "key": "turnBeats",
@@ -148,7 +148,7 @@
       "key": "restart",
       "default": false,
       "unit": "enum",
-      "description": "Restart (owner): every time it gains power it starts again from its Angle; synced, its turn counts from then, not from beat 0"
+      "description": "Restart: every time it gains power it starts again from its Angle; synced, its turn counts from then"
     }
   ],
   "review": [

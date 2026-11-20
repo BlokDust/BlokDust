@@ -559,19 +559,10 @@ bool Engine::acceptsChannel(const Block& ctrl, int channel) noexcept {
   return ctrl.params[P::InputMidiController::mpe] != 0.0 || want <= 0 || want == channel + 1;
 }
 
-namespace {
-/// A key's clock position: C = 12 o'clock (the default −90°), each semitone 30° clockwise, in the lasers' range (−270, 90].
-double keyAngle(int note) noexcept {
-  const double a = -90.0 + 30.0 * (note % 12);
-  return a > 90.0 ? a - 360.0 : a;
-}
-}  // namespace
-
-/// A keyboard's key on a connected Emitter or Laser (owner review 2, beyond v1): held keys power it, like a Toggle;
-/// the newest held key aims it, the 12 notes of the octave as 12 clock positions (letting it go aims at the newest
-/// one left). Every key pressed fires an Emitter once at its own angle, legato and chords too (CHG-0009); held, a
-/// mono keyboard's newest key repeats at the Emitter's rate, a polyphonic keyboard's every held key.
-void Engine::keyAim(Block& b, int note, bool down, bool poly) noexcept {
+/// A keyboard's key on a connected Emitter or Laser (owner review 2, beyond v1): held keys power it, like a Toggle,
+/// until every key is let go. Keys never aim it (owner, 2026-11-20): it keeps its own Angle. Every key pressed fires
+/// an Emitter, legato too (CHG-0009); keys pressed together fire it once.
+void Engine::keyAim(Block& b, int note, bool down) noexcept {
   if (note < 0 || note >= 128) return;
   const auto key = static_cast<std::uint8_t>(note);
   int n = 0;
@@ -583,15 +574,9 @@ void Engine::keyAim(Block& b, int note, bool down, bool poly) noexcept {
       --b.keyCount;
     }
     b.keysHeld[static_cast<std::size_t>(b.keyCount++)] = key;
-    b.keyPoly = poly;
-    if (b.type == BlockType::PowerEmitter && b.keyPressCount < static_cast<int>(b.keyPresses.size()))
-      b.keyPresses[static_cast<std::size_t>(b.keyPressCount++)] = key;
+    if (b.type == BlockType::PowerEmitter) b.keyPressed = true;
   }
   b.keyPower = b.keyCount > 0 ? 1 : 0;
-  if (b.keyCount == 0) return;
-  const double a = keyAngle(b.keysHeld[static_cast<std::size_t>(b.keyCount - 1)]);
-  if (b.type == BlockType::PowerLaser) { b.params[P::PowerLaser::angle] = a; b.laserAngle0 = a; }
-  else if (b.type == BlockType::PowerEmitter) b.params[P::PowerEmitter::angle] = a;
 }
 
 /// Does controller `ctrl` take note command `c`? The block it names; or every controller of its type (the computer's
@@ -671,7 +656,7 @@ void Engine::applyNote(const Command& c) noexcept {
     for (int i = 0; i < orderCount_; ++i) {
       const int s = order_[i];
       if (row[s] && blocks_[s].type == BlockType::SourceStage) { forwardToStage(blocks_[static_cast<std::size_t>(s)], ctrl, c); continue; }
-      if (row[s] && blocks_[s].kind() == BlockKind::PowerSource) { keyAim(blocks_[static_cast<std::size_t>(s)], c.param, c.type == Command::Type::NoteOn, polyOf(ctrl)); continue; }
+      if (row[s] && blocks_[s].kind() == BlockKind::PowerSource) { keyAim(blocks_[static_cast<std::size_t>(s)], c.param, c.type == Command::Type::NoteOn); continue; }
       if (!row[s] || blocks_[s].kind() != BlockKind::AudioSource || blocks_[s].type == BlockType::SourceStage) continue;
       if (blocks_[s].arranged) {  // CHG-0017: the key joins or leaves the notes this source is given
         arrangedKey(s, ctrl, c.param, ch, c.type == Command::Type::NoteOn);
@@ -1763,22 +1748,17 @@ void Engine::runTick() noexcept {
     if (e.type != BlockType::PowerEmitter) continue;
     const bool running = worldPower_ && (e.params[P::PowerEmitter::selfPoweredMode] != 0.0 || e.power() > 0);
     const bool synced = e.params[P::PowerEmitter::sync] != 0.0;
-    // Keys pressed since the last tick (CHG-0009): each fires once at its own angle, now, and the repeat starts over.
-    if (e.keyPressCount > 0) {
-      if (worldPower_) for (int i = 0; i < e.keyPressCount; ++i) emit(e, keyAngle(e.keyPresses[static_cast<std::size_t>(i)]));
-      e.keyPressCount = 0;
+    // A key pressed since the last tick (CHG-0009): it fires once, now, and the repeat starts over.
+    if (e.keyPressed) {
+      e.keyPressed = false;
       if (worldPower_) {
+        emit(e);
         e.emitCounter = 0;
         if (synced) e.beatSlot = beatSlotAt(e, beat_);
         continue;
       }
     }
-    // Repeats: held keys on a polyphonic keyboard repeat together, one particle each; otherwise the Angle (which the
-    // newest held key sets).
-    auto fire = [this](Block& b) {
-      if (b.keyPoly && b.keyCount > 0) for (int i = 0; i < b.keyCount; ++i) emit(b, keyAngle(b.keysHeld[static_cast<std::size_t>(i)]));
-      else emit(b);
-    };
+    auto fire = [this](Block& b) { emit(b); };
     // Struck again while hits hold it (SIMULATION-0012): it fires now, and its timing starts over (as a key press).
     if (e.restrike) {
       e.restrike = false;

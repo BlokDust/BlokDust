@@ -448,8 +448,8 @@ export class V1Scene {
   /**
    * v1 OptionSwitch (style 1, "offOn"), its proportions unchanged: dividers from 0.15h to 0.55h, the dash (off),
    * diamond (on) and HOST's ▷/■ at 0.35h, the chosen cell underlined at 0.55h. The label: POWER; when off, POWER OFF
-   * on v1's red (SAVE-coloured) fill, so a stopped world is never mistaken for a broken one; HOST stopped on the grey
-   * (SAVE AS) fill. Space toggles it too (web).
+   * on the red of v1's record button (its right half, palette 13), so a stopped world is never mistaken for a broken
+   * one; HOST with the host stopped reads SYNCED TO HOST on the same red (owner, 2026-11-20). Space toggles it too (web).
    */
   private drawPower(): void {
     const ctx = this.Ctx, u = App.Unit, { x, y, w, h } = this.powerRect(), menu = App.ThemeManager.MenuOrder;
@@ -459,7 +459,8 @@ export class V1Scene {
     ctx.beginPath();
     for (let i = 1; i < cells; i++) { ctx.moveTo(Math.round(x + cw * i), y + h * 0.15); ctx.lineTo(Math.round(x + cw * i), y + h * 0.55); }
     ctx.stroke();
-    App.FillColor(ctx, App.Palette[mode === 0 ? menu[3] : mode === 1 || this.hostPlaying ? menu[2] : menu[1]]);
+    const red = 13, stopped = mode === 0 || (mode === 2 && !this.hostPlaying);
+    App.FillColor(ctx, App.Palette[stopped ? red : menu[2]]);
     ctx.fillRect(x + cw * mode, y + h * 0.55, cw, h * 0.05 + (this.powerHover ? u : 0));
     const lx = x + cw * 0.5, rx = x + cw * 1.5, hx = x + cw * 2.5;
     ctx.lineWidth = 2; App.StrokeColor(ctx, txt);
@@ -471,8 +472,8 @@ export class V1Scene {
     ctx.stroke(); ctx.lineWidth = 1;
     const hosted = mode === 2;
     const label = this.hostHinting ? "USE THE HOST'S PLAY BUTTON" : mode === 0 ? 'POWER OFF' : !hosted ? 'POWER'
-      : this.hostPlaying ? 'POWER · HOST PLAYING' : 'HOST STOPPED · PRESS PLAY';
-    const fill = mode === 0 && !this.hostHinting ? menu[3] : this.hostHinting || (hosted && !this.hostPlaying) ? menu[1] : null;
+      : this.hostPlaying ? 'POWER · HOST PLAYING' : 'SYNCED TO HOST';
+    const fill = this.hostHinting ? menu[1] : stopped ? red : null;
     ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'center';
     let base = App.Height - 50 * u;
     if (fill !== null) {

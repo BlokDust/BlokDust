@@ -85,7 +85,15 @@ const REWRITES: Record<string, ([string, string, string] | [string, string, stri
     ['display = display || false;\n        this.CurrentSlot = 2;', 'display = display || false;\n        this.CurrentSlot = 3;', 'zoom reset slot']],
   'UI/Header.ts': [
     ['this.Ctx.fillText("BLOKDUST", App.Width*0.5,', 'this.Ctx.fillText("BLOKDUST 2", App.Width*0.5,', 'title (phone)'],
-    ['this.Ctx.fillText("BLOKDUST", (20 +', 'this.Ctx.fillText("BLOKDUST 2", (20 +', 'title']],
+    ['this.Ctx.fillText("BLOKDUST", (20 +', 'this.Ctx.fillText("BLOKDUST 2", (20 +', 'title'],
+    // Owner (GarageBand, 2026-11-20): in a short wide view the blocks draw small (the unit follows the height) but the
+    // drop-down kept its width-based height. Its height (not the spacing across) is App.MenuDrop's (shim.ts).
+    ['var point = new Point(0,((this.Height + (this.DropDownHeight*0.5))*units) + rowOffset);\n                var size = new Size(this.DropDownHeight*units,this.DropDownHeight*units);',
+      'var point = new Point(0,((this.Height + (App.MenuDrop(this.DropDownHeight)*0.5))*units) + rowOffset);\n                var size = new Size(this.DropDownHeight*units,App.MenuDrop(this.DropDownHeight)*units);', 'drop height: items'],
+    ['this.DelayTo(this,this.DropDownHeight,500,0,"DropDown");', 'this.DelayTo(this,App.MenuDrop(this.DropDownHeight),500,0,"DropDown");', 'drop height: open'],
+    ['this.DelayTo(item,this.DropDownHeight,350,0,"InfoOffset");', 'this.DelayTo(item,App.MenuDrop(this.DropDownHeight),350,0,"InfoOffset");', 'drop height: info'],
+    ['item.BackHover = Dimensions.hitRect(item.Position.x - ((this.DropDownHeight*0.5)*units), item.Position.y - ((this.DropDownHeight*0.5)*units), this.DropDownHeight*units, this.DropDownHeight*units, point.x, point.y);',
+      'item.BackHover = Dimensions.hitRect(item.Position.x - ((this.DropDownHeight*0.5)*units), item.Position.y - ((App.MenuDrop(this.DropDownHeight)*0.5)*units), this.DropDownHeight*units, App.MenuDrop(this.DropDownHeight)*units, point.x, point.y);', 'drop height: info back']],
 };
 // Global framework aliases v1 declares per file (`import X = ns.X;`) → named imports from the shim.
 const ALIASES: Record<string, string> = {

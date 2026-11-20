@@ -39,7 +39,7 @@ export async function me(stats = false): Promise<Me | null> {
 
 /** Back from Google or Apple with `?account=limit`: this network has made its new accounts for today (R1b; the server
  * says the same in server/src/auth/newAccounts.ts when a passkey account is refused). */
-export const ACCOUNT_LIMIT_MESSAGE = 'Too many new accounts from this network today. Try again tomorrow, or sign in to an account you already have.';
+export const ACCOUNT_LIMIT_MESSAGE = 'Cannot create any more new accounts today.';
 
 /** The passkey ceremony was cancelled by the user (closed the system dialog): not an error to show. */
 export const cancelled = (e: unknown) => ['NotAllowedError', 'AbortError'].includes((e as Error).name) || /cancel|not allowed/i.test((e as Error).message ?? '');

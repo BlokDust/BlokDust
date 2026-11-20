@@ -126,7 +126,7 @@
         50,
         1200
       ],
-      "description": "Beam length in v1 units (15 = one grid cell), as the Laser's"
+      "description": "Beam length (15 = one grid cell), as the Laser's"
     },
     {
       "key": "band",

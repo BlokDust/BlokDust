@@ -17,7 +17,7 @@ Check items off as they land. Each task should be independently verifiable.
       `pnpm bd analytics`.
 - [x] 9. Config: datasets and rate limits per env; Access / Sentry / rate from local config; query token secret.
 - [x] 10. `pnpm test:analytics` (tests/e2e/analytics.ts).
-- [ ] 11. Owner: create the Sentry project (EU), the Access application for `/admin/*` on staging and production, and
+- [ ] 11. Owner: create the Sentry project (EU) (done, 2026-11-19), the Access application for `/admin/*` on staging and production, and
       an Account Analytics: Read API token (`~/.config/blokdust/analytics_token`); then `pnpm bd server secret` and
       deploy staging.
 - [ ] 12. Owner: Cloudflare notifications (Workers usage) and, before public sharing, Workers Paid; then set

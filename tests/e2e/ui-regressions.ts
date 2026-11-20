@@ -1371,7 +1371,7 @@ Object.assign(tests, {
       return [(A.Width / 2 - w / 2 + (w / 3) * (k + 0.5)) / pr, (A.Height - 30 * u) / pr]; }, i);
     const label = async () => { await pg.evaluate(() => { (window as any).__texts.length = 0; }); await pg.mouse.move(5, 5); await pg.mouse.move(6, 6); await pg.waitForTimeout(250);
       // The switch's own labels (the header's POWER menu is drawn after it).
-      return pg.evaluate(() => ((window as any).__texts as string[]).filter(t => /^(POWER|POWER OFF|POWER · HOST PLAYING|HOST STOPPED · PRESS PLAY|USE THE HOST'S PLAY BUTTON)$/.test(t))[0] ?? null); };  // first: the switch draws before the header
+      return pg.evaluate(() => ((window as any).__texts as string[]).filter(t => /^(POWER|POWER OFF|POWER · HOST PLAYING|SYNCED TO HOST|USE THE HOST'S PLAY BUTTON)$/.test(t))[0] ?? null); };  // first: the switch draws before the header
     const sent = () => pg.evaluate(() => ((window as any).__sent as { id: string; v: any }[]).filter(e => e.id === 'bd_powerMode' || (e.id === 'bd_commands' && JSON.stringify(e.v).includes('"type":10'))).map(e => e.id === 'bd_powerMode' ? `mode${e.v.mode}` : `power${e.v.commands.find((c: any) => c.type === 10).value}`));
     const hostCell = await pg.evaluate(() => (window as any).__bd_probe.scene.hostPower);
     await pg.evaluate(() => { (window as any).__sent.length = 0; });
@@ -1390,7 +1390,7 @@ Object.assign(tests, {
     const app = await openPlugin(plugPatch([{ id: 't', type: 'source.tone', x: 0, y: 0 }]), errors, undefined, true);
     const appCells = await app.pg.evaluate(() => (window as any).__bd_probe.scene.hostPower);
     await app.close();
-    const ok = hostCell && JSON.stringify(toHost) === '["mode2"]' && hostStopped === 'HOST STOPPED · PRESS PLAY' && hostPlaying === 'POWER · HOST PLAYING'
+    const ok = hostCell && JSON.stringify(toHost) === '["mode2"]' && hostStopped === 'SYNCED TO HOST' && hostPlaying === 'POWER · HOST PLAYING'
       && hint === "USE THE HOST'S PLAY BUTTON" && againSent.length === 0 && afterHint === 'POWER · HOST PLAYING'
       && JSON.stringify(backOn) === '["mode1","power1"]' && onLabel === 'POWER' && JSON.stringify(offSent) === '["mode0","power0"]' && offLabel === 'POWER OFF' && appCells === false;
     return [ok, { hostCell, toHost, hostStopped, hostPlaying, hint, againSent, afterHint, backOn, onLabel, offSent, offLabel, appCells }];
@@ -1452,6 +1452,84 @@ Object.assign(tests, {
       const fits = r.send.bottom <= r.h && r.send.height > 10 && r.email.height < 40 && r.message.height >= 30 && r.choice.top > 0;
       out[name] = { fits, send: Math.round(r.send.bottom), h: r.h, email: Math.round(r.email.height), message: Math.round(r.message.height) };
       ok &&= fits;
+    }
+    return [ok, out];
+  },
+} as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
+
+// ---- Owner (iPad, 2026-11-20): a hairline of the face underneath showed round some blocks' outer edges ----
+Object.assign(tests, {
+  async 'block-edges-clean'(errors: string[]) {
+    const p = await open(browser, [], errors);
+    const r = await p.evaluate(() => {
+      const { drawBlocks, BLOCKS_BY_ID } = (window as any).__bd_probe.blockDrawing, pal = (window as any).__bd_probe.v1App.Palette as string[];
+      const G = 37.3, S = 8, W = 6 * G | 0, OX = W / 2 + 0.37, OY = W / 2 + 0.61;
+      const canvas = (scale: number) => {
+        const c = document.createElement('canvas'); c.width = c.height = W * scale;
+        const x = c.getContext('2d', { willReadFrequently: true })!; x.fillStyle = pal[0]; x.fillRect(0, 0, c.width, c.height); return x;
+      };
+      const v1Draw = (x: CanvasRenderingContext2D, layers: any[], s: number) => { for (const l of layers) {
+        x.beginPath(); l.points.forEach(([px, py]: number[], i: number) => { const X = (OX + px * G) * s, Y = (OY + py * G) * s; if (i) x.lineTo(X, Y); else x.moveTo(X, Y); });
+        x.closePath(); x.fillStyle = pal[l.palette]; x.fill();
+      } };
+      // Each pixel against its true mix of colours (v1's layers drawn 8× larger, averaged down). Corners are left out:
+      // there the browser's anti-aliasing of even a lone polygon differs from the average.
+      const worst = (got: CanvasRenderingContext2D, ref: CanvasRenderingContext2D, corners: number[][]) => {
+        const g = got.getImageData(0, 0, W, W).data, big = ref.getImageData(0, 0, W * S, W * S).data;
+        let w = 0;
+        for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+          if (corners.some(([cx, cy]) => Math.hypot(cx - x - 0.5, cy - y - 0.5) < 2.5)) continue;
+          for (let ch = 0; ch < 3; ch++) {
+            let sum = 0;
+            for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) sum += big[((y * S + j) * W * S + x * S + i) * 4 + ch];
+            w = Math.max(w, Math.abs(sum / (S * S) - g[(y * W + x) * 4 + ch]));
+          }
+        }
+        return Math.round(w);
+      };
+      const out: Record<string, { lone: number; drawn: number }> = {};
+      for (const [id, def] of BLOCKS_BY_ID as Map<string, any>) {
+        const layers = def.geometry.layers;
+        if (layers.some((l: any) => l.units === 'unit')) continue;  // the stars: pixel layers, drawn as v1
+        const corners = layers.flatMap((l: any) => l.points.map(([px, py]: number[]) => [OX + px * G, OY + py * G]));
+        const ref = canvas(S); v1Draw(ref, layers, S);
+        const got = canvas(1);
+        drawBlocks(got, { originX: OX, originY: OY, scaledGridSize: G }, { colors: pal }, [{ block: { id: 1, type: id, x: 0, y: 0 }, def }]);
+        let lone = 0;  // the same measure for each layer drawn alone: what anti-aliasing gets wrong anyway
+        for (const l of layers) { const a = canvas(1), b = canvas(S); v1Draw(a, [l], 1); v1Draw(b, [l], S); lone = Math.max(lone, worst(a, b, corners)); }
+        out[id] = { lone, drawn: worst(got, ref, corners) };
+      }
+      return out;
+    });
+    await p.close();
+    // v1's way (faces drawn over a whole base) was up to 74 out; a hairline is anything well past a lone polygon's error.
+    const bad = Object.fromEntries(Object.entries(r).filter(([, v]) => v.drawn > v.lone + 12));
+    return [Object.keys(r).length > 40 && Object.keys(bad).length === 0, { bad, worst: Math.max(...Object.values(r).map(v => v.drawn)) }];
+  },
+} as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
+
+// ---- Owner (GarageBand, 2026-11-20): the block menu's drop-down kept its full height above the iPad keyboard ----
+Object.assign(tests, {
+  async 'block-menu-short-view'(errors: string[]) {
+    const out: Record<string, unknown> = {};
+    let ok = true;
+    for (const [name, w, h] of [['garageband', 1000, 290], ['laptop', 1000, 528], ['tall', 1280, 800]] as const) {
+      const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2 });
+      const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
+      await p.goto(`${url}/index.html`); await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start'); await p.waitForTimeout(1500);
+      const at = await p.evaluate(() => { const hd = (window as any).__bd_probe.scene.Header, c = hd.MenuItems[0], u = (window as any).__bd_probe.v1App.Unit;
+        return [c.Position.x / devicePixelRatio, (hd.Height * 0.5 * u) / devicePixelRatio]; });
+      await p.mouse.move(at[0], at[1]); await p.mouse.down(); await p.mouse.up(); await p.waitForTimeout(1200);
+      const r = await p.evaluate(() => { const hd = (window as any).__bd_probe.scene.Header, u = (window as any).__bd_probe.v1App.Unit, it = hd.MenuItems[0].Items[0];
+        return { drop: hd.DropDown, full: hd.DropDownHeight, centre: (hd.Height + hd.DropDown * 0.5) * u, itemY: it.Position.y }; });
+      await p.screenshot({ path: `${OUT}/block-menu-${name}.png` });
+      await ctx.close();
+      const centred = Math.abs(r.itemY - r.centre) < 1;
+      // Up to MaxAspect (2:1) v1's height; past it, in proportion (GarageBand 1000×290: 58%).
+      const want = r.full * Math.min(1, (h * 2) / w);
+      const good = r.drop > 0 && Math.abs(r.drop - want) < 0.5 && centred;
+      out[name] = { good, drop: Math.round(r.drop), full: Math.round(r.full), centred };
+      ok &&= good;
     }
     return [ok, out];
   },
@@ -2509,7 +2587,7 @@ Object.assign(tests, {
       await p.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', -3, 3)])}`);
       await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start'); await p.waitForTimeout(1500);
       await p.evaluate(() => (window as any).__bd_probe.scene.setWorldPower(false));
-      const want = await p.evaluate(() => { const a = (window as any).__bd_probe.v1App, w = document.createElement('canvas').getContext('2d')!; w.fillStyle = a.Palette[a.ThemeManager.MenuOrder[3]]; w.fillRect(0, 0, 1, 1); return [...w.getImageData(0, 0, 1, 1).data.slice(0, 3)]; });
+      const want = await p.evaluate(() => { const a = (window as any).__bd_probe.v1App, w = document.createElement('canvas').getContext('2d')!; w.fillStyle = a.Palette[13]; w.fillRect(0, 0, 1, 1); return [...w.getImageData(0, 0, 1, 1).data.slice(0, 3)]; });  // the record button's red (owner, 2026-11-20)
       await p.mouse.move(640, 300); await p.waitForTimeout(500);
       const png = PNG.sync.read(await p.screenshot({ clip: { x: 560, y: 690, width: 160, height: 60 } }));
       await p.screenshot({ path: `${OUT}/power-off-label-${dpr}x.png`, clip: { x: 560, y: 690, width: 160, height: 60 } });
@@ -2971,13 +3049,13 @@ Object.assign(tests, {
     return [ids.join() === '4,7' && added.length === 1 && added[0] === 8, { ids, added, fresh }];
   },
 
-  /** Owner idea: keyboards connect to Emitters and Lasers; a held key powers them, its note aims them (C = 12 o'clock). */
+  /** Owner idea: keyboards connect to Emitters and Lasers; a held key powers them (keys never aim them: owner, 2026-11-20). */
   async 'keyboard-powers-emitter'(errors: string[]) {
     const p = await open(browser, [blk(1, 'ComputerKeyboard', -3, 0), blk(2, 'ParticleEmitter', 0, 0)], errors);
     await p.waitForTimeout(500);
     const linked = (await state(p)).connections as number[];
     const before = await maxOver(p, 'particles', 600);
-    await p.keyboard.down('KeyC');  // E3: 4 o'clock
+    await p.keyboard.down('KeyC');
     const held = await maxOver(p, 'particles', 800);
     await p.keyboard.up('KeyC');
     await p.waitForTimeout(3000);
@@ -2989,7 +3067,7 @@ Object.assign(tests, {
   async 'keyboard-legato-fires-emitter'(errors: string[]) {
     const p = await open(browser, [blk(1, 'ComputerKeyboard', -3, 0), blk(2, 'ParticleEmitter', 0, 0)], errors);
     await p.waitForTimeout(500);
-    await p.keyboard.down('KeyZ');  // C3: 12 o'clock
+    await p.keyboard.down('KeyZ');
     await p.waitForTimeout(400);
     const first = (await state(p)).particles;
     await p.keyboard.down('KeyC');  // E3 with C3 still held
@@ -2999,7 +3077,7 @@ Object.assign(tests, {
     await p.close();
     return [first === 1 && second === 2, { first, second }];
   },
-  // Owner (CHG-0009): a polyphonic keyboard's chord fires one particle per key, together.
+  // Owner (2026-11-20): a polyphonic keyboard's chord fires once, at the Emitter's own angle.
   async 'keyboard-poly-chord-fires-emitter'(errors: string[]) {
     const p = await open(browser, [{ ...blk(1, 'ComputerKeyboard', -3, 0), Params: { isPolyphonic: true } } as Block, blk(2, 'ParticleEmitter', 0, 0)], errors);
     await p.waitForTimeout(500);
@@ -3008,7 +3086,7 @@ Object.assign(tests, {
     const chord = (await state(p)).particles;
     for (const k of ['KeyZ', 'KeyC', 'KeyB']) await p.keyboard.up(k);
     await p.close();
-    return [chord === 3, { chord }];
+    return [chord === 1, { chord }];
   },
   // Owner (2026-11-14): every block menu category lists its blocks alphabetically (v1's and the new ones mixed).
   // Owner (2026-11-17): the browser's right-click menu took the pointer's release and left a held block stuck down. The

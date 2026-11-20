@@ -155,6 +155,13 @@ const tests: Record<string, () => Promise<void>> = {
     const bot = await api(anon, 'POST', 'auth/passkey/register/options', { handle: 'new_one', turnstile: 'fail' }, { origin: base });
     check('R6: names are unique ignoring case; rude ones refused; innocent ones allowed; R1: the bot check applies',
       taken.status === 200 && t2.status === 409 && rude.status === 400 && fine.status === 200 && bot.status === 403, [taken.status, t2.status, rude.status, fine.status, bot.status]);
+    // Owner (PR review, 2026-11-19): can someone claim another person's patch knowing only its id? No: a claim needs
+    // the patch's edit token (only its hash is stored), and a patch with an owner is never claimed.
+    const theirs = await api(anon, 'POST', 'patches', { turnstile: 'ok', patch: { format: 'blokdust.patch', version: 2, seed: 1, blocks: [{ id: 'a', type: 'source.tone', x: 0, y: 0 }] }, title: 'Not yours' }, { origin: base });
+    const guess = await api(a, 'POST', 'me/claim', { patches: [{ id: theirs.json?.id, token: 'A'.repeat(32) }] }, { origin: base });
+    const owned = await api(a, 'POST', 'me/claim', { patches: [{ id: before, token: 'A'.repeat(32) }] }, { origin: base });
+    check('R9: an id without its edit token claims nothing', theirs.status === 201 && guess.status === 200 && guess.json?.claimed?.length === 0
+      && owned.status === 200 && owned.json?.claimed?.length === 0, { theirs: theirs.status, guess: guess.json, owned: owned.json });
     await anon.ctx.close();
     shared.a = a; shared.firstPatch = before;
   },
@@ -590,7 +597,7 @@ const tests: Record<string, () => Promise<void>> = {
         body: JSON.stringify({ handle: 'lim_four', turnstile: 'ok' }) });
       const why = await passkey.json() as { error?: string };
       check('R1b: two new accounts, then the third is refused (Google); a known account still signs in', landed.join(',') === 'new,new,limit' && known === 'in', { landed, known });
-      check('R1b: a new passkey account is refused before the device makes a passkey, saying why', passkey.status === 429 && /Too many new accounts from this network today/.test(why.error ?? ''), { status: passkey.status, why });
+      check('R1b: a new passkey account is refused before the device makes a passkey, saying why', passkey.status === 429 && /^Cannot create any more new accounts today\.$/.test(why.error ?? ''), { status: passkey.status, why });
     } finally { await lim.stop(); }
     // Back from Google refused: Settings › SIGN IN, saying why.
     const f = await device();
@@ -598,7 +605,7 @@ const tests: Record<string, () => Promise<void>> = {
     await f.page.waitForFunction(() => { const s = (window as any).__bd_probe?.scene?.SettingsPanel; return s?.Open && s.OffsetY === 0 && s.accountPage.Account !== undefined; }, null, { timeout: 20000 }).catch(() => {});
     await f.page.waitForTimeout(400);
     const st = await pp(f.page);
-    check('R1b: back from Google refused, Settings › SIGN IN says why', st.settings && st.account === null && st.message.startsWith('Too many new accounts'), st);
+    check('R1b: back from Google refused, Settings › SIGN IN says why', st.settings && st.account === null && st.message === 'Cannot create any more new accounts today.', st);
     await f.page.screenshot({ path: `${OUT}/new-account-limit.png` });
     await f.ctx.close();
   },

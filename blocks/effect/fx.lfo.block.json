@@ -103,7 +103,7 @@
       "key": "target",
       "default": "",
       "unit": null,
-      "description": "What it moves, as \"<block id>:<param key>\" (patch ids; AUDIO-0003). Loaders turn it into targetBlock and targetParam"
+      "description": "What it moves, as \"<block id>:<param key>\". Loaders turn it into targetBlock and targetParam"
     },
     {
       "key": "targetBlock",

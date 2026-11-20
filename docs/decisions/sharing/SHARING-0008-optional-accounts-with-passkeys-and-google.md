@@ -1,6 +1,6 @@
 ---
 id: SHARING-0008
-title: Optional accounts with passkeys and Google, sessions in D1
+title: Optional accounts with passkeys, Google and Apple, sessions in D1
 status: proposed
 date: 2026-11-15
 domain: sharing
@@ -8,7 +8,7 @@ tags: [sharing, accounts, security, cost]
 supersedes: [SCOPE-0003]
 superseded_by:
 ---
-# SHARING-0008: Optional accounts with passkeys and Google, sessions in D1
+# SHARING-0008: Optional accounts with passkeys, Google and Apple, sessions in D1
 
 ## Context
 The owner wants optional logins (2026-11-15): a user's saves follow them to any device, a handle shows on what they
@@ -24,7 +24,12 @@ tier, no passwords to store, only trusted and well maintained libraries, and AGP
   - **Google** (OpenID Connect authorisation code flow with PKCE S256), using `arctic` (MIT) with Google's endpoints.
     Only Google's stable subject id is kept. The ID token comes straight from Google's token endpoint over TLS, so the
     Worker checks its issuer, audience and expiry but not its signature (OIDC Core 3.1.3.7).
-  - Apple is left for the iPad app, where App Store rules require Sign in with Apple.
+  - **Apple** (Sign in with Apple, authorisation code flow), alongside Google: no scopes, so no name or email, and
+    Apple answers by redirect. The client secret is an ES256 JWT signed with the Sign in with Apple key (a Worker
+    secret). Only Apple's stable subject id is kept. The iPad app needs it too (App Store rules), and signs in with
+    Apple natively (SHARING-0011).
+  - One account can have any of them: Google, Apple and passkeys are added to (or removed from) the same account,
+    never the last one.
 - **Sessions are server-side.**
   - The token is 32 random bytes in an HttpOnly, SameSite=Lax cookie, with `__Host-` and Secure on https. D1 keeps
     only its SHA-256.

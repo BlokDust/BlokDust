@@ -13,7 +13,7 @@ export const BLOCKS: readonly BlockDef[] = [
     "category": "source",
     "kind": "audio-source",
     "name": "Audio In",
-    "description": "The audio of the track BlokDust is loaded on (FX plugin) or the selected input (web). Always on: unlike v1 Microphone it needs no power.",
+    "description": "The audio of the track BlokDust is loaded on (FX plugin) or the selected input. Always on: it needs no power.",
     "draft": true,
     "v1Type": null,
     "menuId": "AudioIn",
