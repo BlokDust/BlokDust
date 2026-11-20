@@ -1397,6 +1397,25 @@ Object.assign(tests, {
   },
 } as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
 
+// ---- Owner, 2026-11-19: REPORT THIS PATCH? then CANCEL emptied the stage ----
+Object.assign(tests, {
+  async 'report-cancel-keeps-blocks'(errors: string[]) {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
+    await p.goto(`${url}/index.html?demo`); await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start'); await p.waitForTimeout(2500);
+    const before = await p.evaluate(() => (window as any).__bd_probe.state.blocks.length);
+    await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.askReport({ id: 'abcdefghij', title: 'Someone Else' }));
+    await p.waitForTimeout(1500);
+    const at = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.centreOf('reportCancel')) as [number, number] | null;
+    if (at) { await p.mouse.move(at[0], at[1]); await p.mouse.click(at[0], at[1]); }
+    await p.waitForTimeout(1500);
+    const after = await p.evaluate(() => (window as any).__bd_probe.state.blocks.length);
+    await p.screenshot({ path: `${OUT}/report-cancel.png` });
+    await ctx.close();
+    return [before > 0 && after === before, { before, after, at }];
+  },
+} as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
+
 // ---- PATCH-V2 R3 (owner, iPad 2026-11-19): a param this build doesn't know is dropped, the rest loads ----
 Object.assign(tests, {
   /** The page's loader (a Stage's inner world on the website) drops an unknown param with a warning instead of

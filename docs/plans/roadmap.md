@@ -25,5 +25,12 @@ No deadline: we work phase by phase and each phase merges to `main` only when it
 
 **Core block set (Phase 1):** Tone, Noise, Microphone/AudioIn, Sample (user file / Freesound), Filter, EQ, Volume, Reverb, StereoDelay, Distortion, BitCrusher, Chorus, Phaser, Envelope, Vibrato, Power, Toggle, Pulse, Emitter, Laser, Void, ComputerKeyboard, MIDIController (Microphone and AudioIn share an implementation).
 
+## To do (not yet planned)
+- **Patches from a newer BlokDust** (owner, 2026-11-19; spec to write first): a gallery patch saved with blocks or
+  settings an older app or plugin doesn't have. Show only patches the user's version can play, or let OPEN say "This
+  was created with a newer version of BlokDust. Update BlokDust first."; as the last resort, a patch that can't be
+  loaded opens a blank stage and the message bar says it couldn't be loaded (no silent empty world). Settings it
+  doesn't know are already dropped (SPEC-PATCH-FORMAT-V2 R3); unknown block types still refuse the patch.
+
 ## Deferred or rejected
 - Macros: deferred (SCOPE-0002), now proposed as the Stage block (SCOPE-0006, CHG-0021). Custom DSP blocks: rejected (SCOPE-0001). Accounts, gallery, moderation: deferred (SCOPE-0003). MP4 social previews: deferred until funded (SHARING-0002).
