@@ -6350,23 +6350,12 @@ export const BLOCKS: readonly BlockDef[] = [
     },
     "params": [
       {
-        "key": "gapOnHit",
+        "key": "cutByHits",
         "default": 0,
         "unit": "enum",
         "ui": {
           "transform": "Identity",
           "min": 0,
-          "max": 1,
-          "k": 0
-        }
-      },
-      {
-        "key": "gap",
-        "default": 0.05,
-        "unit": "s",
-        "ui": {
-          "transform": "Identity",
-          "min": 0.01,
           "max": 1,
           "k": 0
         }
@@ -7653,63 +7642,7 @@ export const BLOCKS: readonly BlockDef[] = [
         0
       ]
     },
-    "params": [
-      {
-        "key": "transpose",
-        "default": 0,
-        "unit": "octaves",
-        "ui": {
-          "transform": "Identity",
-          "min": -3,
-          "max": 3,
-          "k": 0
-        }
-      },
-      {
-        "key": "glide",
-        "default": 0.05,
-        "unit": "s",
-        "ui": {
-          "transform": "Identity",
-          "min": 0,
-          "max": 1,
-          "k": 0
-        }
-      },
-      {
-        "key": "isPolyphonic",
-        "default": true,
-        "unit": "enum",
-        "ui": {
-          "transform": "None",
-          "min": 0,
-          "max": 0,
-          "k": 0
-        }
-      },
-      {
-        "key": "polyphonic",
-        "default": null,
-        "unit": null,
-        "ui": {
-          "transform": "None",
-          "min": 0,
-          "max": 0,
-          "k": 0
-        }
-      },
-      {
-        "key": "keysSetPitch",
-        "default": false,
-        "unit": "enum",
-        "ui": {
-          "transform": "None",
-          "min": 0,
-          "max": 0,
-          "k": 0
-        }
-      }
-    ]
+    "params": []
   },
   {
     "id": "input.touchpad",

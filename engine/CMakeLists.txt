@@ -3,6 +3,14 @@ add_library(blokdust_engine STATIC
   src/connections.cpp
   src/convolver.cpp
   src/engine.cpp
+  src/engine_arrange.cpp
+  src/engine_commands.cpp
+  src/engine_granular.cpp
+  src/engine_hits.cpp
+  src/engine_notes.cpp
+  src/engine_render.cpp
+  src/engine_tick.cpp
+  src/engine_voices.cpp
   src/tablebank.cpp
   src/wavetable.cpp
 )

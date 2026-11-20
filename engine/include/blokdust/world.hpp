@@ -74,7 +74,8 @@ struct Block {
   bool laserTurning = false;    // laser: it had what turns it on the last tick (synced: running; free: powered; R9a)
   double laserBeat0 = 0.0;      // synced laser with Restart: the beat it last started turning at (R9a)
   bool powerOn = false;         // audio source: power (not notes) is holding a voice (v1 NoteOn("power"))
-  std::uint32_t gapUntil = 0;   // a Power cut by a hit (gapOnHit) gives no power until this tick
+  std::uint32_t gapUntil = 0;   // a Power cut by a particle (cutByHits) gives no power until this tick
+  bool beamCut = false;         // ... and none while a laser beam touches it
   bool restrike = false;        // struck again while hits held it (SIMULATION-0008): a source plays again; a laser's beam,
                                 // or an emitter, fires again (SIMULATION-0012)
 

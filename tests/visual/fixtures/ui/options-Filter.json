@@ -1,4 +1,5 @@
 {
+  "retired": "CHG-0010 (owner, 2026-11-12): the Filter panel has a TYPE row (Peak, Low pass, High pass, Band pass) and a response graph v1 never had, so it no longer matches v1. tests/e2e/ui-regressions.ts filter-types checks the panel.",
   "description": "Click a Filter to open its options panel",
   "composition": {
     "Composition": [

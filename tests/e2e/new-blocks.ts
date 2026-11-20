@@ -295,13 +295,13 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     await p2.close();
     return [quiet1 && keyPlays && quiet2 && stageInPlays, { quiet1, keyPlays, quiet2, stageInPlays }];
   },
-  // Owner review 2026-11-14: the Power block's panel (Gap On Hit, then Gap); a Laser's Rotate sticks at 0; an emitter's
+  // Owner review 2026-11-14: the Power block's panel (Cut By Hits: owner, 2026-11-20); a Laser's Rotate sticks at 0; an emitter's
   // panel draws the way it fires.
   async 'power-gap-rotate-guide'(errors) {
     const p = await open(browser, [blk('pw', 'power.power', -8, 0), blk('l', 'power.laser', 0, 0, { rotate: 200 }), blk('e', 'power.emitter', 8, 0, { angle: 0 })], errors);
     await openPanel(p, 'pw');
     const off = (await rows(p)).map(x => x.type === 'switches' ? 'switches' : x.name);
-    await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('gapOnHit', true));
+    await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('cutByHits', true));
     await p.waitForTimeout(300);
     const on = (await rows(p)).map(x => x.type === 'switches' ? 'switches' : x.name);
     const gapSaved = (await state(p)).patch.blocks.find((b: any) => b.id === 'pw').params;
@@ -318,7 +318,7 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     const guide = await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.PrismExits as [number, number][]);
     await p.screenshot({ path: `${OUT}/emitter-guide.png` });
     await p.close();
-    const pass = off.join() === 'switches' && on.join() === 'switches,Gap' && gapSaved.gapOnHit === 1 && snapped === 0 && fine > 0 && fine < 50 &&
+    const pass = off.join() === 'switches' && on.join() === 'switches' && gapSaved.cutByHits === 1 && snapped === 0 && fine > 0 && fine < 50 &&
       guide?.length === 1 && guide[0][0] > 0 && Math.abs(guide[0][1]) < 1;
     return [pass, { off, on, gapSaved, snapped, fine, guide }];
   },

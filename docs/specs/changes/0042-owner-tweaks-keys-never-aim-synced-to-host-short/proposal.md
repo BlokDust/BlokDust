@@ -26,9 +26,16 @@ Owner review of PR #13, 2026-11-20 (iPad, GarageBand, and comments on the PR).
    Apple; the gallery's ranking formula is no longer written down; the new-account limit says "Cannot create any more
    new accounts today."; owner checks ticked.
 
+7. **Cut By Hits** (SIMULATION-0009, SPEC-SIMULATION-POWER-AND-PARTICLES R2a; owner, 2026-11-20): one switch replaces
+   Gap On Hit and Gap. A particle cuts the Power for a hit's 0.15 s; a laser beam for as long as it touches it.
+8. **Stage In has no settings**: it plays as the controller outside is set (Mono/Poly, Glide, Set Pitch; R13a).
+9. **engine.cpp split by job** into engine_*.cpp with a private engine_internal.hpp; no behaviour change.
+10. **`pnpm bd size`**: files may hold about 5,000 tokens; those over it today (tools/size/baseline.json) may only
+    shrink. A pre-commit hook runs it on the staged files.
+
 ## Out of scope
 - v1's own menu icons (drawn by the ported BlockSprites) keep v1's drawing.
-- The Power block's hit behaviour (SIMULATION-0009 comment): proposed to the owner first.
+- Old patches' Gap and Stage In settings are simply dropped (owner: nobody else uses them yet).
 
 ## Acceptance
 - Engine tests: SPEC-CONNECTIONS-PROXIMITY R2, S5, S6.

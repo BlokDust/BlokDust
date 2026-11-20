@@ -107,44 +107,5 @@
       0
     ]
   },
-  "params": [
-    {
-      "key": "transpose",
-      "default": 0,
-      "unit": "octaves",
-      "range": [
-        -3,
-        3
-      ],
-      "description": "Octave shift (as the keyboards)"
-    },
-    {
-      "key": "glide",
-      "default": 0.05,
-      "unit": "s",
-      "range": [
-        0,
-        1
-      ],
-      "description": "Mono: glide time between notes (as the keyboards)"
-    },
-    {
-      "key": "isPolyphonic",
-      "default": true,
-      "unit": "enum",
-      "description": "Poly (the default: chords played outside stay chords) or mono"
-    },
-    {
-      "key": "polyphonic",
-      "default": null,
-      "unit": null,
-      "description": "Polyphonic: plays several notes at once (the same switch as the keyboards')"
-    },
-    {
-      "key": "keysSetPitch",
-      "default": false,
-      "unit": "enum",
-      "description": "Keys set pitch: notes coming in make no sound; they set the notes that power plays"
-    }
-  ]
+  "params": []
 }

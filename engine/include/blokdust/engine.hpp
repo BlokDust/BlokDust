@@ -222,7 +222,12 @@ class Engine {
   void runModulators() noexcept;
   void paramChanged(int slot, std::uint8_t param) noexcept;
   bool arpTick_ = false;  // set while stepArps re-arranges a source: its Arpeggiator moves on
-  static bool keysSetPitch(const Block& ctrl) noexcept;
+  bool keysSetPitch(const Block& ctrl) const noexcept;
+  bool polyOf(const Block& ctrl) const noexcept;
+  double glideOf(const Block& ctrl) const noexcept;
+  /// Stage In's settings: the outside controller's, from the last note sent into this world (forwardToStage).
+  struct OutsideKeys { double glide = 0.05; bool poly = true; bool pitchOnly = false; } outsideKeys_;
+  void setOutsideKeys(const OutsideKeys& k) noexcept;
   void voiceOff(int slot, BlockId controller, int key, int channel = 0) noexcept;
   void releaseVoice(int slot, int v) noexcept;
   void setPitch(int slot, int v, double glide) noexcept;

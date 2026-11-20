@@ -1,0 +1,7 @@
+{
+  "name": "size",
+  "summary": "Keep agent-written files small enough to read whole (owner, 2026-11-20): a file may hold about 5,000 tokens (UTF-8 bytes ÷ 4). Files already over it are listed in tools/size/baseline.json and may only shrink (a ratchet). The pre-commit hook checks the staged files.",
+  "usage": ["pnpm bd size check [--staged]", "pnpm bd size baseline", "pnpm bd size install"],
+  "outputs": "JSON: files checked, files over the limit (new, or grown past their baseline), files now smaller than their baseline. Exit 1 when a file is over.",
+  "deterministic": true
+}

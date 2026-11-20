@@ -179,14 +179,13 @@ TEST_CASE("SIMULATION-0008: fast particles through a Random Note pick a new note
   CHECK(heard.size() >= hits.size() / 2);  // and mostly a different note (a pick can repeat)
 }
 
-TEST_CASE("Power Gap on hit (owner, 2026-11-14): a hit cuts its power for `gap`, so its Tone is struck again; off, hits pass") {
-  const auto run = [](bool gapOnHit) {
+TEST_CASE("SPEC-SIMULATION-POWER-AND-PARTICLES R2a: Cut By Hits: a particle cuts the Power for a hit's 0.15 s; off, hits pass") {
+  const auto run = [](bool cut) {
     auto e = makeEngine(48000, 1, false);
     addEmitterRight(*e, 1, -14, 0);
     e->push(Command::add(2, BlockType::SourceTone, 0, 4));    // out of the particles' path
     e->push(Command::add(3, BlockType::PowerPower, 0, 0));     // powers the Tone, in the path
-    e->push(Command::setParam(3, P::PowerPower::gapOnHit, gapOnHit ? 1 : 0));
-    e->push(Command::setParam(3, P::PowerPower::gap, 0.1));
+    e->push(Command::setParam(3, P::PowerPower::cutByHits, cut ? 1 : 0));
     render(*e, 48000 * 4);
     return std::move(e);
   };
@@ -196,11 +195,31 @@ TEST_CASE("Power Gap on hit (owner, 2026-11-14): a hit cuts its power for `gap`,
   CHECK(gateOns.size() == cuts.size() + 1);             // on at the start, then again after every cut
   REQUIRE(gateOffs.size() >= 1);
   CHECK(gateOffs[0].tick == cuts[0].tick);             // the cut lets go at once ...
-  CHECK(gateOns[1].tick - cuts[0].tick == 24);         // ... and power comes back after 0.1 s (24 ticks)
+  CHECK(gateOns[1].tick - cuts[0].tick == 36);         // ... and power comes back after a hit's 0.15 s (36 ticks)
   CHECK(eventsOf(*on, Event::Type::Hit, 3).size() == cuts.size());  // the particles stop at it
   const auto off = run(false);
   CHECK(eventsOf(*off, Event::Type::GateOn, 2).size() == 1);   // v1: the Power just holds the Tone
   CHECK(eventsOf(*off, Event::Type::Hit, 3).empty());          // particles pass through it
+}
+
+TEST_CASE("SPEC-SIMULATION-POWER-AND-PARTICLES R2a: Cut By Hits: a laser beam cuts the Power for as long as it touches it (owner, 2026-11-20)") {
+  auto e = makeEngine(48000, 1, false);
+  e->push(Command::add(2, BlockType::SourceTone, 0, 4));
+  e->push(Command::add(3, BlockType::PowerPower, 0, 0));
+  e->push(Command::setParam(3, P::PowerPower::cutByHits, 1));
+  render(*e, 4800);
+  CHECK(e->block(2)->gated());  // powered
+  e->push(Command::add(1, BlockType::PowerLaser, -10, 0));
+  e->push(Command::setParam(1, P::PowerLaser::angle, 0.0));
+  e->push(Command::setParam(1, P::PowerLaser::selfPoweredMode, 1.0));
+  render(*e, 48000);
+  CHECK_FALSE(e->block(2)->gated());  // the beam on it: off, and still off a second later
+  CHECK(eventsOf(*e, Event::Type::Logic, 3).size() == 1);  // one cut per arrival
+  e->clearEvents();
+  e->push(Command::setParam(1, P::PowerLaser::angle, -90.0));  // the beam leaves
+  render(*e, 4800);
+  CHECK(e->block(2)->gated());
+  CHECK(eventsOf(*e, Event::Type::GateOn, 2).size() == 1);  // struck again as the power returns
 }
 
 TEST_CASE("SPEC-SIMULATION-POWER-AND-PARTICLES R1b: Reset of the whole world (id 0) clears the particles in flight, in its Stages too") {

@@ -48,6 +48,7 @@ Run `pnpm bd privacy check` before committing and `pnpm bd privacy history` befo
 - `pnpm bd plugin test` / `pnpm bd plugin au`: JUCE plugin build, pluginval/auval, built VST3/AU ≡ native golden, editor bridge
 - `pnpm bd plugin deploy [--no-build]`: ship the plugins to the externally configured test host. **Run after every change that reaches the plugins** (plugin/, engine/, web/)
 - `pnpm bd win engine|plugin`: the same on the Windows 11 VM (tools/win-vm/README.md)
+- `pnpm bd size check [--staged]`: files may hold about 5,000 tokens; ones already over (tools/size/baseline.json) may only shrink. The pre-commit hook (`pnpm bd size install`) runs it and says how to split a file
 - `pnpm bd perf`: performance baselines → docs/engineering/perf-baselines.md (not a gate)
 - `pnpm bd ci`: run all of the above locally (GitHub Actions is manual-only)
 

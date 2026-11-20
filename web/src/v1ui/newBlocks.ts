@@ -148,7 +148,7 @@ const switches = (...list: { name: string; setting: string; value: boolean }[]) 
 /** Switches whose change shows or hides other rows: the panel is laid out again. */
 // `loop`: v1 Sample.SetParam('loop') → RefreshOptionsPanel, so the waveform shows or hides the loop markers (owner bug
 // 2026-11-14: they stayed as the panel opened).
-export const settingRefreshes = (key: string): boolean => key === 'perHit' || key === 'gapOnHit' || key === 'loop';
+export const settingRefreshes = (key: string): boolean => key === 'perHit' || key === 'loop';
 /** Converted settings whose rows must be laid out again once set. */
 const CONVERT_REFRESH = new Set(['inKey']);
 
@@ -156,7 +156,6 @@ const CONVERT_REFRESH = new Set(['inKey']);
 const CONVERT: Record<string, { param: string; to: (v: number) => number; from?: (v: number) => number }> = {
   attackMs: { param: 'attack', to: v => v / 1000, from: v => v * 1000 },
   releaseMs: { param: 'release', to: v => v / 1000, from: v => v * 1000 },
-  gapMs: { param: 'gap', to: v => v / 1000, from: v => v * 1000 },
   glidePct: { param: 'glide', to: v => v / 100, from: v => v * 100 },  // v1 Keyboard's Glide slider shows glide × 100
   compMeter: { param: 'threshold', to: v => v, from: v => v },   // the Level meter's line (owner, 2026-11-14)
   soundMeter: { param: 'threshold', to: v => v, from: v => v },
@@ -193,13 +192,6 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
     slider('Attack', 'attackMs', Math.max(1, Number(b.Params.attack) * 1000), 1, 1000, { log: true, display: ms }),
     slider('Release', 'releaseMs', Math.max(10, Number(b.Params.release) * 1000), 10, 1000, { log: true, display: ms }),
     slider('Makeup', 'makeup', Number(b.Params.makeup), -24, 24, { centered: true, display: dB }),
-  ],
-  // UI-0012: a keyboard without keys (v1 ComputerKeyboard's form): it plays the notes played on its Stage outside.
-  'input.stage-in': b => [
-    { type: 'switches', name: '', setting: '', props: { value: 0, min: 0, max: 1, quantised: true },
-      switches: [{ name: 'Mono/Poly', setting: 'polyphonic', value: !!b.Params.isPolyphonic, mode: 'fewMany' }] },
-    slider('Octave', 'transpose', Number(b.Params.transpose ?? 0), -3, 3, { quantised: true, centered: true }),
-    slider('Glide', 'glidePct', Number(b.Params.glide ?? 0.05) * 100, 0, 100),
   ],
   // CHG-0021: its level, then the two things to do with it.
   'source.stage': b => {
@@ -265,11 +257,10 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
     slider('Angle', 'angle90', wrapAngle(Number(b.Params.angle) + 90), -180, 180, { quantised: true, centered: true }),
     slider('Range', 'range', Number(b.Params.range), 50, 1200, { quantised: true }),
   ],
-  // v2 (owner, 2026-11-14): v1's Power had no panel. Gap on hit: a particle or beam hitting it cuts its power for a
-  // moment, so what it holds is struck again.
+  // SIMULATION-0009: v1's Power had no panel. Cut By Hits: a particle cuts its power for a moment, a laser beam for as
+  // long as it touches it, so what it holds is struck again when the power comes back.
   'power.power': b => [
-    switches({ name: 'Gap On Hit', setting: 'gapOnHit', value: !!b.Params.gapOnHit }),
-    ...(b.Params.gapOnHit ? [slider('Gap', 'gapMs', Number(b.Params.gap ?? 0.05) * 1000, 10, 1000, { log: true, display: ms })] : []),
+    switches({ name: 'Cut By Hits', setting: 'cutByHits', value: !!b.Params.cutByHits }),
   ],
   // CHG-0015: the pattern as a row of steps, the three numbers that make it (Euclidean, SIMULATION-0005), then Reset.
   'power.counter': b => [

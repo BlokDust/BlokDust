@@ -22,7 +22,7 @@ When a pulse arrives at a block that only earlier hits are holding (from a parti
 - an audio source not held by a Power, Toggle, laser or press is struck again (as SIMULATION-0008);
 - an Emitter fires one particle and starts its timing over (as a key press does);
 - a Laser fires its beam again: everything the beam is on is hit again (event `Hit`). A Toggle, Pulse or Counter acts,
-  a Power with Gap On Hit gaps, a source not held by a Power, Toggle or press is struck, and an Emitter or Laser only
+  a Power with Cut By Hits is cut, a source not held by a Power, Toggle or press is struck, and an Emitter or Laser only
   hits hold fires again.
 
 "Only hits" means no Power, Toggle, press, key or Self Powered. The power itself is unchanged: it ends when the last

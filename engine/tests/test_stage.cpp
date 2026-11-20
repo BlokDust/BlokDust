@@ -186,7 +186,7 @@ TEST_CASE("UI-0012 Stage: a controller touching the Stage plays its Stage In, an
   p.outer->push(off(BlockType::InputTouchpad, 60, 2));              // the note still ends where it started
   render(*p.outer, 48000);
   CHECK(p.sounding() == 0);
-  // Chords stay chords (Stage In is polyphonic by default).
+  // Chords stay chords (the Touchpad is polyphonic by default, and Stage In plays as it does).
   p.outer->push(on(BlockType::InputTouchpad, 60, 2));
   p.outer->push(on(BlockType::InputTouchpad, 64, 2));
   p.outer->push(on(BlockType::InputTouchpad, 67, 2));
@@ -195,6 +195,23 @@ TEST_CASE("UI-0012 Stage: a controller touching the Stage plays its Stage In, an
   // The Touchpad moves away with its notes held: they end inside.
   p.outer->push(Command::move(2, 40, 0));
   render(*p.outer, 48000);
+  CHECK(p.sounding() == 0);
+}
+
+TEST_CASE("UI-0012 Stage: Stage In plays as the outside controller is set: Mono/Poly and Set Pitch (owner, 2026-11-20)") {
+  Played p(BlockType::InputStageIn);
+  p.outer->push(Command::add(2, BlockType::InputTouchpad, 3, 0));
+  p.outer->push(Command::setParam(2, P::InputTouchpad::isPolyphonic, 0));  // mono outside: one voice inside
+  p.outer->push(on(BlockType::InputTouchpad, 60, 2));
+  p.outer->push(on(BlockType::InputTouchpad, 64, 2));
+  render(*p.outer, 4800);
+  CHECK(p.sounding() == 1);
+  p.outer->push(off(BlockType::InputTouchpad, 60, 2));
+  p.outer->push(off(BlockType::InputTouchpad, 64, 2));
+  render(*p.outer, 48000);
+  p.outer->push(Command::setParam(2, P::InputTouchpad::keysSetPitch, 1));  // Set Pitch outside: the pads make no sound
+  p.outer->push(on(BlockType::InputTouchpad, 62, 2));
+  render(*p.outer, 4800);
   CHECK(p.sounding() == 0);
 }
 
