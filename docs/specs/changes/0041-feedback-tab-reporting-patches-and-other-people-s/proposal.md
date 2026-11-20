@@ -1,7 +1,7 @@
 ---
 id: CHG-0041
 title: Feedback tab, reporting patches, and other people's patches on the website
-status: in-progress
+status: done
 date: 2026-11-19
 specs: [SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS, SPEC-SHARING-GALLERY]
 adrs: [SHARING-0009]

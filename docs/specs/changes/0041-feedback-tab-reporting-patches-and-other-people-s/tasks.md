@@ -6,4 +6,4 @@ Check items off as they land. Each task should be independently verifiable.
 - [x] 1. FEEDBACK: tab name, SUGGESTION · BUG · REPORT A PATCH, kinds on the server; right-click report removed.
 - [x] 2. Audio In loads as a Microphone on the website.
 - [x] 3. Other people's patches: microphone off with TURN ON; safety limit after the engine.
-- [ ] 4. Specs, gates, staging, MBP, iPad, push.
+- [x] 4. Specs, gates, staging (support migration 0002), MBP, iPad, push; plugin support smoke against staging.

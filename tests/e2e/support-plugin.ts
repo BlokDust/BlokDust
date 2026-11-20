@@ -29,7 +29,7 @@ const config = remoteConfig('staging');
 async function sql(command: string): Promise<any[]> {
   const r = await run([WRANGLER, 'd1', 'execute', 'blokdust-support-staging', '--remote', '--env', 'staging', '--config', config, '--command', command, '--json'], { quiet: true });
   assert.equal(r.code, 0, 'staging database query failed');
-  return JSON.parse(r.out)[0].results;
+  return JSON.parse(r.out.slice(r.out.search(/^\[/m)))[0].results;  // wrangler may print warnings (with brackets) before the JSON
 }
 try {
   const rows = await sql(`SELECT r.kind, r.message, r.version, r.surface, c.system_json, c.patch_json FROM support_reports r JOIN support_context c ON c.report_id=r.id WHERE r.id='${id}'`);
