@@ -7,7 +7,7 @@
 - [x] 5. Flattened block layers (ui-regressions first).
 - [x] 6. PR comments: descriptions, docs, account limit message, claim check.
 - [x] 7. Gates, staging, MBP, iPad, push.
-- [x] 9. Cut By Hits (engine tests first).
+- [x] 9. Hits Cut Power (engine tests first).
 - [x] 10. Stage In follows the outside controller (engine test first).
 - [x] 11. engine.cpp split; bd size with its baseline and pre-commit hook.
 - [x] 12. Gates, staging, MBP, iPad, push.

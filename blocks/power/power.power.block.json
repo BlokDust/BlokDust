@@ -75,7 +75,7 @@
         0,
         1
       ],
-      "description": "Cut By Hits: when on, a particle that hits the Power cuts its power for a moment, and a laser beam cuts it for as long as it touches it; the blocks it powers play again when the power comes back"
+      "description": "Hits Cut Power: when on, a particle that hits the Power cuts its power for a moment, and a laser beam cuts it for as long as it touches it; the blocks it powers play again when the power comes back"
     }
   ],
   "review": [

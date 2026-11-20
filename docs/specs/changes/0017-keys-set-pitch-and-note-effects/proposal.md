@@ -1,19 +1,19 @@
 ---
 id: CHG-0017
-title: Keys set pitch, and note effects (Chord, Arpeggiator, Random Note)
+title: Silent Keys, and note effects (Chord, Arpeggiator, Random Note)
 status: proposed
 date: 2026-11-13
 specs: [SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-AUDIO-V1-PARITY]
 adrs: [SCOPE-0005, AUDIO-0002]
 ---
-# CHG-0017: Keys set pitch, and note effects (Chord, Arpeggiator, Random Note)
+# CHG-0017: Silent Keys, and note effects (Chord, Arpeggiator, Random Note)
 
 ## Why
 Today a particle hitting a Tone always plays the Tone's own note, so only keyboards change pitch. The owner wants held
 keys to decide what hits play, and Chord, Arpeggiator and Random Note blocks that work next to any source.
 
 ## What changes
-- **Keys set pitch** on Computer Keyboard and MIDI Controller (`keysSetPitch`, default off): keys stop sounding and set
+- **Silent Keys** on Computer Keyboard and MIDI Controller (`keysSetPitch`, default off): keys stop sounding and set
   the notes that power and hits play; with no keys held a source plays its own note. SPEC R10d gains R10e.
 - **Chord** (`fx.chord`): a carousel of chord types (fifth, major, minor, sus2, sus4, seventh, major 7th,
   minor 7th) plus Inversion.

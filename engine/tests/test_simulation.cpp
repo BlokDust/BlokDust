@@ -179,7 +179,7 @@ TEST_CASE("SIMULATION-0008: fast particles through a Random Note pick a new note
   CHECK(heard.size() >= hits.size() / 2);  // and mostly a different note (a pick can repeat)
 }
 
-TEST_CASE("SPEC-SIMULATION-POWER-AND-PARTICLES R2a: Cut By Hits: a particle cuts the Power for a hit's 0.15 s; off, hits pass") {
+TEST_CASE("SPEC-SIMULATION-POWER-AND-PARTICLES R2a: Hits Cut Power: a particle cuts the Power for a hit's 0.15 s; off, hits pass") {
   const auto run = [](bool cut) {
     auto e = makeEngine(48000, 1, false);
     addEmitterRight(*e, 1, -14, 0);
@@ -202,7 +202,7 @@ TEST_CASE("SPEC-SIMULATION-POWER-AND-PARTICLES R2a: Cut By Hits: a particle cuts
   CHECK(eventsOf(*off, Event::Type::Hit, 3).empty());          // particles pass through it
 }
 
-TEST_CASE("SPEC-SIMULATION-POWER-AND-PARTICLES R2a: Cut By Hits: a laser beam cuts the Power for as long as it touches it (owner, 2026-11-20)") {
+TEST_CASE("SPEC-SIMULATION-POWER-AND-PARTICLES R2a: Hits Cut Power: a laser beam cuts the Power for as long as it touches it (owner, 2026-11-20)") {
   auto e = makeEngine(48000, 1, false);
   e->push(Command::add(2, BlockType::SourceTone, 0, 4));
   e->push(Command::add(3, BlockType::PowerPower, 0, 0));

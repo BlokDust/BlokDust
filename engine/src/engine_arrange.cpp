@@ -1,10 +1,10 @@
-// Engine: note effects (Random Note, Chord, Arpeggiator) and Keys set pitch: arranged sources.
+// Engine: note effects (Random Note, Chord, Arpeggiator) and Silent Keys: arranged sources.
 #include "engine_internal.hpp"
 
 namespace blokdust {
 
 // ---------------------------------------------------------------------------------------------------------------
-// arranged sources (CHG-0017, AUDIO-0002): note effects and Keys set pitch
+// arranged sources (CHG-0017, AUDIO-0002): note effects and Silent Keys
 // ---------------------------------------------------------------------------------------------------------------
 
 namespace {
@@ -72,7 +72,7 @@ Engine::NoteFx Engine::noteFxFor(int slot) const noexcept {
   return fx;
 }
 
-/// A source is arranged while a note effect is in its chain or a connected keyboard has Keys set pitch on. Otherwise
+/// A source is arranged while a note effect is in its chain or a connected keyboard has Silent Keys on. Otherwise
 /// v1's voice rules apply untouched.
 bool Engine::wantsArranged(int slot) const noexcept {
   const NoteFx fx = noteFxFor(slot);
@@ -101,7 +101,7 @@ void Engine::arrangedKey(int slot, const Block& ctrl, int key, int channel, bool
 }
 
 /// Work out the notes an arranged source should be sounding and make its voices match (AUDIO-0002).
-/// Notes in: the keys held on its keyboards (a mono keyboard that sounds counts only its newest; with Keys set pitch
+/// Notes in: the keys held on its keyboards (a mono keyboard that sounds counts only its newest; with Silent Keys
 /// every held key counts), or, with none, the source's own note. They sound while the source has power or a sounding
 /// key is held. Then Random Note picks a note for each (CHG-0040), Chord plays each note's chord, and an Arpeggiator
 /// plays one at a time. `trigger`: power arrived, a hit, or (`keyPress`) a sounding key was pressed.

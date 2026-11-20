@@ -44,9 +44,9 @@ export class V1Block {
     if (this.def.id === 'source.microphone' || this.def.id === 'source.audio-in') gainForm(this);
     if (this.def.id === 'source.sample-gen' && this.OptionsForm) soundForm(this);
     if (this.def.id === 'input.midi-controller' && this.OptionsForm) extendMidiForm(this);
-    // Keys set pitch (CHG-0017): a switch beside Mono/Poly, off by default.
+    // Silent Keys (CHG-0017): a switch beside Mono/Poly, off by default.
     if (this.OptionsForm && this.def.params.some(p => p.key === 'keysSetPitch'))
-      (this.OptionsForm.parameters as any[]).find(p => p.type === 'switches')?.switches.push({ name: 'Set Pitch', setting: 'keysSetPitch', value: !!this.Params.keysSetPitch, lit: true, mode: 'offOn' });
+      (this.OptionsForm.parameters as any[]).find(p => p.type === 'switches')?.switches.push({ name: 'Silent Keys', setting: 'keysSetPitch', value: !!this.Params.keysSetPitch, lit: true, mode: 'offOn' });
     // Glide is mono-only (the engine starts each poly note without it): Poly hides it (owner, 2026-11-12, CHG-0010).
     if (this.def.category === 'interaction' && this.OptionsForm && this.Params.isPolyphonic)
       this.OptionsForm.parameters = (this.OptionsForm.parameters as any[]).filter(p => p.setting !== 'glide');

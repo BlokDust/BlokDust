@@ -164,7 +164,7 @@
       "key": "keysSetPitch",
       "default": false,
       "unit": "enum",
-      "description": "Pads set pitch: held pads make no sound; they set the notes that power, particles and lasers play on the connected sources"
+      "description": "Silent Keys: held pads make no sound; they set the notes that power, particles and lasers play on the connected sources"
     },
     {
       "key": "key",

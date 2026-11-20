@@ -14,14 +14,14 @@ A touchscreen instrument: Push-style pads in key, played inside the block's pane
 ## What changes
 - **Touchpad** (`input.touchpad`, Interaction menu): a keyboard to the engine (its first params line up with the Computer
   Keyboard's), poly by default. Panel rows: Key (the twelve notes, press one), Scale (a carousel: Major, Minor, Dorian,
-  Lydian, Mixolydian, Pentatonic), switches Mono/Poly, In Key (off = chromatic) and Set Pitch, Octave, then the pads
+  Lydian, Mixolydian, Pentatonic), switches Mono/Poly, In Key (off = chromatic) and Silent Keys, Octave, then the pads
   (UI-0010). No Glide row (a mono Touchpad uses the default glide).
 - Pads in the options panel: 8 × 4 desktop/iPad, 6 × 5 phone, rows a fourth apart; root notes in the first slider
   colour, held pads in the second, notes outside the scale dimmed (chromatic). Any pointer that lands on a pad belongs
   to the pads until it lifts (so every finger plays). Sliding to another pad sends a per-note bend to the held note:
   the pitch moves there with no new attack. The panel is taller than v1's 240 units and opens centred in the free
   band (low on a phone), clear of the header and the bottom controls.
-- Keys set pitch (CHG-0017) applies to Touchpad too.
+- Silent Keys (CHG-0017) applies to Touchpad too.
 - Designs: `tools/block-designer/proposed.json` (owner, 2026-11-13); copy each into its manifest unchanged. Panel mockups: owner-approved (2026-11-13).
 
 ## Out of scope

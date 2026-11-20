@@ -30,7 +30,7 @@ We will add these blocks, each designed by the owner in `pnpm bd block-designer`
 | Touchpad | Interaction | CHG-0019 |
 | Stage | Source | CHG-0021 |
 
-Labels (CHG-0020) are text on the stage, not a block. Emitter Offset (CHG-0014) and Keys set pitch (CHG-0017) are
+Labels (CHG-0020) are text on the stage, not a block. Emitter Offset (CHG-0014) and Silent Keys (CHG-0017) are
 settings on existing blocks.
 
 ## Consequences

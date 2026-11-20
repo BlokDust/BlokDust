@@ -198,7 +198,7 @@ TEST_CASE("UI-0012 Stage: a controller touching the Stage plays its Stage In, an
   CHECK(p.sounding() == 0);
 }
 
-TEST_CASE("UI-0012 Stage: Stage In plays as the outside controller is set: Mono/Poly and Set Pitch (owner, 2026-11-20)") {
+TEST_CASE("UI-0012 Stage: Stage In plays as the outside controller is set: Mono/Poly and Silent Keys (owner, 2026-11-20)") {
   Played p(BlockType::InputStageIn);
   p.outer->push(Command::add(2, BlockType::InputTouchpad, 3, 0));
   p.outer->push(Command::setParam(2, P::InputTouchpad::isPolyphonic, 0));  // mono outside: one voice inside
@@ -209,7 +209,7 @@ TEST_CASE("UI-0012 Stage: Stage In plays as the outside controller is set: Mono/
   p.outer->push(off(BlockType::InputTouchpad, 60, 2));
   p.outer->push(off(BlockType::InputTouchpad, 64, 2));
   render(*p.outer, 48000);
-  p.outer->push(Command::setParam(2, P::InputTouchpad::keysSetPitch, 1));  // Set Pitch outside: the pads make no sound
+  p.outer->push(Command::setParam(2, P::InputTouchpad::keysSetPitch, 1));  // Silent Keys outside: the pads make no sound
   p.outer->push(on(BlockType::InputTouchpad, 62, 2));
   render(*p.outer, 4800);
   CHECK(p.sounding() == 0);

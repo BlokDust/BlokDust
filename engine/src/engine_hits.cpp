@@ -88,10 +88,10 @@ bool Engine::gateOpen(const Block& g) const noexcept {
   return powered != (g.params[P::PowerGate::invert] != 0.0);
 }
 
-/// A Power with Cut By Hits (SIMULATION-0009): hits cut it, rather than pass through.
+/// A Power with Hits Cut Power (SIMULATION-0009): hits cut it, rather than pass through.
 bool Engine::gapsOnHit(const Block& b) noexcept { return b.type == BlockType::PowerPower && b.params[P::PowerPower::cutByHits] != 0.0; }
 
-/// A particle on a Power with Cut By Hits: no power from it for a hit's length (kPulseSeconds, as a particle's hit on
+/// A particle on a Power with Hits Cut Power: no power from it for a hit's length (kPulseSeconds, as a particle's hit on
 /// a source), so its sources let go and are struck again when it comes back. A hit during a cut starts it over.
 void Engine::powerGap(Block& b) noexcept {
   log(Event::Type::Logic, b.id);
@@ -164,7 +164,7 @@ static_assert(P::PowerSoundLaser::angle == P::PowerLaser::angle && P::PowerSound
 /// this tick fires this tick. Unlike v1, the beam stops at the *nearest* Void before any block is tested.
 void Engine::runLasers() noexcept {
   beamCount_ = 0;
-  // Cut By Hits: a Power gives no power while any beam touches it (owner, 2026-11-20), worked out afresh each tick.
+  // Hits Cut Power: a Power gives no power while any beam touches it (owner, 2026-11-20), worked out afresh each tick.
   std::bitset<kMaxBlocks> wasCut;
   for (int k = 0; k < orderCount_; ++k) { Block& b = blocks_[order_[k]]; wasCut[static_cast<std::size_t>(order_[k])] = b.beamCut; b.beamCut = false; }
   struct Recheck { Engine& e; const std::bitset<kMaxBlocks>& was; ~Recheck() {

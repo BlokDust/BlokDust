@@ -24,7 +24,7 @@ Arpeggiator.
 - **Arpeggiator** plays the held notes one after another, at a synced rate, or one per hit.
 - **Random Note** draws each note from a semitone range, weighted per note by a row of 12 bars (shifted by a Key
   slider; seeded PRNG). Keys and hits only trigger it: each note in gets its own random note.
-- Keyboards get **Keys set pitch** (default off): keys stop sounding and only set what power and hits play. With no keys
+- Keyboards get **Silent Keys** (default off): keys stop sounding and only set what power and hits play. With no keys
   held a source plays its own note.
 
 ## Consequences

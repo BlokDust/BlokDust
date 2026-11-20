@@ -26,9 +26,9 @@ Owner review of PR #13, 2026-11-20 (iPad, GarageBand, and comments on the PR).
    Apple; the gallery's ranking formula is no longer written down; the new-account limit says "Cannot create any more
    new accounts today."; owner checks ticked.
 
-7. **Cut By Hits** (SIMULATION-0009, SPEC-SIMULATION-POWER-AND-PARTICLES R2a; owner, 2026-11-20): one switch replaces
+7. **Hits Cut Power** (SIMULATION-0009, SPEC-SIMULATION-POWER-AND-PARTICLES R2a; owner, 2026-11-20): one switch replaces
    Gap On Hit and Gap. A particle cuts the Power for a hit's 0.15 s; a laser beam for as long as it touches it.
-8. **Stage In has no settings**: it plays as the controller outside is set (Mono/Poly, Glide, Set Pitch; R13a).
+8. **Stage In has no settings**: it plays as the controller outside is set (Mono/Poly, Glide, Silent Keys; R13a).
 9. **engine.cpp split by job** into engine_*.cpp with a private engine_internal.hpp; no behaviour change.
 10. **`pnpm bd size`**: files may hold about 5,000 tokens; those over it today (tools/size/baseline.json) may only
     shrink. A pre-commit hook runs it on the staged files.

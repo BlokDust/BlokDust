@@ -1,4 +1,4 @@
-# CHG-0017 tasks: Keys set pitch, and note effects (Chord, Arpeggiator, Random Note)
+# CHG-0017 tasks: Silent Keys, and note effects (Chord, Arpeggiator, Random Note)
 
 Check items off as they land. Each task should be independently verifiable.
 

@@ -1,4 +1,4 @@
-// CHG-0017 (AUDIO-0002): Keys set pitch, and the note effects Chord, Arpeggiator and Random Note
+// CHG-0017 (AUDIO-0002): Silent Keys, and the note effects Chord, Arpeggiator and Random Note
 // (SPEC-SIMULATION-POWER-AND-PARTICLES R10e–R10h).
 #include <catch2/catch_test_macros.hpp>
 #include <algorithm>
@@ -41,7 +41,7 @@ std::unique_ptr<Engine> toneAndKeys(std::vector<BlockType> fx = {}, bool keysSet
 const double kBase = 261.6;  // v1 Config.BaseNote: a Tone's own note
 }  // namespace
 
-TEST_CASE("R10e Keys set pitch: off by default, a keyboard plays as before") {
+TEST_CASE("R10e Silent Keys: off by default, a keyboard plays as before") {
   auto e = toneAndKeys();
   e->push(Command::noteOn(KB, 64));
   settle(*e);
@@ -49,7 +49,7 @@ TEST_CASE("R10e Keys set pitch: off by default, a keyboard plays as before") {
   CHECK(are(pitches(*e), {hz(64)}));
 }
 
-TEST_CASE("R10e Keys set pitch: held keys make no sound; power then plays them, all of them") {
+TEST_CASE("R10e Silent Keys: held keys make no sound; power then plays them, all of them") {
   auto e = toneAndKeys({}, true);
   for (int k : {60, 64, 67}) e->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
   settle(*e);
@@ -72,7 +72,7 @@ TEST_CASE("R10e Keys set pitch: held keys make no sound; power then plays them, 
   CHECK(are(pitches(*e), {kBase}));
 }
 
-TEST_CASE("R10e Keys set pitch: a particle strums the held chord") {
+TEST_CASE("R10e Silent Keys: a particle strums the held chord") {
   auto e = toneAndKeys({}, true);
   e->push(Command::add(5, BlockType::PowerEmitter, -10, 0));
   e->push(Command::setParam(5, P::PowerEmitter::angle, 0));
@@ -277,7 +277,7 @@ TEST_CASE("R10h Random Note: Key slides the weights; with no weight in the range
   for (int k : randomPresses(1, none, 5)) CHECK(k == 60);
 }
 
-TEST_CASE("R10h Random Note with Keys set pitch: each held key gets its own random note, picked again at each strike; then Chord, then Arpeggiator") {
+TEST_CASE("R10h Random Note with Silent Keys: each held key gets its own random note, picked again at each strike; then Chord, then Arpeggiator") {
   auto e = toneAndKeys({BlockType::FxRandomNote}, true);
   for (int k : {50, 57}) e->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
   std::vector<std::vector<int>> strikes;
