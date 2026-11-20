@@ -23,6 +23,8 @@ struct Loaded {
   /// Stage blocks' inner patches (CHG-0021, SPEC-PATCH-FORMAT-V2 R7): the block, and the commands that build what
   /// is inside it.
   std::vector<std::pair<BlockId, std::shared_ptr<Loaded>>> stages;
+  /// What was dropped to load the rest (SPEC-PATCH-FORMAT-V2 R3: a param this build doesn't know, from a newer one).
+  std::vector<std::string> warnings;
 };
 
 /// Append commands that build `patch` (an object with "blocks"). Returns false and sets `err` on invalid input.

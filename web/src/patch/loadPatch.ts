@@ -34,7 +34,8 @@ export type ScriptOp =
   | { op: 'tempo'; atSample?: number; bpm: number; beat?: number }
   | { op: 'expression'; atSample?: number; note: number; channel?: number; dim: 'bend' | 'pressure' | 'slide'; value: number; controller?: string };
 
-export interface Loaded { seed: number; commands: Command[]; ids: Map<string, number>; types: Map<number, number>; nextId: number }
+export interface Loaded { seed: number; commands: Command[]; ids: Map<string, number>; types: Map<number, number>; nextId: number;
+  /** What was dropped to load the rest (R3: a param this build doesn't know, from a newer BlokDust). */ warnings: string[] }
 
 const typeIndex = new Map(BLOCKS.map((b, i) => [b.id, i]));
 /** Command::Expression (engine.hpp). */
@@ -51,7 +52,7 @@ function addBlock(b: PatchBlock, out: Loaded, at: number) {
   out.commands.push({ type: CommandType.AddBlock, id, blockType: t, x: b.x ?? 0, y: b.y ?? 0, atSample: at });
   for (const [k, v] of Object.entries(b.params ?? {})) {
     const p = paramIndex(t, k);
-    if (p < 0) throw new Error(`unknown param ${k} on ${b.id}`);
+    if (p < 0) { out.warnings.push(`unknown param ${k} on ${b.id}`); continue; }  // R3: dropped, the rest loads
     // An LFO's target (AUDIO-0003): saved as "<block id>:<param key>"; engine ids are this session's (targetCommands).
     if (k === 'targetBlock' || k === 'targetParam' || k === 'target') continue;
     const n = numeric(v);
@@ -91,7 +92,7 @@ export function relinks(patch: Pick<Patch, 'connectionOrder'>, ids: Map<string, 
 export function loadPatch(patch: Patch, script: ScriptOp[] = []): Loaded {
   if (!Array.isArray(patch.blocks)) throw new Error('patch needs a blocks array');
   if (patch.version !== undefined && patch.version !== 2) throw new Error('unsupported patch version');
-  const out: Loaded = { seed: patch.seed ?? 1, commands: [], ids: new Map(), types: new Map(), nextId: 1 };
+  const out: Loaded = { seed: patch.seed ?? 1, commands: [], ids: new Map(), types: new Map(), nextId: 1, warnings: [] };
   // The patch's tempo (SIMULATION-0003), only when set (older patches keep exactly their command list).
   if (typeof patch.tempo === 'number') out.commands.push({ type: CommandType.Tempo, id: 0, value: patch.tempo, x: -1, atSample: -1 });
   for (const b of patch.blocks) addBlock(b, out, -1);

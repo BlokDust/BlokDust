@@ -81,7 +81,8 @@ void BlokDustProcessor::rebuildEngine() {
   if (sampleRate_ <= 0.0) return;
   patch::Loaded loaded;
   std::string err;
-  if (!patch::load(patch_, loaded, err)) { DBG("BlokDust: invalid patch: " << err); loaded = {}; }
+  if (!patch::load(patch_, loaded, err)) { systemLog("patch: not loaded: " + juce::String(err)); loaded = {}; }
+  for (const auto& w : loaded.warnings) systemLog("patch: " + juce::String(w));  // R3: dropped, the rest loads
   auto next = std::make_unique<Engine>(EngineConfig{static_cast<int>(sampleRate_ + 0.5), loaded.seed, true, /*hostInput=*/true});
   for (const auto& c : loaded.commands) next->push(c);
   next->prime();  // blocks exist now, so samples attach before the first audio block (CHG-0004 3.6)

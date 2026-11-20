@@ -1397,6 +1397,20 @@ Object.assign(tests, {
   },
 } as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
 
+// ---- PATCH-V2 R3 (owner, iPad 2026-11-19): a param this build doesn't know is dropped, the rest loads ----
+Object.assign(tests, {
+  /** The page's loader (a Stage's inner world on the website) drops an unknown param with a warning instead of
+   * refusing the patch, as the engine's does (a patch saved by a newer BlokDust). */
+  async 'load-unknown-param'() {
+    const { loadPatch } = await import('../../web/src/patch/loadPatch.ts');
+    let loaded: any = null, error = '';
+    try { loaded = loadPatch({ blocks: [{ id: 't', type: 'source.tone', x: 0, y: 0, params: { fromTheFuture: 3, transpose: 7 } }, { id: 'p', type: 'power.power', x: -3, y: 0 }] } as any); }
+    catch (e) { error = (e as Error).message; }
+    const ok = !!loaded && loaded.ids.size === 2 && loaded.warnings?.length === 1 && /fromTheFuture/.test(loaded.warnings[0]) && loaded.commands.some((c: any) => c.type === 3 && c.value === 7);
+    return [ok, { error, ids: loaded?.ids.size, warnings: loaded?.warnings }];
+  },
+} as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
+
 // ---- Stage in the plugins (CHG-0038, owner 2026-11-19) ----
 Object.assign(tests, {
   /** The plugins have Stage in the menu and open one as the web does: the page asks the processor for the Stage's

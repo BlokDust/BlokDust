@@ -27,7 +27,8 @@ bool addBlock(const nlohmann::json& b, Loaded& out, std::int64_t at, std::string
   if (b.contains("params")) {
     for (const auto& [pk, pv] : b["params"].items()) {
       std::uint8_t idx; double v;
-      if (!paramIndex(t, pk, idx)) { err = "unknown param " + pk + " on " + key; return false; }
+      // R3: a param this build doesn't know (a newer BlokDust saved it) is dropped with a warning; the rest loads.
+      if (!paramIndex(t, pk, idx)) { out.warnings.push_back("unknown param " + pk + " on " + key); continue; }
       // An LFO's target (AUDIO-0003) is saved as "<block id>:<param key>"; the engine ids it becomes are this
       // session's, so saved ones are never read. Resolved once every block is known (resolveTargets).
       if (pk == "targetBlock" || pk == "targetParam") continue;
