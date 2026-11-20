@@ -222,7 +222,8 @@ export class V1Scene {
   }
 
   /** v1 App.Message: show `text` in the message bar (v1's defaults: three seconds, no button). */
-  message(text: string, options?: { seconds?: number }): void { if (this.initialised) this.MessagePanel.NewMessage(text, options); }
+  /** v1 MessagePanel: a line, gone after `seconds`; with `buttonText`, it stays until closed or its button is pressed. */
+  message(text: string, options?: { seconds?: number; buttonText?: string; buttonEvent?: () => void }): void { if (this.initialised) this.MessagePanel.NewMessage(text, options); }
 
   /** Advance tweens; true while anything animates (the stage then redraws every frame). */
   update(nowMs: number): boolean {
@@ -837,7 +838,8 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   const AT = withDownload ? 4 : 3;
   p.accountPage = account;
   p.Populate = () => {
-    populate({ categories: [{ name: 'settings' }, { name: 'connect' }, { name: 'about' }, ...(withDownload ? [{ name: 'download' }] : []), ...(account ? [{ name: account.tabName }] : [])] });
+    populate({ categories: [{ name: 'settings' }, { name: 'feedback' },  // FEEDBACK (CHG-0041: was CONNECT)
+       { name: 'about' }, ...(withDownload ? [{ name: 'download' }] : []), ...(account ? [{ name: account.tabName }] : [])] });
   };
   if (account) {
     // The tab's name follows who is signed in (SIGN IN / ACCOUNT): lay the tabs out again, keeping each tab's state.

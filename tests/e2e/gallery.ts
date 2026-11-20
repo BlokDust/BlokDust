@@ -201,33 +201,39 @@ try {
   check('R11: SAVE after opening someone\'s patch makes a remix; the original counts it; the credit goes', opened.id === aliceId && remix !== aliceId && rp.json.parent === aliceId && glass?.remixes === 1
     && !(await bob.page.evaluate(() => (window as any).__bd_probe.corners.credit)), { remix, parent: rp.json?.parent, remixes: glass?.remixes });
 
-  // ---- R9, R10: right-click the credit to report; five reports hide it; the site owner reviews with bd gallery ----
+  // ---- R9, R10: Settings › FEEDBACK › REPORT A PATCH reports the patch on the stage (CHG-0041: the right-click on the
+  // credit is gone); five reports hide it; the site owner reviews with bd gallery ----
   const carol = await device('carol_g'), dave = await device('dave_g');
   for (const d of [bob, carol, dave]) {
     await tab(d, GALLERY); await search(d, '');
     const i = (await P(d)).items.findIndex((r: { id: string }) => r.id === aliceId);
     await press(d, `gopen${i}`, 2500);
-    const c = await d.page.evaluate(() => (window as any).__bd_probe.corners);
-    await d.page.mouse.click(c.creditAt[0], c.creditAt[1], { button: 'right' }); await d.page.waitForTimeout(900);
     if (d === bob) {
-      const asked = await P(d);
-      const text = await d.page.evaluate(() => { const seen: string[] = []; const f = CanvasRenderingContext2D.prototype.fillText; CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) { seen.push(t); return (f as any).call(this, t, ...a); }; (window as any).__bd_probe.scene.PatchesPanel.Draw(); CanvasRenderingContext2D.prototype.fillText = f; return seen.join(' | '); });
-      await d.page.mouse.move(5, 5); await d.page.waitForTimeout(300); await d.page.screenshot({ path: `${OUT}/report-confirm.png` });
-      check('R9: right-click on the credit asks first, without saying how many reports hide a patch', asked.open && asked.view === 'report' && !/three|hidden/i.test(text), text.slice(0, 300));
-    }
-    if (d === bob) {  // Owner (2026-11-19): CANCEL there emptied the stage.
-      // Blocks on screen, not just in the patch (it was the view that went: the right-click's press began a pan).
+      // Blocks on screen, not just in the patch (a right-click's press used to begin a pan that never ended).
       const onScreen = () => d.page.evaluate(() => { const s = (window as any).__bd_probe; return s.state.blocks.filter((b: any) => { const p = s.blockPoint(b.id); return p && p[0] > 0 && p[0] < innerWidth && p[1] > 90 && p[1] < innerHeight - 90; }).length; });
+      const c = await d.page.evaluate(() => (window as any).__bd_probe.corners);
       const before = await onScreen();
-      await press(d, 'reportCancel', 1200);
-      const after = await onScreen();
-      await d.page.mouse.move(5, 5); await d.page.waitForTimeout(300); await d.page.screenshot({ path: `${OUT}/report-cancel.png` });
-      check('Bug (owner, 2026-11-19): CANCEL on REPORT THIS PATCH? keeps the stage', before > 0 && after === before, { before, after });
       await d.page.mouse.click(c.creditAt[0], c.creditAt[1], { button: 'right' }); await d.page.waitForTimeout(900);
+      await d.page.mouse.move(400, 500, { steps: 6 }); await d.page.waitForTimeout(300);
+      const after = await onScreen(), opened = await d.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Open);
+      check('CHG-0041: a right-click on the credit does nothing (no report; the stage stays put)', before > 0 && after === before && !opened, { before, after, opened });
     }
-    await press(d, 'reportOk', 300); await idle(d);
-    await d.page.waitForTimeout(2200);
-    if (d === bob) check('R9: after REPORT the thanks shows, then the panel closes', !(await P(d)).open);
+    await d.page.evaluate(() => { const s = (window as any).__bd_probe.scene.SettingsPanel; s._OpenTab = 1; (s.MenuItems as any[]).forEach((m, k) => { m.Selected = k === 1 ? 1 : 0; m.YOffset = k === 1 ? 0 : -s.DrawTo.Height; }); s.OpenPanel(); });
+    await d.page.waitForTimeout(900);
+    await d.page.getByRole('radio', { name: 'Report a patch' }).click(); await d.page.waitForTimeout(300);
+    if (d === bob) {
+      const intro = await d.page.evaluate(() => document.getElementById('feedback-intro')!.textContent);
+      await d.page.mouse.move(5, 5); await d.page.waitForTimeout(300); await d.page.screenshot({ path: `${OUT}/report-feedback.png` });
+      check('CHG-0041: FEEDBACK › REPORT A PATCH names the patch on the stage and its maker, without saying how many reports hide it', /GLASS RAIN/i.test(intro ?? '') && /@alice_g/.test(intro ?? '') && !/three|five|hidden/i.test(intro ?? ''), intro);
+      await d.page.locator('#feedback-message').fill('Painfully loud');
+    }
+    await d.page.click('#feedback-send');
+    await d.page.getByRole('status').filter({ hasText: 'reported' }).waitFor({ timeout: 15000 }).catch(() => {});
+    if (d === bob) {
+      const bar = await d.page.evaluate(() => { const m = (window as any).__bd_probe.scene.MessagePanel; return { open: m.Open, text: m._Value?.string }; });
+      check('R9: REPORT sends it; the message bar thanks you', bar.open && /reported/i.test(bar.text ?? ''), bar);
+    }
+    await d.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel()); await d.page.waitForTimeout(600);
   }
   const atThree = await api(anon, 'GET', 'gallery?sort=new');
   check('R9 (security review, PR 13): three reports no longer hide it', atThree.json.items.some((r: { id: string }) => r.id === aliceId), atThree.json.items.map((r: { title: string }) => r.title));

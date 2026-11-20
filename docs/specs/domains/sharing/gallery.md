@@ -43,9 +43,9 @@ saving, browsed in the Patches panel's GALLERY tab (search, popular or new, like
   takes the like back; no down votes. The wish shows at once on both; one request per patch at a time, then another
   only if the wish changed, so fast presses settle on the last (no flicker, at most two requests). `GET
   /api/patches/:id` says `likes` and `liked`.
-- **R9.** Reporting is a right-click on the credit (owner review 2: harder to do by accident), asked first on the
-  GALLERY tab ("For a rude name or anything that should not be here.": it doesn't say how many reports hide a
-  patch). It needs sign-in and counts once per person. At five reports the patch is hidden (three until the PR 13
+- **R9.** Reporting is Settings › FEEDBACK › REPORT A PATCH (CHG-0041, owner 2026-11-19: the right-click on the
+  credit nobody would find is gone), for the gallery patch on the stage that isn't yours, with an optional reason (it
+  doesn't say how many reports hide a patch). It needs sign-in and counts once per person. At five reports the patch is hidden (three until the PR 13
   security review: throwaway accounts are cheap). @blokdust's own patches (EXAMPLES, TUTORIALS) are never hidden by
   reports; their reports are kept for R10.
 - **R10.** `pnpm bd gallery reports|keep|hide|remove` lists reported or hidden patches with their reasons, and keeps
@@ -78,6 +78,13 @@ saving, browsed in the Patches panel's GALLERY tab (search, popular or new, like
   so the site owner signs in as @blokdust to add more; what @blokdust publishes goes in EXAMPLES, and
   `pnpm bd gallery kind <id> tutorial|example` moves one.
 
+- **R17.** *(CHG-0041, owner 2026-11-19)* Someone else's patch on the website (opened from a link or the gallery and
+  neither this browser's nor the signed-in account's; and every embed) is guarded until you save it as yours: its
+  microphone stays off and v1's message bar says "This patch uses your microphone." with TURN ON (a Microphone you put
+  down yourself opens it at once), and its sound goes through a safety limit after the engine (a slow compressor:
+  threshold −24 dB, ratio 4, 0.25 s attack, 1.5 s release; then a limiter: −3 dB, ratio 20). Your own patches,
+  files, presets and the plugins are neither. On the website a patch's Audio In loads as a Microphone, which needs
+  power (the plugins keep Audio In: the DAW track, no power).
 ## Verification
 `pnpm test:gallery` covers R1–R16 (local Worker, mocked siteverify, virtual passkeys; R10 through the real tool on
 the local D1).

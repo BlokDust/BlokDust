@@ -22,6 +22,7 @@ import * as account from '../account/client.ts';
 import { appKey, setAppKey } from '../account/appKey.ts';
 import { appPost, pollDevice, startDevice } from '../account/device.ts';
 import { PLUGIN_SITE } from '../patch/site.ts';
+import { audioInAsMicrophone } from '../patch/webInputs.ts';
 import { activity } from '../account/activity.ts';
 import * as gallery from '../gallery/client.ts';
 import { DEFAULT_SOUNDS, PUBLIC_SITE, isDeadDefault, fetchFreesound, fingerprint, isPortable, openRemembered, pickAudioFile, refKey, rememberHandle, searchFreesound, type FileRef, type FreesoundRef, type SampleRef } from '../patch/samples.ts';
@@ -365,7 +366,7 @@ async function main() {
     stageBuilds.set(uid, build);
     const audio = innerSamples.get(uid) ?? new Map<string, AudioBuffer>();
     innerSamples.set(uid, audio);
-    if (m.blocks.some(b => needsInput(b.type))) void engine.connectMicrophone();
+    if (m.blocks.some(b => needsInput(b.type))) listen();
     await Promise.all(m.blocks.map(async blk => {
       const iid = blk.id === undefined ? undefined : ids[blk.id];
       if (iid === undefined || blk.id === undefined) return;
@@ -434,7 +435,13 @@ async function main() {
   juce?.addEventListener<Record<string, unknown>>('bd_supportSystem', value => { Object.assign(hostSystem, value); });
   const supportClient = !embedId ? new SupportClient({ patch: toPatch, plugin: !!juce,
     system: () => ({ sampleRate: App.Audio.sampleRate, ...hostSystem }) }) : null;
-  const feedbackPanel = supportClient ? new FeedbackPanel(supportClient, () => stage.redraw()) : null;
+  // FEEDBACK's REPORT A PATCH (CHG-0041): the gallery patch on the stage that isn't yours; the gallery's moderation.
+  const feedbackPanel = supportClient ? new FeedbackPanel(supportClient, () => stage.redraw(), {
+    target: () => (credit?.published ? { id: credit.id, title: credit.title, by: credit.by } : null),
+    signedIn: () => !!accountPage()?.Account,
+    signIn: () => (scene.SettingsPanel as any).openAccount?.(),
+    report: async (id, reason) => { await gallery.report(id, reason); },
+  }) : null;
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
   /** The autosave holds the patch on screen (it was restored from it, or edited since). */
   let autosaveIsThis = !params.has('c') && !params.has('v1') && !params.has('demo') && !embedId;
@@ -509,6 +516,7 @@ async function main() {
     setWorldPower: on => { sendRaw([{ type: CommandType.WorldPower, id: 0, value: on ? 1 : 0 }]); stage.redraw(); },  // the whole patch, every stage (owner)
     setPowerMode: mode => { juce?.emitEvent('bd_powerMode', { mode }); stage.redraw(); },
     resetScene: () => {
+      setGuarded(false);  // a new patch is yours (CHG-0041)
       for (const id of [...model.keys()]) removeBlock(id);
       if (inside) leaveStage(false);
       // The old patch's particles go with it (SPEC-SIMULATION-POWER-AND-PARTICLES R1b; owner, 2026-11-18).
@@ -630,7 +638,6 @@ async function main() {
       browse: async (sort, q, page) => { try { return await gallery.browse(sort, q, page); } catch (e) { if ((e as { status?: number }).status === undefined) return null; throw e; } },
       open: (row, mode) => openShared(row.id, mode),
       like: row => wantLike(row.id, row.liked, row.likes),
-      report: async id => { await gallery.report(id); },
       unpublish: async id => { await gallery.unpublish(id, editToken(id)); if (id === App.CompositionId) scene.PatchesPanel.galleryKnown(false); },
     },
     signedIn: () => !!accountPage()?.Account,
@@ -768,7 +775,7 @@ async function main() {
   // ---- the stage's corners (owner review 2026-11-15) ----
   // Top left, under the header: a patch someone else made, "TITLE BY @NAME" (SPEC-SHARING-GALLERY R15); the name opens
   // the gallery on their patches. A published one has a star after it (owner review 2): pressing it likes the patch
-  // (signed out: Settings › SIGN IN); right-clicking the credit reports it. Top right: who is signed in
+  // (signed out: Settings › SIGN IN); FEEDBACK › REPORT A PATCH reports it (CHG-0041). Top right: who is signed in
   // (SPEC-SHARING-ACCOUNTS R14); it opens Settings › ACCOUNT. v1's mid type in the text colour, under the panels.
   let credit: { id: string; title: string; by: string; published: boolean; liked: boolean; likes: number; views: number } | null = null;
   let cornerBoxes: { by?: ButtonBox; me?: ButtonBox; like?: ButtonBox; credit?: ButtonBox; save?: ButtonBox } = {};
@@ -863,14 +870,6 @@ async function main() {
     })();
   }
   function likeCredit(): void { if (credit) wantLike(credit.id, credit.liked, credit.likes); }
-  /** Right-click on the credit: report the patch (signed out: sign in first). */
-  function reportCredit(x: number, y: number): boolean {
-    if (!credit?.published || !cornerBoxes.credit || !inBox(cornerBoxes.credit, x, y)) return false;
-    if (scene.PatchesPanel.Open || (scene.SettingsPanel as any).Open) return false;
-    if (!accountPage()?.Account) (scene.SettingsPanel as any).openAccount?.();
-    else scene.PatchesPanel.askReport({ id: credit.id, title: credit.title });
-    return true;
-  }
   /** Signed in after SAVE / SHARE › SIGN IN: Settings closes and SAVE opens again, ADD TO GALLERY on, the name kept. */
   function backToSave(): void {
     let want: { to?: string; title?: string; at?: number } | null = null;
@@ -1187,6 +1186,7 @@ async function main() {
     input.click();
   }
   function useStagePatch(id: number, patch: Patch): void {
+    if (!juce) patch = audioInAsMicrophone(patch);  // the website's Audio In is a Microphone (CHG-0041)
     const b = model.get(id);
     if (!b) return;
     const { uid, x, y, params } = b;
@@ -1231,7 +1231,7 @@ async function main() {
     model.set(id, { uid, type, x, y, params: { ...p } });
     v1Blocks.set(id, new V1Block(id, def, x, y, p));
     stage.upsertBlock({ id, type, x, y, starPos: type === 'power.void' ? starPos(id) : undefined });
-    if (needsInput(type)) void engine?.connectMicrophone();
+    if (needsInput(type)) listen(!quiet);  // one the user puts down opens it; a loaded one may have to ask (CHG-0041)
     // Plugin: a SampleGen whose sound was saved as a file is played by the processor; it is not generated again.
     const savedFile = !!juce && typeof p.track === 'string' && p.track.startsWith('file:');
     const known = quiet && inside && innerSamples.get(inside.stageUid)?.has(uid);  // looking into a Stage: shown from what it has
@@ -1354,6 +1354,7 @@ async function main() {
     const url = `${juce ? PLUGIN_SITE : `${location.origin}${location.pathname}`}?c=${id}&t=${encodeURIComponent(title)}`;
     if (!juce) history.replaceState(null, '', url);  // v1 AddressBarManager.UpdateURL
     shareLink = { url, owned: isServerId(id) && !!App.SessionId, at, title };
+    setGuarded(false);  // saved: it is yours now (CHG-0041)
     setBaseline(at);  // a shared patch counts as saved
     keepMine(title, id);
     credit = null;  // saved: it is yours now (a remix keeps `parent`)
@@ -1407,6 +1408,9 @@ async function main() {
   async function openShared(id: string, mode: 'open' | 'insert'): Promise<true | string> {
     const r = await loadOrWhy(id);
     if ('missing' in r) return MISSING_TEXT[r.missing];
+    // Someone else's (CHG-0041): opened, or inserted into yours, it is guarded until saved as yours.
+    const theirs = !r.mine && !canOverwrite(id);
+    if (mode === 'open' || theirs) setGuarded(mode === 'open' ? theirs : true);
     usePatch(r.patch, r.title, mode, { id, rev: r.rev, ...(r.title ? { title: r.title } : {}), ...(r.by ? { by: r.by } : {}) });
     if (mode !== 'open') return true;
     // The plugins (CHG-0039): the processor has the patch now; the DAW project keeps it, so no link or session here.
@@ -1467,6 +1471,7 @@ async function main() {
   /** The view's centre, as a grid cell. */
   const viewCentre = () => { const [x, y] = stage.cssToGrid(app.canvas.clientWidth / 2, app.canvas.clientHeight / 2); return { x, y }; };
   function usePatch(p: Patch, title: string, mode: 'open' | 'insert', from?: Omit<PatchSource, 'blocks'>, source: 'file' | 'preset' | 'link' = from ? 'link' : 'file'): void {
+    if (mode === 'open' && source !== 'link') setGuarded(false);  // a file or a preset: not someone else's (CHG-0041)
     applyPatch(p, mode, from);
     track('patch_opened', { source });
     if (mode === 'open') scene.PatchesPanel.setTitle(title);
@@ -1476,6 +1481,7 @@ async function main() {
    * (owner, 2026-11-10): see startPlacing. With a mouse they start under it; on a touch screen in the middle of the view.
    */
   function applyPatch(p: Patch, mode: 'open' | 'insert', from?: Omit<PatchSource, 'blocks'>): void {
+    if (!juce) p = audioInAsMicrophone(p);  // the website's Audio In is a Microphone (CHG-0041)
     if (inside) exitStage();
     const touch = lastPointerType !== 'mouse', at = !touch && lastPointer ? lastPointer : viewCentre();
     const part = mode === 'open'
@@ -1840,6 +1846,32 @@ async function main() {
   (window as unknown as { __bd_loadSample: unknown }).__bd_loadSample = (id: number, name: string, bytes: ArrayBuffer) =>
     useSample(id, { provider: 'file', name, bytes: bytes.byteLength, durationSec: 0, hash: '' }, bytes, true);
   const needsInput = (type: string) => type === 'source.microphone' || type === 'source.audio-in';
+  /**
+   * Someone else's patch on the website (CHG-0041, owner 2026-11-19): opened from a link or the gallery and not this
+   * browser's or the account's, or an embed. Its microphone waits for TURN ON in the message bar, and its sound goes
+   * through the safety limit (EngineNode.setGuard). Your own patches and the plugins: neither.
+   */
+  let guarded = false, inputAllowed = false, inputAsked = false;
+  function setGuarded(on: boolean): void {
+    if (juce) return;
+    if (on && !guarded) { inputAllowed = false; inputAsked = false; }
+    guarded = on;
+    engine?.setGuard(on);
+    if (!on && [...model.values()].some(b => needsInput(b.type))) listen();
+  }
+  /** Open the microphone for a Microphone or Audio In block: at once, unless the patch is someone else's (then the
+   * message bar asks first). `byUser`: the user put the block there themselves. */
+  function listen(byUser = false): void {
+    if (!engine) return;
+    if (byUser) inputAllowed = true;
+    if (guarded && !inputAllowed) {
+      if (inputAsked) return;
+      inputAsked = true;
+      scene.message('This patch uses your microphone.', { buttonText: 'Turn on', buttonEvent: () => { inputAllowed = true; void engine?.connectMicrophone(); } });
+      return;
+    }
+    void engine.connectMicrophone();
+  }
 
   /**
    * LFO targets (AUDIO-0003): the patch names a target as "<block id>:<param key>"; the engine is told this session's
@@ -1981,6 +2013,7 @@ async function main() {
   const readMacros = (list: unknown): Macro[] => (Array.isArray(list) ? list : []).filter((m): m is Macro => !!m && typeof m === 'object' && typeof (m as Macro).block === 'string' && Array.isArray((m as Macro).blocks))
     .map(m => structuredClone(m));
   function showPatch(p: Patch, ids?: Record<string, number>): void {
+    if (!juce) p = audioInAsMicrophone(p);  // the website's Audio In is a Microphone (CHG-0041)
     if (inside) leaveStage(false);
     for (const id of [...model.keys()]) { model.delete(id); v1Blocks.delete(id); stage.removeBlock(id); samples.delete(id); missing.delete(id); }
     undoStack.length = 0; redoStack.length = 0;
@@ -2009,6 +2042,8 @@ async function main() {
   if (start.view.zoom === undefined && !start.view.drag && start.patch.view) start.view = { ...start.view, zoom: start.patch.view.zoom, drag: { x: start.patch.view.x, y: start.patch.view.y } };
   if (start.view.zoom !== undefined || start.view.drag) stage.setView(start.view.zoom ?? 1, start.view.drag ?? { x: 0, y: 0 });
   showPatch(start.patch);
+  // Someone else's patch from a link, or an embed (CHG-0041): guarded. One this browser or the account made is not.
+  setGuarded(!!embedId || (start.source === 'link' && !(start.id && (start.mine || canOverwrite(start.id)))));
   // Unsaved changes are counted from what was opened: a link, a v1 composition or the demo. Work restored from the last
   // visit counts from where it was last saved (or, never saved, as unsaved).
   if (start.missing) baseline = contentOf(toPatch());  // blank: nothing unsaved, and the kept baseline stays the autosave's
@@ -2125,6 +2160,8 @@ async function main() {
     hideLinks,  // tests: the iPad extension's no-links view (CHG-0025)
     /** The microphone is asked for or open (tests, CHG-0035). */
     get microphoneOpen() { return !!engine?.microphoneOpen; },
+    /** Someone else's patch (CHG-0041): the page's flag, and whether the safety limit is on the output (tests). */
+    get guarded() { return { page: guarded, limit: !!engine?.guarded }; },
     get state() { return { ...probe, blocks: stage.allBlocks(), patch: toPatch() }; },
     /** The Stage being looked into and its window, in css px (tests); null on the outer stage. */
     get inside() { if (!inside) return null; const f = insideFrame(), d = stage.metrics.dpr; return { stage: inside.stageId, x: f.x / d, y: f.y / d, w: f.w / d, h: f.h / d, closeX: f.closeX / d, closeY: f.closeY / d }; },
@@ -2185,7 +2222,7 @@ async function main() {
     /** The stage's corners (tests): a patch's credit and who is signed in, with their centres in css px. */
     get corners() {
       const d = stage.metrics.dpr, c = (b?: ButtonBox) => (b ? [(b.x + b.w / 2) / d, (b.y + b.h / 2) / d] : null);
-      // creditAt: the title's start (right-click reports), clear of the @NAME link and the star.
+      // creditAt: the title's start, clear of the @NAME link and the star.
       const titleAt = cornerBoxes.credit ? [(cornerBoxes.credit.x + 12 * stage.metrics.unit) / d, (cornerBoxes.credit.y + cornerBoxes.credit.h / 2) / d] : null;
       return { credit, me: accountPage()?.Account?.handle ?? null, byAt: c(cornerBoxes.by), meAt: c(cornerBoxes.me), meBox: cornerBoxes.me && { x: cornerBoxes.me.x / d, y: cornerBoxes.me.y / d, w: cornerBoxes.me.w / d, h: cornerBoxes.me.h / d }, likeAt: c(cornerBoxes.like), creditAt: titleAt,
         // Quick save (CHG-0033): the own patch's line and where its UNSAVED / SAVE word is.
@@ -2377,7 +2414,8 @@ async function main() {
     engine = EngineNode.build(ctx, module, { seed, commands: engineCommands() });
     engine.onSnapshot(onSnapshot);
     for (const [id, buf] of samples) if (model.has(id)) engine.sendSample(id, buf);
-    if ([...model.values()].some(b => needsInput(b.type))) void engine.connectMicrophone();
+    engine.setGuard(guarded);  // someone else's patch: the safety limit (CHG-0041)
+    if ([...model.values()].some(b => needsInput(b.type))) listen();
     for (const [id, b] of model) if (b.type === 'source.stage') void fillStageSamples(id, b.uid);  // its inner world was built with the engine
     await running;
     keepAwake(ctx);
@@ -2978,7 +3016,6 @@ async function main() {
 
   // ---- Dust 1–8 (plugin only, PLUGIN-0003): right-click an options-panel slider to map a host parameter to it ----
   app.canvas.addEventListener('contextmenu', e => {
-    if (!juce && !embedId && reportCredit(e.offsetX * dpr(), e.offsetY * dpr())) { e.preventDefault(); return; }
     if (!juce || inside) return;  // Dust 1–8 move the outer world's blocks (CHG-0038)
     const hit = scene.sliderAt(e.offsetX * dpr(), e.offsetY * dpr());
     if (!hit) return;

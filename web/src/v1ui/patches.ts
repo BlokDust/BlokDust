@@ -30,8 +30,8 @@
 // LINK and has no video.
 // GALLERY (CHG-0024) is v1 SoundcloudPanel's layout: the search field over its rule with the bordered SEARCH above it,
 // and POPULAR / NEW bottom right where v1 had RANDOMISE. Owner review 2: the rows are one list that scrolls (wheel or
-// drag) and loads the next page as it nears its end, and each row has OPEN only (liking and reporting are on the stage,
-// with the patch open: main.ts).
+// drag) and loads the next page as it nears its end, and each row has OPEN only (liking is on the stage, with the patch
+// open: main.ts; reporting is Settings › FEEDBACK, CHG-0041).
 import { App, Dimensions, DisplayObject } from './shim.ts';
 import { Device } from './ported/Device';
 import { MISSING_TEXT } from '../patch/server.ts';
@@ -57,7 +57,8 @@ export function uniqueTitle(title: string, taken: Iterable<string>): string {
   for (let n = 2; ; n++) { const t = `${base} (${n})`; if (!used.has(t.toLowerCase())) return t; }
 }
 /** Accounts (CHG-0023): what the ACCOUNT tab shows. */
-export interface AccountInfo { handle: string | null; passkeys: number; providers: string[]; methods?: import('../account/client.ts').SignInMethod[]; stats?: import('../account/client.ts').AccountStats }
+export interface AccountInfo { handle: string | null; passkeys: number; providers: string[]; methods?: import('../account/client.ts').SignInMethod[]; stats?: import('../account/client.ts').AccountStats;
+  apps?: import('../account/client.ts').SignedInApp[] }
 export interface AccountHost {
   /** Who is signed in (null: nobody), whether Google and Apple sign-in are offered; null when there is no backend. */
   me(stats?: boolean): Promise<{ user: AccountInfo | null; google: boolean; apple?: boolean } | null>;
@@ -120,7 +121,6 @@ export interface GalleryHost {
   open(row: GalleryRow, mode: 'open' | 'insert'): Promise<boolean | string>;
   /** Like or unlike (the host shows it at once on this row and the stage, and settles fast presses on the last). */
   like(row: GalleryRow): void;
-  report(id: string): Promise<void>;
   unpublish(id: string): Promise<void>;
 }
 /** Video export (CHG-0022): what the VIDEO tab asks for. */
@@ -208,9 +208,8 @@ export const COPY = {
   cancel: 'Cancel', saveFirst: 'Save First', openAnyway: 'Open Anyway',
   remove: 'Delete', removeButton: 'Delete',
   search: 'Search', sorts: { popular: 'Popular', top: 'All Time Top', new: 'New', examples: 'Examples', tutorials: 'Tutorials' }, showMore: 'Show More', signIn: 'Sign In', unpublish: 'Unpublish',
-  like: 'Like', liked: 'Liked', report: 'Report', noneYet: 'Nothing here yet', by: 'by',
-  reportTitle: 'Report this patch?', reportLine: 'For a rude name or anything that should not be here.',
-  reported: 'Thank you. The patch was reported.', openFailed: 'This patch couldn’t be opened. Check your connection and try again.',
+  like: 'Like', liked: 'Liked', noneYet: 'Nothing here yet', by: 'by',
+  openFailed: 'This patch couldn’t be opened. Check your connection and try again.',
   addToGallery: 'Add to Gallery', signInToPublish: 'Only signed-in users can publish to the gallery.',
   makeVideo: 'Make Video', downloadVideo: 'Download Video', tryAgain: 'Try Again',
   cancelVideo: 'Cancel', rendering: 'making video', shareVideo: 'Share Video',
@@ -249,15 +248,13 @@ export class PatchesPanel extends DisplayObject {
   GalleryMore = false;
   GalleryLoading = false;
   GalleryMessage = '';
-  GalleryView: 'list' | 'report' = 'list';
+  GalleryView: 'list' = 'list';
   /** The list's scroll, device px from the top (owner review 2: one scrolling list, pages appended). */
   GalleryScroll = 0;
   /** A press on the list: where it started, and whether it has become a drag (a drag doesn't open the row under it). */
   /** A press on a list (OPEN's or the gallery's): it scrolls if it moves, else the row's button acts on release. */
   private galleryDrag: { tab: 1 | 2; y: number; scroll: number; moved: boolean; row: number; mode: 'open' | 'insert' | 'like' | 'bin' } | null = null;
-  private reporting: { id: string; title: string } | null = null;
   /** After REPORT: the thanks, then the panel closes. */
-  private reported = false;
   private galleryAsk = 0;
   SearchContainer!: HTMLElement;
   SearchInput!: HTMLInputElement;
@@ -892,21 +889,7 @@ export class PatchesPanel extends DisplayObject {
     else if (this.Tab === 1 && this.View === 'list') this.scrollOpen(dy);
   }
   private drawGallery(): void {
-    const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, margin = this.margin, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
-    if (this.GalleryView === 'report' && this.reporting) {
-      this.heading(COPY.reportTitle, this.reporting.title ? `${this.reporting.title.toUpperCase()}. ${COPY.reportLine}` : COPY.reportLine);
-      if (this.reported || this.GalleryLoading) {
-        App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
-        if (this.GalleryLoading) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy + 25 * u, 16, true);
-        else this.wordWrap(this.GalleryMessage, margin, cy + 25 * u, 14 * u, this.pageW);
-        return;
-      }
-      const { left, right } = this.halves();
-      for (const h of [left, right]) h.y = cy + 5 * u;
-      this.filled(left, App.Palette[1], COPY.cancel, !!this.roll.reportCancel);
-      this.filled(right, App.Palette[menu[3]], COPY.report, !!this.roll.reportOk);
-      return;
-    }
+    const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, margin = this.margin, txt = App.Palette[App.ThemeManager.Txt];
     const L = this.galleryLayout(), win = this.galleryWindow();
     // SEARCH (v1 SoundcloudPanel: the rule under the field, SEARCH bordered above it at the right) //
     App.StrokeColor(ctx, txt);
@@ -1000,11 +983,7 @@ export class PatchesPanel extends DisplayObject {
       const [a, b, c] = this.thirds();
       r.cancel = box(a); r.saveFirst = box(b); r.openAnyway = box(c);
     } else if (this.Tab === 2) {
-      if (this.GalleryView === 'report') {
-        const { left, right } = this.halves();
-        for (const h of [left, right]) h.y = cy + 5 * u;
-        r.reportCancel = box(left); r.reportOk = box(right);
-      } else {
+      {
         const L = this.galleryLayout();
         r.search = pad(L.search);
         for (const b of this.sortButtons()) r[`sort_${b.sort}`] = hit(b.x - 5 * u, b.y - 20 * u, b.w + 10 * u, 30 * u);
@@ -1087,7 +1066,6 @@ export class PatchesPanel extends DisplayObject {
       const sb = /^sort_(\w+)$/.exec(name) && this.sortButtons().find(b => `sort_${b.sort}` === name);
       if (sb) return at(sb.x + sb.w / 2, sb.y - 5 * u);
 
-      if (name === 'reportCancel' || name === 'reportOk') { const { left, right } = this.halves(); return at((name === 'reportOk' ? right : left).cx, this.cy + 25 * u); }
     }
     if (name === 'gallerySwitch' || name === 'videoSwitch') { const g = name === 'gallerySwitch' ? this.gallerySwitch() : this.videoSwitch(); return at(g.x + g.w / 2, g.y + g.h * 0.35); }
     if (name === 'player') return mid(this.playerBox());
@@ -1162,13 +1140,6 @@ export class PatchesPanel extends DisplayObject {
     if (this.Tab === 2 && this.View !== 'confirm') {
       const g = this.host.gallery;
       if (!g) return;
-      if (this.GalleryView === 'report') {
-        const row = this.reporting;
-        if (this.reported || this.GalleryLoading) return;
-        if (r.reportCancel) { this.reporting = null; this.GalleryView = 'list'; this.ClosePanel(); return; }
-        if (r.reportOk && row) void this.sendReport(g, row);
-        return;
-      }
       if (r.search) { this.GalleryQuery = this.SearchInput.value.trim(); void this.browse(); return; }
       const sort = GALLERY_SORTS.find(s => r[`sort_${s}`]);
       if (sort) {
@@ -1291,7 +1262,7 @@ export class PatchesPanel extends DisplayObject {
     }
     this.Tab = i;
     for (const j of ALL_TABS) this.tweenSelected(j, j === i ? 1 : 0, j === i ? 400 : 250);
-    if (i === 2) { this.GalleryView = 'list'; this.GalleryMessage = ''; this.reporting = null; void this.browse(); }
+    if (i === 2) { this.GalleryView = 'list'; this.GalleryMessage = ''; void this.browse(); }
     // OPEN lists the account's patches too: signed in or out since the panel opened, the list has changed.
     if (i === 1 && this.View === 'list') void this.refresh();
     this.showDom();
@@ -1377,19 +1348,6 @@ export class PatchesPanel extends DisplayObject {
     this.GalleryQuery = q; this.GalleryView = 'list'; this.GalleryMessage = '';
     if (this.SearchInput) this.SearchInput.value = q;
     if (!this.Open) this.OpenPanel(2); else this.selectTab(2);
-  }
-  /** Report a patch (from the stage, owner review 2: right-click its credit): the GALLERY tab asks first. */
-  askReport(row: { id: string; title: string }): void {
-    this.reporting = row; this.reported = false; this.GalleryMessage = ''; this.GalleryView = 'report';
-    if (!this.Open) this.OpenPanel(2); else this.selectTab(2);
-    this.GalleryView = 'report'; this.reporting = row; this.showDom();
-  }
-  private async sendReport(g: GalleryHost, row: { id: string }): Promise<void> {
-    this.GalleryLoading = true; this.GalleryMessage = '';
-    try { await g.report(row.id); this.GalleryMessage = COPY.reported; this.reported = true; }
-    catch (e) { this.GalleryMessage = (e as Error).message || 'That did not work. Try again.'; this.reported = true; }
-    finally { this.GalleryLoading = false; this.settled(); }
-    setTimeout(() => { if (this.GalleryView === 'report' && this.reporting === row) { this.ClosePanel(); this.reporting = null; this.reported = false; this.GalleryView = 'list'; } }, 1800);
   }
   /** The open patch is (or isn't) in the gallery: the switch shows it (an opened patch of yours; null: unknown). */
   galleryKnown(published: boolean | null): void { this.savedGallery = published; if (published !== null) this.GalleryOn = published; this.GalleryNote = ''; }

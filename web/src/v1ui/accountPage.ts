@@ -161,8 +161,9 @@ export class AccountPage {
     if (this.Account && !this.Account.handle && this.View === 'main') { this.View = 'name'; this.input.value = ''; }
     if (!this.Account && this.View !== 'create' && this.View !== 'code' && this.View !== 'approve') this.View = 'main';
     if (this.View === 'approve' && this.Account && this.ApproveCode && !this.ApproveName) void this.lookUpCode();
-    // SIGN-IN METHODS' APPS SIGNED IN, ready before it opens (owner, 2026-11-19: it jumped as the list arrived).
-    if (this.Account && this.host.apps && !this.host.plugin) void this.loadApps();
+    // SIGN-IN METHODS' APPS SIGNED IN, ready before it opens (owner, 2026-11-19: it jumped as the list arrived): it
+    // comes with the stats, in the one request (R15).
+    if (this.Account?.apps) this.Apps = this.Account.apps;
     if (was === undefined || (this.Account?.handle ?? null) !== before || !!was !== !!this.Account) this.onChange();
     this.mark();
   }

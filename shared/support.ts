@@ -3,12 +3,15 @@ import { BLOCKS } from '../web/src/generated/blocks.gen.ts';
 
 export const SUPPORT = { bodyBytes: 128 * 1024, patchBytes: 64 * 1024, messageChars: 5000, events: 100, windowMs: 15 * 60 * 1000 } as const;
 export type DiagnosticKind = 'error' | 'unhandledrejection' | 'console';
+export type SupportKind = 'feedback' | 'suggestion' | 'bug' | 'automatic';
+export const SUPPORT_KINDS: readonly SupportKind[] = ['feedback', 'suggestion', 'bug', 'automatic'];
 export interface Diagnostic { at: number; kind: DiagnosticKind; message: string }
 export interface SupportPatch { format: 'blokdust.patch'; version: 2; seed?: number; tempo?: number;
   connectionOrder?: [string, string][];
   blocks: { id: string; type: string; x: number; y: number; params: Record<string, number | boolean | string> }[] }
 export interface SupportReport {
-  schema: 1; kind: 'feedback' | 'automatic'; message: string; email: string;
+  /** FEEDBACK's choice (CHG-0041: suggestion, bug; older builds send feedback), or an automatic error report. */
+  schema: 1; kind: SupportKind; message: string; email: string;
   version: string; build: string; system: Record<string, string | number>;
   includeContext?: boolean; patch: SupportPatch | null; diagnostics: Diagnostic[];
 }

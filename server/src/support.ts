@@ -1,6 +1,6 @@
 import type { Env } from './env.ts';
 import { HttpError, json, sha256Hex } from './http.ts';
-import { SUPPORT, diagnosticText, record, supportDiagnostics, supportPatch, supportSystem } from '../../shared/support.ts';
+import { SUPPORT, SUPPORT_KINDS, diagnosticText, record, supportDiagnostics, supportPatch, supportSystem } from '../../shared/support.ts';
 
 const DAY = 86400000;
 // Write-only, credential-free endpoint also used by the embedded plugin WebView. No public report lookup/list API.
@@ -30,7 +30,7 @@ export async function submitSupport(env: Env, req: Request): Promise<Response> {
   if (!(await env.SUPPORT_LIMIT.limit({ key: `support:${key}` })).success) throw new HttpError(429, 'too many reports; try again later');
   const b = await body(req);
   if (b.website) throw new HttpError(400, 'invalid submission'); // honeypot, never stored
-  if (b.schema !== 1 || !['feedback', 'automatic'].includes(String(b.kind))) throw new HttpError(400, 'unsupported report');
+  if (b.schema !== 1 || !(SUPPORT_KINDS as readonly string[]).includes(String(b.kind))) throw new HttpError(400, 'unsupported report');
   const automatic = b.kind === 'automatic';
   if (automatic && b.consent !== true) throw new HttpError(400, 'automatic reporting requires consent');
   if (typeof b.message !== 'string' || !b.message.trim() || b.message.length > SUPPORT.messageChars) throw new HttpError(400, 'message must contain 1–5000 characters');
@@ -47,9 +47,10 @@ export async function submitSupport(env: Env, req: Request): Promise<Response> {
   const id = crypto.randomUUID();
   await env.SUPPORT_DB.batch([
     env.SUPPORT_DB.prepare(`INSERT INTO support_reports
-      (id, created, kind, message, email, version, build, surface, fingerprint, review_due, expires)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-      .bind(id, now, b.kind, message, automatic ? '' : email, b.version, b.build, ['web', 'plugin', 'standalone'].includes(String(system.surface)) ? system.surface : 'unknown', fingerprint, now + 7 * DAY, now + 365 * DAY),
+      (id, created, kind, topic, message, email, version, build, surface, fingerprint, review_due, expires)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      // FEEDBACK's SUGGESTION and BUG (CHG-0041) are feedback with a topic (the table's kinds stay as they were).
+      .bind(id, now, automatic ? 'automatic' : 'feedback', b.kind === 'suggestion' || b.kind === 'bug' ? b.kind : null, message, automatic ? '' : email, b.version, b.build, ['web', 'plugin', 'standalone'].includes(String(system.surface)) ? system.surface : 'unknown', fingerprint, now + 7 * DAY, now + 365 * DAY),
     env.SUPPORT_DB.prepare('INSERT INTO support_context (report_id, system_json, patch_json, diagnostics_json, expires) VALUES (?, ?, ?, ?, ?)')
       .bind(id, JSON.stringify(system), JSON.stringify(patch), JSON.stringify(diagnostics), now + 90 * DAY),
   ]);

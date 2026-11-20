@@ -70,6 +70,32 @@ export class EngineNode {
     this.stream = null;
     setAudioSession('playback');
   }
+  /**
+   * Someone else's patch on the website (CHG-0041, owner 2026-11-19): its sound goes through a safety limit before the
+   * speakers: a slow compressor that turns sustained loudness down, then a limiter for sudden peaks. After the engine,
+   * so the patch's own sound (and every golden hash) is untouched. Off: straight to the speakers again.
+   */
+  private guardNodes: AudioNode[] | null = null;
+  setGuard(on: boolean): void {
+    const ctx = this.node.context as AudioContext;
+    if (on === !!this.guardNodes) return;
+    if (on) {
+      const loud = ctx.createDynamicsCompressor();
+      loud.threshold.value = -24; loud.knee.value = 12; loud.ratio.value = 4; loud.attack.value = 0.25; loud.release.value = 1.5;
+      const limit = ctx.createDynamicsCompressor();
+      limit.threshold.value = -3; limit.knee.value = 0; limit.ratio.value = 20; limit.attack.value = 0.001; limit.release.value = 0.1;
+      this.node.disconnect(ctx.destination);
+      this.node.connect(loud); loud.connect(limit); limit.connect(ctx.destination);
+      this.guardNodes = [loud, limit];
+    } else {
+      const [loud, limit] = this.guardNodes!;
+      this.node.disconnect(loud); loud.disconnect(); limit.disconnect();
+      this.node.connect(ctx.destination);
+      this.guardNodes = null;
+    }
+  }
+  /** Tests: the safety limit is on. */
+  get guarded(): boolean { return !!this.guardNodes; }
   /** Tests: the microphone is open (asked for, or live). */
   get microphoneOpen(): boolean { return !!this.input; }
   /** v1 Recorder: capture the master output; `stop` resolves with what was recorded. */

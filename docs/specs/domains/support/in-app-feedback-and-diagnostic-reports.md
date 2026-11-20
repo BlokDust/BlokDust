@@ -13,16 +13,21 @@ Let users send feedback, questions and bugs from the web app or plugin without l
 private queue for staff review within a week; the dashboard, email integration and AI classification come later.
 
 ## Requirements
-- **R1.** The General panel MUST restore the CONNECT tab beside SETTINGS, ABOUT and (web) DOWNLOAD. Connect MUST
-  replace its obsolete guide/social contents with the support form, without a second modal or page takeover.
-  Use the existing canvas typography metrics, transparent DOM text layers with title-field rules, v1 OptionSwitch
-  and the filled coloured Connect GUIDE-button style. Start with “Suggest a feature, report a bug, or tell us if
-  something isn’t right.” Message and email inputs MUST use the same text size; email MUST be a compact single line.
-  Switch halves MUST be square with the same glyph clearance as a 60-unit OptionsPanel switch row, centred between
-  the email rule and SEND. Provide message, EMAIL (optional), an initially enabled
-  “Share patch and diagnostics” switch and SEND. Success MUST say only “Message sent”, in v1's message bar (owner, 2026-11-18:
-  not a line under the form); the API reference MUST NOT be displayed. The page slides in and out under the tabs with
-  CONNECT, as the other tabs' pages do. No attachment disclosure paragraph or automatic-reporting checkbox is shown.
+- **R1.** The General panel's second tab is FEEDBACK (CHG-0041, owner 2026-11-19: CONNECT read like connecting blocks
+  or an account), beside SETTINGS, ABOUT and (web) DOWNLOAD. It holds the support form, without a second modal or page
+  takeover. Use the existing canvas typography metrics, transparent DOM text layers with title-field rules, v1
+  OptionSwitch and the filled coloured GUIDE-button style. At the top a row of choices drawn as the gallery's sorts
+  (a word, underlined when chosen): SUGGESTION (first) · BUG · REPORT A PATCH, each with its line under the row.
+  SUGGESTION and BUG: message, EMAIL (optional), an initially enabled “Share patch and diagnostics” switch and SEND;
+  the report's kind is the choice (stored as `feedback` with that `topic`). REPORT A PATCH: the gallery patch on the
+  stage that isn't yours, by name and maker ("Report TITLE by @NAME.", with no examples of what to report: owner,
+  2026-11-19), a WHY (optional) field and REPORT, which reports it to the gallery (SPEC-SHARING-GALLERY R9); signed out,
+  SIGN IN; with no such patch, a line saying to open it first and no fields. Message and email inputs MUST use the
+  same text size; email MUST be a compact single line. Switch halves MUST be square with the same glyph clearance as
+  a 60-unit OptionsPanel switch row. Success MUST say only “Message sent” (a report: “Thank you. The patch was
+  reported.”), in v1's message bar (owner, 2026-11-18: not a line under the form); the API reference MUST NOT be
+  displayed. The page slides in and out under the tabs with FEEDBACK, as the other tabs' pages do. No attachment
+  disclosure paragraph or automatic-reporting checkbox is shown.
 - **R2.** Every report MUST include version/build and the message. When the inclusion switch is on, include the
   sanitised current patch (including unsaved changes), available system details and recent diagnostics. When off,
   both client and server MUST omit all three (`patch: null`, empty diagnostics/system). The switch MUST NOT enable
@@ -36,12 +41,12 @@ private queue for staff review within a week; the dashboard, email integration a
   samples. Diagnostic strings MUST be bounded and redact URLs, local paths, sample filenames, email addresses and
   recognised credential assignments. Logged objects MUST NOT be serialised. No general-purpose text redactor can
   guarantee removal of personal information in arbitrary free-form error messages; collection MUST stay narrow.
-- **R4.** The Connect form sends only on explicit submission. Existing automatic-reporting transport remains
+- **R4.** The FEEDBACK form sends only on explicit submission. Existing automatic-reporting transport remains
   disabled in this UI: the renamed attachment switch is not consent for automatic reports. Previously stored
   automatic-reporting preferences MUST NOT silently enable reporting without a separate visible consent control.
   The server retains compatibility with automatic reports from earlier clients only when explicit consent is sent.
 - **R5.** An offline manual send MUST show “You need to be connected to the internet to send this support query.”
-  Other delivery failures MUST show a retry message. The message MUST remain available in the Connect panel on failure.
+  Other delivery failures MUST show a retry message. The message MUST remain available in the FEEDBACK page on failure.
   Sending MUST time out after 15 seconds, disable duplicate clicks and permit manual retry. No persistent draft or
   queue is required. Automatic delivery failure MUST be silent and MUST NOT recursively generate more reports.
 - **R6.** `POST /api/support` MUST write only to a dedicated support database. A streamed request MUST be limited to
@@ -59,7 +64,7 @@ private queue for staff review within a week; the dashboard, email integration a
   and MUST be rendered as plain text by future consumers. Replies are manual through a support mailbox.
 
 ## Scenarios
-- **S1.** Open General → Connect, send a suggestion with an optional email; a private report and sanitised current patch are
+- **S1.** Open General → FEEDBACK, send a suggestion with an optional email; a private report and sanitised current patch are
   saved, “Message sent” appears, and shared patch storage remains unchanged (R1, R2, R6, R8).
 - **S2.** Disconnect and press Send; the message remains, reconnection does not send anything, and manual retry works
   (R5). A server failure also preserves the message.
@@ -73,7 +78,7 @@ SettingsPanel, OptionSwitch and the Connect GUIDE button supply the layout/style
 shim, without editing ported code. Feedback is a deliberate new v2 feature; the rest of the workspace stays unchanged.
 
 ## Verification
-`pnpm test:support`: real Worker + separate local D1, input/size/rate/privacy guards, General/Connect pointer actions,
+`pnpm test:support`: real Worker + separate local D1, input/size/rate/privacy guards, General/FEEDBACK pointer actions,
 offline and server failures, capture, attachment selection, mobile layout and real scheduled cleanup.
 `pnpm web:typecheck`, `pnpm server:typecheck`, `pnpm test:web`, `pnpm test:sharing`, `pnpm test:ui-regressions`,
 `pnpm bd ui diff`, `pnpm bd visual diff --full`, `pnpm bd plugin test`, `pnpm test:support:plugin`.

@@ -83,9 +83,9 @@ try {
   await page.waitForTimeout(450);
   const sliding = await page.evaluate(() => { const p = (window as any).__bd_probe.scene.SettingsPanel, m = document.querySelector<HTMLElement>('#feedback-panel');
     return { y: p.MenuItems[1].YOffset, h: p.DrawTo.Height, shown: !!m && !m.hidden }; });
-  check('Connect slides in with its tab (shown while its page is still arriving)', sliding.y < -1 && sliding.y > -sliding.h && sliding.shown, sliding);
+  check('FEEDBACK slides in with its tab (shown while its page is still arriving)', sliding.y < -1 && sliding.y > -sliding.h && sliding.shown, sliding);
   await page.waitForSelector('#feedback-message');
-  check('Connect shows the embedded support form', await page.getByRole('form', { name: 'Feedback & support' }).isVisible());
+  check('FEEDBACK shows the embedded support form', await page.getByRole('form', { name: 'Feedback', exact: true }).isVisible());
   check('context included by default', await page.getByRole('switch').getAttribute('aria-checked') === 'true');
   let submissions: any[] = [];
   await page.route('**/api/support', async route => {
@@ -116,9 +116,21 @@ try {
   await page.click('#feedback-send');
   await page.getByRole('status').filter({ hasText: 'Message sent' }).waitFor();
   check('context switch excludes patch, diagnostics and system from the request', submissions.length === 2 && submissions[1].includeContext === false && submissions[1].patch === null && submissions[1].diagnostics.length === 0 && Object.keys(submissions[1].system).length === 0);
+  // FEEDBACK (CHG-0041): SUGGESTION · BUG · REPORT A PATCH; a message goes with its choice as its kind.
+  const tabName = await page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.MenuItems[1]?.Name);
+  check('CHG-0041: the tab is FEEDBACK; SUGGESTION is chosen first and sent as a suggestion', /feedback/i.test(tabName ?? '') && submissions[0].kind === 'suggestion' && submissions[1].kind === 'suggestion', { tabName, kinds: submissions.map(x => x.kind) });
+  await page.getByRole('radio', { name: 'Bug' }).click();
+  await page.locator('#feedback-message').fill('Something broke');
+  await page.click('#feedback-send');
+  await page.getByRole('status').filter({ hasText: 'Message sent' }).waitFor();
+  await page.getByRole('radio', { name: 'Report a patch' }).click(); await page.waitForTimeout(300);
+  const reportView = await page.evaluate(() => ({ intro: document.getElementById('feedback-intro')!.textContent, send: getComputedStyle(document.getElementById('feedback-send')!).display, email: getComputedStyle(document.getElementById('feedback-email')!).display }));
+  check('CHG-0041: BUG is sent as a bug; REPORT A PATCH with no one else\'s patch open says what to do, no fields', submissions.length === 3 && submissions[2].kind === 'bug'
+    && /Open the patch you want to report/.test(reportView.intro ?? '') && reportView.send === 'none' && reportView.email === 'none', { kind: submissions[2]?.kind, reportView });
+  await page.getByRole('radio', { name: 'Suggestion' }).click();
   await page.evaluate(() => { console.error('Unexpected test error'); });
   await page.waitForTimeout(300);
-  check('attachment switch does not enable automatic reports', submissions.length === 2);
+  check('attachment switch does not enable automatic reports', submissions.length === 3);
   check('success copy contains no reference', await page.getByRole('status').textContent() === 'Message sent');
   await page.locator('#feedback-message').fill('z');
   await page.keyboard.press('q');

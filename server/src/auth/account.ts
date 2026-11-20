@@ -5,7 +5,7 @@ import { HttpError, json, sameDigest, sha256Hex } from '../http.ts';
 import { handleProblem } from '../moderation.ts';
 import { ID_RE } from '../patches.ts';
 import { withCookies } from './passkey.ts';
-import { currentUser, endSession, requireUser } from './session.ts';
+import { appKeyOf, currentUser, endSession, requireUser } from './session.ts';
 import { endKey } from './appKeys.ts';
 import { accountStats } from '../stats.ts';
 import { addActivity, beaconOn, parseBody, readActivity } from '../activity.ts';
@@ -25,16 +25,19 @@ export async function me(env: Env, req: Request, url?: URL): Promise<Response> {
   const u = await currentUser(env, req, { app: true });  // a signed-in plugin too (SHARING-0011)
   const google = !!env.GOOGLE_CLIENT_ID && !!env.GOOGLE_CLIENT_SECRET, apple = appleConfigured(env);
   if (!u) return json({ user: null, google, apple }, 200, { 'cache-control': 'no-store' });
-  const [pks, ids, stats] = await Promise.all([
+  // The website's ACCOUNT also lists the plugins signed in (SHARING-0011), in the same answer (R15: one request).
+  const wantApps = url?.searchParams.get('stats') === '1' && !appKeyOf(req);
+  const [pks, ids, stats, apps] = await Promise.all([
     env.DB.prepare('SELECT id, created, last_used FROM credentials WHERE user_id = ? ORDER BY created').bind(u.id).all<{ id: string; created: number; last_used: number | null }>(),
     env.DB.prepare('SELECT provider, created FROM identities WHERE user_id = ? ORDER BY created').bind(u.id).all<{ provider: string; created: number }>(),
     url?.searchParams.get('stats') === '1' ? accountStats(env, u.id, u.created) : undefined,
+    wantApps ? env.DB.prepare('SELECT id, name, created, last_used AS lastUsed FROM app_keys WHERE user_id = ? AND expires > ? ORDER BY last_used DESC').bind(u.id, Date.now()).all() : undefined,
   ]);
   // R7a: every way in, for SIGN-IN METHODS: Google, Apple, then the passkeys (oldest first).
   const order = (p: string) => (p === 'google' ? 0 : p === 'apple' ? 1 : 2);
   const methods = [...ids.results.sort((a, b) => order(a.provider) - order(b.provider)).map(r => ({ kind: r.provider, created: r.created })),
     ...pks.results.map(c => ({ kind: 'passkey', id: c.id, created: c.created, lastUsed: c.last_used }))];
-  return json({ user: { id: u.id, handle: u.handle, passkeys: pks.results.length, providers: ids.results.map(r => r.provider), methods, ...(stats ? { stats } : {}) }, google, apple },
+  return json({ user: { id: u.id, handle: u.handle, passkeys: pks.results.length, providers: ids.results.map(r => r.provider), methods, ...(stats ? { stats } : {}), ...(apps ? { apps: apps.results } : {}) }, google, apple },
     200, { 'cache-control': 'no-store' });
 }
 

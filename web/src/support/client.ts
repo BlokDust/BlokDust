@@ -21,7 +21,7 @@ export class SupportClient {
     this.enabled = value;
     try { localStorage.setItem(CONSENT_KEY, value ? 'yes' : 'no'); } catch { /* session-only in private modes */ }
   }
-  report(message: string, email: string, kind: 'feedback' | 'automatic' = 'feedback', includeContext = true): SupportReport {
+  report(message: string, email: string, kind: SupportReport['kind'] = 'feedback', includeContext = true): SupportReport {
     return { schema: 1, kind, message, email, version: __BD_VERSION__, build: __BD_BUILD__,
       includeContext, patch: includeContext ? supportPatch(this.context.patch()) : null, diagnostics: includeContext ? diagnostics.recent() : [],
       system: includeContext ? supportSystem({ surface: this.context.plugin ? 'plugin' : 'web', os: navigator.platform,

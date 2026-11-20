@@ -1004,7 +1004,7 @@ Object.assign(tests, {
       const proto = CanvasRenderingContext2D.prototype, original = { fillText: proto.fillText, fillRect: proto.fillRect, moveTo: proto.moveTo, lineTo: proto.lineTo };
       let drawing: any = null, from = [0, 0], rule = 0, intro = 0, message = 0;
       proto.fillText = function(text: string, x: number, y: number, ...rest: any[]) {
-        if (text.startsWith('Suggest a feature')) intro = y;
+        if (text.startsWith('Tell us')) intro = y;  // SUGGESTION's line (CHG-0041)
         if (text === 'YOUR MESSAGE') message = y;
         if (/PATCH AND DIAGNOSTICS$/.test(text)) drawing = { rule, intro, message };
         else if (drawing && text === '') { (window as any).__supportDrawing = drawing; drawing = null; }
@@ -1047,7 +1047,7 @@ Object.assign(tests, {
     const off = await toggle.getAttribute('aria-checked');
     const tabs = await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.MenuItems.map((m: any) => m.Name));
     await p.close();
-    return [visible && !copy?.includes('technical diagnostics') && on === 'true' && off === 'false' && style.border === '0px' && style.font.includes('Dosis') && tabs[1] === 'CONNECT', { visible, style, on, off, tabs }];
+    return [visible && !copy?.includes('technical diagnostics') && on === 'true' && off === 'false' && style.border === '0px' && style.font.includes('Dosis') && tabs[1] === 'FEEDBACK', { visible, style, on, off, tabs }];
   },
 
   /** Owner (2026-11-10): v1's Tour row is the patch Tempo (web), set once for every synced block: pressing where
@@ -1197,11 +1197,11 @@ Object.assign(tests, {
     const notice = await (await fetch(`${url}/NOTICE.txt`)).text(), licence = await (await fetch(`${url}/LICENSE.txt`)).text();
     const shipped = notice.includes('BlokDust v1') && notice.includes('MIT License') && licence.includes('GNU AFFERO GENERAL PUBLIC LICENSE');
     // (v1 still draws the Connect page, clipped away above the panel: its tab can't be opened, so it never shows.)
-    const r = await p.evaluate(() => { const t: string[] = (window as any).__texts, s = (window as any).__bd_probe.scene.SettingsPanel; return { chrome: t.includes('Chrome Recommended'), connect: t.includes('CONNECT'), connectAway: s.MenuItems[1].YOffset === -s.DrawTo.Height,
+    const r = await p.evaluate(() => { const t: string[] = (window as any).__texts, s = (window as any).__bd_probe.scene.SettingsPanel; return { chrome: t.includes('Chrome Recommended'), connect: t.includes('FEEDBACK'), connectAway: s.MenuItems[1].YOffset === -s.DrawTo.Height,
       about: t.some(x => /This rebuild was released in 2026/.test(x)), toneJs: t.some(x => /Tone\.js/.test(x)), source: t.includes('View the code on GitHub'), opened: (window as any).__opened }; });
     await p.close();
     // SIGN IN: CHG-0023 owner review 2026-11-15.
-    const ok = JSON.stringify(tabs.names) === JSON.stringify(['SETTINGS', 'CONNECT', 'ABOUT', 'DOWNLOAD', 'SIGN IN']) && aboutTab === 2 && !r.chrome && r.connect && r.connectAway && r.about && !r.toneJs
+    const ok = JSON.stringify(tabs.names) === JSON.stringify(['SETTINGS', 'FEEDBACK', 'ABOUT', 'DOWNLOAD', 'SIGN IN']) && aboutTab === 2 && !r.chrome && r.connect && r.connectAway && r.about && !r.toneJs
       && r.source && !idle.equals(hover) && shipped
       // SPEC-SHARING-USAGE-ANALYTICS R12 (owner, 2026-11-16): no Privacy link until production serves the page.
       && JSON.stringify(links.map(l => l.label)) === JSON.stringify(['View the code on GitHub'])
@@ -1314,7 +1314,7 @@ Object.assign(tests, {
     for (const b of buttons) { await p.mouse.move(b.x, b.y); await p.mouse.click(b.x, b.y); await p.waitForTimeout(200); }
     const opened = await p.evaluate(() => (window as any).__opened);
     await p.close();
-    const ok = JSON.stringify(names) === JSON.stringify(['SETTINGS', 'CONNECT', 'ABOUT', 'DOWNLOAD', 'SIGN IN']) && openTab === 3  // SIGN IN: CHG-0023; CONNECT: CHG-0036
+    const ok = JSON.stringify(names) === JSON.stringify(['SETTINGS', 'FEEDBACK', 'ABOUT', 'DOWNLOAD', 'SIGN IN']) && openTab === 3  // SIGN IN: CHG-0023; CONNECT: CHG-0036
       && before.includes('Coming soon.') && openedBefore === 0
       && before.includes('Download the standalone app or VST3/AU plugins to use in your DAW, or get the iPad app with its AUv3 plugin.')
       && before.includes('BlokDust can be used as both an instrument and an effect.')
@@ -1397,22 +1397,37 @@ Object.assign(tests, {
   },
 } as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
 
-// ---- Owner, 2026-11-19: REPORT THIS PATCH? then CANCEL emptied the stage ----
+// ---- CHG-0041 (owner, 2026-11-19): a patch from the FX plugin played the visitor's microphone, unpowered, loud ----
 Object.assign(tests, {
-  async 'report-cancel-keeps-blocks'(errors: string[]) {
-    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-    const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
-    await p.goto(`${url}/index.html?demo`); await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start'); await p.waitForTimeout(2500);
-    const before = await p.evaluate(() => (window as any).__bd_probe.state.blocks.length);
-    await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.askReport({ id: 'abcdefghij', title: 'Someone Else' }));
-    await p.waitForTimeout(1500);
-    const at = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.centreOf('reportCancel')) as [number, number] | null;
-    if (at) { await p.mouse.move(at[0], at[1]); await p.mouse.click(at[0], at[1]); }
-    await p.waitForTimeout(1500);
-    const after = await p.evaluate(() => (window as any).__bd_probe.state.blocks.length);
-    await p.screenshot({ path: `${OUT}/report-cancel.png` });
-    await ctx.close();
-    return [before > 0 && after === before, { before, after, at }];
+  /** On the website a patch's Audio In is a Microphone (it needs power). Someone else's patch (here a link) starts
+   * with the microphone off: the message bar asks, TURN ON opens it; its sound goes through the safety limit. */
+  async 'others-patch-mic-off-and-limited'(errors: string[]) {
+    const { encodePatch } = await import('../../web/src/patch/share.ts');
+    const code = await encodePatch({ format: 'blokdust.patch', version: 2, seed: 1,
+      blocks: [{ id: 'in', type: 'source.audio-in', x: 0, y: 0, params: {} }, { id: 'b2', type: 'fx.bit-crusher', x: -2, y: -3, params: {} }] } as any);
+    const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] });
+    try {
+      const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } });
+      const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
+      await p.addInitScript(() => {
+        const t: string[] = ((window as any).__texts = []), f = CanvasRenderingContext2D.prototype.fillText;
+        CanvasRenderingContext2D.prototype.fillText = function (x: string, ...a: any[]) { t.push(x); return (f as any).call(this, x, ...a); };
+      });
+      await p.goto(`${url}/index.html?c=${code}`); await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start');
+      await p.waitForFunction(() => (window as any).__bd_probe.state.started, null, { timeout: 20000 }); await p.waitForTimeout(2000);
+      const types = await p.evaluate(() => ((window as any).__bd_probe.state.patch.blocks as { type: string }[]).map(x => x.type));
+      const before = await p.evaluate(() => ({ mic: (window as any).__bd_probe.microphoneOpen, guarded: (window as any).__bd_probe.guarded, asked: ((window as any).__texts as string[]).some(t => /THIS PATCH USES YOUR MICROPHONE/i.test(t)) }));
+      await p.screenshot({ path: `${OUT}/others-patch-mic.png` });
+      await p.evaluate(() => (window as any).__bd_probe.scene.MessagePanel._Value.buttonEvent());  // TURN ON
+      await p.waitForFunction(() => (window as any).__bd_probe.microphoneOpen, null, { timeout: 10000 }).catch(() => {});
+      await p.waitForTimeout(800);
+      const on = await p.evaluate(() => (window as any).__bd_probe.microphoneOpen);
+      const unpowered = await maxOver(p, 'rms', 1500);
+      await ctx.close();
+      const ok = types.includes('source.microphone') && !types.includes('source.audio-in') && !before.mic && before.guarded.page && before.guarded.limit && before.asked
+        && on && unpowered < 1e-4;
+      return [ok, { types, before, on, unpowered }];
+    } finally { await b.close(); }
   },
 } as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
 

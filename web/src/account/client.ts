@@ -18,7 +18,8 @@ export interface AccountStats {
 }
 /** A way into the account (R7a): Google, Apple, or one passkey (by its credential id). */
 export interface SignInMethod { kind: 'google' | 'apple' | 'passkey'; id?: string; created: number; lastUsed?: number | null }
-export interface Account { id: string; handle: string | null; passkeys: number; providers: string[]; methods?: SignInMethod[]; stats?: AccountStats }
+export interface Account { id: string; handle: string | null; passkeys: number; providers: string[]; methods?: SignInMethod[]; stats?: AccountStats;
+  /** The plugins signed in (SHARING-0011), with the stats (the website's ACCOUNT). */ apps?: SignedInApp[] }
 export interface Me { user: Account | null; google: boolean; apple?: boolean }
 export interface AccountPatch { id: string; title: string; rev: number; created: number; updated: number }
 

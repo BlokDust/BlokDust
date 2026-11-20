@@ -108,7 +108,7 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                      let tries = 0;
                      const timer = setInterval(() => {
                        const status = document.getElementById('feedback-status').textContent;
-                       const success = status === 'Thank you';
+                       const success = status === 'Message sent';  // the form's status line (owner, 2026-11-18: no thanks line)
                        if (success || ++tries >= 120) {
                          clearInterval(timer);
                          window.__JUCE__.backend.emitEvent('bd_supportSmoke', { success, status, id: reportId });
