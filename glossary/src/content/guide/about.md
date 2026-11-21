@@ -30,4 +30,4 @@ BlokDust is a collaboration between Luke Twyman, Luke Phillips and Ed Silverton,
 
 The original project took some influence from the ‘Redstone’ circuits in Minecraft, and its visual style from early Lego and the music controller Reactable.
 
-BlokDust 2 is [open source](https://github.com/lukephills/blokdust-v2). The original release is [on GitHub](https://github.com/BlokDust/BlokDust) too.
+BlokDust 2 is [open source](https://github.com/BlokDust/BlokDust). The original release is [on GitHub](https://github.com/BlokDust/BlokDust/tree/v1-legacy) too.

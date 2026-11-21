@@ -1,7 +1,7 @@
 # Notices
 
 BlokDust 2 is licensed under the GNU Affero General Public License v3.0 or later (see `LICENSE`). Its source code:
-https://github.com/lukephills/blokdust-v2
+https://github.com/BlokDust/BlokDust
 
 ## Credits
 BlokDust is a collaboration between Luke Twyman, Luke Phillips and Ed Silverton, developed in Brighton, UK, and

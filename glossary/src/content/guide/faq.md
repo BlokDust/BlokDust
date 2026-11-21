@@ -31,11 +31,11 @@ You can make a patch, save a link and share it without signing in. Sign in to ke
 
 ## Is the source code available?
 
-Yes. You can find [BlokDust 2 on GitHub](https://github.com/lukephills/blokdust-v2). The audio and simulation engine is written in C++. In the browser, it runs as WebAssembly with a TypeScript interface.
+Yes. You can find [BlokDust 2 on GitHub](https://github.com/BlokDust/BlokDust). The audio and simulation engine is written in C++. In the browser, it runs as WebAssembly with a TypeScript interface.
 
 ## Can I contribute?
 
-Try publishing something in the gallery so others can pull it apart and learn from it. If you have a bug, an idea or a code contribution, you can use Feedback in Settings or visit the [GitHub project](https://github.com/lukephills/blokdust-v2).
+Try publishing something in the gallery so others can pull it apart and learn from it. If you have a bug, an idea or a code contribution, you can use Feedback in Settings or visit the [GitHub project](https://github.com/BlokDust/BlokDust).
 
 ## Can I use BlokDust as an offline app?
 

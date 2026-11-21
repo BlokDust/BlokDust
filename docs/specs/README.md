@@ -69,3 +69,4 @@
 | [CHG-0041](changes/0041-feedback-tab-reporting-patches-and-other-people-s/proposal.md) | Feedback tab, reporting patches, and other people's patches on the website | **done** | SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS, SPEC-SHARING-GALLERY |
 | [CHG-0042](changes/0042-owner-tweaks-keys-never-aim-synced-to-host-short/proposal.md) | Owner tweaks: keys never aim, SYNCED TO HOST, short menu, clean block edges | **proposed** | SPEC-CONNECTIONS-PROXIMITY, SPEC-VISUAL-V1-PARITY |
 | [CHG-0043](changes/0043-blokdust-glossary/proposal.md) | BlokDust glossary | **proposed** | SPEC-SHARING-BLOKDUST-GLOSSARY |
+| [CHG-0044](changes/0044-publish-blokdust-2-in-the-original-repository/proposal.md) | Publish BlokDust 2 in the original repository | **done** | SPEC-PROCESS-PRIVATE-OPERATIONAL-CONFIGURATION |

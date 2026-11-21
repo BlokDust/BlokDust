@@ -1206,7 +1206,7 @@ Object.assign(tests, {
       && r.source && !idle.equals(hover) && shipped
       // SPEC-SHARING-USAGE-ANALYTICS R12 (owner, 2026-11-16): no Privacy link until production serves the page.
       && JSON.stringify(links.map(l => l.label)) === JSON.stringify(['View the code on GitHub'])
-      && JSON.stringify(r.opened) === JSON.stringify(['https://github.com/lukephills/blokdust-v2']);
+      && JSON.stringify(r.opened) === JSON.stringify(['https://github.com/BlokDust/BlokDust']);
     return [ok, { tabs, aboutTab, ...r, links, shipped, hoverUnderlines: !idle.equals(hover) }];
   },
 

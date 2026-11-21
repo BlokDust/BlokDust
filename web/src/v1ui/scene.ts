@@ -778,7 +778,7 @@ export const PHILLIPS = { blurb: 'Luke Phillips - audio/musical interaction. V2 
 export const ABOUT = 'BlokDust is a collaboration between Luke Twyman, Luke Phillips and Ed Silverton, developed in Brighton, UK, '
   + 'and released in 2016. This rebuild was released in 2026, built by Luke Phillips, now available as a DAW plugin.';
 /** The code (owner: people can read it and send pull requests), where v1 had "Chrome Recommended". */
-export const SOURCE_LINK = { label: 'View the code on GitHub', url: 'https://github.com/lukephills/blokdust-v2' };
+export const SOURCE_LINK = { label: 'View the code on GitHub', url: 'https://github.com/BlokDust/BlokDust' };
 /** The published plugin installers (`pnpm bd release publish` writes it; null until the first release). */
 type Release = { file: string; url: string; sha256: string; bytes: number } | null;
 let RELEASE = RELEASES as { version: string | null; macos: Release; windows: Release };
