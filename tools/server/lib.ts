@@ -41,7 +41,9 @@ export interface LocalServer { url: string; stop(): Promise<void>; log(): string
 
 /**
  * Start the Worker locally. `vars` become an env file (mode 600, never in the repo): secrets such as
- * TURNSTILE_SECRET / FREESOUND_TOKEN and test overrides (TURNSTILE_VERIFY_URL, FREESOUND_API).
+ * TURNSTILE_SECRET / FREESOUND_TOKEN and test overrides (TURNSTILE_VERIFY_URL, FREESOUND_API). ADMIN_LOCAL=1 (the analytics
+ * dashboard without Access, SPEC-SHARING-USAGE-ANALYTICS R10) is set here and nowhere in wrangler.jsonc, so it only
+ * ever reaches a local Worker; a test passes ADMIN_LOCAL: '0' to check the locked dashboard.
  */
 export async function startLocal(opts: { name: string; vars: Record<string, string>; port?: number; fresh?: boolean; env?: string }): Promise<LocalServer> {
   if (!existsSync('web/dist/index.html')) throw new Error('web/dist missing: run `pnpm web:build`');
@@ -49,7 +51,7 @@ export async function startLocal(opts: { name: string; vars: Record<string, stri
   if (opts.fresh !== false) rmSync(state, { recursive: true, force: true });
   mkdirSync(state, { recursive: true });
   const envFile = join(state, 'dev.env');
-  writeFileSync(envFile, Object.entries(opts.vars).map(([k, v]) => `${k}=${JSON.stringify(v)}`).join('\n') + '\n');
+  writeFileSync(envFile, Object.entries({ ADMIN_LOCAL: '1', ...opts.vars }).map(([k, v]) => `${k}=${JSON.stringify(v)}`).join('\n') + '\n');
   chmodSync(envFile, 0o600);
   const envArgs = opts.env ? ['--env', opts.env] : [];
   if (opts.env) buildSite();

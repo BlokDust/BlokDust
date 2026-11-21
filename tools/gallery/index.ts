@@ -38,7 +38,8 @@ async function sql<T>(command: string): Promise<T[]> {
   const r = await run([WRANGLER, 'd1', 'execute', ...target(), '--json', ...(command.length > 4000 ? ['--file', file] : ['--command', command])], { quiet: true });
   if (r.code) throw new Error(`d1 execute failed:\n${r.out}`);
   let j: { results?: T[] }[] = [];
-  try { j = JSON.parse(r.out.slice(r.out.indexOf('['))); } catch { /* a --file import answers without rows */ }
+  // The JSON starts on a line of its own: wrangler's warnings before it hold brackets too ("[WARNING]").
+  try { j = JSON.parse(r.out.slice(r.out.search(/^\[/m))); } catch { /* a --file import answers without rows */ }
   // Several statements: the last one's rows (the SELECT comes last).
   return j.map(x => x.results ?? []).filter(x => x.length).pop() ?? [];
 }

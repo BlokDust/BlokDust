@@ -36,10 +36,11 @@
     "BASE_PATH": "",
     // Cloudflare's always-passes invisible test key (local only).
     "TURNSTILE_SITE_KEY": "1x00000000000000000000BB",
-    // Usage analytics (SHARING-0010 R5): every local session sends events; the dashboard needs no Access locally.
+    // Usage analytics (SHARING-0010 R5): every local session sends events. The dashboard's local no-Access switch
+    // (ADMIN_LOCAL) is not here: only the local Worker's env file sets it (tools/server/lib.ts startLocal), so no
+    // deployed config can carry it.
     "ANALYTICS_RATE": "1",
-    "ANALYTICS_DATASET": "blokdust_events_dev",
-    "ADMIN_LOCAL": "1"
+    "ANALYTICS_DATASET": "blokdust_events_dev"
   },
   "observability": { "enabled": true },
   "env": {
@@ -65,7 +66,7 @@
         { "binding": "DB", "database_name": "blokdust-dev", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" },
         { "binding": "SUPPORT_DB", "database_name": "blokdust-support-dev", "database_id": "00000000-0000-0000-0000-000000000001", "migrations_dir": "support-migrations" }
       ],
-      "vars": { "PUBLIC_BASE_URL": "", "BASE_PATH": "/blokdust", "ASSET_BASE": "/blokdust", "TURNSTILE_SITE_KEY": "1x00000000000000000000BB", "ANALYTICS_RATE": "1", "ANALYTICS_DATASET": "blokdust_events_dev", "ADMIN_LOCAL": "1" }
+      "vars": { "PUBLIC_BASE_URL": "", "BASE_PATH": "/blokdust", "ASSET_BASE": "/blokdust", "TURNSTILE_SITE_KEY": "1x00000000000000000000BB", "ANALYTICS_RATE": "1", "ANALYTICS_DATASET": "blokdust_events_dev" }
     },
     "staging": {
       "triggers": { "crons": ["17 3 * * *"] },
