@@ -11,16 +11,13 @@
 //                              from another machine must find its sample there by name and render like native (task 6).
 //                              BlokDust FX, the app's second extension, renders its fixture with input ≡ golden (task 9).
 //   --no-build                 test the existing build
-//   pnpm bd plugin ios device   (task 10) build for an iPad with automatic signing (team BLOKDUST_APPLE_TEAM_ID; Xcode
-//                              creates the app IDs, the App Group and profiles: needs an Apple account in Xcode →
-//                              Settings → Accounts), then install on the connected iPad (BLOKDUST_IOS_DEVICE: a name or
-//                              identifier, else the first paired iPad).
+//   pnpm bd plugin ios device|log   the real iPad: tools/plugin/ios-device.ts
 // The Simulator is picked by name: BLOKDUST_IOS_SIMULATOR (local config) or the first available "iPad Pro 11-inch".
-import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { configEnvironment, requiredSetting, setting } from '../lib/local-config.ts';
-import { webBuildFor } from './web.ts';
+import { setting } from '../lib/local-config.ts';
+import { APP_ID, OUT, must, run } from './ios-shared.ts';
+export { iosDevice, iosLog } from './ios-device.ts';
 
 const ART = 'build/plugin-ios-sim/plugin/BlokDust_artefacts/Release';
 const APP = `${ART}/Standalone/BlokDust.app`;
@@ -35,16 +32,24 @@ const FIXTURES = ['tests/golden/emitter-tone.json', 'tests/golden/toggle-pulse.j
 // Task 6: a patch from another machine (its sample's path does not exist here) whose file is in the shared Samples
 // folder: the extension relinks it by name and must render like the native engine with the same WAV.
 const SAMPLE_FIXTURE = 'tests/golden/samples/sample-file.json';
-const OUT = '.cache/ios-host';
 const SMALL_VIEW = [480, 320];  // an AUM-sized plugin window (task 8): screenshot only, for review
-const APP_ID = 'com.funputs.blokdust';
 const APP_GROUP = 'group.com.funputs.blokdust';  // plugin/CMakeLists.txt BLOKDUST_APP_GROUP
 const SHARED = /storage: app group, 1 patches/;
+// Usage stats (SPEC-SHARING-USAGE-ANALYTICS R8): one switch and one install id per iPad, in the App Group. The test turns
+// the switch off there; the app and the extension must both read it.
+const STATS_OFF = /usage stats: app group, off/;
+const STATS_FILE = 'usage-stats.settings';
+// …and a page coming back into focus asks once for a change made elsewhere (owner, iPad: switched off in GarageBand,
+// the app, still running, said on).
+const STATS_ASKED = /values: usageStats=1/;
+/** The instrument extension's own log lines: the app's process has the same name (BlokDust), so pick it by its pid. */
+const extensionLines = (log: string) => {
+  const pids = new Set([...log.matchAll(/BlokDust\[(\d+):[^\]]*\].*instrument: processor created \(AUv3/g)].map(m => m[1]));
+  return log.split('\n').filter(l => [...pids].some(p => l.includes(`BlokDust[${p}:`))).join('\n');
+};
+const statsFile = (on: boolean) => `<?xml version="1.0" encoding="UTF-8"?>\n\n<PROPERTIES>\n  <VALUE name="usageStats" val="${on ? 1 : 0}"/>\n</PROPERTIES>\n`;
 const FIRST_PATCH = 'web/src/patch/presets/04-rotating-sequencer.blokdust';  // the app's first launch (PluginProcessor.cpp)
 
-const run = (cmd: string, args: string[], quiet = false) =>
-  spawnSync(cmd, args, { encoding: 'utf8', stdio: quiet ? 'pipe' : ['ignore', 'inherit', 'inherit'], maxBuffer: 64 << 20 });
-const must = (r: ReturnType<typeof run>, what: string) => { if (r.status !== 0) throw new Error(`${what} failed${r.stderr ? `: ${r.stderr.slice(-2000)}` : ''}`); return r; };
 const sleep = (ms: number) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 
 export function iosBuild(): void {
@@ -111,10 +116,15 @@ function sampleRelinkFixture(group: string): { fixture: string; expected: string
 }
 
 /** The app on its own (CHG-0025 task 4): output-only audio, the first-launch patch, saved and restored. */
-function appCheck(udid: string) {
+function appCheck(udid: string, group: string) {
   const plist = JSON.parse(must(run('plutil', ['-convert', 'json', '-o', '-', `${APP}/Info.plist`], true), 'read Info.plist').stdout);
   const appexPlist = JSON.parse(must(run('plutil', ['-convert', 'json', '-o', '-', `${APPEX}/Info.plist`], true), 'read appex Info.plist').stdout);
   const noMicrophone = !('NSMicrophoneUsageDescription' in plist) && !('NSMicrophoneUsageDescription' in appexPlist);
+  // The privacy manifest (CHG-0025 task 12c) in the app and both extensions, a valid plist that declares no tracking.
+  const privacyManifest = [APP, APPEX, FX_APPEX].every(b => {
+    const r = run('plutil', ['-convert', 'json', '-o', '-', `${b}/PrivacyInfo.xcprivacy`], true);
+    try { return r.status === 0 && JSON.parse(r.stdout).NSPrivacyTracking === false; } catch { return false; }
+  });
   const firstBlocks = JSON.parse(readFileSync(FIRST_PATCH, 'utf8')).blocks.length;
 
   const t1 = new Date(Date.now() - 1000);
@@ -130,6 +140,16 @@ function appCheck(udid: string) {
   const t2 = new Date(Date.now() - 1000);
   run('xcrun', ['simctl', 'launch', udid, 'com.apple.Preferences'], true);
   const saved = /container: patch saved/.test(waitForLog(udid, t2, [/container: patch saved/], 20));
+  // Meanwhile another BlokDust switches usage stats on; the same app process, back in front, asks exactly once.
+  writeFileSync(resolve(group, STATS_FILE), statsFile(true));
+  const t4 = new Date();
+  run('xcrun', ['simctl', 'launch', udid, APP_ID], true);
+  sleep(1000);
+  const back = waitForLog(udid, t4, [STATS_ASKED], 20);
+  sleep(2000);
+  const again = appLog(udid, t4);
+  const usageStatsFollows = again.split('values: usageStats=1').length === 2 && !/processor created/.test(back);
+  writeFileSync(resolve(group, STATS_FILE), statsFile(false));
   run('xcrun', ['simctl', 'terminate', udid, 'com.apple.Preferences'], true);
   run('xcrun', ['simctl', 'terminate', udid, APP_ID], true);
   const t3 = new Date(Date.now() - 1000);
@@ -140,9 +160,10 @@ function appCheck(udid: string) {
   run('xcrun', ['simctl', 'terminate', udid, APP_ID], true);
 
   const sharedFolder = SHARED.test(log1);
-  const ok = sharedFolder && noMicrophone && session?.[1] === 'AVAudioSessionCategoryPlayback' && peak > 0 && ready === firstBlocks && saved && restored
+  const usageStatsShared = STATS_OFF.test(log1);
+  const ok = sharedFolder && usageStatsShared && usageStatsFollows && privacyManifest && noMicrophone && session?.[1] === 'AVAudioSessionCategoryPlayback' && peak > 0 && ready === firstBlocks && saved && restored
     && readyAgain === firstBlocks;
-  return { ok, sharedFolder, noMicrophone, session: session?.[1] ?? null, sampleRate: Number(session?.[2] ?? 0), frames: Number(session?.[3] ?? 0), peak,
+  return { ok, sharedFolder, usageStatsShared, usageStatsFollows, privacyManifest, noMicrophone, session: session?.[1] ?? null, sampleRate: Number(session?.[2] ?? 0), frames: Number(session?.[3] ?? 0), peak,
     ready, expectedBlocks: firstBlocks, saved, restored, readyAfterRelaunch: readyAgain, screenshot: shot };
 }
 
@@ -162,7 +183,8 @@ export function iosTest(noBuild: boolean): void {
   mkdirSync(resolve(group, 'BlokDust/Patches'), { recursive: true });
   cpSync(FIRST_PATCH, resolve(group, 'BlokDust/Patches/Shared Test.blokdust'));
   const sampleCase = sampleRelinkFixture(group);
-  const app = appCheck(sim.udid);
+  writeFileSync(resolve(group, STATS_FILE), statsFile(false));
+  const app = appCheck(sim.udid, group);
 
   const out = resolve(OUT, 'result.json');
   rmSync(out, { force: true });
@@ -205,83 +227,12 @@ export function iosTest(noBuild: boolean): void {
   const sample = { fixture: SAMPLE_FIXTURE, audioHash: s?.audioHash ?? null, expected: sampleCase.expected, identical: s?.audioHash === sampleCase.expected,
     relinked: /sample: relinked from Samples/.test(log), error: s?.error };
   const lastBlocks = JSON.parse(readFileSync(SAMPLE_FIXTURE, 'utf8')).patch.blocks.length;  // the editor shows the last state set
-  const editor = { sharedFolder: extensionSharedFolder, view: !!result.view, ready: ready.at(-1) ?? null, expectedBlocks: lastBlocks, screenshot: shot,
+  const editor = { sharedFolder: extensionSharedFolder, usageStatsShared: STATS_OFF.test(extensionLines(log)), view: !!result.view, ready: ready.at(-1) ?? null, expectedBlocks: lastBlocks, screenshot: shot,
     smallScreenshot: existsSync(small) ? small : null };
   const ok = app.ok && !result.error && wrapper === 'AUv3' && renders.length === FIXTURES.length && renders.every(r => r.identical && r.stateRoundTrips) && sample.identical
     && result.fxName === 'BlokDust FX' && fxRenders.length === FX_FIXTURES.length && fxRenders.every(r => r.identical && r.stateRoundTrips) && sample.relinked
-    && editor.sharedFolder && editor.view && editor.ready === lastBlocks;
+    && editor.sharedFolder && editor.usageStatsShared && editor.view && editor.ready === lastBlocks;
   console.log(JSON.stringify({ ok, simulator: sim.name, component: COMPONENT, name: result.name, wrapper, params: result.params?.length ?? 0,
     error: result.error, app, renders, sample, fx: { name: result.fxName ?? null, renders: fxRenders }, editor }));
   if (!ok) process.exit(1);
-}
-
-const DEVICE_APP = 'build/plugin-ios/plugin/BlokDust_artefacts/Release/Standalone/BlokDust.app';
-
-type Ipad = { identifier: string; deviceProperties: { name: string };
-  hardwareProperties: { deviceType?: string; productType?: string; udid?: string }; connectionProperties: { pairingState?: string } };
-
-/** The paired iPad: BLOKDUST_IOS_DEVICE (name or identifier), or the first one. */
-function findIpad(): Ipad {
-  const tmp = resolve(OUT, 'devices.json');
-  mkdirSync(OUT, { recursive: true });
-  must(run('xcrun', ['devicectl', 'list', 'devices', '--json-output', tmp], true), 'devicectl list');
-  const devices = (JSON.parse(readFileSync(tmp, 'utf8')).result.devices as Ipad[]).filter(d => d.connectionProperties.pairingState === 'paired');
-  const want = setting('BLOKDUST_IOS_DEVICE');
-  const ipad = want ? devices.find(d => d.identifier === want || d.deviceProperties.name === want)
-    : devices.find(d => d.hardwareProperties.deviceType === 'iPad' || /^iPad/.test(d.hardwareProperties.productType ?? ''));
-  if (!ipad) throw new Error('no paired iPad: connect it (USB or the same network), trust this Mac, and enable Developer Mode on it');
-  return ipad;
-}
-
-/** The plugin's log from the iPad, to stdout as JSON lines. The app and its extensions write it to the App Group
- * (WebViewDrops.mm), which devicectl cannot read; the app copies it into its own container each time it opens. */
-export function iosLog(): void {
-  const ipad = findIpad();
-  const dest = resolve(OUT, 'ipad-log');
-  mkdirSync(dest, { recursive: true });
-  const lines: string[] = [];
-  for (const name of ['blokdust.old.log', 'blokdust.log']) {
-    const out = resolve(dest, name);
-    rmSync(out, { force: true });
-    run('xcrun', ['devicectl', 'device', 'copy', 'from', '--device', ipad.identifier, '--domain-type', 'appDataContainer',
-      '--domain-identifier', APP_ID, '--source', `Library/Logs/${name}`, '--destination', out], true);
-    if (existsSync(out)) lines.push(...readFileSync(out, 'utf8').split('\n').filter(Boolean));
-  }
-  if (!lines.length) throw new Error('no log yet: open the BlokDust app on the iPad (it copies the plugin\'s log where this can read it)');
-  console.log(JSON.stringify({ ok: true, device: ipad.deviceProperties.name, lines: lines.slice(-300) }));
-}
-
-/** Build for an iPad (signed by Xcode for the team in local config) and install it on the connected iPad. */
-export function iosDevice(noBuild: boolean): void {
-  if (process.platform !== 'darwin') throw new Error('the iPadOS build needs macOS with Xcode');
-  // Find the iPad first: Xcode adds a device to the team's profile only when it builds for that device.
-  const ipad = findIpad();
-  if (!noBuild) {
-    requiredSetting('BLOKDUST_APPLE_TEAM_ID');
-    const env = configEnvironment();
-    webBuildFor('staging');  // the owner reviews against staging (CHG-0039)
-    // The sites whose passkeys the app may use (SHARING-0011): the live site and the review site (local config).
-    env.BLOKDUST_WEBCREDENTIALS = ['BLOKDUST_PRODUCTION_PUBLIC_URL', 'BLOKDUST_STAGING_PUBLIC_URL']
-      .map(k => setting(k)).filter(Boolean).map(u => new URL(u).hostname).join(';');
-    // Once the App ID has Sign in with Apple and Associated Domains (the developer portal, or Xcode signed in to the
-    // team): BLOKDUST_IOS_NATIVE_SIGN_IN=1 in local config builds them in.
-    env.BLOKDUST_IOS_NATIVE_SIGN_IN = setting('BLOKDUST_IOS_NATIVE_SIGN_IN', '0');
-    must(spawnSync('cmake', ['--preset', 'plugin-ios'], { stdio: ['ignore', 'inherit', 'inherit'], env }), 'configure (plugin-ios)');
-    // xcodebuild with the CMake-generated scheme and this iPad as the destination, so automatic signing registers the iPad
-    // in the team's profile (a plain target build signs for whatever devices the profile already lists).
-    const destination = ipad.hardwareProperties.udid ? `id=${ipad.hardwareProperties.udid}` : 'generic/platform=iOS';
-    const b = spawnSync('xcodebuild', ['-project', 'build/plugin-ios/blokdust.xcodeproj', '-scheme', 'BlokDust_Standalone', '-configuration', 'Release',
-      '-destination', destination, '-quiet', '-allowProvisioningUpdates', '-allowProvisioningDeviceRegistration', 'build'],
-      { encoding: 'utf8', env, maxBuffer: 64 << 20 });
-    if (b.status !== 0) {
-      const out = `${b.stdout}\n${b.stderr}`;
-      const errors = [...new Set(out.split('\n').filter(l => /error:|BUILD FAILED/.test(l)))].slice(0, 20).join('\n');
-      const account = /No Accounts|No Account for Team|No profiles for|App Groups capability|requires a provisioning profile|Signing for .* requires a development team/.test(out)
-        ? '\nXcode could not sign: add the Apple account of the team in Xcode → Settings → Accounts, then run this again.' : '';
-      throw new Error(`iPadOS device build failed:\n${errors}${account}`);
-    }
-  }
-  if (!existsSync(DEVICE_APP)) throw new Error(`missing ${DEVICE_APP}: run pnpm bd plugin ios device`);
-  must(run('xcrun', ['devicectl', 'device', 'install', 'app', '--device', ipad.identifier, DEVICE_APP]), 'install on the iPad');
-  console.log(JSON.stringify({ ok: true, installed: DEVICE_APP, device: ipad.deviceProperties.name }));
 }

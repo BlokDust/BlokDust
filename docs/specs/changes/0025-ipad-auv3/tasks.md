@@ -81,3 +81,15 @@ Check items off as they land. Each task should be independently verifiable.
 - [ ] 11. Owner review in AUM, GarageBand, Logic for iPad, Cubasis.
 - [x] 12a. Licensing: JUCE 8 Starter for the App Store build (LICENSING-0003); bundle IDs under `com.funputs`; iPad only.
 - [ ] 12b. App Store Connect / TestFlight setup (owner).
+- [x] 12c. Privacy: one usage-stats switch and install id per iPad (App Group; SPEC-SHARING-USAGE-ANALYTICS R8, test
+      in `bd plugin ios test`), the ping to the page's server, `PrivacyInfo.xcprivacy` in the app and both extensions;
+      then on the iPad: one ping a day on staging, none after switching off in the app or in a host.
+      2026-11-20: built: `usage-stats.settings` + a lock file in the App Group, the ping sent from the page's bd_ready
+      to its `events` URL (none from the Simulator), the manifest in all three bundles; `bd plugin ios test` checks
+      both (written failing first). Installed on the owner's iPad (review build → staging).
+      Owner's iPad check: one ping a day across the app and GarageBand (staging: one `auv3` event). Switching off in
+      GarageBand left the app, still running, showing on: the page now reads plugin values by name (bd_get → bd_values,
+      web/src/app/pluginValues.ts) at start and once per focus return (onFocusReturn, web/src/app/focus.ts; owner: no
+      polling, and a general mechanism for later values such as the newest version); SPEC R7; `bd plugin ios test`
+      flips the file while the app is in the background.
+      Owner's second iPad check passed (2026-11-20). GarageBand shows as host "Unknown" (an AUv3 can't see its host).

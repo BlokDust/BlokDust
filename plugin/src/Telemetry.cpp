@@ -1,11 +1,16 @@
 #include "Telemetry.h"
 
+#include "PatchFiles.h"    // the App Group on iPad
 #include "WebViewDrops.h"  // systemLog
 
 #include <atomic>
 
 #if JUCE_MAC || JUCE_IOS
 #include <CoreFoundation/CoreFoundation.h>
+#include <TargetConditionals.h>
+#include <fcntl.h>
+#include <sys/file.h>
+#include <unistd.h>
 #elif JUCE_WINDOWS
 #include <windows.h>
 #if JUCE_MSVC
@@ -19,6 +24,15 @@ namespace {
 // The public site, which the plugin's page already uses for Freesound search (web/src/patch/samples.ts PUBLIC_SITE).
 constexpr const char* kEventsUrl = "https://blokdust.funputs.com/api/events";
 
+/** On iPad (CHG-0025): the App Group the app and both extensions share, so one switch and one install id cover the
+ *  iPad; each would otherwise keep its own. Empty elsewhere, or when the group is missing (unsigned builds). */
+juce::File sharedDir() {
+#if JUCE_IOS
+  if (juce::String(patchfiles::rootKind()) == "app group") return patchfiles::root().getParentDirectory();
+#endif
+  return {};
+}
+
 std::unique_ptr<juce::PropertiesFile> settings() {
   juce::PropertiesFile::Options o;
   o.applicationName = "BlokDust";
@@ -27,13 +41,50 @@ std::unique_ptr<juce::PropertiesFile> settings() {
   o.osxLibrarySubFolder = "Application Support";
   o.commonToAllUsers = false;
   o.processLock = nullptr;
+  if (const auto dir = sharedDir(); dir != juce::File{}) return std::make_unique<juce::PropertiesFile>(dir.getChildFile("usage-stats.settings"), o);
   return std::make_unique<juce::PropertiesFile>(o);
 }
 
-/** One settings file is shared by every BlokDust in every DAW: guard read-modify-write across processes. */
-juce::InterProcessLock& settingsLock() {
-  static juce::InterProcessLock lock("BlokDustSettings");
-  return lock;
+const char* storeKind() { return sharedDir() != juce::File{} ? "app group" : "settings file"; }
+
+/** One settings file is shared by every BlokDust in every DAW (on iPad: the app and its extensions): guard
+ *  read-modify-write across processes. JUCE's InterProcessLock keeps its lock file inside each sandbox's own container
+ *  on iPad, so there the lock is a file in the App Group. */
+class SettingsLock {
+ public:
+  SettingsLock() {
+#if JUCE_IOS
+    if (const auto dir = sharedDir(); dir != juce::File{}) {
+      fd_ = ::open(dir.getChildFile("usage-stats.lock").getFullPathName().toRawUTF8(), O_RDWR | O_CREAT, 0600);
+      if (fd_ >= 0) ::flock(fd_, LOCK_EX);
+      return;
+    }
+#endif
+    lock_ = std::make_unique<juce::InterProcessLock::ScopedLockType>(processLock());
+  }
+  ~SettingsLock() {
+#if JUCE_IOS
+    if (fd_ >= 0) { ::flock(fd_, LOCK_UN); ::close(fd_); }
+#endif
+  }
+  SettingsLock(const SettingsLock&) = delete;
+  SettingsLock& operator=(const SettingsLock&) = delete;
+
+ private:
+  static juce::InterProcessLock& processLock() {
+    static juce::InterProcessLock lock("BlokDustSettings");
+    return lock;
+  }
+  std::unique_ptr<juce::InterProcessLock::ScopedLockType> lock_;
+  [[maybe_unused]] int fd_ = -1;
+};
+
+/** Where the ping goes: BLOKDUST_EVENTS_URL (local Worker tests), else the server the page itself uses (review builds:
+ *  staging; installers: the live site; tools/plugin/web.ts), else the live site. */
+juce::String eventsUrl(const juce::String& fromPage) {
+  if (const auto env = juce::SystemStats::getEnvironmentVariable("BLOKDUST_EVENTS_URL", {}); env.isNotEmpty()) return env;
+  if (fromPage.startsWith("https://") && fromPage.endsWith("/api/events") && !fromPage.containsAnyOf("?#@ ")) return fromPage;
+  return kEventsUrl;
 }
 
 juce::String today() { return juce::Time::getCurrentTime().formatted("%Y-%m-%d"); }  // local date
@@ -59,12 +110,12 @@ std::atomic<bool> busy{false};
 }  // namespace
 
 bool enabled() {
-  juce::InterProcessLock::ScopedLockType l(settingsLock());
+  SettingsLock l;
   return settings()->getBoolValue("usageStats", true);
 }
 
 void setEnabled(bool on) {
-  juce::InterProcessLock::ScopedLockType l(settingsLock());
+  SettingsLock l;
   auto s = settings();
   s->setValue("usageStats", on);
   // Off: forget the install id too; a new one is made if it's turned back on.
@@ -138,20 +189,27 @@ juce::String pingBody(juce::AudioProcessor::WrapperType format, bool fx, const j
   return juce::JSON::toString(juce::var(body), true);
 }
 
-void dailyPing(juce::ThreadPool& pool, juce::AudioProcessor::WrapperType format, bool fx) {
-  if (juce::SystemStats::getEnvironmentVariable("BLOKDUST_NO_TELEMETRY", {}) == "1") return;
+void dailyPing(juce::ThreadPool& pool, juce::AudioProcessor::WrapperType format, bool fx, const juce::String& pageEventsUrl) {
   if (surfaceOf(format).isEmpty()) return;
   if (busy.exchange(true)) return;  // another BlokDust in this process is already sending today's
   juce::String installId, body;
   {
-    juce::InterProcessLock::ScopedLockType l(settingsLock());
+    SettingsLock l;
     auto s = settings();
-    if (!s->getBoolValue("usageStats", true) || s->getValue("lastPing") == today()) { busy = false; return; }
+    const bool on = s->getBoolValue("usageStats", true);
+    systemLog(juce::String("usage stats: ") + storeKind() + ", " + (on ? "on" : "off"));
+    // Never from tests: validators and test hosts (BLOKDUST_NO_TELEMETRY), and the iPad Simulator, whose extensions
+    // never see environment variables.
+    bool test = juce::SystemStats::getEnvironmentVariable("BLOKDUST_NO_TELEMETRY", {}) == "1";
+#if TARGET_OS_SIMULATOR
+    test = true;
+#endif
+    if (test || !on || s->getValue("lastPing") == today()) { busy = false; return; }
     installId = s->getValue("installId");
     if (installId.isEmpty()) { installId = juce::Uuid().toDashedString(); s->setValue("installId", installId); s->saveIfNeeded(); }
   }
   body = pingBody(format, fx, installId);
-  const auto url = juce::SystemStats::getEnvironmentVariable("BLOKDUST_EVENTS_URL", kEventsUrl);
+  const auto url = eventsUrl(pageEventsUrl);
   pool.addJob([body, url] {
     int status = 0;
     auto in = juce::URL(url).withPOSTData(body).createInputStream(
@@ -162,7 +220,7 @@ void dailyPing(juce::ThreadPool& pool, juce::AudioProcessor::WrapperType format,
             .withStatusCode(&status));
     // The reply is ignored beyond its status: the server can't make the plugin do anything (security review).
     if (in != nullptr && status >= 200 && status < 300) {
-      juce::InterProcessLock::ScopedLockType l(settingsLock());
+      SettingsLock l;
       auto s = settings();
       s->setValue("lastPing", today());
       s->saveIfNeeded();

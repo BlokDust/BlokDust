@@ -1,6 +1,7 @@
 #pragma once
 // Plugin editor: the same web stage app (ARCHITECTURE-0003) in JUCE 8's WebView, bridged with JUCE events:
-//   JS → native: bd_hello (send me the patch), bd_commands ({commands:[...]}), bd_ready ({blocks})
+//   JS → native: bd_hello (send me the patch), bd_commands ({commands:[...]}), bd_ready ({blocks}),
+//                bd_get ({keys}: values the plugin keeps, such as usageStats) → native → JS: bd_values ({name: value})
 //   native → JS: bd_patch ({patch: "<json>"}), bd_snapshot ({particles, connections, powered}),
 //                bd_sampleInfo ({id, track, duration, preview, params, ref, missing, loading})
 //   JS → native (samples, CHG-0004): bd_pickFile ({id}), bd_loadUrl ({id, ref, display, maxSeconds}), bd_samplesHello
@@ -20,6 +21,7 @@ class BlokDustEditor : public juce::AudioProcessorEditor, public juce::FileDragA
   void sendSampleInfo(const nlohmann::json& s);
   /// A patch file's text to the page (bd_patchFile), for Open / Insert. `req` < 0: not a reply (a dialog or a drop).
   void sendAccount();
+  void sendValues(const juce::var& keys);
   void sendPatchFile(const juce::File& f, const juce::String& mode, int req, int stage = 0);
   void sendPatchText(const juce::String& text, const juce::String& name, const juce::String& file, const juce::String& mode, int req, int stage = 0);
   // Audio files dropped from Finder/Explorer or the DAW (CHG-0004 3.7): the page says which block is under the drop

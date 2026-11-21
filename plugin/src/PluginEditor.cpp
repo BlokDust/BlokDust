@@ -6,37 +6,7 @@
 #include "PatchFiles.h"
 #include "Telemetry.h"
 
-#include <BinaryData.h>
-
 namespace blokdust::plugin {
-
-namespace {
-juce::String mimeFor(const juce::String& name) {
-  if (name.endsWithIgnoreCase(".html")) return "text/html";
-  if (name.endsWithIgnoreCase(".js")) return "text/javascript";
-  if (name.endsWithIgnoreCase(".css")) return "text/css";
-  if (name.endsWithIgnoreCase(".json")) return "application/json";
-  if (name.endsWithIgnoreCase(".png")) return "image/png";
-  if (name.endsWithIgnoreCase(".woff2")) return "font/woff2";
-  if (name.endsWithIgnoreCase(".wasm")) return "application/wasm";
-  return "application/octet-stream";
-}
-}  // namespace
-
-std::optional<juce::WebBrowserComponent::Resource> BlokDustEditor::resource(const juce::String& url) {
-  // Web assets are embedded as BinaryData keyed by original file name (Vite asset names are content-hashed, so unique).
-  auto name = url.fromLastOccurrenceOf("/", false, false).upToFirstOccurrenceOf("?", false, false);
-  if (name.isEmpty()) name = "index.html";
-  for (int i = 0; i < BinaryData::namedResourceListSize; ++i) {
-    if (name != BinaryData::originalFilenames[i]) continue;
-    int size = 0;
-    const char* data = BinaryData::getNamedResource(BinaryData::namedResourceList[i], size);
-    std::vector<std::byte> bytes(static_cast<std::size_t>(size));
-    std::memcpy(bytes.data(), data, static_cast<std::size_t>(size));
-    return juce::WebBrowserComponent::Resource{std::move(bytes), mimeFor(name)};
-  }
-  return std::nullopt;
-}
 
 BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
     : AudioProcessorEditor(p), proc_(p),
@@ -53,10 +23,6 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                .withEventListener("bd_hello", [this](const juce::var&) {
                  systemLog("page: hello");
                  reloadPatch();
-                 // Settings › About's usage stats switch shows this install's choice (SHARING-0010 R7).
-                 auto* a = new juce::DynamicObject();
-                 a->setProperty("on", telemetry::enabled());
-                 web_.emitEventIfBrowserIsVisible("bd_analytics", juce::var(a));
                  sendAccount();
                })
                // Plugin sign-in (CHG-0039, SHARING-0011): the page keeps the key it was given; signing out drops it.
@@ -85,9 +51,14 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                            + " @" + v.getProperty("dpr", 1).toString());
                })
                .withEventListener("bd_analytics", [](const juce::var& v) { telemetry::setEnabled(static_cast<bool>(v.getProperty("on", true))); })
+               // Values the plugin keeps, by name (web/src/app/pluginValues.ts): at start and on each focus return.
+               .withEventListener("bd_get", [this](const juce::var& v) { sendValues(v.getProperty("keys", {})); })
                .withEventListener("bd_ready", [this](const juce::var& v) {
                  uiReadyBlocks_ = static_cast<int>(v.getProperty("blocks", -1));
                  systemLog("page: ready, " + juce::String(uiReadyBlocks_) + " blocks");
+                 // Usage stats (SHARING-0010 R8): BlokDust's window opening counts as using it today; at most one ping a
+                 // day, to the server the page uses (review builds: staging).
+                 telemetry::dailyPing(telemetryPool_, proc_.wrapperType, proc_.isFx(), v.getProperty("events", "").toString());
                  if (auto* o = v.getDynamicObject()) {
                    o->setProperty("snapshotSeq", static_cast<juce::int64>(proc_.snapshotSeq()));
                    o->setProperty("wasm", resource("blokdust.wasm").has_value());  // host tests: the Wavetable's picture needs it
@@ -290,75 +261,10 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
   systemLog(juce::String(proc_.isFx() ? "fx" : "instrument") + " editor: loading " + juce::WebBrowserComponent::getResourceProviderRoot() + " (host " + juce::PluginHostType().getHostDescription() + ")");
   web_.goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
   startTimerHz(30);
-  // Usage stats (SHARING-0010 R8): BlokDust's window opening counts as using it today; at most one ping a day.
-  telemetry::dailyPing(telemetryPool_, proc_.wrapperType, proc_.isFx());
 }
 
 /// The key this plugin signed in with (if any), what it calls itself, and whether it can open a browser (an AUv3
 /// can't open Safari: the page shows a QR code instead).
-void BlokDustEditor::sendAccount() {
-  const bool standalone = proc_.wrapperType == juce::AudioProcessor::wrapperType_Standalone;
-  auto j = account::read();
-  j["name"] = account::deviceName(standalone).toStdString();
-#if JUCE_IOS
-  j["browser"] = standalone;
-#if BLOKDUST_NATIVE_SIGN_IN
-  j["native"] = standalone;  // Sign in with Apple and passkeys: the app's own (in a host they'd be the host's)
-#endif
-#else
-  j["browser"] = true;
-#endif
-  web_.emitEventIfBrowserIsVisible("bd_account", juce::JSON::parse(juce::String(j.dump())));
-}
-
-void BlokDustEditor::sendSampleInfo(const nlohmann::json& s) {
-  web_.emitEventIfBrowserIsVisible("bd_sampleInfo", juce::JSON::parse(juce::String(s.dump())));
-}
-
-void BlokDustEditor::sendPatchFile(const juce::File& f, const juce::String& mode, int req, int stage) {
-  if (!f.existsAsFile()) return;
-  sendPatchText(f.loadFileAsString(), f.getFileNameWithoutExtension(), f.getFileName(), mode, req, stage);
-}
-
-void BlokDustEditor::sendPatchText(const juce::String& text, const juce::String& name, const juce::String& file, const juce::String& mode, int req, int stage) {
-  auto* obj = new juce::DynamicObject();
-  if (req >= 0) obj->setProperty("req", req);
-  if (stage > 0) obj->setProperty("stage", stage);
-  obj->setProperty("text", text);
-  obj->setProperty("name", name);
-  obj->setProperty("file", file);
-  obj->setProperty("mode", mode);
-  web_.emitEventIfBrowserIsVisible("bd_patchFile", juce::var(obj));
-}
-
-void BlokDustEditor::reloadPatch() {
-  auto* obj = new juce::DynamicObject();
-  obj->setProperty("patch", juce::String(proc_.patchJson()));
-  // The engine's id for each patch block: the page must use them (the engine outlives the editor; once blocks were
-  // deleted its ids are not 1..N, and connections, moves and params would name the wrong blocks; owner, Ableton).
-  auto* ids = new juce::DynamicObject();
-  for (const auto& [id, key] : proc_.blockIds()) ids->setProperty(juce::Identifier(juce::String(key)), static_cast<int>(id));
-  obj->setProperty("ids", juce::var(ids));
-  obj->setProperty("innerIds", juce::JSON::parse(juce::String(proc_.innerIds().dump())));  // each Stage's inner blocks (CHG-0038)
-  // The standalone app has no DAW to pass keys on to: the page keeps every plain key, or macOS sounds its alert for
-  // each one nobody takes (owner, 2026-11-13, CHG-0013).
-  obj->setProperty("standalone", proc_.wrapperType == juce::AudioProcessor::wrapperType_Standalone);
-#if JUCE_IOS
-  obj->setProperty("ios", true);  // no Trash, no Finder (CHG-0025)
-#endif
-  obj->setProperty("powerMode", proc_.powerMode());
-  obj->setProperty("hostPlaying", proc_.hostIsPlaying());
-  auto* system = new juce::DynamicObject();
-  system->setProperty("surface", juce::JUCEApplicationBase::isStandaloneApp() ? "standalone" : "plugin");
-  system->setProperty("os", juce::SystemStats::getOperatingSystemName());
-  system->setProperty("host", juce::PluginHostType().getHostDescription());
-  system->setProperty("format", juce::AudioProcessor::getWrapperTypeDescription(proc_.wrapperType));
-  system->setProperty("sampleRate", proc_.getSampleRate());
-  system->setProperty("bufferSize", proc_.getBlockSize());
-  web_.emitEventIfBrowserIsVisible("bd_supportSystem", juce::var(system));
-  web_.emitEventIfBrowserIsVisible("bd_patch", juce::var(obj));
-}
-
 bool BlokDustEditor::isInterestedInFileDrag(const juce::StringArray& files) {
   for (const auto& f : files)
     if (juce::File(f).hasFileExtension("wav;aif;aiff;flac;ogg;mp3;m4a;caf;aac;blokdust")) return true;

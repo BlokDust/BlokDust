@@ -33,13 +33,19 @@ identifying anyone, and without endangering the shared Cloudflare account.
   changing the responses; a client MUST NOT be able to send these events.
 - **R7.** Settings › About MUST show a small switch, "Anonymous usage stats: on/off", beside the version number. On the
   website it turns events and error reports off in that browser (remembered); a browser sending Global Privacy
-  Control MUST be treated as off. In a plugin it MUST set the install's choice (all projects on that computer).
+  Control MUST be treated as off. In a plugin it MUST set the install's choice (all projects on that computer), and
+  the page MUST read it as a plugin value (`bd_get` / `bd_values`, `usageStats`) when it starts and once each time it
+  comes back into focus, so a change made in another BlokDust (another DAW; on iPad the app and the hosts) shows; no
+  timers.
 - **R8.** A plugin MUST send at most one `plugin_active` event a day per install, when its window opens, never on the
   audio thread, with: format, instrument or FX, DAW name and version, OS, CPU architecture, BlokDust version and a
   random install id (stored by the Worker only as a hash). It MUST NOT send when the user has turned it off (and
   turning it off MUST forget the install id), when `BLOKDUST_NO_TELEMETRY=1` (validators, test hosts) or for formats
-  other than VST3, AU, AUv3 and the standalone app. The Worker MUST accept plugin events only from a plugin surface
-  with a well-formed install id. The reply MUST be ignored beyond its status.
+  other than VST3, AU, AUv3 and the standalone app, nor from the iPad Simulator. On iPad the app and both AUv3
+  extensions MUST share one switch and one install id (a settings file in the App Group), so the About switch in any
+  of them covers the iPad. The event MUST go to the server the plugin's page uses (review builds: staging; installers:
+  the live site; an https `/api/events` URL, else the live site). The Worker MUST accept plugin events only from a
+  plugin surface with a well-formed install id. The reply MUST be ignored beyond its status.
 - **R9.** The website MUST load Sentry only when the Worker names a DSN and usage stats are on, with errors only (no
   tracing, no replay, no breadcrumbs), no user, cookie, header, body or query-string collection (`dataCollection`), IP storage off in the project, query strings removed from URLs and file names and share
   ids removed from messages. Plugins MUST NOT install a crash handler.

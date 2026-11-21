@@ -22,7 +22,7 @@ import { type GalleryState, type Missing, MISSING_TEXT, accountOwned, canOverwri
 import * as account from '../account/client.ts';
 import { appKey, setAppKey } from '../account/appKey.ts';
 import { appPost, pollDevice, startDevice } from '../account/device.ts';
-import { PLUGIN_SITE } from '../patch/site.ts';
+import { PLUGIN_SITE, apiUrl } from '../patch/site.ts';
 import { audioInAsMicrophone } from '../patch/webInputs.ts';
 import { activity } from '../account/activity.ts';
 import * as gallery from '../gallery/client.ts';
@@ -53,15 +53,14 @@ import { canShareFile, downloadFile, shareFile, videoFileName } from '../video/s
 import type { Credit } from '../video/frame.ts';
 import { analyticsAllowed, count, flushAnalytics, hostOf, pageRate, setAnalyticsAllowed, startAnalytics, track } from '../analytics/client.ts';
 import { startSentry } from '../analytics/sentry.ts';
+import { pluginUsageStats } from '../analytics/pluginStats.ts';
+import { pluginValues } from './pluginValues.ts';
+import { isDarkTheme } from './darkTheme.ts';
+import { noteToFrequency } from '../v1ui/noteToFrequency.ts';
 
 /** SAVE / SHARE's MAKE VIDEO (CHG-0022): hidden until the video export gets its own round of work (owner, 2026-11-17,
  * CHG-0035). `?video=1` shows it (its tests, and that work). */
 const VIDEO_EXPORT = new URLSearchParams(location.search).get('video') === '1';
-/** A dark theme: its background (palette 0) is dark (MODE STEREO, CONSOLE, SEA CUCUMBER, VOLCANOLOGIST). */
-function isDarkTheme(t: Theme): boolean {
-  const [r, g, b] = (t.colors[0].match(/[\d.]+/g) ?? ['0', '0', '0']).map(Number);
-  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5;
-}
 /** sessionStorage key: a sign-in begun from SAVE / SHARE goes back there (CHG-0035). */
 const AFTER_SIGN_IN = 'bd.afterSignIn';
 /** Link-preview size (Open Graph's recommended 1.91:1; server/src/pages.ts THUMB). */
@@ -78,15 +77,6 @@ const typeIndex = (type: string) => BLOCKS.findIndex(b => b.id === type);
 const SESSION_PARAMS = new Set(['targetBlock', 'targetParam']);
 const DEF_BY_V1 = new Map<string, BlockDef>();
 for (const d of BLOCKS) DEF_BY_V1.set(d.menuId, d);  // v1's type names, plus the post-2.0 blocks' menu ids
-
-/** Tone r6 noteToFrequency ("c#4" → Hz), as v1's SampleGen calls it. */
-const NOTE_INDEX: Record<string, number> = { cbb: -2, cb: -1, c: 0, 'c#': 1, cx: 2, dbb: 0, db: 1, d: 2, 'd#': 3, dx: 4, ebb: 2, eb: 3, e: 4, 'e#': 5, ex: 6,
-  fbb: 3, fb: 4, f: 5, 'f#': 6, fx: 7, gbb: 5, gb: 6, g: 7, 'g#': 8, gx: 9, abb: 7, ab: 8, a: 9, 'a#': 10, ax: 11, bbb: 9, bb: 10, b: 11, 'b#': 12, bx: 13 };
-function noteToFrequency(note: string): number {
-  const parts = note.split(/(-?\d+)/);
-  if (parts.length !== 3) return 0;
-  return 440 * 2 ** ((NOTE_INDEX[parts[0].toLowerCase()] + (parseInt(parts[1], 10) + 1) * 12 - 69) / 12);
-}
 
 interface View { theme?: number; zoom?: number; drag?: { x: number; y: number } }
 /** A server share id from `/embed/<id>` (the Worker also names it in a meta tag). */
@@ -175,8 +165,9 @@ async function main() {
       if (start.source) track('patch_opened', { source: start.source });
     }
   }
-  /** Plugin: the install's usage stats choice (R7), as the processor last said (bd_analytics). */
-  let pluginStats = true;
+  /** Plugin: values the plugin keeps (bd_get / bd_values), such as the install's usage stats choice (R7). */
+  const values = juce ? pluginValues(juce) : null;
+  const pluginStats = juce && values ? pluginUsageStats(juce, values, () => stage.redraw()) : null;
   /** Session totals for session_summary (sent when the page goes). */
   const usage = { blocksMax: 0, blocksDeleted: 0, undos: 0, keys: false, midi: false };
   addEventListener('pagehide', () => {
@@ -489,9 +480,7 @@ async function main() {
     deleteBlock: id => { if (!drag) deleteBlocks([id]); },
     // Settings › About (SPEC-SHARING-USAGE-ANALYTICS R7): this browser's choice; in the plugin, the install's (the
     // processor keeps it and sends it with bd_analytics).
-    usageStats: juce
-      ? { get: () => pluginStats, set: on => { pluginStats = on; juce.emitEvent('bd_analytics', { on }); } }
-      : { get: () => analyticsAllowed(), set: on => { setAnalyticsAllowed(on); } },
+    usageStats: pluginStats ?? { get: () => analyticsAllowed(), set: on => { setAnalyticsAllowed(on); } },
     setParam: (id, key, value) => {
       const b = model.get(id), def = b && BLOCKS_BY_ID.get(b.type);
       const p = def?.params.findIndex(q => q.key === key) ?? -1;
@@ -2313,7 +2302,8 @@ async function main() {
         if (typeof a.cc === 'number') ccBySlot.set(a.slot, a.cc);
       }
       probe.started = true;
-      juce.emitEvent('bd_ready', { blocks: stage.allBlocks().length, supportSystem: hostSystem });
+      // events: where the plugin sends its daily usage ping (SHARING-0010 R8), the same server this page uses.
+      juce.emitEvent('bd_ready', { blocks: stage.allBlocks().length, supportSystem: hostSystem, events: apiUrl('events') });
     });
     // Plugin samples (CHG-0004 3.6): the processor loads them natively and reports what to show.
     // Dust moves (host automation, MIDI CC; owner, Ableton, 2026-11-12): the block takes the value, and its options
@@ -2334,7 +2324,6 @@ async function main() {
     });
     juce.addEventListener('bd_hostState', (h: { mode: number; playing: boolean }) => { scene.setHostState(h.mode, h.playing); stage.redraw(); });
     juce.addEventListener('bd_ccLearned', (e: { slot: number; cc: number }) => { ccBySlot.set(e.slot, e.cc); });
-    juce.addEventListener('bd_analytics', (e: { on: boolean }) => { pluginStats = !!e.on; });
     for (const ev of ['bd_nativeAppleDone', 'bd_nativePasskeyDone']) juce.addEventListener(ev, (v: Record<string, string | boolean>) => { const f = nativeAnswer; nativeAnswer = null; f?.(v); });
     // Signed in (SHARING-0011): the key the plugin keeps; what it calls itself; whether it can open a browser.
     juce.addEventListener('bd_account', (e: { key?: string; name?: string; browser?: boolean; native?: boolean }) => {
@@ -2370,6 +2359,7 @@ async function main() {
       (e.view ?? 0) !== (inside?.stageId ?? 0) ? undefined : (++snaps, onSnapshot({ type: 'snapshot', frame: 0, rms: 0, events: [], particles: new Float32Array(e.particles),
         connections: new Uint32Array(e.connections), powered: new Uint32Array(e.powered), beams: new Float32Array(e.beams ?? []), playheads: new Float32Array(e.playheads ?? []), monitors: new Float32Array(e.monitors ?? []) })));
     juce.emitEvent('bd_hello', {});
+    values?.ask();
     juce.emitEvent('bd_samplesHello', {});
     sendRaw([{ type: CommandType.WorldPower, id: 0, value: 1 }]);  // a reopened editor shows the switch on: so is the world
   }
