@@ -9,8 +9,6 @@ export interface TourHarness {
 
 export function tourTests({ browser, url, OUT, toCss, maxOver }: TourHarness): Record<string, (errors: string[]) => Promise<[boolean, unknown]>> {
   return {
-  // Owner (2026-11-21): a first visit (no link, nothing kept in this browser) opens an empty stage, as v1 did, and is
-  // asked about the tour; the old start scene (11 test blocks) stays only behind `?demo`, for tests.
   async 'first-visit-empty'(errors: string[]) {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
     const p = await ctx.newPage();
@@ -25,8 +23,6 @@ export function tourTests({ browser, url, OUT, toCss, maxOver }: TourHarness): R
     await ctx.close();
     return [r.blocks === 0 && r.asked, r];
   },
-  // Owner (2026-11-17, CHG-0035): v1's tour, back. A first visit is asked; TAKE THE TOUR clears the stage and walks
-  // through v1's steps (each passes when it is done); the last one is in the owner's words, and the answer is kept.
   async 'tour'(errors: string[]) {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
     const p = await ctx.newPage();

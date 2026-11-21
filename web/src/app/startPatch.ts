@@ -1,5 +1,5 @@
 // The patch the website starts with (DATA-0004, CHG-0003): a share link, a v1 composition, the autosave or, on a first
-// visit, an empty stage (SPEC-VISUAL-V1-PARITY R12). Split from main.ts by job.
+// visit, an empty stage (SPEC-VISUAL-V1-PARITY R12).
 import type { Patch } from '../patch/loadPatch.ts';
 import { decodePatch, loadLocal, loadSession } from '../patch/share.ts';
 import { type Missing, isServerId, loadOrWhy } from '../patch/server.ts';
@@ -35,6 +35,5 @@ export async function initialPatch(params: URLSearchParams, embedId: string | nu
   if (v1) { try { const r = importV1(JSON.parse(v1) as V1Composition); return { patch: r.patch, view: r.view, id: null, source: 'v1' }; } catch { /* fall through */ } }
   if (params.has('demo')) return { patch: demo as Patch, view: {}, id: null, source: 'demo' };
   const local = loadLocal();
-  // A first visit opens an empty stage, as v1 did (owner, 2026-11-21).
   return { patch: local ?? { format: 'blokdust.patch', version: 2, blocks: [] }, view: {}, id: loadSession().id, source: local ? 'autosave' : 'demo' };
 }
