@@ -1,16 +1,16 @@
 {
-  "version": "2.0.1",
-  "published": "2026-11-13",
+  "version": "2.1.0",
+  "published": "2026-11-21",
   "macos": {
-    "file": "BlokDust-2.0.1-Mac.pkg",
-    "url": "https://downloads.funputs.com/releases/blokdust/2.0.1/BlokDust-2.0.1-Mac.pkg",
-    "sha256": "63375e0eaae562b90c89d473f9d2a0e47a27fa3f8ad02fd016bd5f86ae07666e",
-    "bytes": 44159254
+    "file": "BlokDust-2.1.0-Mac.pkg",
+    "url": "https://downloads.funputs.com/releases/blokdust/2.1.0/BlokDust-2.1.0-Mac.pkg",
+    "sha256": "d40f2e51beef0bc0ffcf501b7f11fd84ea7862a19b1524dc0e96fa5d2b959961",
+    "bytes": 52864424
   },
   "windows": {
-    "file": "BlokDust-2.0.1-Windows.zip",
-    "url": "https://downloads.funputs.com/releases/blokdust/2.0.1/BlokDust-2.0.1-Windows.zip",
-    "sha256": "81f3f35fb60a7e934e8f4aed7719bffade7b27996811b41a03485114dd6326c9",
-    "bytes": 9926465
+    "file": "BlokDust-2.1.0-Windows.zip",
+    "url": "https://downloads.funputs.com/releases/blokdust/2.1.0/BlokDust-2.1.0-Windows.zip",
+    "sha256": "bb2c7d864e42739e564f83bf73bf9d69ccdc00a6bbbede62488e4df54517b99d",
+    "bytes": 12070295
   }
 }

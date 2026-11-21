@@ -12,6 +12,9 @@ if (-not (Test-Path (Join-Path $webview2 'Microsoft.Web.WebView2'))) {
 Get-Process BlokDust, 'BlokDust FX' -ErrorAction SilentlyContinue | Stop-Process -Force
 cmake -S . -B $build -A x64 -DBLOKDUST_BUILD_TESTS=OFF -DBLOKDUST_BUILD_TOOLS=ON -DBLOKDUST_BUILD_PLUGIN=ON "-DJUCE_WEBVIEW2_PACKAGE_LOCATION=$webview2" | Out-Null
 if ($LASTEXITCODE) { throw 'configure failed' }
+# JUCE's version resources (FILEVERSION) can survive a version bump in an existing build folder (2.1.0's first build
+# still said 2.0.1): remove them so this build writes them from the release's version.
+Get-ChildItem -Path "$build\plugin" -Recurse -Include *_resources.rc, *_resources.res -ErrorAction SilentlyContinue | Remove-Item -Force
 cmake --build $build --config Release --parallel --target BlokDust_VST3 BlokDustFX_VST3 BlokDust_Standalone -- /nologo /verbosity:minimal
 if ($LASTEXITCODE) { throw 'build failed' }
 # The version every binary carries must be the release's.

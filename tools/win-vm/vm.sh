@@ -65,7 +65,7 @@ launch() {
         -qmp unix:"$QMP",server,nowait \
         -display none -vnc 127.0.0.1:5 \
         -pidfile "$PIDFILE" -daemonize \
-        "${extra[@]}"
+        ${extra[@]+"${extra[@]}"}  # bash 3.2 (macOS): an empty array is "unbound" under set -u
 
     echo "started (pid $(cat "$PIDFILE")); VNC on 127.0.0.1:5905"
 }
