@@ -55,7 +55,7 @@ identifying anyone, and without endangering the shared Cloudflare account.
   (an integer, 1–90) varies. The query token MUST stay on the server.
 - **R11.** The dashboard MUST show client-sent values as text only and send a CSP that allows only its own (nonce)
   script and style, no framing.
-- **R12.** A privacy note (`/privacy.html`) MUST describe what is recorded, why, for how long, Sentry as a processor, and
+- **R12.** A privacy note (`/privacy/`, a page of the BlokDust guide; `/privacy` and `/privacy.html` redirect to it) MUST describe what is recorded, why, for how long, Sentry as a processor, and
   how to turn it off, and be live, and linked from the About footer, before production's rate is above 0. Owner
   (2026-11-16): the footer link is left out until then (it pointed at production, which doesn't serve the page yet).
 
