@@ -54,7 +54,16 @@ function(blokdust_plugin target)
     # com.funputs.blokdust.fx; JUCE names the extension com.funputs.blokdust.fx.fxAUv3.
     set(bundle_id "com.funputs.blokdust.fx")
   endif()
+  # The build number (CFBundleVersion): each App Store upload needs a new one (`bd plugin ios archive` sets
+  # BLOKDUST_IOS_BUILD); otherwise the version.
+  set(build_version "${PROJECT_VERSION}")
+  if(DEFINED ENV{BLOKDUST_IOS_BUILD} AND NOT "$ENV{BLOKDUST_IOS_BUILD}" STREQUAL "")
+    set(build_version "$ENV{BLOKDUST_IOS_BUILD}")
+  endif()
+  set(platform_args "")
   if(IOS)
+    # App Store Connect (CHG-0025 task 12b): standard HTTPS only, so no export-compliance question on each upload.
+    list(APPEND platform_args PLIST_TO_MERGE "<plist><dict><key>ITSAppUsesNonExemptEncryption</key><false/></dict></plist>")
     set(mic FALSE)
     set(app_groups TRUE)
   else()
@@ -97,7 +106,9 @@ function(blokdust_plugin target)
     LAUNCH_STORYBOARD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ios/LaunchScreen.storyboard"
     # Patches, recordings and SampleGen audio shared by the app and the AUv3 (CHG-0025 task 5; PatchFiles.h).
     APP_GROUPS_ENABLED ${app_groups}
-    APP_GROUP_IDS ${BLOKDUST_APP_GROUP})
+    APP_GROUP_IDS ${BLOKDUST_APP_GROUP}
+    BUILD_VERSION "${build_version}"
+    ${platform_args})
   if(IOS)
     target_compile_definitions(${target} PUBLIC BLOKDUST_APP_GROUP="${BLOKDUST_APP_GROUP}")
     target_sources(${target} PRIVATE src/ios/NativeSignIn.mm)  # Sign in with Apple and passkeys in the app (SHARING-0011)

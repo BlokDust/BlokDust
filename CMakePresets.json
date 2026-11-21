@@ -94,6 +94,23 @@
         "CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_STYLE": "Automatic",
         "CMAKE_XCODE_GENERATE_SCHEME": "ON"
       }
+    },
+    {
+      "name": "plugin-ios-release",
+      "displayName": "iPadOS app for the App Store (CHG-0025 task 12b; bd plugin ios archive: the live site, its own build folder)",
+      "binaryDir": "${sourceDir}/build/plugin-ios-release",
+      "generator": "Xcode",
+      "cacheVariables": {
+        "CMAKE_SYSTEM_NAME": "iOS",
+        "CMAKE_OSX_SYSROOT": "iphoneos",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "BLOKDUST_BUILD_TESTS": "OFF",
+        "BLOKDUST_BUILD_TOOLS": "ON",
+        "BLOKDUST_BUILD_PLUGIN": "ON",
+        "CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM": "$env{BLOKDUST_APPLE_TEAM_ID}",
+        "CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_STYLE": "Automatic",
+        "CMAKE_XCODE_GENERATE_SCHEME": "ON"
+      }
     }
   ],
   "buildPresets": [

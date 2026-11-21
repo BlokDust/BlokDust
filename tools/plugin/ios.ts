@@ -12,12 +12,14 @@
 //                              BlokDust FX, the app's second extension, renders its fixture with input ≡ golden (task 9).
 //   --no-build                 test the existing build
 //   pnpm bd plugin ios device|log   the real iPad: tools/plugin/ios-device.ts
+//   pnpm bd plugin ios archive      the App Store build: tools/plugin/ios-release.ts
 // The Simulator is picked by name: BLOKDUST_IOS_SIMULATOR (local config) or the first available "iPad Pro 11-inch".
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { setting } from '../lib/local-config.ts';
 import { APP_ID, OUT, must, run } from './ios-shared.ts';
-export { iosDevice, iosLog } from './ios-device.ts';
+import { iosDevice, iosLog } from './ios-device.ts';
+import { iosArchive } from './ios-release.ts';
 
 const ART = 'build/plugin-ios-sim/plugin/BlokDust_artefacts/Release';
 const APP = `${ART}/Standalone/BlokDust.app`;
@@ -121,6 +123,10 @@ function appCheck(udid: string, group: string) {
   const appexPlist = JSON.parse(must(run('plutil', ['-convert', 'json', '-o', '-', `${APPEX}/Info.plist`], true), 'read appex Info.plist').stdout);
   const noMicrophone = !('NSMicrophoneUsageDescription' in plist) && !('NSMicrophoneUsageDescription' in appexPlist);
   // The privacy manifest (CHG-0025 task 12c) in the app and both extensions, a valid plist that declares no tracking.
+  // App Store Connect (task 12b): standard HTTPS only, declared so uploads skip the export question; one build number.
+  const fxPlist = JSON.parse(must(run('plutil', ['-convert', 'json', '-o', '-', `${FX_APPEX}/Info.plist`], true), 'read FX Info.plist').stdout);
+  const appStorePlist = plist.ITSAppUsesNonExemptEncryption === false
+    && [appexPlist, fxPlist].every(p => p.CFBundleVersion === plist.CFBundleVersion && p.CFBundleShortVersionString === plist.CFBundleShortVersionString);
   const privacyManifest = [APP, APPEX, FX_APPEX].every(b => {
     const r = run('plutil', ['-convert', 'json', '-o', '-', `${b}/PrivacyInfo.xcprivacy`], true);
     try { return r.status === 0 && JSON.parse(r.stdout).NSPrivacyTracking === false; } catch { return false; }
@@ -161,9 +167,9 @@ function appCheck(udid: string, group: string) {
 
   const sharedFolder = SHARED.test(log1);
   const usageStatsShared = STATS_OFF.test(log1);
-  const ok = sharedFolder && usageStatsShared && usageStatsFollows && privacyManifest && noMicrophone && session?.[1] === 'AVAudioSessionCategoryPlayback' && peak > 0 && ready === firstBlocks && saved && restored
+  const ok = sharedFolder && usageStatsShared && usageStatsFollows && privacyManifest && appStorePlist && noMicrophone && session?.[1] === 'AVAudioSessionCategoryPlayback' && peak > 0 && ready === firstBlocks && saved && restored
     && readyAgain === firstBlocks;
-  return { ok, sharedFolder, usageStatsShared, usageStatsFollows, privacyManifest, noMicrophone, session: session?.[1] ?? null, sampleRate: Number(session?.[2] ?? 0), frames: Number(session?.[3] ?? 0), peak,
+  return { ok, sharedFolder, usageStatsShared, usageStatsFollows, privacyManifest, appStorePlist, noMicrophone, session: session?.[1] ?? null, sampleRate: Number(session?.[2] ?? 0), frames: Number(session?.[3] ?? 0), peak,
     ready, expectedBlocks: firstBlocks, saved, restored, readyAfterRelaunch: readyAgain, screenshot: shot };
 }
 
@@ -235,4 +241,16 @@ export function iosTest(noBuild: boolean): void {
   console.log(JSON.stringify({ ok, simulator: sim.name, component: COMPONENT, name: result.name, wrapper, params: result.params?.length ?? 0,
     error: result.error, app, renders, sample, fx: { name: result.fxName ?? null, renders: fxRenders }, editor }));
   if (!ok) process.exit(1);
+}
+
+/** `bd plugin ios <command> …` */
+export function iosCommand(args: string[]): void {
+  const [command, ...rest] = args;
+  const noBuild = rest.includes('--no-build');
+  if (command === 'build') iosBuild();
+  else if (command === 'test') iosTest(noBuild);
+  else if (command === 'device') iosDevice(noBuild);
+  else if (command === 'log') iosLog();
+  else if (command === 'archive') iosArchive(rest);
+  else throw new Error('usage: bd plugin ios build | test [--no-build] | device [--no-build] | log | archive [--build N] [--upload]');
 }

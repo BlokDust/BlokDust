@@ -18,6 +18,9 @@ Tools fail with the missing variable's name when an operation needs an unconfigu
   Xcode's automatic signing, which needs the team's Apple account in Xcode → Settings → Accounts.
   `BLOKDUST_IOS_NATIVE_SIGN_IN=1` builds in Sign in with Apple and the site's passkeys (SHARING-0011) once the App ID
   has the Sign in with Apple and Associated Domains capabilities; the sites come from the public URLs below.
+  The App Store build (`bd plugin ios archive`) signs and uploads with an App Store Connect API key (Admin access):
+  `BLOKDUST_ASC_KEY_ID`, `BLOKDUST_ASC_ISSUER_ID` and the key file `app_store_connect_key.p8` beside this file
+  (`BLOKDUST_ASC_KEY_PATH` overrides); command-line builds can't use the account signed in to Xcode.
 - Plugin sign-in (CHG-0039): `bd plugin deploy` and `bd plugin ios device` build the plugins' page against
   `BLOKDUST_STAGING_PUBLIC_URL`, installers against `BLOKDUST_PRODUCTION_PUBLIC_URL` (`BLOKDUST_PLUGIN_SITE_URL`
   overrides a plain `pnpm web:build`). `BLOKDUST_APPLE_APP_ID` overrides the app id the Worker is given (default: the

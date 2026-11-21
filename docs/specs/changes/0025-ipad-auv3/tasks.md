@@ -81,6 +81,11 @@ Check items off as they land. Each task should be independently verifiable.
 - [ ] 11. Owner review in AUM, GarageBand, Logic for iPad, Cubasis.
 - [x] 12a. Licensing: JUCE 8 Starter for the App Store build (LICENSING-0003); bundle IDs under `com.funputs`; iPad only.
 - [ ] 12b. App Store Connect / TestFlight setup (owner).
+      2026-11-20: `pnpm bd plugin ios archive [--build N] [--upload]` (tools/plugin/ios-release.ts): the live site,
+      build/plugin-ios-release, build number = UTC YYYYMMDD.HHMM, ITSAppUsesNonExemptEncryption false (checked in
+      `bd plugin ios test`, failing first), archive checks (versions, extensions, privacy manifests, iPad only), export
+      or upload. First archive passed its checks; export needs the App Store Connect API key (owner). Owner: app record
+      (SKU blokdust-ipad, Full Access), API key, then the first upload on their go.
 - [x] 12c. Privacy: one usage-stats switch and install id per iPad (App Group; SPEC-SHARING-USAGE-ANALYTICS R8, test
       in `bd plugin ios test`), the ping to the page's server, `PrivacyInfo.xcprivacy` in the app and both extensions;
       then on the iPad: one ping a day on staging, none after switching off in the app or in a host.

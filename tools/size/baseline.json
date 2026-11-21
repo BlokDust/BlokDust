@@ -12,7 +12,7 @@
   "tests/e2e/sharing.ts": 13475,
   "tests/e2e/ui-regressions.ts": 72451,
   "tools/block-designer/page.html": 10252,
-  "tools/plugin/index.ts": 10271,
+  "tools/plugin/index.ts": 10212,
   "web/src/app/main.ts": 54867,
   "web/src/stage/Stage.ts": 5925,
   "web/src/v1ui/accountPage.ts": 11456,
