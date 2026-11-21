@@ -20,6 +20,8 @@ BlokDust 2: a faithful, much faster rebuild of BlokDust (2015), a visual music p
 5. Verify before handing back: `pnpm bd index --check` plus every gate relevant to your change (see docs/engineering/testing-strategy.md). Report failures honestly with output.
 6. Record: tick `tasks.md`; new decisions → `pnpm bd new adr <domain> "Title"`; behaviour changes → update the spec; then `pnpm bd index`.
 
+Branches and releases: [docs/engineering/branches-and-releases.md](docs/engineering/branches-and-releases.md) (`main` → staging; releases are tags).
+
 ## Private operations
 Read `~/.config/blokdust/LOCAL.md` if present before deployment, signing, notarization or tests on configured machines.
 Tools load `~/.config/blokdust/config.env` (environment overrides); see [local configuration](docs/engineering/local-configuration.md).
