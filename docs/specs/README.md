@@ -16,6 +16,7 @@
 | [SPEC-PROCESS-PRIVATE-OPERATIONAL-CONFIGURATION](domains/process/private-operational-configuration.md) | Private operational configuration | process | **active** | PROCESS-0005 |
 | [SPEC-SHARING-ACCOUNTS](domains/sharing/accounts.md) | Accounts | sharing | **draft** | SHARING-0008, SHARING-0001, DATA-0005 |
 | [SPEC-SHARING-BACKEND](domains/sharing/backend.md) | Sharing backend, embeds and sample references | sharing | **draft** | SHARING-0001, SHARING-0002, SHARING-0004, DATA-0005, SCOPE-0003 |
+| [SPEC-SHARING-BLOKDUST-GLOSSARY](domains/sharing/blokdust-glossary.md) | BlokDust glossary | sharing | **draft** |  |
 | [SPEC-SHARING-GALLERY](domains/sharing/gallery.md) | Gallery | sharing | **draft** | SHARING-0009, SHARING-0008, DATA-0005 |
 | [SPEC-SHARING-USAGE-ANALYTICS](domains/sharing/usage-analytics.md) | Usage analytics | sharing | **draft** | SHARING-0010 |
 | [SPEC-SHARING-VIDEO-EXPORT](domains/sharing/video-export.md) | Video export | sharing | **draft** | SHARING-0007, SIMULATION-0001, DATA-0005, UI-0005 |
@@ -67,3 +68,4 @@
 | [CHG-0040](changes/0040-note-bars-for-random-note-and-chord/proposal.md) | Note bars for Random Note and Chord | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |
 | [CHG-0041](changes/0041-feedback-tab-reporting-patches-and-other-people-s/proposal.md) | Feedback tab, reporting patches, and other people's patches on the website | **done** | SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS, SPEC-SHARING-GALLERY |
 | [CHG-0042](changes/0042-owner-tweaks-keys-never-aim-synced-to-host-short/proposal.md) | Owner tweaks: keys never aim, SYNCED TO HOST, short menu, clean block edges | **proposed** | SPEC-CONNECTIONS-PROXIMITY, SPEC-VISUAL-V1-PARITY |
+| [CHG-0043](changes/0043-blokdust-glossary/proposal.md) | BlokDust glossary | **proposed** | SPEC-SHARING-BLOKDUST-GLOSSARY |

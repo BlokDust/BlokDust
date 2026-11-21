@@ -1,0 +1,100 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import releases from '../../../web/src/releases.json';
+import Base from '../layouts/Base.astro';
+import RelatedLinks from './RelatedLinks.astro';
+import ShortcutGroups from './ShortcutGroups.astro';
+import GuideTile from './GuideTile.astro';
+import { categories, categoryLinks, categoryPath, categoryTitle, guide, guideArt, relatedFor, siteCopy } from '../catalogue';
+
+interface Props { entry: CollectionEntry<'blocks'> | CollectionEntry<'guide'> }
+const { entry } = Astro.props;
+const { title, heading = title, description, image } = entry.data;
+const block = entry.collection === 'blocks' ? entry.data : undefined;
+const route = entry.collection === 'guide' ? entry.data.route : undefined;
+const group = categories.find(category => route === `blocks/categories/${category}`);
+const platforms = entry.collection === 'guide' ? entry.data.platforms : undefined;
+const shortcuts = entry.collection === 'guide' ? entry.data.shortcuts : undefined;
+const index = route === 'blocks';
+const landing = route === 'guide';
+const original = guideArt(entry.data.artwork ?? entry.data.legacySource);
+const banner = original?.banner ?? image;
+const socialImage = original ? { ...original.banner, alt: title } : image;
+const crumbs = [
+  ...(block || group ? [{ href: '/blocks/', label: siteCopy.blocksLabel }] : []),
+  ...(block ? [{ href: categoryPath(block.category), label: categoryTitle(block.category) }] : []),
+];
+const categoryTiles = categories.map(category => [`blocks/categories/${category}`, category] as const);
+const landingTiles = [
+  ['guide/whats-new', 'source'], ['about', 'orange'], ['guide/get-started', 'green'], ['guide/synths', 'interaction'],
+  ['blocks/categories/power', 'power'], ['blocks/categories/interaction', 'charcoal'], ['guide/features', 'sky'], ['blocks', 'red'],
+];
+const tiles = (landing ? landingTiles : index ? categoryTiles : []).map(([route, accent]) => {
+  const item = guide.find(item => item.data.route === route);
+  const art = guideArt(item?.data.artwork ?? item?.data.legacySource);
+  if (!item || !art) throw new Error(`Missing guide tile for ${route}`);
+  return { href: `/${route}/`, title: item.data.tileTitle ?? item.data.heading ?? item.data.title, image: art.tile ?? art.banner, accent };
+});
+const { Content } = await render(entry);
+const related = index ? [] : relatedFor(entry, group);
+---
+<Base {title} {description} image={socialImage} isArticle={!index && !landing && route !== 'about'}>
+  <article class:list={['article', block?.category ?? group]}>
+    {landing ? (
+      <h1 class="visually-hidden">{title}</h1>
+    ) : (
+      <header class:list={['article-header', { 'screenshot-banner': banner && !original }]} data-theme={original ? undefined : image?.theme}>
+        {banner && (
+          <div class="banner-art">
+            <img src={banner.src} width={banner.width} height={banner.height} alt={original ? '' : image?.alt} />
+          </div>
+        )}
+        <div class="article-width banner-heading"><h1>{heading}</h1></div>
+      </header>
+    )}
+    {tiles.length > 0 && <div class="guide-grid">{tiles.map(tile => <GuideTile {...tile} />)}</div>}
+    {!landing && (
+      <div class="article-width article-body">
+        {crumbs.length > 0 && (
+          <nav class="breadcrumb" aria-label={siteCopy.breadcrumbLabel}>
+            <ol>{crumbs.map(({ href, label }) => <li><a href={href}>{label}</a></li>)}</ol>
+          </nav>
+        )}
+        <p class="intro">{description}</p>
+        <div class="prose">
+          {platforms?.map(({ key, title, description, linkLabel }) => (
+            <section class="download-platform">
+              <h2>{title}</h2>
+              <p>{description}</p>
+              {releases[key] ? <p><a href={releases[key].url}>{linkLabel}</a></p> : <p>{siteCopy.downloadUnavailable}</p>}
+            </section>
+          ))}
+          <Content />
+          {shortcuts && <ShortcutGroups groups={shortcuts} />}
+        </div>
+        {image && original && (
+          <img class="guide-figure" src={image.src} alt={image.alt} width={image.width} height={image.height} decoding="async" />
+        )}
+        {block && block.examples.length > 0 && (
+          <section class="example-list" aria-labelledby="examples-heading">
+            <h2 id="examples-heading">{siteCopy.examplesLabel}</h2>
+            <ul>{block.examples.map(({ href, title }) => <li><a href={href}>{title}</a></li>)}</ul>
+          </section>
+        )}
+      </div>
+    )}
+    <section class="article-width related" aria-labelledby="related-heading">
+      <h2 id="related-heading">{siteCopy.relatedLabel}</h2>
+      {index ? (
+        <div class="related-groups">
+          {categories.map(category => (
+            <section>
+              <h3>{categoryTitle(category)}</h3>
+              <RelatedLinks links={categoryLinks(category)} />
+            </section>
+          ))}
+        </div>
+      ) : <RelatedLinks links={related} />}
+    </section>
+  </article>
+</Base>

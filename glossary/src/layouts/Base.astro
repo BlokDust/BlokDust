@@ -1,0 +1,68 @@
+---
+import { siteCopy } from '../catalogue';
+import GuideHeader from '../components/GuideHeader.astro';
+import '../styles/guide.css';
+
+interface Image {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  image?: Image;
+  isArticle?: boolean;
+}
+
+const { title, description, image = siteCopy.defaultImage, isArticle } = Astro.props;
+const pageTitle = `${title} | ${siteCopy.brand}`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const imageUrl = new URL(image.src, Astro.site);
+const social = [
+  { href: 'https://www.instagram.com/blokdust/', label: siteCopy.instagramLabel },
+  { href: 'https://www.tiktok.com/@blokdust', label: siteCopy.tiktokLabel },
+];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical.href} />
+    <link rel="icon" type="image/x-icon" href="/guide-favicon.ico" />
+    <meta property="og:type" content={isArticle ? 'article' : 'website'} />
+    <meta property="og:site_name" content={siteCopy.brand} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical.href} />
+    <meta property="og:image" content={imageUrl.href} />
+    <meta property="og:image:width" content={image.width} />
+    <meta property="og:image:height" content={image.height} />
+    <meta property="og:image:alt" content={image.alt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={imageUrl.href} />
+    <meta name="twitter:image:alt" content={image.alt} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">{siteCopy.skipLabel}</a>
+    <GuideHeader />
+    <main id="main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <nav class="footer-links" aria-label={siteCopy.footerLabel}>
+        <ul class="site-links">
+          {social.map(({ href, label }) => <li><a href={href}>{label}</a></li>)}
+          <li><a href="https://github.com/lukephills/blokdust-v2">{siteCopy.sourceLabel}</a></li>
+        </ul>
+      </nav>
+    </footer>
+  </body>
+</html>

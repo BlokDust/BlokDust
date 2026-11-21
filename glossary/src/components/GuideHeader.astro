@@ -1,0 +1,43 @@
+---
+import BlockList from './BlockList.astro';
+import { categories, categoryPath, categoryTitle, guide, siteCopy } from '../catalogue';
+
+const pages = ['about', 'guide/get-started', 'guide/keyboard-shortcuts', 'guide/synths', 'guide/features', 'guide/faq', 'guide/whats-new', 'downloads'];
+const features = pages.map(route => ({
+  href: `/${route}/`,
+  label: guide.find(entry => entry.data.route === route)!.data.title,
+}));
+const current = (href: string) => Astro.url.pathname === href ? 'page' : undefined;
+---
+<header class="site-header">
+  <details class="guide-menu">
+    <summary class="menu-toggle">
+      <span class="visually-hidden">{siteCopy.menuLabel}</span>
+      <svg class="menu-mark" viewBox="0 0 45 48" width="45" height="48" aria-hidden="true">
+        <path d="M0 24 15 9 30 24 45 9 M0 39 15 24 30 39 45 24" />
+      </svg>
+      <svg class="menu-cross" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+        <path d="m1 1 22 22 M23 1 1 23" />
+      </svg>
+    </summary>
+    <nav class="menu-panel" aria-label={siteCopy.primaryLabel}>
+      <section class="menu-group">
+        <h2>{siteCopy.guideLabel}</h2>
+        <ul class="menu-links" role="list">
+          {features.map(({ href, label }, i) => <li><a href={href} aria-current={current(href)}>{label}</a>{i < features.length - 1 && ', '}</li>)}
+        </ul>
+      </section>
+      <section class="menu-group">
+        <h2><a href="/blocks/" aria-current={current('/blocks/')}>{siteCopy.blocksLabel}</a></h2>
+        {categories.map(category => (
+          <div class="menu-category">
+            <h3><a href={categoryPath(category)} aria-current={current(categoryPath(category))}>{categoryTitle(category)}</a></h3>
+            <BlockList {category} />
+          </div>
+        ))}
+      </section>
+    </nav>
+  </details>
+  <a class="wordmark" href="/guide/">{siteCopy.brand}</a>
+  <a class="play-link" href="/">{siteCopy.playLabel}</a>
+</header>

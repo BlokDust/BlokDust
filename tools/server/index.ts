@@ -119,8 +119,8 @@ async function deploy(): Promise<void> {
   const e = envName();
   const config = remoteConfig(e);
   if (!args.includes('--no-build')) {
-    const b = await run(['pnpm', 'web:build'], { cwd: process.cwd() });
-    if (b.code) throw new Error('web build failed');
+    const b = await run(['pnpm', 'site:build'], { cwd: process.cwd() });
+    if (b.code) throw new Error('site build failed');
   }
   // Cloudflare's D1 API sometimes fails a request transiently (seen 2026-11-07): retry before giving up.
   let m = { code: 1, out: '' };

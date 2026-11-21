@@ -1,8 +1,10 @@
 packages:
   - web
   - server
+  - glossary
 minimumReleaseAgeExclude:
   - vite@8.3.6
 allowBuilds:
   esbuild: true
+  sharp: false
   workerd: true
