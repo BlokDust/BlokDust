@@ -1,0 +1,338 @@
+{
+  "autowah.html": {
+    "banner": {
+      "src": "/guide-media/original/autowah-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "bitcrusher.html": {
+    "banner": {
+      "src": "/guide-media/original/bitcrusher-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "blocks.html": {
+    "banner": {
+      "src": "/guide-media/original/blocks-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "blokdust-is-live.html": {
+    "banner": {
+      "src": "/guide-media/original/faq-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    },
+    "tile": {
+      "src": "/guide-media/original/faq-400x400.jpg",
+      "width": 400,
+      "height": 400
+    }
+  },
+  "blokdust.html": {
+    "banner": {
+      "src": "/guide-media/original/blokdust-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    },
+    "tile": {
+      "src": "/guide-media/original/blokdust-400x400.jpg",
+      "width": 400,
+      "height": 400
+    }
+  },
+  "chomp.html": {
+    "banner": {
+      "src": "/guide-media/original/chomp-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "chopper.html": {
+    "banner": {
+      "src": "/guide-media/original/chopper-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "chorus.html": {
+    "banner": {
+      "src": "/guide-media/original/chorus-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "computer-keyboard.html": {
+    "banner": {
+      "src": "/guide-media/original/keyboard-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "convolution.html": {
+    "banner": {
+      "src": "/guide-media/original/convolution-1-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "distortion.html": {
+    "banner": {
+      "src": "/guide-media/original/distortion-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "effect.html": {
+    "banner": {
+      "src": "/guide-media/original/effects-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "envelope.html": {
+    "banner": {
+      "src": "/guide-media/original/envelope-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "eq.html": {
+    "banner": {
+      "src": "/guide-media/original/eq-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "features.html": {
+    "banner": {
+      "src": "/guide-media/original/features-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    },
+    "tile": {
+      "src": "/guide-media/original/features-400x400.jpg",
+      "width": 400,
+      "height": 400
+    }
+  },
+  "filter.html": {
+    "banner": {
+      "src": "/guide-media/original/filter-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "frequently-asked-questions.html": {
+    "banner": {
+      "src": "/guide-media/original/faq-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "get-started.html": {
+    "banner": {
+      "src": "/guide-media/original/get-started-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    },
+    "tile": {
+      "src": "/guide-media/original/get-started-400x400.jpg",
+      "width": 400,
+      "height": 400
+    }
+  },
+  "granular.html": {
+    "banner": {
+      "src": "/guide-media/original/granular-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "interaction-2.html": {
+    "banner": {
+      "src": "/guide-media/original/interaction-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    },
+    "tile": {
+      "src": "/guide-media/original/interaction-400x400.jpg",
+      "width": 400,
+      "height": 400
+    }
+  },
+  "laser.html": {
+    "banner": {
+      "src": "/guide-media/original/laser-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "microphone.html": {
+    "banner": {
+      "src": "/guide-media/original/microphone-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "midi-controller.html": {
+    "banner": {
+      "src": "/guide-media/original/midi-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "noise.html": {
+    "banner": {
+      "src": "/guide-media/original/noise-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "particle-emitter.html": {
+    "banner": {
+      "src": "/guide-media/original/particleEmitter-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "phaser.html": {
+    "banner": {
+      "src": "/guide-media/original/phaser-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "pitch-shifter.html": {
+    "banner": {
+      "src": "/guide-media/original/pitchshifter-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "power-block.html": {
+    "banner": {
+      "src": "/guide-media/original/power-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "power.html": {
+    "banner": {
+      "src": "/guide-media/original/power-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    },
+    "tile": {
+      "src": "/guide-media/original/power-400x400.jpg",
+      "width": 400,
+      "height": 400
+    }
+  },
+  "pulse-power.html": {
+    "banner": {
+      "src": "/guide-media/original/momentary-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "recorder.html": {
+    "banner": {
+      "src": "/guide-media/original/recorder-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "reverb.html": {
+    "banner": {
+      "src": "/guide-media/original/convolution-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "sample.html": {
+    "banner": {
+      "src": "/guide-media/original/soundcloud-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "samplegen.html": {
+    "banner": {
+      "src": "/guide-media/original/wavegen-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "scuzz.html": {
+    "banner": {
+      "src": "/guide-media/original/scuzz-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "source.html": {
+    "banner": {
+      "src": "/guide-media/original/tone-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "stereo-delay.html": {
+    "banner": {
+      "src": "/guide-media/original/delay-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "synths.html": {
+    "banner": {
+      "src": "/guide-media/original/synths-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    },
+    "tile": {
+      "src": "/guide-media/original/synths-400x400.jpg",
+      "width": 400,
+      "height": 400
+    }
+  },
+  "toggle-power.html": {
+    "banner": {
+      "src": "/guide-media/original/toggle-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "tone.html": {
+    "banner": {
+      "src": "/guide-media/original/tone-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "vibrato.html": {
+    "banner": {
+      "src": "/guide-media/original/lfo-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "void.html": {
+    "banner": {
+      "src": "/guide-media/original/void-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  },
+  "volume.html": {
+    "banner": {
+      "src": "/guide-media/original/volume-1200x400.jpg",
+      "width": 1200,
+      "height": 400
+    }
+  }
+}

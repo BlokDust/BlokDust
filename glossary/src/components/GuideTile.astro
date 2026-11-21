@@ -1,0 +1,13 @@
+---
+interface Props {
+  href: string;
+  title: string;
+  image: { src: string; width: number; height: number };
+  accent: string;
+}
+const { href, title, image, accent } = Astro.props;
+---
+<a class:list={['guide-tile', accent]} href={href}>
+  <img {...image} alt="" decoding="async" />
+  <span class="tile-title">{title}</span>
+</a>

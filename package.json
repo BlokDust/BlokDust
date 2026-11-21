@@ -37,7 +37,10 @@
     "test:mpe": "node tests/mpe/run.ts",
     "test:support": "node tests/e2e/support.ts",
     "test:support:plugin": "node tests/e2e/support-plugin.ts",
-    "test:support:base": "node tests/e2e/support.ts --based"
+    "test:support:base": "node tests/e2e/support.ts --based",
+    "glossary:build": "pnpm -C glossary build",
+    "site:build": "pnpm web:build && pnpm glossary:build && node -e \"require('node:fs').cpSync('glossary/dist', 'web/dist', { recursive: true })\"",
+    "test:glossary": "node tests/e2e/glossary.ts"
   },
   "devDependencies": {
     "ajv": "8.20.0",

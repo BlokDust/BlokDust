@@ -1,0 +1,44 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { siteCopy } from '../catalogue';
+
+interface Props { groups: NonNullable<CollectionEntry<'guide'>['data']['shortcuts']> }
+const { groups } = Astro.props;
+---
+{groups.map(group => (
+  <section class="shortcut-group">
+    <h2>{group.title}</h2>
+    <div class="shortcut-rows">
+      {group.rows.map(row => {
+        const isPiano = 'piano' in row;
+        return (
+          <div class:list={['shortcut-row', { 'shortcut-piano-row': isPiano }]}>
+            <h3>{row.title}</h3>
+            {isPiano ? (
+              <div class="shortcut-piano" role="group" aria-label={row.title}>
+                {row.piano.map(([white, black]) => (
+                  <span class="piano-step">
+                    <kbd class="piano-white">{white}</kbd>
+                    {black && <kbd class="piano-black">{black}</kbd>}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div class="shortcut-keys">
+                {row.keys.map((combination, i) => (
+                  <Fragment>
+                    {i > 0 && <span>{siteCopy.shortcutOrLabel}</span>}
+                    <span class="shortcut-combination">
+                      {combination.map(key => <kbd>{key}</kbd>)}
+                    </span>
+                  </Fragment>
+                ))}
+              </div>
+            )}
+            <p>{row.description}</p>
+          </div>
+        );
+      })}
+    </div>
+  </section>
+))}
