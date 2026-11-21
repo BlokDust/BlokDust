@@ -28,7 +28,7 @@ export interface Stats {
   opens: number;
   /** Running totals (R16): the browser's estimates. */
   playMs: number; blocksAdded: number; particles: number; laserTurns: number;
-  /** Up to 5 block types: in the most patches first, then the most of them. */
+  /** Up to 6 block types (one row on a computer, two of three on a phone): in the most patches first, then the most of them. */
   favourites: { type: string; patches: number; count: number }[];
 }
 

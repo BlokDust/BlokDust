@@ -20,12 +20,15 @@ std::shared_ptr<LoadedSample> SampleLoader::decode(std::unique_ptr<juce::InputSt
   reader->read(&s->audio, 0, frames, 0, true, ch > 1);
   s->sampleRate = reader->sampleRate;
   s->duration = frames / reader->sampleRate;
-  const int points = std::min(frames, 4096);
+  // The loudest |sample| of each of up to 4000 equal stretches (the page draws v1's 200-point waveform from it, 20 to
+  // a point, and zooms into it: web/src/v1ui/waveZoom.ts). One sample per stretch, as it was, missed the peaks.
+  const int points = std::min(frames, 4000);
   s->preview.resize(static_cast<std::size_t>(points));
   for (int i = 0; i < points; ++i) {
-    const int at = static_cast<int>(static_cast<juce::int64>(i) * frames / points);
-    float v = s->audio.getSample(0, at);
-    if (ch > 1) v = 0.5f * (v + s->audio.getSample(1, at));
+    const auto from = static_cast<int>(static_cast<juce::int64>(i) * frames / points);
+    const auto to = std::max(from + 1, static_cast<int>(static_cast<juce::int64>(i + 1) * frames / points));
+    float v = 0.0f;
+    for (int c = 0; c < ch; ++c) v = std::max(v, s->audio.getMagnitude(c, from, to - from));
     s->preview[static_cast<std::size_t>(i)] = v;
   }
   return s;

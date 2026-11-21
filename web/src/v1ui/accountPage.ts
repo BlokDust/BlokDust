@@ -334,10 +334,10 @@ export class AccountPage {
       c.textAlign = 'left';
     }
     if (phone) y += PHONE.remixed * u;
-    // Five in a row; a phone: two rows of three.
-    const favs = st.favourites.map(f => ({ ...f, item: menuItem(f.type) })).filter(f => f.item).slice(0, phone ? 6 : 5);
+    // Six in a row; a phone: two rows of three.
+    const favs = st.favourites.map(f => ({ ...f, item: menuItem(f.type) })).filter(f => f.item).slice(0, 6);
     if (!favs.length) { c.font = App.Metrics.TxtItalic2; c.fillText(COPY.noFavourites, L, y + FAV.icon * u); }
-    const w = phone ? this.pageW() / 3 : 84 * u;
+    const w = this.pageW() / (phone ? 3 : 6);
     favs.forEach((f, k) => {
       const i = phone ? k % 3 : k, rowY = y + (phone ? Math.floor(k / 3) * PHONE.favRow * u : 0);
       const x = L + w * (i + 0.5);

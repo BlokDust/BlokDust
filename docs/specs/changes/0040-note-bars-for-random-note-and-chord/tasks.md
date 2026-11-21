@@ -9,5 +9,6 @@ Check items off as they land. Each task should be independently verifiable.
 - [x] 4. Web UI: note-bars row, range slider, Key slider, drag label, light-up; LFO targets; ui-regressions.
 - [ ] 5. `pnpm bd patches migrate` (blocks + Stage macros, dry run, D1 export first); staging, then production.
       Tool and golden fixtures done; the D1 runs wait for the owner's go.
-- [ ] 6. Gates (`bd index --check`, engine, render, wasm/worklet, web, ui-regressions, plugin test); plugin deploy
+- [x] 6. Gates (`bd index --check`, engine, render, wasm/worklet, web, ui-regressions, plugin test); plugin deploy
+      iPad build passed the owner's check (2026-11-20).
       (MBP), iPad build, staging deploy + smoke.

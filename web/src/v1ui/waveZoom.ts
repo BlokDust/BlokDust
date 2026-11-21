@@ -9,7 +9,6 @@
 // recomputed for the window, so v1's own value ↔ pixel maths (handles, slider, spread lines) work unchanged. Drawing
 // is clipped to the waveform; handles outside the window are not drawn and can't be grabbed. Unzoomed, nothing changes.
 import { App } from './shim.ts';
-import { Waveform } from './ported/Core/Audio/Waveform';
 
 type View = { f0: number; f1: number; rev: boolean; src: unknown };
 const views = new Map<number, View>();  // block id → its window (this session; not saved in the patch)
@@ -42,32 +41,45 @@ function minSpan(b: any): number {
   return n > 0 ? Math.min(1, 400 / n) : 0.1;
 }
 
+/** The loudest |value| overlapping each of POINTS equal parts of [a0, a1] (fractions of `chs`, one or two channels).
+ * Exact edges at any zoom: a part narrower than one value takes the value under it, so the row is always full and
+ * stays on the handles' scale. v1's GetWaveformFromBuffer rounds its parts up to whole values, which cut a short
+ * window's waveform short and snapped it to whole values (owner's recording, 2026-11-20: the plugins' page has only
+ * the processor's preview, so their windows are short). Long parts are read with a stride, as v1 does. */
+function peaks(chs: ArrayLike<number>[], a0: number, a1: number): number[] {
+  const n = chs[0]?.length ?? 0, out: number[] = [];
+  if (!n) return out;
+  for (let i = 0; i < POINTS; i++) {
+    const lo = Math.min(n - 1, Math.floor((a0 + (a1 - a0) * i / POINTS) * n));
+    const hi = Math.max(lo, Math.min(n - 1, Math.ceil((a0 + (a1 - a0) * (i + 1) / POINTS) * n) - 1));
+    const step = Math.max(1, Math.floor((hi - lo + 1) / 64));
+    let m = 0;
+    for (const ch of chs) for (let k = lo; k <= hi; k += step) m = Math.max(m, Math.abs(ch[k]));
+    out.push(m);
+  }
+  return out;
+}
+const channels = (src: any): ArrayLike<number>[] =>
+  src?.getChannelData ? Array.from({ length: Math.min(2, src.numberOfChannels) }, (_, c) => src.getChannelData(c)) : [src ?? []];
+
 const gain = new WeakMap<object, number>();
 /** v1's soft normalise (95 %) of the whole sound, so a zoomed quiet stretch stays as quiet as it looks unzoomed. */
 function normalOf(buf: any): number {
   let g = gain.get(buf);
   if (g === undefined) {
-    const peak = Math.max(0, ...new Waveform().GetWaveformFromBuffer(buf, POINTS, 5, 0));
+    const peak = Math.max(0, ...peaks(channels(buf), 0, 1));
     g = peak > 0.01 ? (1 / peak - 1) * 0.95 + 1 : 1;
     gain.set(buf, g);
   }
   return g;
 }
-/** The window's waveform: v1 GetWaveformFromBuffer on that stretch of the sound (or the drawn array, resampled). */
+/** The window's waveform: the peaks of that stretch of the sound (or of the drawn array, already normalised). */
 function windowWave(src: any, f0: number, f1: number, rev: boolean): number[] {
   const [a0, a1] = rev ? [1 - f1, 1 - f0] : [f0, f1];
-  let w: number[];
-  if (src?.getChannelData) {
-    const len = src.length, a = Math.floor(a0 * len), z = Math.max(a + 1, Math.ceil(a1 * len));
-    const part = { numberOfChannels: Math.min(2, src.numberOfChannels), getChannelData: (c: number) => src.getChannelData(c).subarray(a, z) };
-    const g = normalOf(src);
-    w = new Waveform().GetWaveformFromBuffer(part as any, POINTS, 5, 0).map((x: number) => Math.min(1, x * g));
-  } else {
-    const arr: number[] = src ?? [], n = arr.length;
-    if (!n) return [];
-    const from = rev ? [...arr].reverse() : arr;  // the drawn array is already reversed: back to the sound's order
-    w = Array.from({ length: POINTS }, (_, i) => from[Math.min(n - 1, Math.floor((a0 + (a1 - a0) * (i + 0.5) / POINTS) * n))]);
-  }
+  // The drawn array is already reversed: back to the sound's order first.
+  const chs = src?.getChannelData ? channels(src) : [rev ? [...(src ?? [])].reverse() : (src ?? [])];
+  const g = src?.getChannelData ? normalOf(src) : 1;
+  const w = peaks(chs, a0, a1).map(x => Math.min(1, x * g));
   return rev ? w.reverse() : w;
 }
 

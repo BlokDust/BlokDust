@@ -10,4 +10,5 @@ Check items off as they land. Each task should be independently verifiable.
 - [x] 5. Inside view (UI-0009) desktop + phone layout
 - [x] 6. Golden `stage-nested`; browser tests `pnpm test:new-blocks -- --only stage,stage-from-selection`
 - [x] 6a. Keep Particles (R13b, owner review 4): engine `test_stage.cpp`, browser `stage-keep-particles`
-- [ ] 7. Owner check (desktop, iPad, phone)
+- [x] 7. Owner check (desktop, iPad, phone)
+      Owner passed (2026-11-20). Loading a Stage from a share link (3a) stays open.

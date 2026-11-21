@@ -11,4 +11,5 @@
 - [x] 10. Stage In follows the outside controller (engine test first).
 - [x] 11. engine.cpp split; bd size with its baseline and pre-commit hook.
 - [x] 12. Gates, staging, MBP, iPad, push.
-- [ ] 8. Owner check.
+- [x] 8. Owner check.
+      Owner passed (2026-11-20).

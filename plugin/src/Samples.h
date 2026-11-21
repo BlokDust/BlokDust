@@ -21,7 +21,7 @@ struct LoadedSample {
   double duration = 0.0;
   nlohmann::json ref;               // patch `refs` entry (provider "file" with path, or "freesound")
   std::string track;                // ref key: "file:<name>" or "freesound:<id>"
-  std::vector<float> preview;       // ≤ 4096 mono points for the UI's v1 waveform (it never gets the audio)
+  std::vector<float> preview;       // ≤ 4000 peaks (loudest |sample| per stretch) for the UI's waveform (it never gets the audio)
 };
 
 using SampleResult = std::function<void(std::shared_ptr<LoadedSample> ok, std::string error)>;

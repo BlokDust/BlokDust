@@ -122,7 +122,7 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
     light type over a mid-type label; numbers past 9,999 are short (12.3K, 1.2M);
   - on a phone (CHG-0037): the two rows of four numbers, FAVOURITE BLOCKS in two rows of three (six), the most remixed
     line under its title, more room between the parts;
-  - FAVOURITE BLOCKS: up to five block types (the server sends six), in the most of the account's patches first, then the most of them,
+  - FAVOURITE BLOCKS: up to six block types in one row, from the account's saved patches (the latest of each): in the most of them first, then the most of them,
     each v1's menu icon over its menu name (two lines when wider than its column); or a line saying to save a patch;
   - "Most remixed: TITLE, N times" at the right of the FAVOURITE BLOCKS line, when others have made patches from one
     of the account's.

@@ -4,6 +4,7 @@
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { chromium, type Browser, type Page } from 'playwright';
 import { serveDist } from './serve.ts';
+import { waveformTests } from './ui-regressions/waveform.ts';
 import { THEMES } from '../../web/src/generated/palettes.gen.ts';
 import { BLOCKS } from '../../web/src/generated/blocks.gen.ts';
 import { drawnPoints, insidePolygon, selectionRing } from '../../web/src/stage/ring.ts';
@@ -3522,80 +3523,6 @@ Object.assign(tests, {
     const ok = (seen: any[]) => seen.every(s => s.loop === s.mode) && seen.map(s => s.loop).join() === [seen[0].loop, false, true, false].join();
     return [ok(r.Sample as any[]) && ok(r.Recorder as any[]), r];
   },
-  // Owner (2026-11-15): a sample's waveform zooms and slides, so a tiny loop of a long sample can be picked: mouse wheel,
-  // trackpad pinch (Ctrl + wheel) and sideways swipe, a drag on the waveform, two fingers. The stage never zooms.
-  async 'waveform-zoom'(errors: string[]) {
-    cdn.seconds = 3;
-    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, hasTouch: true });
-    const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
-    await p.route('https://cdn.freesound.org/**', r => r.fulfill({ status: 200, contentType: 'audio/wav', headers: { 'access-control-allow-origin': '*' }, body: decayWav(cdn.seconds) }));
-    await p.goto(`${url}/index.html?v1=${comp([blk(1, 'Sample', 0, 0)])}`);
-    await p.waitForFunction(() => (window as any).__bd_probe);
-    await p.click('#start');
-    await p.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 10);
-    await p.waitForFunction(() => (window as any).__bd_probe.samples.some((x: any) => x.loaded), null, { timeout: 10000 });
-    await p.waitForTimeout(1200);
-    const [bx, by] = await toCss(p, 0, 0.5);
-    await p.mouse.click(bx, by); await p.waitForTimeout(1200);
-    const geo = () => p.evaluate(() => {
-      const P = (window as any).__bd_probe, o = P.scene.OptionsPanel, w = (o.Options as any[]).find(x => x.Type === 'waveregion'), v = o.SelectedBlock;
-      return { x: o.Position.x + o.Margin, w: o.Range, y: o.Position.y + w.Position.y, h: w.Size.height, min: w.Min, max: w.Max, span: w.Max - w.Min,
-        wave: (w.Waveform as number[]).length, start: v.Params.startPosition, end: v.Params.endPosition, loopStart: v.Params.loopStart, dur: v.GetDuration(),
-        handle0: w.Handles[0].Position.x, stageZoom: P.v1App.ZoomLevel, drag: { ...P.v1App.DragOffset } };
-    });
-    const r: Record<string, any> = {};
-    const g0 = await geo(); r.whole = { min: g0.min, max: g0.max, dur: g0.dur };
-    const mid = g0.y + g0.h / 2;
-    // 1. mouse wheel at the waveform's left edge: zooms in about the pointer
-    await p.mouse.move(g0.x - 4, mid);  // in the grab margin: the left edge stays put
-    for (let i = 0; i < 8; i++) { await p.mouse.wheel(0, -100); await p.waitForTimeout(40); }
-    const g1 = await geo(); r.wheel = { min: g1.min, span: g1.span, wave: g1.wave };
-    // 2. trackpad pinch (Ctrl + wheel) zooms further
-    await p.keyboard.down('Control');
-    for (let i = 0; i < 3; i++) { await p.mouse.wheel(0, -50); await p.waitForTimeout(40); }
-    await p.keyboard.up('Control');
-    const g2 = await geo(); r.pinch = { min: g2.min, span: g2.span };
-    // 3. the Start handle dragged half way across the window lands half way through it (fine control)
-    await p.mouse.move(g2.x + g2.handle0, mid); await p.mouse.down();
-    await p.mouse.move(g2.x + g2.w / 2, mid, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(100);
-    const g3 = await geo(); r.handle = { start: g3.start, want: g2.min + g2.span / 2 };
-    // 4. a drag on the waveform away from the handles slides it on (left: later in the sound)
-    await p.mouse.move(g3.x + g3.w * 0.9, mid); await p.mouse.down();
-    await p.mouse.move(g3.x + g3.w * 0.7, mid, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(100);
-    const g4 = await geo(); r.dragPan = { min: g4.min, span: g4.span, start: g4.start };
-    // 5. a sideways trackpad swipe slides it back
-    await p.mouse.move(g4.x + g4.w * 0.5, mid);
-    await p.mouse.wheel(-Math.round(g4.w * 0.1), 0); await p.waitForTimeout(100);
-    const g5 = await geo(); r.swipe = { min: g5.min, span: g5.span };
-    await p.screenshot({ path: `${OUT}/waveform-zoom.png` });
-    // 6. two fingers spreading on the waveform zoom it about their midpoint; the first finger's press moves nothing
-    const cdp = await ctx.newCDPSession(p);
-    const pt = (f: number, id: number) => ({ x: g5.x + g5.w * f, y: mid, id });
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [pt(0.45, 1)] });
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [pt(0.45, 1), pt(0.55, 2)] });
-    for (let i = 1; i <= 8; i++) { const d = 0.05 + 0.15 * i / 8; await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [pt(0.5 - d, 1), pt(0.5 + d, 2)] }); await p.waitForTimeout(16); }
-    const during = await p.evaluate(() => (window as any).__bd_touch());
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [pt(0.7, 2)] });
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await p.waitForTimeout(200);
-    const g6 = await geo(); r.touch = { min: g6.min, span: g6.span, start: g6.start, stagePinch: during.pinch, centre: g6.min + g6.span / 2, wasCentre: g5.min + g5.span / 2 };
-    // 7. zoomed all the way out: the whole sound again, region kept
-    await p.mouse.move(g6.x + g6.w / 2, mid);
-    for (let i = 0; i < 80; i++) await p.mouse.wheel(0, 100);
-    await p.waitForTimeout(100);
-    const g7 = await geo(); r.out = { min: g7.min, max: g7.max, start: g7.start };
-    r.stage = [g0, g1, g2, g3, g4, g5, g6, g7].map(g => [g.stageZoom, g.drag.x, g.drag.y]);
-    await ctx.close();
-    const close = (a: number, b: number, eps: number) => Math.abs(a - b) <= eps;
-    const pass = close(g0.min, 0, 1e-9) && close(g0.max, g0.dur, 1e-9) &&
-      g1.span < g0.dur * 0.5 && close(g1.min, 0, 1e-9) && g1.wave === 200 &&
-      g2.span < g1.span * 0.6 && close(g3.start, r.handle.want, g2.span * 0.03) &&
-      close(g4.min, g3.min + g3.span * 0.2, g3.span * 0.02) && close(g4.span, g3.span, 1e-9) && close(g4.start, g3.start, 1e-9) &&
-      close(g5.min, g4.min - g4.span * 0.1, g4.span * 0.02) &&
-      g6.span < g5.span * 0.45 && close(r.touch.centre, r.touch.wasCentre, g5.span * 0.03) && close(g6.start, g5.start, 1e-9) && !r.touch.stagePinch &&
-      close(g7.min, 0, 1e-9) && close(g7.max, g0.dur, 1e-9) && close(g7.start, g3.start, 1e-9) &&
-      r.stage.every((s: number[]) => JSON.stringify(s) === JSON.stringify(r.stage[0]));
-    return [pass, r];
-  },
   // Owner (2026-11-17): short attacks were hard to set on the Envelope's graph (v1's straight 10 ms – 5 s axis put
   // everything under 100 ms in 2 px). The time handles now sit on a log axis, follow the pointer from where they are
   // grabbed, move a tenth as fast with Shift, and a press where handles overlap takes the nearest one (adsrPanel.ts).
@@ -3675,6 +3602,9 @@ Object.assign(tests, {
     return [daw.prevented === false && !daw.open && app.prevented === true && app.open && app.tab === 0 && !daw.sent.length && !app.sent.length, { daw, app }];
   },
 } as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
+
+// The waveform zoom's tests (CHG-0028), in their own file.
+Object.assign(tests, waveformTests({ browser, url, OUT, comp, blk, toCss, decayWav, openPlugin, plugPatch }));
 
 /** Bugs captured but not fixed yet: reported as KNOWN (not failing CI) with the reason; a pass says to remove it. */
 const KNOWN: Record<string, string> = {
