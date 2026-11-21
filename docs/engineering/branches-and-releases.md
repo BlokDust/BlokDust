@@ -21,13 +21,14 @@ read it):
 
 ## Releasing
 1. Bump the version on `main` through a pull request, and check staging.
-2. Tag the commit and push the tag: `git tag -a vX.Y.Z -m "BlokDust X.Y.Z"`, then `git push origin vX.Y.Z`.
+2. On an up-to-date `main`, run `pnpm bd release tag --dry-run`, then `pnpm bd release tag [--notes <file>]`. It
+   checks the branch, the version and that the tag is new, then tags, pushes and publishes the GitHub release. It
+   deploys nothing, and it prints the steps below.
 3. Ship from that tag, each step on the owner's go:
    - `pnpm bd server deploy --env production`, then `pnpm bd server smoke --env production`
    - `pnpm bd plugin package` and `pnpm bd win package`, then `pnpm bd release publish`. Commit the updated
      `web/src/releases.json` through a pull request and deploy the site again.
    - `pnpm bd plugin ios archive --upload` for the iPad app
-4. Publish a GitHub release for the tag, with notes and links to the installers.
 
 A site-only fix can go to production between releases, but it still ships from a tag (a patch release), so
 `git checkout vX.Y.Z` always gives the code that is live.
