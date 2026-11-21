@@ -1,36 +1,68 @@
-<p align="center"><img src="docs/media/blokdust-laser.gif" width="800" alt="BlokDust: a rotating laser plays a ring of tones and fires particle emitters"></p>
-
 # BlokDust 2
 
-A visual, physics-driven music playground. Drop blocks on a grid; nearby blocks connect; particle emitters and lasers
-fire into sound sources to make self-playing musical environments. A faithful, much faster rebuild of
-[BlokDust v1](https://github.com/BlokDust/BlokDust/tree/v1-legacy) (2015), for the web and as VST3/AU plug-ins and a standalone app.
+BlokDust is a free, open-source music-making app. Connect blocks to build instruments, create sounds, make effects and design musical worlds that play themselves.
 
-**Play it:** [blokdust.funputs.com](https://blokdust.funputs.com/) · **Plug-ins:** Settings › DOWNLOAD on the site
-(macOS and Windows, free)
+Use it in your browser, as a standalone app, or as a VST3, AU or AUv3 plugin in your favourite music software.
 
-> **Status:** 2.0 is out (November 2026): the website and the free plug-ins for macOS and Windows. Next: an iPad
-> (AUv3) version. See the [roadmap](docs/plans/roadmap.md) and [what's new since v1](CHANGELOG.md).
+**[Play BlokDust](https://blokdust.funputs.com/)** · **[User Guide](https://blokdust.funputs.com/guide)** · **[Download](https://blokdust.funputs.com/downloads)**
 
-- **Docs:** [docs/](docs/README.md) · [architecture](docs/architecture/overview.md) · [decisions](docs/decisions/README.md) · [specs](docs/specs/README.md)
-- **Agents:** read [AGENTS.md](AGENTS.md)
-- **Tools:** `pnpm install && pnpm bd list` · registry in [tools/README.md](tools/README.md)
+![BlokDust in action](docs/media/blokdust-laser.gif)
 
-## Source and version history
-This repository is the public home of BlokDust 2. The `main` branch contains V2; new contributions should target it.
-V2 arrived as a source snapshot of 2.0.2 after the original V1 history, followed by its full development history from
-2.0.2 onwards.
+## Features
 
-The original application and its history remain available on the [v1-legacy branch](https://github.com/BlokDust/BlokDust/tree/v1-legacy)
-and at the [v1-before-v2 tag](https://github.com/BlokDust/BlokDust/tree/v1-before-v2). V1 retains its MIT license;
-V2 is AGPL-3.0-or-later, with the original attribution and notices preserved in [NOTICE.md](NOTICE.md).
+- Build your own synthesizers, sequencers and audio effects.
+- Create music using particles, lasers and moving blocks.
+- Play your creations using MIDI and MPE controllers.
+- Use audio samples, live audio and your own recordings.
+- Save, share and embed your creations on other websites.
+- Use BlokDust in Ableton Live, Logic Pro, REAPER and other DAWs.
 
-Clone the current source with `git clone https://github.com/BlokDust/BlokDust.git`. Local setup and verification
-commands are in [docs/engineering/toolchain.md](docs/engineering/toolchain.md) and [AGENTS.md](AGENTS.md).
+Everything is free. No account is needed to get started.
+
+## Patch Gallery
+
+Explore, play and remix patches made by the BlokDust community. Create a free account to save your patches across devices and publish your creations to the gallery.
+
+To explore the gallery, open **Patches → Gallery**. To create an account or sign in, open **Settings → Account / Sign In**.
+
+## Download
+
+BlokDust is available on multiple platforms:
+
+- **Web** — play directly in your browser.
+- **macOS** — standalone app, VST3 and AU plugins.
+- **Windows** — standalone app and VST3 plugin.
+- **iPad** — AUv3 plugin, coming soon to the Apple App Store.
+
+Visit the [downloads page](https://blokdust.funputs.com/downloads) or select **Download** in Settings at [blokdust.funputs.com](https://blokdust.funputs.com/).
+
+## Built with
+
+- **C++** – audio engine and physics simulation.
+- **JUCE** – native audio plugins and standalone apps.
+- **WebAssembly** – audio processing in the browser.
+- **TypeScript & PixiJS** – user interface and graphics.
+- **Cloudflare Workers & D1** – patch storage and sharing.
+
+## Development
+
+Contributions, bug reports and feature suggestions are welcome.
+
+- [Developer documentation](docs/README.md)
+- [Architecture](docs/architecture/overview.md)
+- [Build and setup instructions](docs/engineering/toolchain.md)
+- [Changelog](CHANGELOG.md)
 
 ## Credits
-BlokDust is a collaboration between Luke Twyman, Luke Phillips and Ed Silverton, released in 2016
-([the original](https://github.com/BlokDust/BlokDust/tree/v1-legacy)). This rebuild was released in 2026, built by Luke Phillips.
 
-## License
-[AGPL-3.0-or-later](LICENSE). Portions derived from BlokDust v1 (MIT), see [NOTICE.md](NOTICE.md). Patches you make are yours.
+BlokDust was originally created by Luke Twyman, Luke Phillips and Ed Silverton in 2016.
+
+BlokDust 2 was rebuilt by Luke Phillips and released in 2026.
+
+The [original version](https://github.com/BlokDust/BlokDust/tree/v1-legacy) remains available on GitHub.
+
+## Licence
+
+BlokDust 2 is licensed under [AGPL-3.0-or-later](LICENSE). Portions derived from the original BlokDust are licensed under MIT. See [NOTICE.md](NOTICE.md).
+
+The patches you create are yours.
