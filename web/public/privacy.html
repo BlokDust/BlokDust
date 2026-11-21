@@ -23,11 +23,12 @@
 <body>
 <main>
   <h1>BLOKDUST PRIVACY</h1>
-  <p class="updated">Updated 16 November 2026</p>
+  <p class="updated">Updated 20 November 2026</p>
 
   <p>BlokDust records a few anonymous facts about how it is used, so we can see what people make with it and what
     breaks. It never records who you are, what your patches contain, what you search for, or your files. There are no
-    cookies, no adverts and no tracking across other sites.</p>
+    adverts and no tracking across other sites. You don't need an account; if you make one, it holds as little as it
+    can (below). The only cookie is the one that keeps you signed in.</p>
 
   <h2>On the website</h2>
   <ul>
@@ -46,7 +47,8 @@
 
   <h2>In the plugins and the app</h2>
   <ul>
-    <li>Once a day when BlokDust runs, it sends: the BlokDust version, the plugin format (VST3, Audio Unit or the app),
+    <li>Once a day when BlokDust runs, it sends: the BlokDust version, the plugin format (VST3, Audio Unit, the iPad's
+      AUv3 or the app),
       instrument or effect, the name and version of the program it runs in (your DAW), your operating system and
       processor type, and a random number made when it was installed, so each installation counts once. The random
       number is stored only as a one-way hash.</li>
@@ -63,11 +65,35 @@
 
   <h2>Patches and samples</h2>
   <p>A patch you share is stored so its link works; it holds only what you put in it. Samples stay on your computer or
-    on Freesound: BlokDust never uploads audio.</p>
+    on Freesound: BlokDust never uploads audio. Saving and sharing pass a Cloudflare Turnstile check, which tells
+    people from bots without a puzzle.</p>
+
+  <h2>Accounts</h2>
+  <p>An account is optional. It lets you keep your patches on every device, add them to the gallery and like others'.
+    It holds:</p>
+  <ul>
+    <li>The name you choose (your @handle), shown on patches you add to the gallery.</li>
+    <li>How you sign in. With Google or Apple, only the ID they give BlokDust for your account: BlokDust doesn't ask
+      for, and never gets, your name, email address or picture. With a passkey, only its public key (the private part
+      never leaves your device).</li>
+    <li>A cookie that keeps you signed in. The server keeps only a one-way hash of it.</li>
+    <li>Your patches, what you've added to the gallery, and which patches you've liked.</li>
+    <li>The numbers on Settings › Account (play time, blocks added, particles, laser turns), which your browser sends
+      with your saves and when you close the page.</li>
+  </ul>
+  <p>To limit how many accounts can be made from one network in a day, the server keeps a hash of your network address
+    mixed with a value that changes every day, for that day only.</p>
+  <p><strong>Deleting your account</strong> (Settings › Account) removes it, how you signed in, your patches, your
+    gallery entries and your likes, at once. Links to your patches stop working.</p>
+
+  <h2>Feedback and reports</h2>
+  <p>What you send from the FEEDBACK tab (a suggestion, a bug or a report about a patch) is kept so we can read and
+    answer it: your message, an email address if you give one, the BlokDust version and your system (operating system,
+    browser or DAW, audio settings), and the patch you had open. The system details and the patch are deleted after 90
+    days, the rest after a year. It isn't linked to your account.</p>
 
   <h2>Questions</h2>
-  <p>BlokDust is open source: you can read exactly what is sent in
-    <a href="https://github.com/lukephills/blokdust-v2">the code on GitHub</a>, and ask questions there.</p>
+  <p>Email <a href="mailto:support@funputs.com">support@funputs.com</a>.</p>
 </main>
 </body>
 </html>
