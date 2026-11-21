@@ -17,7 +17,9 @@ export function inspect(file: string, text: string): Finding[] {
     const addresses = line.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g) ?? [];
     if (addresses.some(a => !/@(?:example\.(?:com|org|invalid)|2x\.png|3x\.png)$/.test(a)
       && !/^(?:\d+\+)?[\w.-]+@users\.noreply\.github\.com$/.test(a)
-      && a !== 'noreply@anthropic.com')) findings.push({ file, line: i + 1, category: 'email-or-ssh-address' });
+      && a !== 'noreply@anthropic.com'
+      // support@funputs.com: the public contact on the privacy page (owner, 2026-11-20).
+      && a !== 'support@funputs.com')) findings.push({ file, line: i + 1, category: 'email-or-ssh-address' });
     if (file.endsWith('wrangler.jsonc') && /"database_id":\s*"(?!00000000)[a-f0-9]{8}-[a-f0-9-]{27}"/.test(line)) {
       findings.push({ file, line: i + 1, category: 'deployed-database-id' });
     }
