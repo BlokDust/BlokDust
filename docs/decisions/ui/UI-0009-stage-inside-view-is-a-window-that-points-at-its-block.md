@@ -18,7 +18,7 @@ instructional text. Four options were sketched on v1 frames and a phone frame (2
 We will show the inner stage in a v1 options-panel-shaped window, above the outer stage and below the header and block
 menus. On desktop and iPad the outer stage slides so the Stage block sits in a wider left margin, joined to the window
 by the options-panel pointer. On a phone the block sits in a strip under the header and the pointer points down.
-- In: the Stage panel's **Open stage** button, or double-click the block.
+- In: the Stage panel's **Open stage** button (its only button; a patch goes inside with Insert while it is open), or double-click the block.
 - Out: × in the window, Esc, or a click or tap anywhere outside the window (the Stage block included).
 - The menus, zoom and trash act on the inner stage while it is open. The world POWER switch stays global (UI-0008).
 

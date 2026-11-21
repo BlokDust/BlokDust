@@ -200,7 +200,7 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
       slider('Volume', 'gainDb', g > 0 ? Math.max(-40, 20 * Math.log10(g)) : -40, -40, 6, { display: v => (v <= -40 ? 'OFF' : `${v >= 0 ? '+' : ''}${v.toFixed(1)} dB`) }),
       // R13b (owner, 2026-11-14): unpowered, the particles inside carry on.
       switches({ name: 'Keep Particles', setting: 'keepParticles', value: !!b.Params.keepParticles }),
-      // One row: OPEN STAGE beside LOAD PATCH (owner, 2026-11-14; buttonPair.ts). The plugins too (CHG-0038).
+      // OPEN STAGE (a patch goes inside by INSERT while it is open, owner 2026-11-20). The plugins too.
       { type: 'actionbutton', name: '', setting: 'openStage', props: { text: 'Open Stage' } },
     ];
   },

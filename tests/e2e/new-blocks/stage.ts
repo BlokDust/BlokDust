@@ -52,7 +52,7 @@ export const stageTests: Tests = {
     const stillPlays = (await state(p)).rms > 0.005;
     await p.mouse.up();
     await p.close();
-    const pass = menu.includes('Stage') && silent && held && names.includes('Volume') && names.filter((n: string) => n === 'buttonpair').length === 1 &&
+    const pass = menu.includes('Stage') && silent && held && names.includes('Volume') && names.filter((n: string) => n === 'actionbutton').length === 1 &&
       inner.join() === 'fx.filter,power.power,source.tone' && !insideMenu.includes('Stage') && insideMenu.includes('Sample') && insideMenu.includes('Microphone') && insideMenu.includes('Tone') &&
       insideInteraction.includes('Stage In') && !outerInteraction.includes('Stage In') &&
       linked === 2 && unlinked === 1 && out1 && outerBlocks.join() === 'fx.volume,source.stage' && !!movedFilter && movedFilter.x !== 3 && again === 3 && out2 && out3 && stillPlays &&

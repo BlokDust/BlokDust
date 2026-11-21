@@ -175,20 +175,18 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                  sendPatchFile(f, "open", static_cast<int>(v.getProperty("req", 0)));
                })
                // FROM YOUR COMPUTER: one picker; the page then asks Open or Insert.
-               .withEventListener("bd_patchPick", [this](const juce::var& v) {
-                 // `stage`: a Stage panel's LOAD PATCH (CHG-0038); the reply names it, and the page fills that Stage.
-                 const int stage = static_cast<int>(v.getProperty("stage", 0));
+               .withEventListener("bd_patchPick", [this](const juce::var&) {
                  patchChooser_ = std::make_unique<juce::FileChooser>("Choose a BlokDust patch", patchfiles::folder(), "*.blokdust;*.json", true, false, pickerParent(this));
-                 patchChooser_->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this, stage](const juce::FileChooser& fc) {
+                 patchChooser_->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this](const juce::FileChooser& fc) {
 #if JUCE_IOS
                    // iPad: a document-picker URL outside our sandbox; JUCE's stream holds its security-scoped access.
                    if (const auto url = fc.getURLResult(); !url.isEmpty())
                      if (auto in = url.createInputStream(juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress))) {
                        const auto name = juce::URL::removeEscapeChars(url.getFileName());
-                       sendPatchText(in->readEntireStreamAsString(), name.upToLastOccurrenceOf(".", false, false), name, "choose", -1, stage);
+                       sendPatchText(in->readEntireStreamAsString(), name.upToLastOccurrenceOf(".", false, false), name, "choose", -1);
                      }
 #else
-                   if (const auto f = fc.getResult(); f.existsAsFile()) sendPatchFile(f, "choose", -1, stage);
+                   if (const auto f = fc.getResult(); f.existsAsFile()) sendPatchFile(f, "choose", -1);
 #endif
                  });
                })

@@ -61,21 +61,50 @@ export const stagePlayTests: Tests = {
     const pass = JSON.stringify(before) === '[["Keep Particles",false]]' && saved.keepParticles === 1 && JSON.stringify(after) === '[["Keep Particles",true]]';
     return [pass, { before, saved, after }];
   },
-  // Owner 2026-11-14: OPEN STAGE and LOAD PATCH sit side by side on one row; a real click on each half does its own.
+  // Owner 2026-11-20: LOAD PATCH is gone (it read a file only; a patch from OPEN or the gallery goes in with INSERT while
+  // the Stage is open): the panel's last row is OPEN STAGE alone, and a real click on it opens the Stage.
   async 'stage-panel-buttons'(errors) {
     const p = await open(browser, [blk('st', 'source.stage', 0, 0)], errors);
-    await p.evaluate(() => { const h = (window as any).__bd_probe.scene.host, seen: string[] = ((window as any).__pressed = []); h.openStage = () => seen.push('open'); h.loadStagePatch = () => seen.push('load'); });
+    await p.evaluate(() => { const h = (window as any).__bd_probe.scene.host, seen: string[] = ((window as any).__pressed = []); h.openStage = () => seen.push('open'); });
     await openPanel(p, 'st');
     const row = await p.evaluate(() => { const o = (window as any).__bd_probe.scene.OptionsPanel, pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio;
-      const r = (o.Options as any[]).find(x => x.Type === 'buttonpair'); if (!r) return null;
-      const y = (o.Position.y + r.Position.y + r.Size.height / 2) / pr, x = (f: number) => (o.Position.x + o.Margin + o.Range * f) / pr;
-      return { rows: (o.Options as any[]).map(x => x.Type), left: [x(0.25), y], right: [x(0.75), y] }; });
-    if (!row) { await p.close(); return [false, 'no button pair row']; }
+      const r = (o.Options as any[]).find(x => x.Setting === 'openStage'); if (!r) return null;
+      const y = (o.Position.y + r.Position.y + r.Size.height / 2) / pr;
+      return { rows: (o.Options as any[]).map(x => x.Type), type: r.Type, text: r._Text, at: [(o.Position.x + o.Margin + o.Range * 0.5) / pr, y] }; });
+    if (!row) { await p.close(); return [false, 'no OPEN STAGE row']; }
     await p.screenshot({ path: `${OUT}/stage-panel-buttons.png` });
-    for (const at of [row.left, row.right]) { await p.mouse.move(at[0], at[1]); await p.mouse.click(at[0], at[1]); await p.waitForTimeout(200); }
+    await p.mouse.move(row.at[0], row.at[1]); await p.mouse.click(row.at[0], row.at[1]); await p.waitForTimeout(200);
     const pressed = await p.evaluate(() => (window as any).__pressed);
     await p.close();
-    return [row.rows.filter((t: string) => t === 'buttonpair').length === 1 && !row.rows.includes('actionbutton') && pressed.join() === 'open,load', { rows: row.rows, pressed }];
+    return [row.type === 'actionbutton' && row.text === 'Open Stage' && !row.rows.includes('buttonpair') && pressed.join() === 'open', { ...row, pressed }];
+  },
+  // Owner 2026-11-20: with a Stage open, INSERT (Patches › OPEN, or the gallery) puts the patch inside that Stage, placed
+  // like any insert; its own Stage blocks stay out (one level). The world outside is untouched.
+  async 'stage-insert-inside'(errors) {
+    const p = await open(browser, [blk('st', 'source.stage', 0, 0), blk('out', 'source.tone', 8, 0)], errors);
+    const mine = { format: 'blokdust.patch', version: 2, seed: 1, meta: { title: 'Two Blocks' },
+      blocks: [blk('a', 'source.tone', 0, 0), blk('b', 'power.power', 2, 0), blk('s', 'source.stage', 4, 0)] };
+    await p.evaluate(m => localStorage.setItem('blokdust.myPatches', JSON.stringify([{ title: 'Two Blocks', saved: Date.UTC(2026, 10, 1), patch: m }])), mine);
+    await p.evaluate(i => (window as any).__bd_stage.enter(i), await idOf(p, 'st')); await p.waitForTimeout(800);
+    const click = async (name: string, wait = 800) => {
+      const [x, y] = await p.evaluate(n => (window as any).__bd_probe.scene.PatchesPanel.centreOf(n), name) as [number, number];
+      await p.mouse.move(x, y); await p.mouse.click(x, y); await p.waitForTimeout(wait);
+    };
+    await p.evaluate(() => { try { localStorage.removeItem('blokdust.patchesTab'); } catch { /* */ } });
+    await p.mouse.move(1138, 45); await p.mouse.click(1138, 45); await p.waitForTimeout(1500);  // PATCHES
+    await click('tab1', 1100);  // OPEN
+    await click('ins0', 1000);  // INSERT on Two Blocks: its blocks follow the pointer
+    await p.mouse.move(640, 500); await p.mouse.click(640, 500); await p.waitForTimeout(500);  // put them down
+    const inner = await p.evaluate(() => [...(window as any).__bd_probe.state.patch.blocks].map((b: any) => b.type).sort());
+    const stillInside = await p.evaluate(() => !!(window as any).__bd_probe.inside);
+    await p.evaluate(() => (window as any).__bd_stage.exit()); await p.waitForTimeout(800);
+    const after = await state(p);
+    await p.close();
+    const outer = after.patch.blocks.map((b: any) => b.type).sort();
+    const macro = (after.patch.macros ?? []).find((m: any) => m.block === 'st');
+    const inStage = (macro?.blocks ?? []).map((b: any) => b.type).sort();
+    return [JSON.stringify(outer) === JSON.stringify(['source.stage', 'source.tone']) && JSON.stringify(inStage) === JSON.stringify(['power.power', 'source.tone']),
+      { inner, stillInside, outer, inStage }];
   },
   // Owner 2026-11-14: a double click on a Stage opens it, and its options panel never shows (the first click had set it
   // on its way open).

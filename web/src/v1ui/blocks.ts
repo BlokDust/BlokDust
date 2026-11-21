@@ -115,8 +115,7 @@ export class V1Block {
       App.MainScene.host.setSound(this.Id, n, false);  // the wave is made when the slider is let go (newBlocks.ts)
       return;
     }
-    if (key === 'openStage') { App.MainScene.host.openStage(this.Id); return; }          // a Stage's panel buttons (CHG-0021)
-    if (key === 'loadStagePatch') { App.MainScene.host.loadStagePatch(this.Id); return; }
+    if (key === 'openStage') { App.MainScene.host.openStage(this.Id); return; }          // a Stage's OPEN STAGE (CHG-0021)
     if (key === 'resetCounter') { App.MainScene.host.resetCounter(this.Id); return; }  // a Counter's Reset (R2c)
     // Samplers: reverse flips the waveform and mirrors the region at once (the app updates Params and the engine).
     if (key === 'reverse' && this.def.params.some(q => q.key === 'startPosition')) { App.MainScene.host.reverseSample(this.Id, !!value); return; }

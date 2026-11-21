@@ -10,15 +10,14 @@ void BlokDustEditor::sendSampleInfo(const nlohmann::json& s) {
   web_.emitEventIfBrowserIsVisible("bd_sampleInfo", juce::JSON::parse(juce::String(s.dump())));
 }
 
-void BlokDustEditor::sendPatchFile(const juce::File& f, const juce::String& mode, int req, int stage) {
+void BlokDustEditor::sendPatchFile(const juce::File& f, const juce::String& mode, int req) {
   if (!f.existsAsFile()) return;
-  sendPatchText(f.loadFileAsString(), f.getFileNameWithoutExtension(), f.getFileName(), mode, req, stage);
+  sendPatchText(f.loadFileAsString(), f.getFileNameWithoutExtension(), f.getFileName(), mode, req);
 }
 
-void BlokDustEditor::sendPatchText(const juce::String& text, const juce::String& name, const juce::String& file, const juce::String& mode, int req, int stage) {
+void BlokDustEditor::sendPatchText(const juce::String& text, const juce::String& name, const juce::String& file, const juce::String& mode, int req) {
   auto* obj = new juce::DynamicObject();
   if (req >= 0) obj->setProperty("req", req);
-  if (stage > 0) obj->setProperty("stage", stage);
   obj->setProperty("text", text);
   obj->setProperty("name", name);
   obj->setProperty("file", file);

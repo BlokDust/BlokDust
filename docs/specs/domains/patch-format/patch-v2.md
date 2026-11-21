@@ -65,7 +65,9 @@ The single, portable representation of a BlokDust creation, used by the web app,
   - **Insert** adds the file's blocks, keeping their layout, with ids that don't clash; their refs come along; the
     file's tempo and automation are ignored. The blocks then follow the pointer (drawn like a pressed block) until a
     click puts them down; on a touch screen they start in the middle of the view and a finger drags them, lifting it puts
-    them down. Esc cancels; Cmd/Ctrl+Z right after takes the whole Insert out again.
+    them down. Esc cancels; Cmd/Ctrl+Z right after takes the whole Insert out again. With a Stage open, Insert (from a
+    file, OPEN or the gallery) puts the blocks inside that Stage, leaving out its Stage blocks and their macros (R7: one
+    level); this is how a Stage takes a patch (owner, 2026-11-20: the Stage panel's LOAD PATCH, file only, went).
   - **Open** over unsaved changes (the patch differs from what was last saved, shared or opened) asks first: CANCEL ·
     SAVE FIRST · OPEN ANYWAY. Insert never asks.
   - A picked or dropped file asks Open or Insert; a file that isn't a patch says so.

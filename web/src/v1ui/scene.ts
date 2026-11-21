@@ -7,7 +7,6 @@ import { App, Dimensions, Point, Size, TWEEN } from './shim.ts';
 import { V1Block } from './blocks.ts';
 import { installFilterPanel } from './filterPanel.ts';
 import { installSelectors } from './selectorOption.ts';
-import { installButtonPairs } from './buttonPair.ts';
 import { drawNewSprite, drawPrismExits, followLfos, hasLiveRows, installLiveRows, installNewBlockMenu } from './newBlocks.ts';
 import { installTouchpad } from './touchpadPanel.ts';
 import { installWaveZoom, panelView } from './waveZoom.ts';
@@ -87,7 +86,6 @@ export interface SceneHost extends PatchesHost {
   themes(): readonly Theme[];
   /** A Stage block's panel buttons (CHG-0021): look inside it; fill it from a patch file. */
   openStage(id: number): void;
-  loadStagePatch(id: number): void;
   /** A Counter's Reset button (CHG-0015): back to step 1. */
   resetCounter(id: number): void;
   /** Ids of the blocks connected to block `id` (the engine's proximity connections). */
@@ -203,7 +201,6 @@ export class V1Scene {
       installFilterPanel(this.OptionsPanel);
       cancellableOpen(this.OptionsPanel);
       installSelectors(this.OptionsPanel);
-      installButtonPairs(this.OptionsPanel);
       installLiveRows(this.OptionsPanel);
       installTouchpad(this.OptionsPanel);  // it lays the Touchpad's rows out again after the others adapt them
       installNoteBars(this.OptionsPanel);  // Random Note's and Chord's bars and Range (UI-0016)

@@ -22,8 +22,8 @@ class BlokDustEditor : public juce::AudioProcessorEditor, public juce::FileDragA
   /// A patch file's text to the page (bd_patchFile), for Open / Insert. `req` < 0: not a reply (a dialog or a drop).
   void sendAccount();
   void sendValues(const juce::var& keys);
-  void sendPatchFile(const juce::File& f, const juce::String& mode, int req, int stage = 0);
-  void sendPatchText(const juce::String& text, const juce::String& name, const juce::String& file, const juce::String& mode, int req, int stage = 0);
+  void sendPatchFile(const juce::File& f, const juce::String& mode, int req);
+  void sendPatchText(const juce::String& text, const juce::String& name, const juce::String& file, const juce::String& mode, int req);
   // Audio files dropped from Finder/Explorer or the DAW (CHG-0004 3.7): the page says which block is under the drop
   // (or makes a new Sample there), then the processor loads the file by its path.
   bool isInterestedInFileDrag(const juce::StringArray& files) override;

@@ -458,7 +458,6 @@ async function main() {
   const linkWays: { plugin?: LinkWay; web?: LinkWay } = {};
   const scene = new V1Scene({
     openStage: id => enterStage(id),
-    loadStagePatch: id => loadStagePatch(id),
     resetCounter: id => send([{ type: CommandType.Reset, id }]),
     feedback: feedbackPanel ?? undefined,
     createBlock: (v1Type, gx, gy) => {
@@ -1170,34 +1169,7 @@ async function main() {
     const t = stage.hitTest(x, y, id => moving.has(id));
     return t && model.get(t.id)?.type === 'source.stage' ? t.id : null;
   }
-  /** The Stage panel's LOAD PATCH: a patch file's blocks become what is inside (the file's own Stage blocks are left
-   * out: one level). The block is made again, so its inner world starts fresh. */
-  function loadStagePatch(id: number): void {
-    if (juce) { juce.emitEvent('bd_patchPick', { stage: id }); return; }  // the native picker; the reply names the Stage (bd_patchFile)
-    const input = document.createElement('input');
-    input.type = 'file'; input.accept = `.${PATCH_EXT},.json,application/json`;
-    input.onchange = async () => {
-      const f = input.files?.[0], patch = f ? parsePatchFile(await f.text()) : null, b = model.get(id);
-      if (!patch || !b || b.type !== 'source.stage' || inside) return;
-      useStagePatch(id, patch);
-    };
-    input.click();
-  }
-  function useStagePatch(id: number, patch: Patch): void {
-    if (!juce) patch = audioInAsMicrophone(patch);  // the website's Audio In is a Microphone (CHG-0041)
-    const b = model.get(id);
-    if (!b) return;
-    const { uid, x, y, params } = b;
-    for (const [k, r] of Object.entries(patch.refs ?? {})) if (r && typeof r === 'object' && 'provider' in r && !refs.has(k)) refs.set(k, r as SampleRef);
-    scene.OptionsPanel.Close();
-    removeBlock(id);
-    macros.set(uid, { block: uid, blocks: patch.blocks.filter(q => BLOCKS_BY_ID.has(q.type) && q.type !== 'source.stage').map(q => structuredClone(q)),
-      ...(patch.connectionOrder?.length ? { connectionOrder: patch.connectionOrder } : {}), ...(patch.labels?.length ? { labels: patch.labels } : {}) });
-    innerIds.delete(uid); innerSamples.delete(uid);
-    addBlock('source.stage', x, y, params, uid);
-    stage.redraw();
-  }
-  (window as unknown as { __bd_stage?: unknown }).__bd_stage = { enter: enterStage, exit: exitStage, wrap: wrapInStage, use: useStagePatch };  // tests
+  (window as unknown as { __bd_stage?: unknown }).__bd_stage = { enter: enterStage, exit: exitStage, wrap: wrapInStage };  // tests
   function endLabelEdit(keep: boolean): void {
     const e = labelEdit;
     if (!e) return;
@@ -1267,7 +1239,6 @@ async function main() {
     const f = e.req !== undefined ? pendingReplies.get(e.req) : undefined;
     if (f) { pendingReplies.delete(e.req!); f(e); } else if (ev === 'bd_patchFile') {
       const r = e as { text: string; name: string; file?: string; stage?: number };
-      if (r.stage) { const patch = parsePatchFile(r.text), b = model.get(r.stage); if (patch && b?.type === 'source.stage' && !inside) useStagePatch(r.stage, patch); return; }  // a Stage's LOAD PATCH
       showPicked(r.text, r.file ?? `${r.name}.${PATCH_EXT}`);
     }
   });
@@ -1480,6 +1451,7 @@ async function main() {
    */
   function applyPatch(p: Patch, mode: 'open' | 'insert', from?: Omit<PatchSource, 'blocks'>): void {
     if (!juce) p = audioInAsMicrophone(p);  // the website's Audio In is a Microphone (CHG-0041)
+    if (inside && mode === 'insert') { insertInStage(p); return; }
     if (inside) exitStage();
     const touch = lastPointerType !== 'mouse', at = !touch && lastPointer ? lastPointer : viewCentre();
     const part = mode === 'open'
@@ -1512,6 +1484,20 @@ async function main() {
     addLabels(readLabels(mode === 'open' ? p.labels : 'labels' in part ? part.labels : []));
     if (mode === 'open') { connectionOrder = [...(p.connectionOrder ?? [])]; send(relinks(p, uidToId())); applyView(p.view); keepBlocksInView(); }
     if (mode === 'open') setBaseline(); else startPlacing(ids, touch, at);
+    stage.redraw();
+  }
+  /** INSERT with a Stage open (owner, 2026-11-20; it replaced the Stage panel's LOAD PATCH): the patch's blocks go inside
+   * it, placed like any insert; its Stage blocks stay out (one level). Added as blocks put down inside are, so the
+   * plugins' processor hears of them the same way. */
+  function insertInStage(p: Patch): void {
+    const touch = lastPointerType !== 'mouse', at = !touch && lastPointer ? lastPointer : viewCentre();
+    const fits = (t: string) => BLOCKS_BY_ID.has(t) && !INSIDE_HIDDEN.has(BLOCKS_BY_ID.get(t)!.menuId);
+    const part = insertBlocks({ ...p, blocks: p.blocks.filter(b => fits(b.type)), macros: [] }, new Set([...model.values()].map(b => b.uid)), at);
+    endPlacing(false);
+    for (const [k, r] of Object.entries(part.refs)) if (r && typeof r === 'object' && 'provider' in r && !refs.has(k)) refs.set(k, r as SampleRef);
+    const ids = part.blocks.map(b => addBlock(b.type, b.x ?? 0, b.y ?? 0, b.params ?? {}, b.id));
+    addLabels(readLabels(part.labels));
+    startPlacing(ids, touch, at);
     stage.redraw();
   }
   /** Plugin: what to do once the processor sends the merged patch back. */
