@@ -5,12 +5,14 @@
 //   pnpm bd release publish            upload to R2 `funputs-releases` at releases/blokdust/<version>/ (new files only:
 //                                      refuses a version that is already there), check each URL serves the same bytes,
 //                                      then write web/src/releases.json (commit it and deploy the site)
+//   pnpm bd release tag [--dry-run] [--notes <file>]  tag vX.Y.Z on main and publish its GitHub release (tag.ts)
 // Funputs' own files are untouched. Its download-analytics Worker counts these as product `blokdust`, per version
 // (FUNPUTS PR "count BlokDust downloads"; the file names follow its <PRODUCT>-<version>-Mac|Windows pattern).
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { releaseTag } from './tag.ts';
 
 const BUCKET = 'funputs-releases';
 const BASE_URL = 'https://downloads.funputs.com';
@@ -81,4 +83,5 @@ async function publish(dryRun: boolean) {
 const cmd = process.argv[2];
 if (cmd === 'check') { const c = check(); console.log(JSON.stringify({ version: VERSION, files: c.files.map(f => ({ file: f.file, bytes: f.bytes, sha256: f.sha })), problems: c.problems })); if (c.problems.length) process.exit(1); }
 else if (cmd === 'publish') await publish(process.argv.includes('--dry-run'));
-else { console.error('usage: bd release check | publish [--dry-run]'); process.exit(2); }
+else if (cmd === 'tag') releaseTag(process.argv.slice(3));
+else { console.error('usage: bd release check | publish [--dry-run] | tag [--dry-run] [--notes <file>]'); process.exit(2); }

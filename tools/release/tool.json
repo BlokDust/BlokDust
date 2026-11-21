@@ -1,7 +1,12 @@
 {
   "name": "release",
-  "summary": "Publish the plugin installers (BlokDust-<version>-Mac.pkg and -Windows.exe from `bd plugin package` / `bd win package`) to downloads.funputs.com/releases/blokdust/<version>/ and write web/src/releases.json, which the web app's Settings › DOWNLOAD tab reads. Immutable: refuses a version already published.",
-  "usage": ["pnpm bd release check", "pnpm bd release publish --dry-run", "pnpm bd release publish"],
+  "summary": "Publish the plugin installers (BlokDust-<version>-Mac.pkg and -Windows.exe from `bd plugin package` / `bd win package`) to downloads.funputs.com/releases/blokdust/<version>/ and write web/src/releases.json, which the web app's Settings \u203a DOWNLOAD tab reads. Immutable: refuses a version already published. `tag` tags vX.Y.Z on main and publishes its GitHub release (docs/engineering/branches-and-releases.md); it deploys nothing.",
+  "usage": [
+    "pnpm bd release check",
+    "pnpm bd release publish --dry-run",
+    "pnpm bd release publish",
+    "pnpm bd release tag [--dry-run] [--notes <file>]"
+  ],
   "outputs": "JSON summary on stdout; web/src/releases.json; objects in the funputs-releases R2 bucket",
   "deterministic": false
 }
