@@ -12,7 +12,7 @@
 // ~/.config/blokdust/app_store_connect_key.p8 (BLOKDUST_ASC_KEY_PATH). Command-line xcodebuild can't use the Apple
 // account signed in to Xcode's app ("No Accounts").
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { CONFIG_DIR, configEnvironment, requiredSetting, setting } from '../lib/local-config.ts';
 import { must, run } from './ios-shared.ts';
@@ -46,6 +46,19 @@ function defaultBuild(): string {
   return `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}.${p(d.getUTCHours())}${p(d.getUTCMinutes())}`;
 }
 
+/** The bundles' dSYMs (crash-report symbols): CMake's targets write them beside their products, where Xcode's archive
+ *  doesn't look, so they are copied into the archive's dSYMs folder. */
+const DSYMS: [string, string][] = [
+  ['BlokDust.app', 'build/plugin-ios-release/plugin/BlokDust_artefacts/Release/Standalone'],
+  ['BlokDust.appex', 'build/plugin-ios-release/plugin/BlokDust_artefacts/Release/AUv3'],
+  ['BlokDust FX.appex', 'build/plugin-ios-release/plugin/BlokDustFX_artefacts/Release/AUv3'],
+];
+const uuids = (path: string) => [...run('dwarfdump', ['--uuid', path], true).stdout.matchAll(/UUID: ([0-9A-F-]{36})/g)].map(m => m[1]).sort().join();
+function collectDsyms(archive: string): void {
+  mkdirSync(`${archive}/dSYMs`, { recursive: true });
+  for (const [name, dir] of DSYMS) if (existsSync(`${dir}/${name}.dSYM`)) cpSync(`${dir}/${name}.dSYM`, `${archive}/dSYMs/${name}.dSYM`, { recursive: true });
+}
+
 /** What App Store Connect checks first, from the archive itself. */
 function checkArchive(archive: string, version: string, build: string) {
   const app = `${archive}/Products/Applications/BlokDust.app`;
@@ -58,6 +71,10 @@ function checkArchive(archive: string, version: string, build: string) {
     encryptionDeclared: plists.app?.ITSAppUsesNonExemptEncryption === false,
     ipadOnly: JSON.stringify(plists.app?.UIDeviceFamily) === '[2]',
     bundleId: plists.app?.CFBundleIdentifier === 'com.funputs.blokdust',
+    // Symbols for crash reports (App Store Connect warned "Upload Symbols Failed": preset plugin-ios-release makes them).
+    // …and each one's UUIDs those of the binary it describes (this build's).
+    dSYMs: Object.values(bundles).every(b => { const n = b.split('/').pop()!, exe = `${b}/${n.replace(/\.(app|appex)$/, '')}`, d = `${archive}/dSYMs/${n}.dSYM`;
+      return existsSync(d) && uuids(d) !== '' && uuids(d) === uuids(exe); }),
     // An extension's ID is the app's plus one part (App Store Connect: "Bad bundle identifier").
     extensionIds: [plists.instrument, plists.fx].every(p => /^com\.funputs\.blokdust\.[^.]+$/.test(p?.CFBundleIdentifier ?? '')),
   };
@@ -88,6 +105,7 @@ export function iosArchive(args: string[]): void {
     '-destination', 'generic/platform=iOS', '-archivePath', archive, '-allowProvisioningUpdates', ...apiKey(), '-quiet', 'archive'],
   { encoding: 'utf8', env, maxBuffer: 64 << 20 });
   if (a.status !== 0) throw xcodeFailure('archive', a);
+  collectDsyms(archive);
   const check = checkArchive(archive, version, build);
   if (!check.ok) {
     console.log(JSON.stringify({ ok: false, version, build, archive, ...check }));

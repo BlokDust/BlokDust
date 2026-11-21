@@ -86,6 +86,11 @@ Check items off as they land. Each task should be independently verifiable.
       `bd plugin ios test`, failing first), archive checks (versions, extensions, privacy manifests, iPad only), export
       or upload. First archive passed its checks; export needs the App Store Connect API key (owner). Owner: app record
       (SKU blokdust-ipad, Full Access), API key, then the first upload on their go.
+      2026-11-20: 2.1.0 (20261121.0239) uploaded by the owner from Xcode on the build Mac: the App Store refused the FX
+      extension's two-part ID (now com.funputs.blokdust.fx), and an API key can't read App Groups, so a new ID's first
+      profiles need Xcode's own account once. Since then `bd plugin ios archive` signs all three bundles from the
+      command line. Upload warnings: no dSYMs (fixed: preset adds -g, the tool copies each bundle's dSYM into the archive
+      and checks its UUIDs); built with the iOS 26.5 SDK (Xcode 27 needed from April 2027).
 - [x] 12c. Privacy: one usage-stats switch and install id per iPad (App Group; SPEC-SHARING-USAGE-ANALYTICS R8, test
       in `bd plugin ios test`), the ping to the page's server, `PrivacyInfo.xcprivacy` in the app and both extensions;
       then on the iPad: one ping a day on staging, none after switching off in the app or in a host.
