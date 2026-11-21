@@ -58,6 +58,8 @@ function checkArchive(archive: string, version: string, build: string) {
     encryptionDeclared: plists.app?.ITSAppUsesNonExemptEncryption === false,
     ipadOnly: JSON.stringify(plists.app?.UIDeviceFamily) === '[2]',
     bundleId: plists.app?.CFBundleIdentifier === 'com.funputs.blokdust',
+    // An extension's ID is the app's plus one part (App Store Connect: "Bad bundle identifier").
+    extensionIds: [plists.instrument, plists.fx].every(p => /^com\.funputs\.blokdust\.[^.]+$/.test(p?.CFBundleIdentifier ?? '')),
   };
   return { ok: Object.values(checks).every(Boolean), checks };
 }

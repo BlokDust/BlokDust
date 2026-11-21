@@ -64,7 +64,7 @@ Check items off as they land. Each task should be independently verifiable.
       switch's HOST cell (UI-0015).
 - [x] 9. BlokDust FX as a second AUv3 in the same app.
       2026-11-16: `BlokDust FX.appex` is embedded beside `BlokDust.appex` (`XCODE_EMBED_APP_EXTENSIONS`); on iPad its
-      ID is `com.funputs.blokdust.fx` (extension `com.funputs.blokdust.fx.fxAUv3`), as an embedded extension's ID must
+      ID is `com.funputs.blokdust.fx` (the extension too since 2026-11-20: the App Store refused JUCE's `…fx.fxAUv3`), as an embedded extension's ID must
       start with the app's. It registers as `aufx Bdfx Bldt` (same codes as desktop) and shares the App Group.
       `bd plugin ios test` loads it out of process and renders `fx-audio-in` with its sine fed in: ≡ golden, state
       round-trips.

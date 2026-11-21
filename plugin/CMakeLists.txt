@@ -51,7 +51,7 @@ function(blokdust_plugin target)
   endif()
   if(IOS AND ARG_FX)
     # On iPad FX is a second extension inside the BlokDust app, so its ID must sit under the app's (CHG-0025 task 9):
-    # com.funputs.blokdust.fx; JUCE names the extension com.funputs.blokdust.fx.fxAUv3.
+    # the extension is com.funputs.blokdust.fx (set below; JUCE would name it com.funputs.blokdust.fx.fxAUv3).
     set(bundle_id "com.funputs.blokdust.fx")
   endif()
   # The build number (CFBundleVersion): each App Store upload needs a new one (`bd plugin ios archive` sets
@@ -140,6 +140,15 @@ if(IOS)
   # and BlokDust FX as a second AUv3 in the same app (task 9): one App Store product holds both.
   blokdust_plugin(BlokDust PRODUCT "BlokDust" CODE Bdst FORMATS AUv3 Standalone)
   blokdust_plugin(BlokDustFX PRODUCT "BlokDust FX" CODE Bdfx FX TRUE FORMATS AUv3)
+  # The App Store wants an extension's ID to be the app's plus ONE part (CHG-0025 task 12b: it refused
+  # com.funputs.blokdust.fx.fxAUv3, JUCE's <target ID>.<last part>AUv3). JUCE writes the Info.plist while configuring,
+  # so it is rewritten here, and Xcode's setting with it. The instrument's com.funputs.blokdust.blokdustAUv3 is fine.
+  set(fx_appex_id "com.funputs.blokdust.fx")
+  get_target_property(fx_plist BlokDustFX_AUv3 MACOSX_BUNDLE_INFO_PLIST)
+  file(READ "${fx_plist}" fx_plist_text)
+  string(REPLACE "<string>com.funputs.blokdust.fx.fxAUv3</string>" "<string>${fx_appex_id}</string>" fx_plist_text "${fx_plist_text}")
+  file(WRITE "${fx_plist}" "${fx_plist_text}")
+  set_target_properties(BlokDustFX_AUv3 PROPERTIES XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${fx_appex_id}")
   add_dependencies(BlokDust_Standalone BlokDustFX_AUv3)
   set_target_properties(BlokDust_Standalone PROPERTIES XCODE_EMBED_APP_EXTENSIONS "BlokDust_AUv3;BlokDustFX_AUv3")
   # The privacy manifest (CHG-0025 task 12c): the App Store wants one in the app and in each extension.

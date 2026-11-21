@@ -125,8 +125,10 @@ function appCheck(udid: string, group: string) {
   // The privacy manifest (CHG-0025 task 12c) in the app and both extensions, a valid plist that declares no tracking.
   // App Store Connect (task 12b): standard HTTPS only, declared so uploads skip the export question; one build number.
   const fxPlist = JSON.parse(must(run('plutil', ['-convert', 'json', '-o', '-', `${FX_APPEX}/Info.plist`], true), 'read FX Info.plist').stdout);
+  // Each extension's ID is the app's plus one part (the App Store refused com.funputs.blokdust.fx.fxAUv3).
   const appStorePlist = plist.ITSAppUsesNonExemptEncryption === false
-    && [appexPlist, fxPlist].every(p => p.CFBundleVersion === plist.CFBundleVersion && p.CFBundleShortVersionString === plist.CFBundleShortVersionString);
+    && [appexPlist, fxPlist].every(p => p.CFBundleVersion === plist.CFBundleVersion && p.CFBundleShortVersionString === plist.CFBundleShortVersionString
+      && new RegExp(`^${plist.CFBundleIdentifier.replace(/\./g, '\\.')}\\.[^.]+$`).test(p.CFBundleIdentifier));
   const privacyManifest = [APP, APPEX, FX_APPEX].every(b => {
     const r = run('plutil', ['-convert', 'json', '-o', '-', `${b}/PrivacyInfo.xcprivacy`], true);
     try { return r.status === 0 && JSON.parse(r.stdout).NSPrivacyTracking === false; } catch { return false; }
