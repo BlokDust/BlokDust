@@ -1,0 +1,134 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "source.stage",
+  "draft": false,
+  "category": "source",
+  "kind": "audio-source",
+  "name": "Stage",
+  "description": "A container for groups of blocks or whole patches. Connect it to a power to turn on the powers inside.",
+  "v1": {
+    "type": null
+  },
+  "connection": null,
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 3,
+        "points": [
+          [
+            -1,
+            -2
+          ],
+          [
+            0,
+            -2
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            -1,
+            2
+          ]
+        ]
+      },
+      {
+        "palette": 9,
+        "points": [
+          [
+            -1,
+            1
+          ],
+          [
+            -1,
+            -2
+          ],
+          [
+            0,
+            -2
+          ],
+          [
+            1,
+            -1
+          ]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [
+            -1,
+            1
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            -1,
+            2
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        -1,
+        -2
+      ],
+      [
+        0,
+        -2
+      ],
+      [
+        1,
+        -1
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        -1,
+        2
+      ]
+    ],
+    "menuOffset": [
+      0,
+      0
+    ]
+  },
+  "params": [
+    {
+      "key": "gain",
+      "default": 1,
+      "unit": "ratio",
+      "range": [
+        0,
+        2
+      ],
+      "description": "Output level of the inner stage (1 = as it sounds inside)"
+    },
+    {
+      "key": "keepParticles",
+      "default": 0,
+      "unit": "enum",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Keep particles: when on, particles inside keep moving and hitting when the Stage loses power (nothing new is emitted or powered); when off, they vanish"
+    }
+  ]
+}

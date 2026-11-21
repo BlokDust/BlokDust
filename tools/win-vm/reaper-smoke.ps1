@@ -4,6 +4,9 @@
 # Leaves REAPER running so `bd win shot` can capture the editor; -Stop closes it.
 param([int] $Seconds = 6, [switch] $Stop, [string] $Mode = 'play', [string] $Fx = 'VST3i:BlokDust', [switch] $Quit)
 $ErrorActionPreference = 'Stop'
+# Test runs never send the plugins' daily usage ping (SHARING-0010 R8), here or on the desktop session's processes.
+$env:BLOKDUST_NO_TELEMETRY = '1'
+[Environment]::SetEnvironmentVariable('BLOKDUST_NO_TELEMETRY', '1', 'User')
 Get-Process reaper -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Sleep -Seconds 1
 if ($Stop) { 'stopped'; exit 0 }

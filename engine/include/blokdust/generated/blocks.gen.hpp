@@ -8,8 +8,8 @@
 
 namespace blokdust::gen {
 
-inline constexpr std::size_t kBlockTypeCount = 33;
-inline constexpr std::size_t kMaxParams = 14;
+inline constexpr std::size_t kBlockTypeCount = 47;
+inline constexpr std::size_t kMaxParams = 15;
 
 enum class BlockType : std::uint16_t {
   SourceAudioIn,  // source.audio-in
@@ -19,32 +19,46 @@ enum class BlockType : std::uint16_t {
   SourceRecorder,  // source.recorder
   SourceSample,  // source.sample
   SourceSampleGen,  // source.sample-gen
+  SourceStage,  // source.stage
   SourceTone,  // source.tone
+  SourceWavetable,  // source.wavetable
+  FxArpeggiator,  // fx.arpeggiator
   FxAutoWah,  // fx.auto-wah
   FxBitCrusher,  // fx.bit-crusher
   FxChomp,  // fx.chomp
   FxChopper,  // fx.chopper
+  FxChord,  // fx.chord
   FxChorus,  // fx.chorus
+  FxCompressor,  // fx.compressor
   FxConvolver,  // fx.convolver
   FxDistortion,  // fx.distortion
   FxEnvelope,  // fx.envelope
   FxEq,  // fx.eq
   FxFilter,  // fx.filter
+  FxLfo,  // fx.lfo
   FxPhaser,  // fx.phaser
   FxPitchShifter,  // fx.pitch-shifter
+  FxRandomNote,  // fx.random-note
   FxReverb,  // fx.reverb
   FxScuzz,  // fx.scuzz
   FxStereoDelay,  // fx.stereo-delay
   FxVibrato,  // fx.vibrato
   FxVolume,  // fx.volume
+  PowerChance,  // power.chance
+  PowerCounter,  // power.counter
   PowerEmitter,  // power.emitter
+  PowerGate,  // power.gate
   PowerLaser,  // power.laser
   PowerPower,  // power.power
+  PowerPrism,  // power.prism
   PowerPulse,  // power.pulse
+  PowerSoundLaser,  // power.sound-laser
   PowerToggle,  // power.toggle
   PowerVoid,  // power.void
   InputComputerKeyboard,  // input.computer-keyboard
   InputMidiController,  // input.midi-controller
+  InputStageIn,  // input.stage-in
+  InputTouchpad,  // input.touchpad
 };
 
 enum class BlockKind : std::uint8_t {
@@ -56,6 +70,10 @@ enum class BlockKind : std::uint8_t {
   Logic,
   Void,
   Controller,
+  Gate,
+  Path,
+  Listener,
+  Modulator,
 };
 
 struct GridPoint { float x; float y; };
@@ -65,7 +83,8 @@ struct GridPoint { float x; float y; };
 enum class UiTransform : std::uint8_t { None, Identity, SubtractFrom /* k − ui */, Minus /* ui − k */, Divide /* ui ÷ k */ };
 
 /// Param default. numeric=false marks v1 params with non-numeric defaults (strings/objects), stored as 0.
-struct ParamInfo { std::string_view key; double defaultValue; bool numeric; UiTransform transform; double uiMin; double uiMax; double k; };
+/// log: the slider is logarithmic (an LFO moves the param in octaves, AUDIO-0003).
+struct ParamInfo { std::string_view key; double defaultValue; bool numeric; UiTransform transform; double uiMin; double uiMax; double k; bool log = false; };
 
 struct BlockInfo {
   BlockType type;
@@ -173,8 +192,17 @@ inline constexpr ParamInfo kParamsSourceSampleGen[] = {
   {"generate", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
   {"seed", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
   {"region", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
+  {"sound", 0.0, true, UiTransform::Identity, 0.0, 999.0, 0.0},
 };
-namespace param::SourceSampleGen { enum : std::uint8_t { playbackRate, detune, reverse, startPosition, endPosition, loop, loopStart, loopEnd, volume, generate, seed, region, Count }; }
+namespace param::SourceSampleGen { enum : std::uint8_t { playbackRate, detune, reverse, startPosition, endPosition, loop, loopStart, loopEnd, volume, generate, seed, region, sound, Count }; }
+
+// ---- source.stage (Stage)
+inline constexpr GridPoint kOutlineSourceStage[] = {{-1.0f, -2.0f}, {0.0f, -2.0f}, {1.0f, -1.0f}, {1.0f, 0.0f}, {-1.0f, 2.0f}};
+inline constexpr ParamInfo kParamsSourceStage[] = {
+  {"gain", 1.0, true, UiTransform::Identity, 0.0, 2.0, 0.0},
+  {"keepParticles", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+};
+namespace param::SourceStage { enum : std::uint8_t { gain, keepParticles, Count }; }
 
 // ---- source.tone (Tone)
 inline constexpr GridPoint kOutlineSourceTone[] = {{-2.0f, 0.0f}, {0.0f, -2.0f}, {2.0f, 0.0f}, {1.0f, 1.0f}, {-1.0f, 1.0f}};
@@ -184,6 +212,28 @@ inline constexpr ParamInfo kParamsSourceTone[] = {
   {"fine", 0.0, true, UiTransform::Identity, -1.0, 1.0, 0.0},
 };
 namespace param::SourceTone { enum : std::uint8_t { waveform, transpose, fine, Count }; }
+
+// ---- source.wavetable (Wavetable)
+inline constexpr GridPoint kOutlineSourceWavetable[] = {{-1.0f, -1.0f}, {0.0f, -2.0f}, {2.0f, 0.0f}, {1.0f, 1.0f}, {-1.0f, 1.0f}};
+inline constexpr ParamInfo kParamsSourceWavetable[] = {
+  {"table", 0.0, true, UiTransform::Identity, 0.0, 8.0, 0.0},
+  {"position", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"transpose", 0.0, true, UiTransform::Identity, -48.0, 48.0, 0.0},
+  {"fine", 0.0, true, UiTransform::Identity, -1.0, 1.0, 0.0},
+};
+namespace param::SourceWavetable { enum : std::uint8_t { table, position, transpose, fine, Count }; }
+
+// ---- fx.arpeggiator (Arpeggiator)
+inline constexpr GridPoint kOutlineFxArpeggiator[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {2.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}};
+inline constexpr ParamInfo kParamsFxArpeggiator[] = {
+  {"pattern", 0.0, true, UiTransform::Identity, 0.0, 3.0, 0.0},
+  {"perHit", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"sync", 1.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"speed", 8.0, true, UiTransform::Identity, 1.0, 30.0, 0.0},
+  {"division", 0.25, true, UiTransform::Identity, 0.0625, 4.0, 0.0},
+  {"octaves", 1.0, true, UiTransform::Identity, 1.0, 3.0, 0.0},
+};
+namespace param::FxArpeggiator { enum : std::uint8_t { pattern, perHit, sync, speed, division, octaves, Count }; }
 
 // ---- fx.auto-wah (AutoWah)
 inline constexpr GridPoint kOutlineFxAutoWah[] = {{0.0f, -1.0f}, {1.0f, -1.0f}, {1.0f, 1.0f}, {-2.0f, 1.0f}};
@@ -224,6 +274,26 @@ inline constexpr ParamInfo kParamsFxChopper[] = {
 };
 namespace param::FxChopper { enum : std::uint8_t { rate, depth, spread, waveform, mix, Count }; }
 
+// ---- fx.chord (Chord)
+inline constexpr GridPoint kOutlineFxChord[] = {{-1.0f, 0.0f}, {1.0f, -2.0f}, {1.0f, 2.0f}};
+inline constexpr ParamInfo kParamsFxChord[] = {
+  {"q0", 3.0, true, UiTransform::Identity, 0.0, 7.0, 0.0},
+  {"q1", 7.0, true, UiTransform::Identity, 0.0, 7.0, 0.0},
+  {"q2", 5.0, true, UiTransform::Identity, 0.0, 7.0, 0.0},
+  {"q3", 3.0, true, UiTransform::Identity, 0.0, 7.0, 0.0},
+  {"q4", 2.0, true, UiTransform::Identity, 0.0, 7.0, 0.0},
+  {"q5", 7.0, true, UiTransform::Identity, 0.0, 7.0, 0.0},
+  {"q6", 7.0, true, UiTransform::Identity, 0.0, 7.0, 0.0},
+  {"q7", 6.0, true, UiTransform::Identity, 0.0, 7.0, 0.0},
+  {"q8", 7.0, true, UiTransform::Identity, 0.0, 7.0, 0.0},
+  {"q9", 5.0, true, UiTransform::Identity, 0.0, 7.0, 0.0},
+  {"q10", 3.0, true, UiTransform::Identity, 0.0, 7.0, 0.0},
+  {"q11", 2.0, true, UiTransform::Identity, 0.0, 7.0, 0.0},
+  {"key", 0.0, true, UiTransform::Identity, 0.0, 11.0, 0.0},
+  {"smooth", 1.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+};
+namespace param::FxChord { enum : std::uint8_t { q0, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, key, smooth, Count }; }
+
 // ---- fx.chorus (Chorus)
 inline constexpr GridPoint kOutlineFxChorus[] = {{-1.0f, -1.0f}, {0.0f, -1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f}, {-1.0f, 1.0f}};
 inline constexpr ParamInfo kParamsFxChorus[] = {
@@ -233,6 +303,18 @@ inline constexpr ParamInfo kParamsFxChorus[] = {
   {"feedback", 0.4, true, UiTransform::Identity, 0.0, 0.496, 0.0},
 };
 namespace param::FxChorus { enum : std::uint8_t { rate, delayTime, depth, feedback, Count }; }
+
+// ---- fx.compressor (Compressor)
+inline constexpr GridPoint kOutlineFxCompressor[] = {{1.0f, -1.0f}, {2.0f, -1.0f}, {2.0f, 0.0f}, {1.0f, 1.0f}, {-1.0f, 1.0f}};
+inline constexpr ParamInfo kParamsFxCompressor[] = {
+  {"threshold", -24.0, true, UiTransform::Identity, -60.0, 0.0, 0.0},
+  {"ratio", 4.0, true, UiTransform::Identity, 1.0, 20.0, 0.0},
+  {"knee", 10.0, true, UiTransform::Identity, 0.0, 40.0, 0.0},
+  {"attack", 0.003, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"release", 0.25, true, UiTransform::Identity, 0.01, 1.0, 0.0},
+  {"makeup", 0.0, true, UiTransform::Identity, -24.0, 24.0, 0.0},
+};
+namespace param::FxCompressor { enum : std::uint8_t { threshold, ratio, knee, attack, release, makeup, Count }; }
 
 // ---- fx.convolver (Convolution)
 inline constexpr GridPoint kOutlineFxConvolver[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {2.0f, 0.0f}, {0.0f, 2.0f}, {-1.0f, 1.0f}};
@@ -284,12 +366,27 @@ namespace param::FxEq { enum : std::uint8_t { frequency_1, Q_1, gain_1, frequenc
 // ---- fx.filter (Filter)
 inline constexpr GridPoint kOutlineFxFilter[] = {{-1.0f, -2.0f}, {1.0f, 0.0f}, {1.0f, 2.0f}, {-1.0f, 0.0f}};
 inline constexpr ParamInfo kParamsFxFilter[] = {
-  {"frequency", 440.0, true, UiTransform::Identity, 20.0, 20000.0, 0.0},
+  {"frequency", 440.0, true, UiTransform::Identity, 20.0, 20000.0, 0.0, true},
   {"gain", 0.0, true, UiTransform::Identity, -35.0, 35.0, 0.0},
   {"type", 0.0, true, UiTransform::Identity, 0.0, 3.0, 0.0},
   {"Q", 1.0, true, UiTransform::Identity, 0.5, 14.0, 0.0},
 };
 namespace param::FxFilter { enum : std::uint8_t { frequency, gain, type, Q, Count }; }
+
+// ---- fx.lfo (LFO)
+inline constexpr GridPoint kOutlineFxLfo[] = {{-1.0f, 0.0f}, {0.0f, 0.0f}, {1.0f, -1.0f}, {2.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}};
+inline constexpr ParamInfo kParamsFxLfo[] = {
+  {"target", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
+  {"targetBlock", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"targetParam", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"shape", 0.0, true, UiTransform::Identity, 0.0, 3.0, 0.0},
+  {"sync", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"rate", 1.0, true, UiTransform::Identity, 0.02, 20.0, 0.0, true},
+  {"division", 4.0, true, UiTransform::Identity, 0.25, 64.0, 0.0},
+  {"depth", 0.5, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"phase", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+};
+namespace param::FxLfo { enum : std::uint8_t { target, targetBlock, targetParam, shape, sync, rate, division, depth, phase, Count }; }
 
 // ---- fx.phaser (Phaser)
 inline constexpr GridPoint kOutlineFxPhaser[] = {{-1.0f, 0.0f}, {-1.0f, -2.0f}, {1.0f, 0.0f}, {1.0f, 2.0f}};
@@ -309,6 +406,27 @@ inline constexpr ParamInfo kParamsFxPitchShifter[] = {
   {"windowSize", 0.07, true, UiTransform::None, 0.0, 0.0, 0.0},
 };
 namespace param::FxPitchShifter { enum : std::uint8_t { mix, pitchOffset, windowSize, Count }; }
+
+// ---- fx.random-note (Random Note)
+inline constexpr GridPoint kOutlineFxRandomNote[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {-1.0f, 0.0f}};
+inline constexpr ParamInfo kParamsFxRandomNote[] = {
+  {"w0", 1.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"w1", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"w2", 1.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"w3", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"w4", 1.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"w5", 1.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"w6", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"w7", 1.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"w8", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"w9", 1.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"w10", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"w11", 1.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"key", 0.0, true, UiTransform::Identity, 0.0, 11.0, 0.0},
+  {"low", 60.0, true, UiTransform::Identity, 24.0, 107.0, 0.0},
+  {"high", 71.0, true, UiTransform::Identity, 24.0, 107.0, 0.0},
+};
+namespace param::FxRandomNote { enum : std::uint8_t { w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, key, low, high, Count }; }
 
 // ---- fx.reverb (Reverb)
 inline constexpr GridPoint kOutlineFxReverb[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {2.0f, 0.0f}, {0.0f, 2.0f}, {-1.0f, 1.0f}};
@@ -355,6 +473,23 @@ inline constexpr ParamInfo kParamsFxVolume[] = {
 };
 namespace param::FxVolume { enum : std::uint8_t { gain, Count }; }
 
+// ---- power.chance (Chance)
+inline constexpr GridPoint kOutlinePowerChance[] = {{-1.0f, 0.0f}, {1.0f, -2.0f}, {1.0f, 1.0f}, {0.0f, 2.0f}, {-1.0f, 1.0f}};
+inline constexpr ParamInfo kParamsPowerChance[] = {
+  {"chance", 0.5, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+};
+namespace param::PowerChance { enum : std::uint8_t { chance, Count }; }
+
+// ---- power.counter (Counter)
+inline constexpr GridPoint kOutlinePowerCounter[] = {{0.0f, -1.0f}, {1.0f, 0.0f}, {2.0f, 0.0f}, {0.0f, 2.0f}};
+inline constexpr ParamInfo kParamsPowerCounter[] = {
+  {"steps", 8.0, true, UiTransform::Identity, 1.0, 16.0, 0.0},
+  {"hits", 3.0, true, UiTransform::Identity, 0.0, 16.0, 0.0},
+  {"rotate", 0.0, true, UiTransform::Identity, 0.0, 15.0, 0.0},
+  {"pattern", -1.0, true, UiTransform::Identity, -1.0, 65535.0, 0.0},
+};
+namespace param::PowerCounter { enum : std::uint8_t { steps, hits, rotate, pattern, Count }; }
+
 // ---- power.emitter (Particle Emitter)
 inline constexpr GridPoint kOutlinePowerEmitter[] = {{-2.0f, 0.0f}, {-1.0f, 0.0f}, {0.0f, -1.0f}, {1.0f, 0.0f}, {2.0f, 0.0f}, {0.0f, 2.0f}};
 inline constexpr ParamInfo kParamsPowerEmitter[] = {
@@ -366,8 +501,16 @@ inline constexpr ParamInfo kParamsPowerEmitter[] = {
   {"sync", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
   {"division", 1.0, true, UiTransform::Identity, 0.0625, 16.0, 0.0},
   {"swing", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"offset", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
 };
-namespace param::PowerEmitter { enum : std::uint8_t { angle, speed, rate, range, selfPoweredMode, sync, division, swing, Count }; }
+namespace param::PowerEmitter { enum : std::uint8_t { angle, speed, rate, range, selfPoweredMode, sync, division, swing, offset, Count }; }
+
+// ---- power.gate (Gate)
+inline constexpr GridPoint kOutlinePowerGate[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {2.0f, 0.0f}, {1.0f, 1.0f}, {-1.0f, 1.0f}, {-2.0f, 0.0f}};
+inline constexpr ParamInfo kParamsPowerGate[] = {
+  {"invert", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+};
+namespace param::PowerGate { enum : std::uint8_t { invert, Count }; }
 
 // ---- power.laser (Laser)
 inline constexpr GridPoint kOutlinePowerLaser[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f}, {-1.0f, 0.0f}};
@@ -378,12 +521,26 @@ inline constexpr ParamInfo kParamsPowerLaser[] = {
   {"selfPoweredMode", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
   {"sync", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
   {"turnBeats", 4.0, true, UiTransform::Identity, -64.0, 64.0, 0.0},
+  {"restart", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
 };
-namespace param::PowerLaser { enum : std::uint8_t { angle, range, rotate, selfPoweredMode, sync, turnBeats, Count }; }
+namespace param::PowerLaser { enum : std::uint8_t { angle, range, rotate, selfPoweredMode, sync, turnBeats, restart, Count }; }
 
 // ---- power.power (Power)
 inline constexpr GridPoint kOutlinePowerPower[] = {{-1.0f, 0.0f}, {1.0f, -2.0f}, {2.0f, -1.0f}, {2.0f, 0.0f}, {0.0f, 2.0f}, {-1.0f, 1.0f}};
-namespace param::PowerPower { enum : std::uint8_t { Count }; }
+inline constexpr ParamInfo kParamsPowerPower[] = {
+  {"cutByHits", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+};
+namespace param::PowerPower { enum : std::uint8_t { cutByHits, Count }; }
+
+// ---- power.prism (Prism)
+inline constexpr GridPoint kOutlinePowerPrism[] = {{-1.0f, 0.0f}, {-1.0f, -1.0f}, {0.0f, -1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f}};
+inline constexpr ParamInfo kParamsPowerPrism[] = {
+  {"angle", -90.0, true, UiTransform::Identity, -270.0, 90.0, 0.0},
+  {"rotate", 0.0, true, UiTransform::Identity, -500.0, 500.0, 0.0},
+  {"streams", 1.0, true, UiTransform::Identity, 1.0, 4.0, 0.0},
+  {"spread", 60.0, true, UiTransform::Identity, 0.0, 180.0, 0.0},
+};
+namespace param::PowerPrism { enum : std::uint8_t { angle, rotate, streams, spread, Count }; }
 
 // ---- power.pulse (Pulse Power)
 inline constexpr GridPoint kOutlinePowerPulse[] = {{0.0f, -1.0f}, {1.0f, -1.0f}, {1.0f, 1.0f}, {0.0f, 2.0f}, {-1.0f, 2.0f}, {-1.0f, 0.0f}};
@@ -392,8 +549,22 @@ inline constexpr ParamInfo kParamsPowerPulse[] = {
   {"pulseLength", 0.15, true, UiTransform::Identity, 0.01, 2.0, 0.0},
   {"sync", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
   {"pulseBeats", 0.25, true, UiTransform::Identity, 0.0625, 4.0, 0.0},
+  {"delay", 0.0, true, UiTransform::Identity, 0.0, 4.0, 0.0},
+  {"delayBeats", 0.0, true, UiTransform::Identity, 0.0, 4.0, 0.0},
 };
-namespace param::PowerPulse { enum : std::uint8_t { logic, pulseLength, sync, pulseBeats, Count }; }
+namespace param::PowerPulse { enum : std::uint8_t { logic, pulseLength, sync, pulseBeats, delay, delayBeats, Count }; }
+
+// ---- power.sound-laser (Sound Laser)
+inline constexpr GridPoint kOutlinePowerSoundLaser[] = {{-1.0f, 0.0f}, {0.0f, -1.0f}, {1.0f, -1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f}};
+inline constexpr ParamInfo kParamsPowerSoundLaser[] = {
+  {"angle", -90.0, true, UiTransform::Identity, -270.0, 90.0, 0.0},
+  {"range", 150.0, true, UiTransform::Identity, 50.0, 1200.0, 0.0},
+  {"band", 0.0, true, UiTransform::Identity, 0.0, 3.0, 0.0},
+  {"threshold", -30.0, true, UiTransform::Identity, -60.0, 0.0, 0.0},
+  {"invert", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"hold", 0.1, true, UiTransform::Identity, 0.0, 2.0, 0.0},
+};
+namespace param::PowerSoundLaser { enum : std::uint8_t { angle, range, band, threshold, invert, hold, Count }; }
 
 // ---- power.toggle (Toggle Power)
 inline constexpr GridPoint kOutlinePowerToggle[] = {{0.0f, -1.0f}, {1.0f, 0.0f}, {1.0f, 2.0f}, {0.0f, 2.0f}, {-1.0f, 1.0f}, {-1.0f, -1.0f}};
@@ -413,8 +584,9 @@ inline constexpr ParamInfo kParamsInputComputerKeyboard[] = {
   {"glide", 0.05, true, UiTransform::Divide, 0.001, 100.0, 100.0},
   {"isPolyphonic", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
   {"polyphonic", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
+  {"keysSetPitch", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
 };
-namespace param::InputComputerKeyboard { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, Count }; }
+namespace param::InputComputerKeyboard { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, keysSetPitch, Count }; }
 
 // ---- input.midi-controller (MIDI Controller)
 inline constexpr GridPoint kOutlineInputMidiController[] = {{-1.0f, 0.0f}, {0.0f, -1.0f}, {2.0f, 1.0f}, {1.0f, 2.0f}, {-1.0f, 2.0f}};
@@ -429,8 +601,27 @@ inline constexpr ParamInfo kParamsInputMidiController[] = {
   {"slideTo", 1.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
   {"bendRange", 48.0, true, UiTransform::Identity, 1.0, 96.0, 0.0},
   {"device", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
+  {"keysSetPitch", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
 };
-namespace param::InputMidiController { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, channel, mpe, pressureTo, slideTo, bendRange, device, Count }; }
+namespace param::InputMidiController { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, channel, mpe, pressureTo, slideTo, bendRange, device, keysSetPitch, Count }; }
+
+// ---- input.stage-in (Stage In)
+inline constexpr GridPoint kOutlineInputStageIn[] = {{-1.0f, -1.0f}, {0.0f, -1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f}, {-1.0f, 1.0f}};
+namespace param::InputStageIn { enum : std::uint8_t { Count }; }
+
+// ---- input.touchpad (Touchpad)
+inline constexpr GridPoint kOutlineInputTouchpad[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {2.0f, 0.0f}, {2.0f, 1.0f}, {0.0f, 1.0f}, {-1.0f, 0.0f}};
+inline constexpr ParamInfo kParamsInputTouchpad[] = {
+  {"transpose", 0.0, true, UiTransform::Identity, -3.0, 3.0, 0.0},
+  {"glide", 0.05, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"isPolyphonic", 1.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"polyphonic", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
+  {"keysSetPitch", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"key", 0.0, true, UiTransform::Identity, 0.0, 11.0, 0.0},
+  {"scale", 0.0, true, UiTransform::Identity, 0.0, 5.0, 0.0},
+  {"chromatic", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+};
+namespace param::InputTouchpad { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, keysSetPitch, key, scale, chromatic, Count }; }
 
 inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::SourceAudioIn, "source.audio-in", "", BlockKind::AudioSource, 0.0f, kOutlineSourceAudioIn, 6, kParamsSourceAudioIn, 1, true},
@@ -439,33 +630,47 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::SourceNoise, "source.noise", "Noise", BlockKind::AudioSource, 0.0f, kOutlineSourceNoise, 5, kParamsSourceNoise, 2, true},
   {BlockType::SourceRecorder, "source.recorder", "Recorder", BlockKind::AudioSource, 0.0f, kOutlineSourceRecorder, 6, kParamsSourceRecorder, 13, true},
   {BlockType::SourceSample, "source.sample", "Sample", BlockKind::AudioSource, 0.0f, kOutlineSourceSample, 6, kParamsSourceSample, 14, true},
-  {BlockType::SourceSampleGen, "source.sample-gen", "SampleGen", BlockKind::AudioSource, 0.0f, kOutlineSourceSampleGen, 6, kParamsSourceSampleGen, 12, true},
+  {BlockType::SourceSampleGen, "source.sample-gen", "SampleGen", BlockKind::AudioSource, 0.0f, kOutlineSourceSampleGen, 6, kParamsSourceSampleGen, 13, true},
+  {BlockType::SourceStage, "source.stage", "", BlockKind::AudioSource, 0.0f, kOutlineSourceStage, 5, kParamsSourceStage, 2, false},
   {BlockType::SourceTone, "source.tone", "ToneSource", BlockKind::AudioSource, 0.0f, kOutlineSourceTone, 5, kParamsSourceTone, 3, true},
+  {BlockType::SourceWavetable, "source.wavetable", "", BlockKind::AudioSource, 0.0f, kOutlineSourceWavetable, 5, kParamsSourceWavetable, 4, false},
+  {BlockType::FxArpeggiator, "fx.arpeggiator", "", BlockKind::PreEffect, 6.0f, kOutlineFxArpeggiator, 5, kParamsFxArpeggiator, 6, false},
   {BlockType::FxAutoWah, "fx.auto-wah", "AutoWah", BlockKind::PostEffect, 6.0f, kOutlineFxAutoWah, 4, kParamsFxAutoWah, 5, true},
   {BlockType::FxBitCrusher, "fx.bit-crusher", "BitCrusher", BlockKind::PostEffect, 6.0f, kOutlineFxBitCrusher, 5, kParamsFxBitCrusher, 2, true},
   {BlockType::FxChomp, "fx.chomp", "Chomp", BlockKind::PostEffect, 6.0f, kOutlineFxChomp, 6, kParamsFxChomp, 3, true},
   {BlockType::FxChopper, "fx.chopper", "Chopper", BlockKind::PostEffect, 6.0f, kOutlineFxChopper, 6, kParamsFxChopper, 5, true},
+  {BlockType::FxChord, "fx.chord", "", BlockKind::PreEffect, 6.0f, kOutlineFxChord, 3, kParamsFxChord, 14, false},
   {BlockType::FxChorus, "fx.chorus", "Chorus", BlockKind::PostEffect, 6.0f, kOutlineFxChorus, 5, kParamsFxChorus, 4, true},
+  {BlockType::FxCompressor, "fx.compressor", "", BlockKind::PostEffect, 6.0f, kOutlineFxCompressor, 5, kParamsFxCompressor, 6, false},
   {BlockType::FxConvolver, "fx.convolver", "Convolver", BlockKind::PostEffect, 6.0f, kOutlineFxConvolver, 5, kParamsFxConvolver, 5, true},
   {BlockType::FxDistortion, "fx.distortion", "Distortion", BlockKind::PostEffect, 6.0f, kOutlineFxDistortion, 4, kParamsFxDistortion, 2, true},
   {BlockType::FxEnvelope, "fx.envelope", "Envelope", BlockKind::PreEffect, 6.0f, kOutlineFxEnvelope, 5, kParamsFxEnvelope, 4, true},
   {BlockType::FxEq, "fx.eq", "EQ", BlockKind::PostEffect, 6.0f, kOutlineFxEq, 6, kParamsFxEq, 12, true},
   {BlockType::FxFilter, "fx.filter", "Filter", BlockKind::PostEffect, 6.0f, kOutlineFxFilter, 4, kParamsFxFilter, 4, true},
+  {BlockType::FxLfo, "fx.lfo", "", BlockKind::Modulator, 6.0f, kOutlineFxLfo, 6, kParamsFxLfo, 9, false},
   {BlockType::FxPhaser, "fx.phaser", "Phaser", BlockKind::PostEffect, 6.0f, kOutlineFxPhaser, 4, kParamsFxPhaser, 4, true},
   {BlockType::FxPitchShifter, "fx.pitch-shifter", "PitchShifter", BlockKind::PostEffect, 6.0f, kOutlineFxPitchShifter, 4, kParamsFxPitchShifter, 3, true},
+  {BlockType::FxRandomNote, "fx.random-note", "", BlockKind::PreEffect, 6.0f, kOutlineFxRandomNote, 5, kParamsFxRandomNote, 15, false},
   {BlockType::FxReverb, "fx.reverb", "Reverb", BlockKind::PostEffect, 6.0f, kOutlineFxReverb, 5, kParamsFxReverb, 3, true},
   {BlockType::FxScuzz, "fx.scuzz", "Scuzz", BlockKind::PreEffect, 6.0f, kOutlineFxScuzz, 4, kParamsFxScuzz, 3, true},
   {BlockType::FxStereoDelay, "fx.stereo-delay", "StereoDelay", BlockKind::PostEffect, 6.0f, kOutlineFxStereoDelay, 6, kParamsFxStereoDelay, 5, true},
   {BlockType::FxVibrato, "fx.vibrato", "Vibrato", BlockKind::PreEffect, 6.0f, kOutlineFxVibrato, 4, kParamsFxVibrato, 3, true},
   {BlockType::FxVolume, "fx.volume", "Volume", BlockKind::PostEffect, 6.0f, kOutlineFxVolume, 4, kParamsFxVolume, 1, true},
-  {BlockType::PowerEmitter, "power.emitter", "ParticleEmitter", BlockKind::PowerSource, 0.0f, kOutlinePowerEmitter, 6, kParamsPowerEmitter, 8, true},
-  {BlockType::PowerLaser, "power.laser", "Laser", BlockKind::PowerSource, 0.0f, kOutlinePowerLaser, 5, kParamsPowerLaser, 6, true},
-  {BlockType::PowerPower, "power.power", "Power", BlockKind::PowerEffect, 6.0f, kOutlinePowerPower, 6, nullptr, 0, true},
-  {BlockType::PowerPulse, "power.pulse", "Pulse", BlockKind::Logic, 6.0f, kOutlinePowerPulse, 6, kParamsPowerPulse, 4, true},
+  {BlockType::PowerChance, "power.chance", "", BlockKind::Logic, 6.0f, kOutlinePowerChance, 5, kParamsPowerChance, 1, false},
+  {BlockType::PowerCounter, "power.counter", "", BlockKind::Logic, 6.0f, kOutlinePowerCounter, 4, kParamsPowerCounter, 4, false},
+  {BlockType::PowerEmitter, "power.emitter", "ParticleEmitter", BlockKind::PowerSource, 0.0f, kOutlinePowerEmitter, 6, kParamsPowerEmitter, 9, true},
+  {BlockType::PowerGate, "power.gate", "", BlockKind::Gate, 0.0f, kOutlinePowerGate, 6, kParamsPowerGate, 1, false},
+  {BlockType::PowerLaser, "power.laser", "Laser", BlockKind::PowerSource, 0.0f, kOutlinePowerLaser, 5, kParamsPowerLaser, 7, true},
+  {BlockType::PowerPower, "power.power", "Power", BlockKind::PowerEffect, 6.0f, kOutlinePowerPower, 6, kParamsPowerPower, 1, true},
+  {BlockType::PowerPrism, "power.prism", "", BlockKind::Path, 0.0f, kOutlinePowerPrism, 5, kParamsPowerPrism, 4, false},
+  {BlockType::PowerPulse, "power.pulse", "Pulse", BlockKind::Logic, 6.0f, kOutlinePowerPulse, 6, kParamsPowerPulse, 6, true},
+  {BlockType::PowerSoundLaser, "power.sound-laser", "", BlockKind::Listener, 6.0f, kOutlinePowerSoundLaser, 5, kParamsPowerSoundLaser, 6, false},
   {BlockType::PowerToggle, "power.toggle", "Toggle", BlockKind::Logic, 6.0f, kOutlinePowerToggle, 6, kParamsPowerToggle, 1, true},
   {BlockType::PowerVoid, "power.void", "Void", BlockKind::Void, 0.0f, kOutlinePowerVoid, 4, nullptr, 0, true},
-  {BlockType::InputComputerKeyboard, "input.computer-keyboard", "ComputerKeyboard", BlockKind::Controller, 6.0f, kOutlineInputComputerKeyboard, 5, kParamsInputComputerKeyboard, 4, true},
-  {BlockType::InputMidiController, "input.midi-controller", "MIDIController", BlockKind::Controller, 6.0f, kOutlineInputMidiController, 5, kParamsInputMidiController, 10, true},
+  {BlockType::InputComputerKeyboard, "input.computer-keyboard", "ComputerKeyboard", BlockKind::Controller, 6.0f, kOutlineInputComputerKeyboard, 5, kParamsInputComputerKeyboard, 5, true},
+  {BlockType::InputMidiController, "input.midi-controller", "MIDIController", BlockKind::Controller, 6.0f, kOutlineInputMidiController, 5, kParamsInputMidiController, 11, true},
+  {BlockType::InputStageIn, "input.stage-in", "", BlockKind::Controller, 6.0f, kOutlineInputStageIn, 5, nullptr, 0, false},
+  {BlockType::InputTouchpad, "input.touchpad", "", BlockKind::Controller, 6.0f, kOutlineInputTouchpad, 6, kParamsInputTouchpad, 8, false},
 }};
 
 constexpr const BlockInfo& info(BlockType t) { return kBlocks[static_cast<std::size_t>(t)]; }

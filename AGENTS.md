@@ -37,6 +37,9 @@ Run `pnpm bd privacy check` before committing and `pnpm bd privacy history` befo
 - `pnpm test:e2e`: build a patch with v1's UI and hear it (CHG-0002 acceptance)
 - `pnpm test:sharing`: sharing backend + embeds + samples (local `wrangler dev`, Turnstile test key, Freesound/siteverify mocks)
 - `pnpm bd server dev|setup|secret|deploy|smoke`: the Cloudflare Worker + D1 in `server/` (staging = owner review; production only after a merge)
+- `pnpm test:gallery`: the public gallery (publish, search, likes, remixes, reports, `bd gallery` review)
+- `pnpm test:accounts`: optional accounts (local Worker, mocked Google/siteverify, Chrome's virtual passkey authenticator)
+- `pnpm test:video`: video export in Google Chrome (MP4 checked with ffprobe/ffmpeg; `--chromium` for the WASM AAC path)
 - `pnpm test:mpe`: the web MPE/MIDI parser on the shared streams in `tests/mpe/` (the C++ parser runs them in the engine tests; PLUGIN-0004)
 - `pnpm test:ui-regressions`: one browser test per UI bug found in review; every new bug gets a failing test here (or in engine tests) before its fix
 - `pnpm bd render --check --configs release,dev`: golden audio/event hashes
@@ -45,6 +48,7 @@ Run `pnpm bd privacy check` before committing and `pnpm bd privacy history` befo
 - `pnpm bd plugin test` / `pnpm bd plugin au`: JUCE plugin build, pluginval/auval, built VST3/AU ≡ native golden, editor bridge
 - `pnpm bd plugin deploy [--no-build]`: ship the plugins to the externally configured test host. **Run after every change that reaches the plugins** (plugin/, engine/, web/)
 - `pnpm bd win engine|plugin`: the same on the Windows 11 VM (tools/win-vm/README.md)
+- `pnpm bd size check [--staged]`: files may hold about 5,000 tokens; ones already over (tools/size/baseline.json) may only shrink. The pre-commit hook (`pnpm bd size install`) runs it and says how to split a file
 - `pnpm bd perf`: performance baselines → docs/engineering/perf-baselines.md (not a gate)
 - `pnpm bd ci`: run all of the above locally (GitHub Actions is manual-only)
 

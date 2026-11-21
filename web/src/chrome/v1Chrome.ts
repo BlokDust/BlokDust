@@ -105,8 +105,8 @@ export function drawV1Chrome(c: ChromeInput): void {
 
     ctx.fillStyle = txt;
     ctx.font = '200 ' + headerType + 'px Dosis';
-    if (rows > 1) { ctx.textAlign = 'center'; ctx.fillText('BLOKDUST', W * 0.5, (thisHeight * 0.5) + (headerType * 0.38)); }
-    else { ctx.textAlign = 'left'; ctx.fillText('BLOKDUST', (20 + createNewMargin) * units, (thisHeight * 0.5) + (headerType * 0.38)); }
+    if (rows > 1) { ctx.textAlign = 'center'; ctx.fillText('BLOKDUST 2', W * 0.5, (thisHeight * 0.5) + (headerType * 0.38)); }
+    else { ctx.textAlign = 'left'; ctx.fillText('BLOKDUST 2', (20 + createNewMargin) * units, (thisHeight * 0.5) + (headerType * 0.38)); }
 
     ctx.strokeStyle = theme.colors[1];
     ctx.globalAlpha = 1;

@@ -109,39 +109,43 @@ TEST_CASE("moving a source away from a controller with a held note releases it")
   CHECK_FALSE(e->block(2)->gated());
 }
 
-TEST_CASE("Keyboards power connected Emitters and Lasers while a key is held, and the note aims them like a clock (owner review 2)") {
-  // Owner: a keyboard is like a Toggle while a key is down. The 12 notes of the octave are 12 clock positions:
-  // C points at 12 o'clock (the default angle, −90°), each semitone turns 30° clockwise.
+TEST_CASE("SPEC-CONNECTIONS-PROXIMITY R2: keyboards power connected Emitters and Lasers while a key is held; keys never aim them (owner, 2026-11-20)") {
+  // Owner: a keyboard is like a Toggle while a key is down. Notes no longer turn them (C was 12 o'clock): they keep
+  // their own Angle.
   auto e = makeEngine(48000, 1, false);
   e->push(Command::add(1, BlockType::InputComputerKeyboard, 0, 0));
   e->push(Command::add(2, BlockType::PowerEmitter, 3, 0));
   e->push(Command::add(3, BlockType::PowerLaser, -3, 0));
   e->push(Command::add(4, BlockType::PowerEmitter, 30, 30));  // not connected: never fires
+  e->push(Command::setParam(2, P::PowerEmitter::angle, 45));
+  e->push(Command::setParam(3, P::PowerLaser::angle, 0));
   render(*e, 4800);
   CHECK(e->connected(1, 2));
   CHECK(e->connected(1, 3));
   CHECK(eventsOf(*e, Event::Type::Emit, 2).empty());  // no key: unpowered
   CHECK(e->beams().empty());
   e->clearEvents();
-  e->push(Command::noteOn(BlockType::InputComputerKeyboard, 64));  // E: 4 o'clock = −90 + 120 = 30°
+  e->push(Command::noteOn(BlockType::InputComputerKeyboard, 64));
   render(*e, 4800);
-  CHECK(eventsOf(*e, Event::Type::Emit, 2).size() == 1);  // powered: fires at once (v1 emitter when powered)
+  CHECK(eventsOf(*e, Event::Type::Emit, 2).size() == 1);  // fires at once
   CHECK(eventsOf(*e, Event::Type::Emit, 4).empty());
-  CHECK(e->beams().size() == 1);
-  CHECK(e->block(2)->params[P::PowerEmitter::angle] == 30.0);
-  CHECK(e->block(3)->params[P::PowerLaser::angle] == 30.0);
+  CHECK(e->beams().size() == 1);  // the laser holds while the key does
+  CHECK(e->block(2)->params[P::PowerEmitter::angle] == 45.0);
+  CHECK(e->block(3)->params[P::PowerLaser::angle] == 0.0);
   const auto parts = e->particles();
   REQUIRE(parts.size() == 1);
-  CHECK(parts[0].vx > 0.0); CHECK(parts[0].vy > 0.0);  // down-right, towards 4 o'clock
-  e->push(Command::noteOn(BlockType::InputComputerKeyboard, 69));  // A (9 o'clock = −180°): the laser follows the newest key
+  CHECK(parts[0].vx > 0.0); CHECK(parts[0].vy > 0.0);  // its own 45°
+  e->push(Command::noteOn(BlockType::InputComputerKeyboard, 69));
   render(*e, 480);
-  CHECK(e->block(3)->params[P::PowerLaser::angle] == -180.0);
+  CHECK(e->block(3)->params[P::PowerLaser::angle] == 0.0);
   e->push(Command::noteOff(BlockType::InputComputerKeyboard, 64));
+  render(*e, 480);
+  CHECK(e->beams().size() == 1);  // one key still held: still on
   e->push(Command::noteOff(BlockType::InputComputerKeyboard, 69));
   render(*e, 480);
   e->clearEvents();
   render(*e, 48000 * 3);
-  CHECK(eventsOf(*e, Event::Type::Emit, 2).empty());  // released: off again
+  CHECK(eventsOf(*e, Event::Type::Emit, 2).empty());  // every key released: off again
   CHECK(e->beams().empty());
   // A key held while the keyboard moves away leaves no power behind.
   e->push(Command::noteOn(BlockType::InputComputerKeyboard, 60));
@@ -162,25 +166,22 @@ std::vector<int> particleHeadings(const Engine& e) {
 }
 }  // namespace
 
-TEST_CASE("SPEC-CONNECTIONS-PROXIMITY R2 S5: every key pressed fires the keyboard's Emitter, legato too (owner, CHG-0009)") {
-  // Owner: holding one key and pressing another (legato) fired nothing; each note-on fires a particle at its note.
+TEST_CASE("SPEC-CONNECTIONS-PROXIMITY R2 S5: every key pressed fires the keyboard's Emitter at its own angle, legato too (owner, CHG-0009)") {
   auto e = makeEngine(48000, 1, false);
   e->push(Command::add(1, BlockType::InputComputerKeyboard, 0, 0));
   e->push(Command::add(2, BlockType::PowerEmitter, 3, 0));
   render(*e, 4800);
-  e->push(Command::noteOn(BlockType::InputComputerKeyboard, 60));  // C: 12 o'clock (−90°)
+  e->push(Command::noteOn(BlockType::InputComputerKeyboard, 60));
   render(*e, 4800);
   CHECK(eventsOf(*e, Event::Type::Emit, 2).size() == 1);
   e->clearEvents();
-  e->push(Command::noteOn(BlockType::InputComputerKeyboard, 64));  // E, C still held: 4 o'clock (30°)
+  e->push(Command::noteOn(BlockType::InputComputerKeyboard, 64));  // C still held
   render(*e, 4800);
   CHECK(eventsOf(*e, Event::Type::Emit, 2).size() == 1);
-  CHECK(particleHeadings(*e) == std::vector<int>{-90, 30});
-  // Mono: a held key repeats at the newest key's angle; letting it go aims back at the key still held.
+  CHECK(particleHeadings(*e) == std::vector<int>{-90, -90});  // both at the Emitter's own angle (default −90°)
   e->clearEvents();
   e->push(Command::noteOff(BlockType::InputComputerKeyboard, 64));
   render(*e, 480);
-  CHECK(e->block(2)->params[P::PowerEmitter::angle] == -90.0);
   CHECK(eventsOf(*e, Event::Type::Emit, 2).empty());  // a release fires nothing
   e->push(Command::noteOn(BlockType::InputComputerKeyboard, 60));  // the held key again (a repeat note-on)
   render(*e, 480);
@@ -191,7 +192,7 @@ TEST_CASE("SPEC-CONNECTIONS-PROXIMITY R2 S5: every key pressed fires the keyboar
   CHECK(eventsOf(*e, Event::Type::Emit, 2).empty());
 }
 
-TEST_CASE("SPEC-CONNECTIONS-PROXIMITY R2 S6: a polyphonic keyboard fires one particle per key, together (owner, CHG-0009)") {
+TEST_CASE("SPEC-CONNECTIONS-PROXIMITY R2 S6: a chord fires once; held keys repeat at the Emitter's rate, one particle (owner, 2026-11-20)") {
   auto e = makeEngine(48000, 1, false);
   e->push(Command::add(1, BlockType::InputComputerKeyboard, 0, 0));
   e->push(Command::add(2, BlockType::PowerEmitter, 3, 0));
@@ -199,20 +200,17 @@ TEST_CASE("SPEC-CONNECTIONS-PROXIMITY R2 S6: a polyphonic keyboard fires one par
   render(*e, 4800);
   e->push(Command::noteOn(BlockType::InputComputerKeyboard, 60));
   e->push(Command::noteOn(BlockType::InputComputerKeyboard, 64));
-  e->push(Command::noteOn(BlockType::InputComputerKeyboard, 67));  // G: 7 o'clock (120°)
+  e->push(Command::noteOn(BlockType::InputComputerKeyboard, 67));
   render(*e, 480);
-  CHECK(eventsOf(*e, Event::Type::Emit, 2).size() == 3);
-  CHECK(particleHeadings(*e) == std::vector<int>{-90, 30, 120});
-  // Held, the chord repeats together at the emitter's rate: one particle per held key.
+  CHECK(eventsOf(*e, Event::Type::Emit, 2).size() == 1);  // pressed together: one particle, not three on top of each other
   e->clearEvents();
   render(*e, 48000 * 3 / 2);  // past one 1.33 s interval, short of two
-  CHECK(eventsOf(*e, Event::Type::Emit, 2).size() == 3);
-  // Let go of one: the other two keep going.
+  CHECK(eventsOf(*e, Event::Type::Emit, 2).size() == 1);
   e->push(Command::noteOff(BlockType::InputComputerKeyboard, 64));
   render(*e, 480);
   e->clearEvents();
   render(*e, 48000 * 4 / 3);
-  CHECK(eventsOf(*e, Event::Type::Emit, 2).size() == 2);
+  CHECK(eventsOf(*e, Event::Type::Emit, 2).size() == 1);
 }
 
 TEST_CASE("Audio In is always on and feeds its chain; without input it is silent") {
@@ -269,11 +267,36 @@ TEST_CASE("Microphone gain scales its v1 level (owner review 2)") {
   auto peakFor = [&](double gain) {
     auto e = makeEngine(48000, 1, false);
     e->push(Command::add(1, BlockType::SourceMicrophone, 0, 0));
+    e->push(Command::add(2, BlockType::PowerPower, -3, 0));  // the website's Microphone plays only while powered (R1a)
     e->push(Command::setParam(1, P::SourceMicrophone::gain, gain));
     for (std::uint32_t d = 0; d < 48000; d += 128) e->process(in.data() + d, in.data() + d, outL.data() + d, outR.data() + d, 128);
     double p = 0; for (std::size_t i = 24000; i < 48000; ++i) p = std::max(p, double(std::abs(outL[i]))); return p;
   };
   CHECK_THAT(peakFor(2.0) / peakFor(1.0), WithinAbs(2.0, 1e-3));
+}
+
+TEST_CASE("SPEC-SIMULATION-POWER-AND-PARTICLES R1a: the website's Microphone is silent until it is powered (CHG-0035)") {
+  std::vector<float> in(48128), outL(48128), outR(48128);  // whole 128-frame blocks from 24000
+  for (std::size_t i = 0; i < in.size(); ++i) in[i] = static_cast<float>(0.25 * dmath::sin(dmath::kTwoPi * 440.0 * double(i) / 48000.0));
+  auto peak = [&](std::size_t from, std::size_t to) { double p = 0; for (std::size_t i = from; i < to; ++i) p = std::max(p, double(std::abs(outL[i]))); return p; };
+  auto e = makeEngine(48000, 1, false);
+  e->push(Command::add(1, BlockType::SourceMicrophone, 0, 0));
+  e->push(Command::add(3, BlockType::FxDistortion, 3, 0));  // an effect on it, as the owner had: still silent
+  e->push(Command::add(2, BlockType::PowerPower, -30, 0));    // far away: not connected
+  for (std::uint32_t d = 0; d < 24000; d += 128) e->process(in.data() + d, in.data() + d, outL.data() + d, outR.data() + d, 128);
+  CHECK(peak(0, 24000) == 0.0);
+  e->push(Command::move(2, -3, 0, 24000));  // the Power comes next to it
+  for (std::uint32_t d = 24000; d < 48000; d += 128) e->process(in.data() + d, in.data() + d, outL.data() + d, outR.data() + d, 128);
+  CHECK(peak(36000, 48000) > 0.01);
+}
+
+TEST_CASE("Plugin Audio Input (the Microphone with host input) stays always on (PLUGIN-0002)") {
+  std::vector<float> in(9600), outL(9600), outR(9600);
+  for (std::size_t i = 0; i < in.size(); ++i) in[i] = static_cast<float>(0.5 * dmath::sin(0.01 * double(i)));
+  auto e = std::make_unique<Engine>(EngineConfig{48000, 1, true, /*hostInput=*/true});
+  e->push(Command::add(1, BlockType::SourceMicrophone, 0, 0));
+  for (std::uint32_t d = 0; d < 9600; d += 128) e->process(in.data() + d, in.data() + d, outL.data() + d, outR.data() + d, 128);
+  CHECK(outL[9000] == in[9000]);
 }
 
 TEST_CASE("v1 master compressor (Chromium DynamicsCompressor port): +2.08 dB make-up below the knee, loud input reduced") {

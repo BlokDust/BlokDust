@@ -10,9 +10,11 @@ export interface ProcessorOptions {
 export type ToWorklet =
   | { type: 'commands'; commands: Command[] }
   /** Decoded audio for a source.sample block (the user's own file, DATA-0005); copied into WASM memory. */
-  | { type: 'sample'; id: number; left: Float32Array; right?: Float32Array; sampleRate: number }
+  | { type: 'sample'; id: number; left: Float32Array; right?: Float32Array; sampleRate: number; /** Inside this Stage block (CHG-0021). */ stage?: number }
   /** v1 Recorder (RecorderJS on the master output): start / stop capturing the engine's output. */
-  | { type: 'record'; on: boolean };
+  | { type: 'record'; on: boolean }
+  /** Snapshots come from this Stage block's inner world (CHG-0021); 0: the outer world. */
+  | { type: 'view'; stage: number };
 
 export interface Snapshot {
   type: 'snapshot';
@@ -28,8 +30,13 @@ export interface Snapshot {
   powered: Uint32Array;
   /** Sampler playheads, packed [blockId, seconds]* (the open panel's playback lines). */
   playheads?: Float32Array;
+  /** Live readouts for open panels, packed [blockId, v0, v1, v2, v3]* (Engine::monitors: a Compressor's level and gain
+   * reduction, …). */
+  monitors?: Float32Array;
   /** UI-relevant events since the previous snapshot. */
   events: EngineEvent[];
+  /** Particles emitted since the previous snapshot, however they were fired (Settings › ACCOUNT's count, R16). */
+  emitted?: number;
   /** Output RMS since the previous snapshot (meters / tests). */
   rms: number;
 }

@@ -9,8 +9,21 @@ export interface Patch { format?: string; version?: number; seed?: number; tempo
   /** The order the connected pairs connected in, oldest first, as [block id, block id] (R4a: a source's effects run in
    * the order they connected, as in v1). Ordering only: connections still come from positions. */
   connectionOrder?: [string, string][];
+  /** What is inside each Stage block (CHG-0021, SPEC-PATCH-FORMAT-V2 R7): one entry per Stage block, by its id. One
+   * level only: an inner patch's own Stage blocks stay empty. */
+  macros?: Macro[];
+  /** Notes on the stage (CHG-0020, UI-0011): text at a grid position. The engine never reads them. */
+  labels?: { id: string; text: string; x: number; y: number }[];
   /** The view it was saved at (owner, 2026-11-12, SPEC-PATCH-FORMAT-V2 R2): opening shows it. The engine ignores it. */
-  view?: { x: number; y: number; zoom: number } }
+  view?: { x: number; y: number; zoom: number };
+  /** Where its blocks came from (owner review 3, 2026-11-16; SPEC-PATCH-FORMAT-V2 R11): each saved patch INSERT brought
+   * in, with the ids of the blocks it brought that are still here. With `parent` (a remix, kept by the server) and
+   * each source's own `sources`, the patches a patch was made from can be followed all the way back. The engine
+   * ignores it. */
+  sources?: PatchSource[] }
+/** A shared patch (server id, and its revision then) whose blocks were inserted into this one. */
+export interface PatchSource { id: string; rev?: number; title?: string; by?: string | null; blocks: string[] }
+export interface Macro { block: string; blocks: PatchBlock[]; connectionOrder?: [string, string][]; labels?: Patch['labels']; view?: Patch['view'] }
 export type ScriptOp =
   | { op: 'add'; atSample?: number; block: PatchBlock }
   | { op: 'move'; atSample?: number; block: string; x: number; y: number }
@@ -21,7 +34,8 @@ export type ScriptOp =
   | { op: 'tempo'; atSample?: number; bpm: number; beat?: number }
   | { op: 'expression'; atSample?: number; note: number; channel?: number; dim: 'bend' | 'pressure' | 'slide'; value: number; controller?: string };
 
-export interface Loaded { seed: number; commands: Command[]; ids: Map<string, number>; types: Map<number, number>; nextId: number }
+export interface Loaded { seed: number; commands: Command[]; ids: Map<string, number>; types: Map<number, number>; nextId: number;
+  /** What was dropped to load the rest (R3: a param this build doesn't know, from a newer BlokDust). */ warnings: string[] }
 
 const typeIndex = new Map(BLOCKS.map((b, i) => [b.id, i]));
 /** Command::Expression (engine.hpp). */
@@ -38,10 +52,30 @@ function addBlock(b: PatchBlock, out: Loaded, at: number) {
   out.commands.push({ type: CommandType.AddBlock, id, blockType: t, x: b.x ?? 0, y: b.y ?? 0, atSample: at });
   for (const [k, v] of Object.entries(b.params ?? {})) {
     const p = paramIndex(t, k);
-    if (p < 0) throw new Error(`unknown param ${k} on ${b.id}`);
+    if (p < 0) { out.warnings.push(`unknown param ${k} on ${b.id}`); continue; }  // R3: dropped, the rest loads
+    // An LFO's target (AUDIO-0003): saved as "<block id>:<param key>"; engine ids are this session's (targetCommands).
+    if (k === 'targetBlock' || k === 'targetParam' || k === 'target') continue;
     const n = numeric(v);
     if (n !== null) out.commands.push({ type: CommandType.SetParam, id, param: p, value: n, atSample: at });
   }
+}
+
+/** LFO targets (AUDIO-0003, the C++ loader's resolveTargets): each block's `target`, "<block id>:<param key>", as
+ * SetParam targetBlock / targetParam. Unknown blocks or params are skipped (the LFO idles). */
+export function targetCommands(blocks: PatchBlock[], ids: Map<string, number>): Command[] {
+  const out: Command[] = [], types = new Map(blocks.map(b => [b.id, typeIndex.get(b.type)]));
+  for (const b of blocks) {
+    const text = b.params?.target, own = types.get(b.id), id = ids.get(b.id);
+    if (typeof text !== 'string' || own === undefined || id === undefined) continue;
+    const colon = text.lastIndexOf(':');
+    if (colon < 0) continue;
+    const uid = text.slice(0, colon), target = ids.get(uid), theirs = types.get(uid);
+    if (target === undefined || theirs === undefined) continue;
+    const tb = paramIndex(own, 'targetBlock'), tp = paramIndex(own, 'targetParam'), idx = paramIndex(theirs, text.slice(colon + 1));
+    if (tb < 0 || tp < 0 || idx < 0) continue;
+    out.push({ type: CommandType.SetParam, id, param: tb, value: target }, { type: CommandType.SetParam, id, param: tp, value: idx });
+  }
+  return out;
 }
 
 /** Relink commands replaying a patch's `connectionOrder` (the C++ loader does the same). */
@@ -58,11 +92,22 @@ export function relinks(patch: Pick<Patch, 'connectionOrder'>, ids: Map<string, 
 export function loadPatch(patch: Patch, script: ScriptOp[] = []): Loaded {
   if (!Array.isArray(patch.blocks)) throw new Error('patch needs a blocks array');
   if (patch.version !== undefined && patch.version !== 2) throw new Error('unsupported patch version');
-  const out: Loaded = { seed: patch.seed ?? 1, commands: [], ids: new Map(), types: new Map(), nextId: 1 };
+  const out: Loaded = { seed: patch.seed ?? 1, commands: [], ids: new Map(), types: new Map(), nextId: 1, warnings: [] };
   // The patch's tempo (SIMULATION-0003), only when set (older patches keep exactly their command list).
   if (typeof patch.tempo === 'number') out.commands.push({ type: CommandType.Tempo, id: 0, value: patch.tempo, x: -1, atSample: -1 });
   for (const b of patch.blocks) addBlock(b, out, -1);
+  for (const c of targetCommands(patch.blocks, out.ids)) out.commands.push({ ...c, atSample: -1 });
   for (const r of relinks(patch, out.ids)) out.commands.push({ ...r, atSample: -1 });
+  // Stage blocks' inner patches (R7; the C++ loader's `stages`): their commands carry the Stage block's engine id, and
+  // come after the outer patch's, so the block exists when its inner world is made (WasmEngine.push).
+  const inner: Command[] = [], filled = new Set<number>();
+  for (const m of Array.isArray(patch.macros) ? patch.macros : []) {
+    const stage = m && typeof m.block === 'string' ? out.ids.get(m.block) : undefined;
+    // One inner world per Stage, the first entry's (as the C++ loader; security review, PR 13).
+    if (stage === undefined || !Array.isArray(m.blocks) || filled.has(stage)) continue;
+    filled.add(stage);
+    for (const c of loadPatch({ blocks: m.blocks, connectionOrder: m.connectionOrder }).commands) inner.push({ ...c, stage });
+  }
   for (const s of script) {
     const at = s.atSample ?? -1;
     if (s.op === 'add') { addBlock(s.block, out, at); continue; }
@@ -92,5 +137,6 @@ export function loadPatch(patch: Patch, script: ScriptOp[] = []): Loaded {
   // Same ordering rule as the C++ loader: stable by due sample (immediate first).
   const due = (c: Command) => Math.max(c.atSample ?? -1, -1);
   out.commands = out.commands.map((c, i) => ({ c, i })).sort((a, b) => due(a.c) - due(b.c) || a.i - b.i).map(x => x.c);
+  out.commands.push(...inner);
   return out;
 }

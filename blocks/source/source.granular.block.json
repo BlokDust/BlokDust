@@ -5,7 +5,7 @@
   "category": "source",
   "kind": "audio-source",
   "name": "Granular",
-  "description": "It takes a SoundCloud sample of your choice and chops it into tiny pieces which are used as a sound source.",
+  "description": "It takes a sample from freesound.org and chops it into tiny pieces which are used as a sound source.",
   "v1": {
     "type": "Granular",
     "class": [

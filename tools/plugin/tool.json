@@ -1,13 +1,17 @@
 {
   "name": "plugin",
-  "summary": "Build the JUCE 8 plugin (VST3/AU/Standalone, WebView editor embedding web/dist), run pluginval (strictness 5), and load the built VST3 headlessly like a DAW: golden fixtures must hash exactly like the native engine and the editor must build the stage from the patch. `package` makes the notarised universal macOS installer (BlokDust-<version>-Mac.pkg).",
+  "summary": "Build the JUCE 8 plugin (VST3/AU/Standalone, WebView editor embedding web/dist), run pluginval (strictness 5), and load the built VST3 headlessly like a DAW: golden fixtures must hash exactly like the native engine and the editor must build the stage from the patch. `package` makes the notarised universal macOS installer (BlokDust-<version>-Mac.pkg). `ios build|test` builds the iPadOS AUv3 inside the BlokDust app for the Simulator and loads it out of process like AUM: golden hashes ≡ native, state round-trip, editor bd_ready; and checks the app itself: output-only audio, no microphone entry, patch saved and restored (CHG-0025). `ios archive` makes the App Store build (the live site, distribution signing) and checks it: one version and build number, privacy manifests, encryption declared; it exports an .ipa, or with --upload sends it to App Store Connect.",
   "usage": [
     "pnpm bd plugin build",
     "pnpm bd plugin validate",
     "pnpm bd plugin test",
+    "pnpm bd plugin ios test [--no-build]",
+    "pnpm bd plugin ios device [--no-build]",
+    "pnpm bd plugin ios log",
+    "pnpm bd plugin ios archive [--build N] [--upload]",
     "pnpm bd plugin package",
     "pnpm bd plugin deploy [--no-build] [--force]"
   ],
-  "outputs": "build/plugin/plugin/BlokDust_artefacts/Release/{VST3,AU,Standalone}; JSON {pluginval, renders}",
+  "outputs": "build/plugin/plugin/BlokDust_artefacts/Release/{VST3,AU,Standalone}; JSON {pluginval, renders}; build/plugin-ios-sim/…/Standalone/BlokDust.app (AUv3 inside); .cache/ios-host/{result.json,app.png,editor.png,editor-small.png}; .cache/ios-release/<version>-<build>/{BlokDust.xcarchive,BlokDust.ipa}",
   "deterministic": true
 }

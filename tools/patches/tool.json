@@ -1,0 +1,7 @@
+{
+  "name": "patches",
+  "summary": "Rewrite stored patches whose block settings changed shape (no load-time conversion; SPEC-PATCH-FORMAT-V2). CHG-0040: Random Note's key + scale + octaves become 12 weights + a semitone range; Chord's one chord becomes the same chord on all 12 notes, Smooth off. Works on patch files (and golden fixtures) or every revision in an env's D1, after exporting a backup.",
+  "usage": ["pnpm bd patches migrate --files tests/golden/random-note.json", "pnpm bd patches migrate --env staging --dry-run", "pnpm bd patches migrate --env production", "pnpm bd patches migrate --local gallery"],
+  "outputs": "JSON on stdout: what changed (files, or revisions with block counts) and the backup path; patch files rewritten in place; .cache/backups/<env>-<time>.sql",
+  "deterministic": true
+}

@@ -5,6 +5,7 @@
 import l10n from './ported/data/l10n.json';
 import menu from './ported/data/menu.json';
 import config from './ported/data/config.json';
+import { MAX_ASPECT } from '../stage/metrics.ts';
 
 // v1 lib/extensions (MIT): the helpers the ported UI calls, defined non-enumerable so they never leak into for…in.
 const def = (o: object, k: string, v: unknown) => { if (!(k in o)) Object.defineProperty(o, k, { value: v, writable: true, configurable: true }); };
@@ -122,9 +123,29 @@ export const App: any = {
   BlockCreator: { MenuJson: menu },
   Palette: [] as string[],
   Unit: 1, GridSize: 15, ScaledUnit: 1, ScaledGridSize: 15, Width: 0, Height: 0, ZoomLevel: 1,
+  /** Widest view shape that sizes the UI from its width (stage/metrics.ts; Metrics.ts, rewritten by bd v1 port-ui). */
+  MaxAspect: MAX_ASPECT,
   DragOffset: new Point(), ScaledDragOffset: new Point(),
   /** Running inside the plugin's WebView (labels and options differ: CHG-0004). */
   IsPlugin: false,
+  /** Settings on a phone (owner, 2026-11-18): the close cross sits where the header's settings icon is (its centre);
+   * the page is centred and reaches 20 units short of the cross (v1 puts the cross 20 units past the page's right);
+   * the tabs share the width from the left edge to there; each row is taller (v1: 4/7 of the width, 48-unit rows).
+   * Desktop keeps v1's. */
+  get SettingsPhone(): boolean { return this.Metrics?.Device === 0; },
+  SettingsCrossX(w: number): number {
+    const dd = this.MainScene?.Header?.DropDownHeight;
+    return typeof dd === 'number' && dd > 0 ? w - dd * 0.5 * this.Unit + 30 * this.Unit : w - 40 * this.Unit;
+  },
+  /** The block menu's drop-down height (units) for its width-based `dd`: past MaxAspect the unit follows the height
+   * (Metrics.ts), so the blocks draw smaller; the drop-down shrinks the same way, the blocks still centred in it
+   * (owner, GarageBand 2026-11-20). Views up to MaxAspect keep v1's. */
+  MenuDrop(dd: number): number { return this.Width > 0 && this.Height > 0 ? dd * Math.min(1, (this.Height * this.MaxAspect) / this.Width) : dd; },
+  SettingsMenuWidth(w: number): number { return this.SettingsPhone ? 2 * (this.SettingsCrossX(w) - 20 * this.Unit - w * 0.5) : (w / 7) * 4; },
+  SettingsTabsWidth(w: number): number { return this.SettingsCrossX(w) - 20 * this.Unit; },
+  get SettingsRow(): number { return this.SettingsPhone ? 62 : 48; },
+  /** Links can't open here (a plugin inside another iPad app): scene.ts hideLinks. */
+  NoLinks: false,
   Blocks: [] as any[], SubCanvas: [] as HTMLCanvasElement[], CompositionId: null as string | null, SessionId: null as string | null,
   FillColor(ctx: CanvasRenderingContext2D, c: string) { ctx.fillStyle = c; },
   StrokeColor(ctx: CanvasRenderingContext2D, c: string) { ctx.strokeStyle = c; },
@@ -141,7 +162,9 @@ export const App: any = {
   },
   FocusManager: { IsActive: true },
   /** v1's input events: the Splash subscribes in Setup; v2 calls the splash itself (scene.ts), so these never fire. */
-  PointerInputManager: { MouseDown: new NullstoneEvent(), TouchEnd: new NullstoneEvent(), TouchMove: new NullstoneEvent() },
+  PointerInputManager: { MouseDown: new NullstoneEvent(), TouchEnd: new NullstoneEvent(), TouchMove: new NullstoneEvent(),
+    /** v1: the last press was a touch (the tour gives its touch steps); set by the app's pointer handler. */
+    TouchAssumed: typeof matchMedia === 'function' && matchMedia('(hover: none)').matches },
   IsLoadingComposition: false,
   // v1 AddressBarManager.UpdateURL: show a saved composition's link in the address bar. Phase 1 patch tokens (`?c=p…`,
   // no backend) are too long to be useful there, so those stay out of it.

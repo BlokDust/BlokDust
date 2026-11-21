@@ -16,11 +16,21 @@ No deadline: we work phase by phase and each phase merges to `main` only when it
 **Release plan (owner, 2026-11-08):** Phases 4 and 5 are deferred. Instead:
 1. **Release 1** ([CHG-0005](../specs/changes/0005-release-1/proposal.md), branch `release-1`): what the web and plugin need before real users: patch files and presets, mobile fixes and multi-touch, multi-select, hosting at blokdust.funputs.com, credits, plugin installers.
 2. **Quiet launch:** website + free plugins live at blokdust.funputs.com (funputs.com/blokdust redirects there), no announcement; real users find bugs.
-3. **iPad AUv3**, then the **main launch**: iPad, website and plugins announced together.
-4. **XY pad block:** its own branch and thread, after Release 1; the owner prototypes several designs (always-visible pad vs settings, fixed note+filter vs assignable axes, Push-style grid) before choosing.
+3. **iPad AUv3** ([CHG-0025](../specs/changes/0025-ipad-auv3/proposal.md), branch `feat/ipad-auv3`), then the **main launch**: iPad, website and plugins announced together.
+4. **Post-2.0 blocks** (owner, 2026-11-13, [SCOPE-0005](../decisions/scope/SCOPE-0005-the-post-2-0-block-set.md)): designed in `pnpm bd block-designer`, built in this order:
+   CHG-0014 Compressor + emitter Offset, CHG-0015 Counter/Chance/Prism, CHG-0016 Sound Laser, CHG-0017 Silent Keys + note effects,
+   CHG-0018 LFO, CHG-0019 Touchpad, CHG-0020 Labels, CHG-0021 Stage block.
+   CHG-0032 Gate built with a placeholder look; its design is next (owner, 2026-11-17).
 5. **Rebuild the BlokDust guide** (owner, 2026-11-10): guide.blokdust.com was a WordPress site the owner can no longer reach, and it has been hacked, so Settings no longer links it (Connect tab removed). A future agent task: collect the guide's text and images (archived copies, e.g. the Wayback Machine, not the hacked site) and make a static site that becomes the new guide.
 
 **Core block set (Phase 1):** Tone, Noise, Microphone/AudioIn, Sample (user file / Freesound), Filter, EQ, Volume, Reverb, StereoDelay, Distortion, BitCrusher, Chorus, Phaser, Envelope, Vibrato, Power, Toggle, Pulse, Emitter, Laser, Void, ComputerKeyboard, MIDIController (Microphone and AudioIn share an implementation).
 
+## To do (not yet planned)
+- **Patches from a newer BlokDust** (owner, 2026-11-19; spec to write first): a gallery patch saved with blocks or
+  settings an older app or plugin doesn't have. Show only patches the user's version can play, or let OPEN say "This
+  was created with a newer version of BlokDust. Update BlokDust first."; as the last resort, a patch that can't be
+  loaded opens a blank stage and the message bar says it couldn't be loaded (no silent empty world). Settings it
+  doesn't know are already dropped (SPEC-PATCH-FORMAT-V2 R3); unknown block types still refuse the patch.
+
 ## Deferred or rejected
-- Macros: deferred (SCOPE-0002). Custom DSP blocks: rejected (SCOPE-0001). Accounts, gallery, moderation: deferred (SCOPE-0003). MP4 social previews: deferred until funded (SHARING-0002).
+- Macros: deferred (SCOPE-0002), now proposed as the Stage block (SCOPE-0006, CHG-0021). Custom DSP blocks: rejected (SCOPE-0001). Accounts, gallery, moderation: deferred (SCOPE-0003). MP4 social previews: deferred until funded (SHARING-0002).

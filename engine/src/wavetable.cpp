@@ -17,7 +17,40 @@ constexpr double kCentsPerRange = 1200.0 / kBandsPerOctave;
 
 unsigned waveSize(double sampleRate) { return sampleRate <= 24000 ? 2048u : sampleRate <= 88200 ? 4096u : 16384u; }
 
-/// In-place iterative radix-2 complex FFT, inverse direction (e^{+i...}), unscaled. Twiddles from dmath (deterministic).
+}  // namespace
+
+std::vector<std::complex<double>> fftTwiddles(std::size_t maxSize) {
+  std::vector<std::complex<double>> t;
+  for (std::size_t len = 2; len <= maxSize; len <<= 1)
+    for (std::size_t k = 0; k < len / 2; ++k) {
+      const double ang = dmath::kTwoPi * static_cast<double>(k) / static_cast<double>(len);
+      t.emplace_back(dmath::cos(ang), dmath::sin(ang));
+    }
+  return t;
+}
+
+void inverseFft(std::vector<std::complex<double>>& a, const std::vector<std::complex<double>>& twiddles) {
+  const std::size_t n = a.size();
+  for (std::size_t i = 1, j = 0; i < n; ++i) {
+    std::size_t bit = n >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) std::swap(a[i], a[j]);
+  }
+  for (std::size_t len = 2; len <= n; len <<= 1) {
+    const std::complex<double>* tw = twiddles.data() + (len / 2 - 1);
+    for (std::size_t k = 0; k < len / 2; ++k) {
+      const std::complex<double> w = tw[k];
+      for (std::size_t i = 0; i < n; i += len) {
+        const std::complex<double> u = a[i + k];
+        const std::complex<double> v = a[i + k + len / 2] * w;
+        a[i + k] = u + v;
+        a[i + k + len / 2] = u - v;
+      }
+    }
+  }
+}
+
 void inverseFft(std::vector<std::complex<double>>& a) {
   const std::size_t n = a.size();
   for (std::size_t i = 1, j = 0; i < n; ++i) {
@@ -39,6 +72,8 @@ void inverseFft(std::vector<std::complex<double>>& a) {
     }
   }
 }
+
+namespace {
 
 /// Chromium's Fourier sine coefficient b[n] for each basic shape (all odd functions, positive slope at 0).
 double coefficient(Waveform w, unsigned n) {

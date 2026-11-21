@@ -1,0 +1,215 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.chord",
+  "draft": false,
+  "category": "effect",
+  "kind": "pre-effect",
+  "name": "Chord",
+  "description": "Plays a chord on every note it is given: a chord for each of the 12 notes, voiced smoothly.",
+  "v1": {
+    "type": null
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 4,
+        "points": [
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            -2
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            -1
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        -1,
+        0
+      ],
+      [
+        1,
+        -2
+      ],
+      [
+        1,
+        2
+      ]
+    ],
+    "menuOffset": [
+      0,
+      0
+    ]
+  },
+  "params": [
+    {
+      "key": "q0",
+      "default": 3,
+      "unit": "enum",
+      "range": [
+        0,
+        7
+      ],
+      "description": "Chord on C (before Key): 0 none, 1 sus2, 2 minor, 3 major, 4 sus4, 5 minor 7th, 6 7th, 7 major 7th"
+    },
+    {
+      "key": "q1",
+      "default": 7,
+      "unit": "enum",
+      "range": [
+        0,
+        7
+      ],
+      "description": "Chord on C# (before Key): 0 none, 1 sus2, 2 minor, 3 major, 4 sus4, 5 minor 7th, 6 7th, 7 major 7th"
+    },
+    {
+      "key": "q2",
+      "default": 5,
+      "unit": "enum",
+      "range": [
+        0,
+        7
+      ],
+      "description": "Chord on D (before Key): 0 none, 1 sus2, 2 minor, 3 major, 4 sus4, 5 minor 7th, 6 7th, 7 major 7th"
+    },
+    {
+      "key": "q3",
+      "default": 3,
+      "unit": "enum",
+      "range": [
+        0,
+        7
+      ],
+      "description": "Chord on D# (before Key): 0 none, 1 sus2, 2 minor, 3 major, 4 sus4, 5 minor 7th, 6 7th, 7 major 7th"
+    },
+    {
+      "key": "q4",
+      "default": 2,
+      "unit": "enum",
+      "range": [
+        0,
+        7
+      ],
+      "description": "Chord on E (before Key): 0 none, 1 sus2, 2 minor, 3 major, 4 sus4, 5 minor 7th, 6 7th, 7 major 7th"
+    },
+    {
+      "key": "q5",
+      "default": 7,
+      "unit": "enum",
+      "range": [
+        0,
+        7
+      ],
+      "description": "Chord on F (before Key): 0 none, 1 sus2, 2 minor, 3 major, 4 sus4, 5 minor 7th, 6 7th, 7 major 7th"
+    },
+    {
+      "key": "q6",
+      "default": 7,
+      "unit": "enum",
+      "range": [
+        0,
+        7
+      ],
+      "description": "Chord on F# (before Key): 0 none, 1 sus2, 2 minor, 3 major, 4 sus4, 5 minor 7th, 6 7th, 7 major 7th"
+    },
+    {
+      "key": "q7",
+      "default": 6,
+      "unit": "enum",
+      "range": [
+        0,
+        7
+      ],
+      "description": "Chord on G (before Key): 0 none, 1 sus2, 2 minor, 3 major, 4 sus4, 5 minor 7th, 6 7th, 7 major 7th"
+    },
+    {
+      "key": "q8",
+      "default": 7,
+      "unit": "enum",
+      "range": [
+        0,
+        7
+      ],
+      "description": "Chord on G# (before Key): 0 none, 1 sus2, 2 minor, 3 major, 4 sus4, 5 minor 7th, 6 7th, 7 major 7th"
+    },
+    {
+      "key": "q9",
+      "default": 5,
+      "unit": "enum",
+      "range": [
+        0,
+        7
+      ],
+      "description": "Chord on A (before Key): 0 none, 1 sus2, 2 minor, 3 major, 4 sus4, 5 minor 7th, 6 7th, 7 major 7th"
+    },
+    {
+      "key": "q10",
+      "default": 3,
+      "unit": "enum",
+      "range": [
+        0,
+        7
+      ],
+      "description": "Chord on A# (before Key): 0 none, 1 sus2, 2 minor, 3 major, 4 sus4, 5 minor 7th, 6 7th, 7 major 7th"
+    },
+    {
+      "key": "q11",
+      "default": 2,
+      "unit": "enum",
+      "range": [
+        0,
+        7
+      ],
+      "description": "Chord on B (before Key): 0 none, 1 sus2, 2 minor, 3 major, 4 sus4, 5 minor 7th, 6 7th, 7 major 7th"
+    },
+    {
+      "key": "key",
+      "default": 0,
+      "unit": "semitones",
+      "range": [
+        0,
+        11
+      ],
+      "description": "Shifts the chords up this many semitones (0 = C … 11 = B)"
+    },
+    {
+      "key": "smooth",
+      "default": 1,
+      "unit": "enum",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Each chord's other notes move to the octave nearest the previous chord's"
+    }
+  ]
+}

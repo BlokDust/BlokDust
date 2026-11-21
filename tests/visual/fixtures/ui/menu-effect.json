@@ -1,4 +1,5 @@
 {
+  "retired": "Owner (2026-11-14, 2026-11-17): the block menus are in the owner's order (Effects alphabetical), not v1's, so the menu page shows different blocks in each slot from v1. tests/e2e/ui-regressions.ts menus-in-owner-order checks the order.",
   "description": "Header: open the effect category menu",
   "composition": {
     "Composition": [

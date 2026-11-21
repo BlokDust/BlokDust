@@ -7,13 +7,19 @@
 //                             `blokdust`), staple, Gatekeeper-check → build/plugin/dist/BlokDust-macOS.zip
 //   pnpm bd plugin package   macOS installer: universal, macOS 11+, signed, BlokDust-<version>-Mac.pkg notarised + stapled
 //                             (build/plugin-release/dist), with its .sha256 (CHG-0005 task 12)
+//   pnpm bd plugin ios build|test|device [--no-build]|log|archive   iPadOS AUv3: Simulator build/test, an iPad, its log, the App Store build (CHG-0025; ios.ts)
 //   pnpm bd plugin test       build + validate + load the BUILT VST3 like a DAW: golden fixtures must hash exactly
 //                             like the native engine, and the WebView editor must build the stage from the patch
 import { spawn, spawnSync } from 'node:child_process';
 import { requiredSetting, setting } from '../lib/local-config.ts';
+import { iosCommand } from './ios.ts';
+import { webBuildFor } from './web.ts';
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
+
+// Validators and test hosts never send the daily usage ping (SHARING-0010 R8): every child inherits this.
+process.env.BLOKDUST_NO_TELEMETRY ??= '1';
 
 const ART = 'build/plugin/plugin/BlokDust_artefacts/Release';
 const VST3 = `${ART}/VST3/BlokDust.vst3`;
@@ -54,7 +60,7 @@ function resignAdHoc(): void {
 /** Deploy to the externally configured SSH test host. See docs/engineering/local-configuration.md. */
 function deploy(noBuild: boolean, force = false): void {
   const host = requiredSetting('BLOKDUST_TEST_HOST');
-  if (!noBuild) build(); else resignAdHoc();
+  if (!noBuild) { webBuildFor('staging'); build(); } else resignAdHoc();  // the owner reviews against staging (CHG-0039)
   for (const b of BUNDLES()) if (!existsSync(b)) throw new Error(`no ${b}: build first (pnpm bd plugin build)`);
   const ssh = (cmd: string) => run('ssh', ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10', host, cmd], true);
   if (ssh('true').status !== 0) throw new Error(`cannot reach ${host} over SSH (Remote Login on, this machine's key in its authorized_keys?)`);
@@ -67,7 +73,8 @@ function deploy(noBuild: boolean, force = false): void {
   const shipped: string[] = [];
   for (const b of BUNDLES()) {
     const dest = b.endsWith('.vst3') ? 'Library/Audio/Plug-Ins/VST3/' : 'Library/Audio/Plug-Ins/Components/';
-    const r = run('rsync', ['-a', '--delete', b, `${host}:${dest}`], true);
+    // Compare contents so rewritten signature/resource files cannot be skipped on matching size/mtime.
+    const r = run('rsync', ['-a', '--checksum', '--delete', b, `${host}:${dest}`], true);
     if (r.status !== 0) throw new Error(`rsync failed for ${b}: ${r.stderr}`);
     shipped.push(dest + b.split('/').pop());
   }
@@ -105,8 +112,8 @@ const expected = (fixture: string) => JSON.parse(readFileSync(join('tests/golden
 /** The native engine's render of a fixture right now (fixtures outside the golden set, e.g. with sample files). */
 const nativeRender = (fixture: string) => JSON.parse(spawnSync('node', ['tools/bd.ts', 'render', fixture], { encoding: 'utf8' }).stdout.trim().split('\n').pop()!);
 /** DAW state for tests/golden/samples/sample-file.json: its patch with the file ref's path made absolute (a project). */
-function sampleState(moved = false): string {
-  const fx = JSON.parse(readFileSync('tests/golden/samples/sample-file.json', 'utf8'));
+function sampleState(moved = false, fixture = 'tests/golden/samples/sample-file.json'): string {
+  const fx = JSON.parse(readFileSync(fixture, 'utf8'));
   for (const r of Object.values(fx.patch.refs) as any[]) if (r.provider === 'file') {
     r.path = resolve(r.path);
     if (moved) {  // the project remembers an old folder; the file now lives in a sibling folder (DATA-0005 relink)
@@ -117,7 +124,7 @@ function sampleState(moved = false): string {
       r.path = join(root, 'old', 'chord.wav');
     }
   }
-  const out = resolve(`.cache/plugin-sample-state${moved ? '-moved' : ''}.json`);
+  const out = resolve(`.cache/plugin-${fixture.split('/').pop()!.replace('.json', '')}-state${moved ? '-moved' : ''}.json`);
   writeFileSync(out, JSON.stringify(fx.patch));
   return out;
 }
@@ -145,6 +152,10 @@ function test() {
     // relinks nothing, and renders like the native engine with the same WAV attached.
     { name: "state: Sample with the user's file", plugin: VST3, fixture: 'tests/golden/samples/sample-file.json', extra: ['--state', sampleState(), '--settle', '2000'], native: true, noRoundTripCheck: true },
     { name: 'state: moved file relinked by name', plugin: VST3, fixture: 'tests/golden/samples/sample-file.json', extra: ['--state', sampleState(true), '--settle', '2000'], native: true, noRoundTripCheck: true },
+    // CHG-0038: a Sample inside a Stage (a website patch in a DAW project): the plugin loads its file into the Stage's
+    // inner world and renders like the native engine with the WAV attached there.
+    { name: 'Stage: a sampler inside plays its file', plugin: VST3, fixture: 'tests/golden/samples/stage-sample-file.json',
+      extra: ['--state', sampleState(false, 'tests/golden/samples/stage-sample-file.json'), '--settle', '2000'], native: true, noRoundTripCheck: true },
     // CHG-0004 3.5: the host's transport (120 BPM, beat each block) ≡ the patch tempo rendered natively.
     { name: 'host tempo + transport', plugin: VST3, fixture: 'tests/golden/tempo-host.json', extra: ['--tempo', '120'] },
     // PLUGIN-0004: a raw MPE stream through the plugin's own parser ≡ the web parser's commands rendered natively.
@@ -155,7 +166,9 @@ function test() {
     const got = hostRender(c.plugin, c.fixture, c.extra, { BLOKDUST_DIAG_FILE: diag });
     const exp = c.native ? nativeRender(c.fixture) : expected(c.fixture);
     const nameOk = !c.paramName || got.params?.[c.paramName[0]] === c.paramName[1];
-    const ok = nameOk && got.audioHash === exp.audioHash && (c.noRoundTripCheck || got.stateRoundTrips === true) && (c.editorBlocks === undefined || got.editor?.blocks === c.editorBlocks);
+    const ok = nameOk && got.audioHash === exp.audioHash && (c.noRoundTripCheck || got.stateRoundTrips === true) && (c.editorBlocks === undefined || (got.editor?.blocks === c.editorBlocks && got.editor?.supportSystem?.format === 'VST3' && got.editor?.supportSystem?.sampleRate > 0 && got.editor?.supportSystem?.bufferSize > 0
+      // Owner (iPad, 2026-11-20): the Wavetable's picture is drawn by the engine's wasm; the editor must serve it.
+      && got.editor?.wasm === true));
     return { case: c.name, ok, audioHash: got.audioHash ?? got.error, expected: exp.audioHash, ...(got.editor ? { editor: got.editor } : {}) };
   });
   // CHG-0004 3.10 (found by the REAPER save/reopen check): Dust values are part of the plugin's saved state.
@@ -201,11 +214,30 @@ function test() {
     const ok = !!a.tailHash && a.tailHash === b.tailHash && a.peak > 0.001;
     renders.push({ case: 'Play resyncs: takes from bar 1 match', ok, audioHash: a.tailHash ?? a.error, expected: b.tailHash });
   }
+  // Owner (GarageBand on iPad, 2026-11-16, CHG-0025): the power switch's HOST mode (saved with the project) powers the
+  // world while the DAW plays and turns it off while it is stopped; plain ON keeps it running when stopped.
+  {
+    const fx = JSON.parse(readFileSync('tests/golden/tempo-host.json', 'utf8'));
+    const state = (mode: number) => { const f = resolve(`.cache/power-mode-${mode}.state.json`); writeFileSync(f, JSON.stringify({ ...fx.patch, plugin: { powerMode: mode } })); return f; };
+    // Stopped at 1.25 s, played again from bar 1 at 3 s: the stopped window starts 1 s after the stop (notes release).
+    const run = (mode: number, window: string) => hostRender(VST3, 'tests/golden/tempo-host.json', ['--state', state(mode), '--tempo', '120', '--stopped', '60000:144000', '--peak', window]);
+    const hostStopped = run(2, '108000:144000').windowPeak, hostPlaysAgain = run(2, '150000:240000').windowPeak, onStopped = run(1, '108000:144000').windowPeak;
+    const reloaded = hostRender(VST3, 'tests/golden/tempo-host.json', ['--state', state(2), '--reload']).stateAfter?.plugin;
+    const ok = hostStopped < 1e-4 && hostPlaysAgain > 0.001 && onStopped > 0.001 && reloaded?.powerMode === 2;
+    renders.push({ case: 'power HOST: off while the DAW is stopped, on when it plays', ok, audioHash: JSON.stringify({ hostStopped, hostPlaysAgain, onStopped, reloaded }), expected: 'stopped silent; plays; ON keeps running' });
+  }
   // Owner (Logic): a disabled plugin gets no audio callbacks at all; with its editor open the stage must still update.
   {
     const r = hostRender(VST3, 'tests/golden/emitter-tone.json', ['--idle', '--editor', diag], { BLOKDUST_DIAG_FILE: diag });
     const seq = r.editor?.snapshotSeq ?? 0;
     renders.push({ case: 'no audio callbacks: the editor still ticks the world', ok: seq > 0, audioHash: String(seq), expected: '> 0 snapshots' });
+  }
+  // CHG-0038: Stage blocks' inner worlds as the processor keeps them (edits inside go to the Stage's world, made on
+  // first use; a removed Stage's world is freed once the engine let it go; macros keep the processor's sampler fields).
+  {
+    const r = spawnSync(HOST, ['--selftest-stages'], { encoding: 'utf8' });
+    const j = (() => { try { return JSON.parse(r.stdout.trim().split('\n').pop()!); } catch { return {}; } })();
+    renders.push({ case: 'Stage worlds: edits inside reach their own world', ok: j.ok === true, audioHash: JSON.stringify(j.checks ?? r.stderr), expected: 'all checks true' });
   }
   // CHG-0005: patch files (save, list) and the Open / Insert merge the processor applies.
   {
@@ -334,7 +366,7 @@ const VERSION = (JSON.parse(readFileSync('package.json', 'utf8')) as { version: 
 function packageMac(profile: string, appId: string, installerId: string, noBuild: boolean) {
   if (process.platform !== 'darwin') throw new Error('macOS only');
   if (!noBuild) {
-    if (run('pnpm', ['web:build']).status !== 0) throw new Error('web build failed');
+    webBuildFor('production');  // installers talk to the live site (CHG-0039)
     if (run('cmake', ['--preset', 'plugin-release']).status !== 0) throw new Error('configure failed');
     if (run('cmake', ['--build', '--preset', 'plugin-release', '-j', '8']).status !== 0) throw new Error('build failed');
   }
@@ -364,7 +396,7 @@ function packageMac(profile: string, appId: string, installerId: string, noBuild
     mkdirSync(r.dir, { recursive: true });
     if (r.ext) for (const b of bundles.filter(x => x.path.endsWith(r.ext!))) cpSync(b.path, join(r.dir, b.path.split('/').pop()!), { recursive: true, verbatimSymlinks: true });
     else { cpSync('NOTICE.md', join(r.dir, 'NOTICE.txt')); cpSync('LICENSE', join(r.dir, 'LICENSE.txt')); }
-    const args = ['--root', r.dir, '--identifier', `com.blokdust.pkg.${key}`, '--version', VERSION, '--install-location', r.to];
+    const args = ['--root', r.dir, '--identifier', `com.funputs.blokdust.pkg.${key}`, '--version', VERSION, '--install-location', r.to];
     if (r.ext) {
       // Install where it says, not over a copy the user moved elsewhere (bundles are relocatable by default).
       const plist = join(staging, `${key}.plist`);
@@ -376,20 +408,20 @@ function packageMac(profile: string, appId: string, installerId: string, noBuild
     const p = run('pkgbuild', [...args, join(pkgs, `${key}.pkg`)], true);
     if (p.status !== 0) throw new Error(`pkgbuild ${key}: ${p.stderr}`);
   }
-  const ref = (key: string) => `<pkg-ref id="com.blokdust.pkg.${key}" version="${VERSION}">${key}.pkg</pkg-ref>`;
+  const ref = (key: string) => `<pkg-ref id="com.funputs.blokdust.pkg.${key}" version="${VERSION}">${key}.pkg</pkg-ref>`;
   writeFileSync(join(staging, 'distribution.xml'), `<?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="2">
     <title>BlokDust ${VERSION}</title>
-    <organization>com.blokdust</organization>
+    <organization>com.funputs</organization>
     <options customize="allow" require-scripts="false" hostArchitectures="arm64,x86_64"/>
     <volume-check><allowed-os-versions><os-version min="11.0"/></allowed-os-versions></volume-check>
     <choices-outline>
         <line choice="vst3"/><line choice="au"/><line choice="app"/><line choice="docs"/>
     </choices-outline>
-    <choice id="vst3" title="VST3 plug-ins" description="BlokDust and BlokDust FX, in /Library/Audio/Plug-Ins/VST3 (Live, REAPER, Bitwig, Cubase)."><pkg-ref id="com.blokdust.pkg.vst3"/></choice>
-    <choice id="au" title="Audio Unit plug-ins" description="BlokDust and BlokDust FX, in /Library/Audio/Plug-Ins/Components (Logic, GarageBand)."><pkg-ref id="com.blokdust.pkg.au"/></choice>
-    <choice id="app" title="Standalone app" description="BlokDust, in /Applications."><pkg-ref id="com.blokdust.pkg.app"/></choice>
-    <choice id="docs" title="Licences" visible="false" description="Notices and licences."><pkg-ref id="com.blokdust.pkg.docs"/></choice>
+    <choice id="vst3" title="VST3 plug-ins" description="BlokDust and BlokDust FX, in /Library/Audio/Plug-Ins/VST3 (Live, REAPER, Bitwig, Cubase)."><pkg-ref id="com.funputs.blokdust.pkg.vst3"/></choice>
+    <choice id="au" title="Audio Unit plug-ins" description="BlokDust and BlokDust FX, in /Library/Audio/Plug-Ins/Components (Logic, GarageBand)."><pkg-ref id="com.funputs.blokdust.pkg.au"/></choice>
+    <choice id="app" title="Standalone app" description="BlokDust, in /Applications."><pkg-ref id="com.funputs.blokdust.pkg.app"/></choice>
+    <choice id="docs" title="Licences" visible="false" description="Notices and licences."><pkg-ref id="com.funputs.blokdust.pkg.docs"/></choice>
     ${ref('vst3')}
     ${ref('au')}
     ${ref('app')}
@@ -488,6 +520,7 @@ else if (cmd === 'reaper') await reaperMac();
 else if (cmd === 'deploy') deploy(process.argv.includes('--no-build'), process.argv.includes('--force'));
 else if (cmd === 'validate') { const v = validate(); console.log(JSON.stringify(v)); if (v.vst3 !== 'pass') process.exit(1); }
 else if (cmd === 'test') test();
+else if (cmd === 'ios') iosCommand(process.argv.slice(3));
 else if (cmd === 'au') au(process.argv.includes('--keep'));
 else if (cmd === 'sign') {
   const arg = (k: string, d: string | (() => string)) => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : typeof d === 'function' ? d() : d; };
@@ -498,4 +531,4 @@ else if (cmd === 'package') {
   packageMac(arg('--profile', setting('BLOKDUST_NOTARY_PROFILE', 'blokdust')), arg('--identity', () => requiredSetting('BLOKDUST_SIGNING_IDENTITY')),
     arg('--installer-identity', () => requiredSetting('BLOKDUST_INSTALLER_IDENTITY')), process.argv.includes('--no-build'));
 }
-else { console.error('usage: bd plugin build | package [--no-build] | validate | test | au [--keep] | reaper | deploy [--no-build] | sign [--profile blokdust] [--identity ...]'); process.exit(2); }
+else { console.error('usage: bd plugin build | package [--no-build] | validate | test | ios build|test|device [--no-build] | ios log | ios archive [--build N] [--upload] | au [--keep] | reaper | deploy [--no-build] | sign [--profile blokdust] [--identity ...]'); process.exit(2); }

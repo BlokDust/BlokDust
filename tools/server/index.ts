@@ -4,7 +4,10 @@
 //   pnpm bd server setup --env staging|production  create the D1 database and the Turnstile widget (Cloudflare API via
 //                                                   wrangler's login), save their ids outside the checkout, keep the
 //                                                   Turnstile secret in ~/.config/blokdust (never in the repo)
-//   pnpm bd server secret --env staging|production upload TURNSTILE_SECRET and FREESOUND_TOKEN as Worker secrets
+//   pnpm bd server secret --env staging|production upload TURNSTILE_SECRET, FREESOUND_TOKEN and (if kept)
+//                                                   GOOGLE_CLIENT_SECRET (~/.config/blokdust/google_client_secret)
+//                                                   APPLE_PRIVATE_KEY (~/.config/blokdust/apple_private_key.p8)
+//                                                   CF_ACCOUNT_ID + CF_ANALYTICS_TOKEN (~/.config/blokdust/analytics_token)
 //   pnpm bd server deploy --env staging|production [--no-build]  build web/dist, apply D1 migrations, deploy
 //   pnpm bd server smoke --env staging|production | --url <base>  the sharing e2e suite against a deployed Worker
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -54,6 +57,9 @@ async function setup(): Promise<void> {
   let db = dbs.find(d => d.name === dbName(e));
   if (!db) { db = await cf<{ uuid: string; name: string }>('POST', '/d1/database', { name: dbName(e) }); console.error(`created D1 ${db.name}`); }
   saveSettings({ [envKey(e, 'DATABASE_ID')]: db.uuid });
+  let support = dbs.find(d => d.name === `blokdust-support-${e}`);
+  if (!support) support = await cf<{ uuid: string; name: string }>('POST', '/d1/database', { name: `blokdust-support-${e}` });
+  saveSettings({ [envKey(e, 'SUPPORT_DATABASE_ID')]: support.uuid });
   // Turnstile (invisible), bound to the Worker's hostname
   const hosts = hostsOf(e);
   type Widget = { sitekey: string; name: string; secret?: string; domains: string[]; mode: string };
@@ -91,7 +97,22 @@ async function secret(): Promise<void> {
   const e = envName();
   await putSecret(e, 'TURNSTILE_SECRET', readSecret(`turnstile_${e}`));
   await putSecret(e, 'FREESOUND_TOKEN', readSecret('freesound_token'));
-  console.log(JSON.stringify({ env: e, secrets: ['TURNSTILE_SECRET', 'FREESOUND_TOKEN'] }));
+  const secrets = ['TURNSTILE_SECRET', 'FREESOUND_TOKEN'];
+  // Sign in with Google (SPEC-SHARING-ACCOUNTS R2a), when its client secret is kept here.
+  const google = readSecret('google_client_secret');
+  if (google) { await putSecret(e, 'GOOGLE_CLIENT_SECRET', google); secrets.push('GOOGLE_CLIENT_SECRET'); }
+  // Sign in with Apple (R2b): the .p8 key from Apple, kept as apple_private_key.p8.
+  const apple = readSecret('apple_private_key.p8');
+  if (apple) { await putSecret(e, 'APPLE_PRIVATE_KEY', apple); secrets.push('APPLE_PRIVATE_KEY'); }
+  // The analytics dashboard's queries (SHARING-0010): the account id and an Account Analytics: Read token, when the
+  // token file exists (`analytics_token` in the config directory). Optional: without them the dashboard says so.
+  const analyticsToken = readSecret('analytics_token');
+  if (analyticsToken) {
+    await putSecret(e, 'CF_ACCOUNT_ID', requiredSetting('CLOUDFLARE_ACCOUNT_ID'));
+    await putSecret(e, 'CF_ANALYTICS_TOKEN', analyticsToken);
+    secrets.push('CF_ACCOUNT_ID', 'CF_ANALYTICS_TOKEN');
+  }
+  console.log(JSON.stringify({ env: e, secrets }));
 }
 
 async function deploy(): Promise<void> {
@@ -108,6 +129,8 @@ async function deploy(): Promise<void> {
     m = await run([WRANGLER, 'd1', 'migrations', 'apply', dbName(e), '--remote', '--env', e, '--config', config]);
   }
   if (m.code) throw new Error('migrations failed');
+  const support = await run([WRANGLER, 'd1', 'migrations', 'apply', `blokdust-support-${e}`, '--remote', '--env', e, '--config', config]);
+  if (support.code) throw new Error('support migrations failed');
   const d = await run([WRANGLER, 'deploy', '--env', e, '--config', config]);
   if (d.code) throw new Error('deploy failed');
   console.log(JSON.stringify({ env: e, deployed: true }));

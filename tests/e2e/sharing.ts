@@ -3,6 +3,7 @@
 //   siteverify (tests/e2e/mock-services.ts), so every run is the same.
 //   --remote <url>: the same flow against a deployed Worker (`pnpm bd server smoke`): real Turnstile and Freesound;
 //   checks that need the mocks are skipped there, and patches it creates are deleted at the end.
+import { inflateSync } from 'node:zlib';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium, type Browser, type Frame, type Page } from 'playwright';
 import { startLocal, type LocalServer } from '../../tools/server/lib.ts';
@@ -60,7 +61,7 @@ async function openShare(page: Page): Promise<void> {
   }
   await page.waitForTimeout(1000);
   const tab = await page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Tab);
-  if (tab !== 0) await press(page, 'tab0');
+  if (tab !== 0) { await press(page, 'tab0'); await page.waitForTimeout(800); }  // the page drops in (CHG-0035)
 }
 async function press(page: Page, name: string): Promise<void> {
   const [x, y] = await page.evaluate(n => (window as any).__bd_probe.scene.PatchesPanel.centreOf(n), name);
@@ -192,10 +193,116 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
     check('save-as records the parent', a.status === 201 && a.json?.parent === c.json.id, a.json);
     created.push({ id: a.json.id, token: a.json.editToken });
     check('delete without token → 403', (await api('DELETE', `patches/${a.json.id}`)).status === 403);
-    check('delete with token → 204, then 404', (await api('DELETE', `patches/${a.json.id}`, undefined, a.json.editToken)).status === 204 && (await api('GET', `patches/${a.json.id}`)).status === 404);
+    check('delete with token → 204, then 410 (deleted)', (await api('DELETE', `patches/${a.json.id}`, undefined, a.json.editToken)).status === 204 && (await api('GET', `patches/${a.json.id}`)).status === 410);
   },
 
   /** Acceptance: Share → open in a fresh browser → identical render hash; Overwrite / Create new as v1. */
+  /** CHG-0033 (owner, 2026-11-17), R18–R20: Cmd/Ctrl+S and the corner's UNSAVED/SAVE save over your own link (same
+   * id and title, no gallery field, no panel) and v1's message bar says SAVED; the corner names the patch and marks
+   * unsaved changes, which survive a reload; a failed save says so and changes nothing. */
+  /** Owner (2026-11-18): a link to no patch opened this browser's last stage (a made-up id) or an empty one, with no
+   * word. Now the message bar says why and the stage starts blank; the bad link leaves the address bar; this browser's
+   * autosave is kept. Deleted patches answer 410 (SPEC-SHARING-BACKEND R4b). */
+  async 'missing-links'(browser) {
+    if (remote) return;
+    const made = await api('POST', 'patches', { patch: PATCH, turnstile: 'XXXX.DUMMY.TOKEN.XXXX', title: 'Soon gone' });
+    const del = await api('DELETE', `patches/${made.json.id}`, undefined, made.json.editToken);
+    const gone = await api('GET', `patches/${made.json.id}`);
+    check('a deleted patch answers 410; one that never was, 404', del.status === 204 && gone.status === 410 && (await api('GET', 'patches/A000000000')).status === 404, [del.status, gone.status]);
+    const page = await open(browser, `${base}/?demo`);
+    // This browser's last stage (its autosave), as a visit without a link would restore it.
+    const autosave = await page.evaluate(p => { localStorage.setItem('blokdust2.autosave', JSON.stringify(p)); return localStorage.getItem('blokdust2.autosave'); }, PATCH);
+    const cases: [string, RegExp][] = [['madeUpId', /doesn.t lead to a patch/i], ['A000000000', /doesn.t lead to a patch/i], [made.json.id, /has been deleted/i]];
+    const seen: unknown[] = [];
+    let ok = !!autosave;
+    for (const [id, want] of cases) {
+      await page.goto(`${base}/?c=${id}&t=Whatever`);
+      await page.waitForFunction(() => (window as any).__bd_probe);
+      if (await page.$('#start')) await page.click('#start');
+      await page.waitForFunction(() => (window as any).__bd_probe.state.started, null, { timeout: 20000 });
+      await page.waitForFunction(() => (window as any).__bd_probe.scene.MessagePanel.Open, null, { timeout: 8000 }).catch(() => {});
+      const r = await page.evaluate(() => { const w = window as any; return { text: String(w.__bd_probe.scene.MessagePanel._Value?.string ?? ''), blocks: w.__bd_probe.scene.host.hasBlocks(), url: location.search, autosave: localStorage.getItem('blokdust2.autosave') }; });
+      seen.push({ id, ...r, autosave: r.autosave === autosave });
+      ok &&= want.test(r.text) && !r.blocks && !r.url.includes('c=') && r.autosave === autosave;
+    }
+    await page.context().close();
+    check('a bad, unknown or deleted link: the message bar says which, a blank stage, the link leaves the address bar, the autosave is kept', ok, seen);
+  },
+
+  async 'quick-save'(browser) {
+    const a = await open(browser, `${base}/?demo`);
+    await a.evaluate(() => (window as any).__bd_probe.scene.setWorldPower(false));
+    const corner = () => a.evaluate(() => (window as any).__bd_probe.corners as { own: { title: string; dirty: boolean; saving: boolean; hover: boolean } | null; saveAt: [number, number] | null });
+    const msg = () => a.evaluate(() => { const m = (window as any).__bd_probe.scene.MessagePanel; return { open: m.Open, shown: m._Alpha > 0, text: m._Value?.string }; });
+    const puts: { url: string; body: any }[] = [];
+    a.on('request', r => { if (/\/api\/patches/.test(r.url()) && r.method() !== 'GET') puts.push({ url: `${r.method()} ${r.url().replace(/^.*\/api\//, '')}`, body: JSON.parse(r.postData() ?? '{}') }); });
+    const transpose = (v: number) => a.evaluate(n => { const s = (window as any).__bd_probe; const t = s.state.blocks.find((x: any) => x.type === 'source.tone'); s.scene.host.setParam(t.id, 'transpose', n); }, v);
+    const key = async () => { await a.keyboard.press('ControlOrMeta+s'); };
+    const settled = () => a.waitForFunction(() => { const o = (window as any).__bd_probe.corners.own; return o && !o.saving && !o.dirty; }, null, { timeout: 30000 }).catch(() => {});
+
+    // Never saved: the key opens Patches › SAVE (R18) and saves nothing.
+    await key(); await a.waitForTimeout(1200);
+    check('R18: no link of your own: Cmd/Ctrl+S opens Patches › SAVE, saves nothing', await a.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel; return pp.Open && pp.Tab === 0; }) && puts.length === 0 && (await corner()).own === null);
+    const title = await a.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Title.trim());
+    const url = await shareVia(a, 'generate'), id = idOf(url);
+    const token = await a.evaluate(i => JSON.parse(localStorage.getItem('blokdust2.editTokens') ?? '{}')[i], id);
+    if (id && token) created.push({ id, token });
+    await closeShare(a);
+    const c0 = await corner();
+    await a.screenshot({ path: `${OUT}/quick-save-clean.png` });
+    check('R19: your saved link: the corner names it, nothing unsaved', c0.own?.title === title && !c0.own.dirty && !c0.saveAt, c0);
+
+    await transpose(5); await a.waitForTimeout(800);
+    const c1 = await corner();
+    await a.mouse.move(640, 600); await a.waitForTimeout(200);
+    await a.screenshot({ path: `${OUT}/quick-save-unsaved.png` });
+    check('R19: a change marks it UNSAVED', !!c1.own?.dirty && !!c1.saveAt, c1);
+    await a.mouse.move(c1.saveAt![0], c1.saveAt![1]); await a.waitForTimeout(300);
+    const hover = await corner();
+    await a.screenshot({ path: `${OUT}/quick-save-hover.png` });
+    check('R19: under the mouse it reads SAVE', !!hover.own?.hover, hover.own);
+    await a.mouse.move(640, 600); await a.waitForTimeout(200);
+
+    puts.length = 0;
+    await key(); await settled(); await a.waitForTimeout(300);
+    const m1 = await msg(), g1 = await api('GET', `patches/${id}`);
+    await a.screenshot({ path: `${OUT}/quick-save-saved.png` });
+    check('R18: Cmd/Ctrl+S saves over the same link (no panel, no gallery change)', puts.length === 1 && puts[0].url === `PUT patches/${id}` && !('gallery' in puts[0].body) && puts[0].body.title === title
+      && g1.json?.rev === 2 && g1.json?.title === title && g1.json?.patch?.blocks?.some((x: any) => x.params?.transpose === 5) && idOf(a.url()) === id
+      && !(await a.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Open)), { puts: puts.map(p => p.url), rev: g1.json?.rev, title: g1.json?.title, at: a.url() });
+    check('R18: v1 message bar says SAVED; the corner is clean again', m1.open && m1.shown && m1.text === 'Saved' && (await corner()).own?.dirty === false, m1);
+
+    // Nothing changed: SAVED again, no request.
+    puts.length = 0; await a.waitForTimeout(3500);
+    await key(); await a.waitForTimeout(600);
+    check('R18: no changes: SAVED shows, nothing is sent', puts.length === 0 && (await msg()).open, puts);
+
+    // The corner's SAVE saves too.
+    await transpose(3); await a.waitForTimeout(800);
+    const c2 = await corner();
+    await a.mouse.move(c2.saveAt![0], c2.saveAt![1]); await a.mouse.click(c2.saveAt![0], c2.saveAt![1]); await settled();
+    const g2 = await api('GET', `patches/${id}`);
+    check('R19: pressing SAVE in the corner saves over the link', g2.json?.rev === 3 && g2.json?.patch?.blocks?.some((x: any) => x.params?.transpose === 3), g2.json?.rev);
+
+    // A failed save says so, keeps the link and the unsaved mark (R18: never a new self-contained link).
+    await transpose(4); await a.waitForTimeout(800);
+    await a.route('**/api/patches/**', r => r.request().method() === 'PUT' ? r.fulfill({ status: 500, body: '{}' }) : r.continue());
+    await a.waitForTimeout(3500);
+    await key();
+    await a.waitForFunction(() => !(window as any).__bd_probe.corners.own?.saving, null, { timeout: 30000 }).catch(() => {});
+    const m3 = await msg(), c3 = await corner();
+    check('R18: a failed save says so; same link, still UNSAVED', m3.open && /failed/i.test(m3.text ?? '') && !!c3.own?.dirty && idOf(a.url()) === id && (await api('GET', `patches/${id}`)).json?.rev === 3, { m3, own: c3.own, at: a.url() });
+    await a.unroute('**/api/patches/**');
+
+    // R20: unsaved edits survive a reload and still show as UNSAVED.
+    await a.reload(); await a.waitForFunction(() => (window as any).__bd_probe);
+    await a.click('#start'); await a.waitForFunction(() => (window as any).__bd_probe.state.started, null, { timeout: 20000 });
+    await a.waitForTimeout(1500);
+    const c4 = await corner(), kept = (await probe(a)).patch.blocks.some((x: any) => x.params?.transpose === 4);
+    check('R20: after a reload the unsaved edit is back and marked UNSAVED', kept && c4.own?.title === title && !!c4.own.dirty, { kept, own: c4.own });
+    await a.context().close();
+  },
+
   /** CHG-0013 (owner, 2026-11-13): the plugin's CREATE SHARE LINK opens `?c=p…&t=…&share=1` here; the page makes the
    * link at once and the address bar shows the short server link, which opens the same patch. */
   async 'share-from-app'(browser) {
@@ -219,6 +326,8 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
     await a.evaluate(() => (window as any).__bd_probe.scene.setWorldPower(false));
     await a.waitForTimeout(500);
     const hashA = await renderHash(a);
+    // The share card uses the sharer's colour theme (SPEC-SHARING-BACKEND R9): share from a non-default one.
+    const themeBg = await a.evaluate(() => { const s = (window as any).__bd_probe; s.scene.host.setTheme(3); return s.scene.host.themes()[3].colors[0] as string; });
     const url = await shareVia(a, 'generate');
     const id = idOf(url);
     check('generate link → a server id (not a patch token)', /^[0-9A-Za-oq-z][0-9A-Za-z]{9}$/.test(id), url);
@@ -288,6 +397,9 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
     const html = await (await fetch(`${base}/?c=${id}`)).text();
     const meta = (p: string) => html.match(new RegExp(`<meta (?:property|name)="${p}" content="([^"]*)"`))?.[1] ?? null;
     check('share page: Open Graph + twitter tags', !!meta('og:title') && !!meta('og:image') && meta('twitter:card') === 'player' && !!meta('twitter:player'), { title: meta('og:title'), image: meta('og:image') });
+    const saved = (await api('GET', `patches/${id}`)).json?.title ?? null;
+    check('share page: og:title is the patch title alone, og:description says what BlokDust is (SPEC-SHARING-BACKEND R9)',
+      meta('og:title') === (saved || 'BlokDust') && /^Connect blocks to make sounds/.test(meta('og:description') ?? ''), { title: meta('og:title'), saved, description: meta('og:description') });
     check('share page: oEmbed discovery link', /type="application\/json\+oembed"/.test(html));
     const img = await fetch(local(meta('og:image')!.replace(/&amp;/g, '&')));
     const png = new Uint8Array(await img.arrayBuffer());
@@ -296,6 +408,12 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
     const dims = png.length > 24 ? [dv.getUint32(16), dv.getUint32(20)] : null;
     check('og:image is the saved PNG thumbnail (1200×630)', img.headers.get('content-type') === 'image/png' && dims?.[0] === 1200 && dims?.[1] === 630,
       { status: img.status, bytes: png.length, dims, url: meta('og:image') });
+    // Pixel (0,0) of a PNG is its first row's first bytes whatever the row filter (every predictor is 0 there).
+    let off = 8; const idat: Uint8Array[] = [];
+    while (off < png.length) { const n = dv.getUint32(off), t = String.fromCharCode(...png.subarray(off + 4, off + 8)); if (t === 'IDAT') idat.push(png.subarray(off + 8, off + 8 + n)); off += 12 + n; }
+    const raw = inflateSync(Buffer.concat(idat));
+    const corner = '#' + [raw[1], raw[2], raw[3]].map(v => v.toString(16).padStart(2, '0')).join('');
+    check("og:image is drawn in the sharer's colour theme (theme 3's background)", [raw[1], raw[2], raw[3]].join() === themeBg.match(/\d+/g)!.slice(0, 3).join(), { corner, themeBg });
     const oe = await (await fetch(`${base}/oembed?url=${encodeURIComponent(`${base}/?c=${id}`)}&maxwidth=480`)).json() as any;
     check('/oembed: rich JSON with an iframe to /embed/<id>, maxwidth respected', oe.type === 'rich' && oe.version === '1.0' && oe.width === 480 && oe.height === 300 && new RegExp(`/embed/${id}"`).test(oe.html), oe);
     check('/oembed: other sites → 404', (await fetch(`${base}/oembed?url=${encodeURIComponent('https://example.com/?c=' + id)}`)).status === 404);
@@ -502,7 +620,7 @@ tests['share-new-tab'] = async browser => {
   };
   const before0 = (await probe(a)).patch.blocks.length;
   await dragOut([421, 45], [182, 180], [700, 600]);   // SOURCE → Tone
-  await dragOut([692, 45], [305, 180], [630, 600]);   // POWER → Power
+  await dragOut([692, 45], [365, 180], [630, 600]);   // POWER → Power (second item of a paged menu)
   const first = (await probe(a)).blocks[0];
   const p0 = await a.evaluate(i => (window as any).__bd_probe.blockPoint(i), first.id);
   await a.mouse.move(p0[0], p0[1]); await a.mouse.down(); await a.mouse.move(p0[0] + 150, p0[1] + 80, { steps: 8 }); await a.mouse.up(); await a.waitForTimeout(800);

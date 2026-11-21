@@ -1,4 +1,5 @@
 {
+  "retired": "CHG-0015, CHG-0016 (owner, 2026-11-13): the Power menu holds four more blocks (Sound Laser, Counter, Chance, Prism), so it pages like v1's Effect menu and its first page is laid out differently from v1's six. tests/e2e/new-blocks.ts counter-panel checks the menu's items.",
   "description": "Header: open the power category menu",
   "composition": {
     "Composition": [

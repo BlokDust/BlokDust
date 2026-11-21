@@ -40,7 +40,7 @@ Owner review, 2026-11-07:
 - New Emitters and Pulses from the menu start synced. Saved patches without `sync` keep v1 frame timing.
 
 Owner review, 2026-11-10 (CHG-0005):
-- The web's tempo is set once, in Settings (in Tour's row), not on every synced block.
+- The web's tempo is set once, in Settings (in v1's Tour row; the tour has a row of its own under it), not on every synced block.
 - A Stereo Delay can sync: `delayBeats` at the tempo (at most 1 s), replacing Delay Time, and following tempo changes
   with the same glide as a moved slider. New delays start synced at 1/8 (v1's 0.25 s at 120 BPM).
 
@@ -49,4 +49,5 @@ Owner review 2, 2026-11-08 (Ableton):
   flight and pulses end, and emitters start their timing again (synced: on the next grid slot, or at once on one;
   free: as when just added). Every take from the same position then plays the same, whatever happened before.
 - **A synced Laser is locked to the beat:** at beat 0 it points at its Angle; one turn every |`turnBeats`|. (It was a
-  per-tick step, so stops and starts shifted it.)
+  per-tick step, so stops and starts shifted it.) With Restart on, it counts from when it starts running instead
+  (SPEC-SIMULATION-POWER-AND-PARTICLES R9a, owner 2026-11-17).

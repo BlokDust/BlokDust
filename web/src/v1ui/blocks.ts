@@ -7,6 +7,7 @@ import { FORMS } from './ported/BlockForms';
 import { SoundCloudTrack } from './ported/Core/Audio/SoundCloud/SoundcloudTrack';
 import type { FreesoundSound } from '../patch/samples.ts';
 import { filterForm } from './filterPanel.ts';
+import { convertSetting, newBlockForm, setLfoTarget, settingRefreshes } from './newBlocks.ts';
 
 /** v1 Config keys for each sampler's longest searchable track (seconds). */
 const MAX_TRACK: Record<string, string> = { Sample: 'SoundCloudMaxTrackLength', Granular: 'GranularMaxTrackLength', ConvolutionReverb: 'ConvolverMaxTrackLength' };
@@ -39,8 +40,13 @@ export class V1Block {
     const f = this.def.v1Type ? FORMS[this.def.v1Type] : undefined;
     this.OptionsForm = null;
     f?.call(this);
+    newBlockForm(this);  // the post-2.0 blocks (SCOPE-0005)
     if (this.def.id === 'source.microphone' || this.def.id === 'source.audio-in') gainForm(this);
+    if (this.def.id === 'source.sample-gen' && this.OptionsForm) soundForm(this);
     if (this.def.id === 'input.midi-controller' && this.OptionsForm) extendMidiForm(this);
+    // Silent Keys (CHG-0017): a switch beside Mono/Poly, off by default.
+    if (this.OptionsForm && this.def.params.some(p => p.key === 'keysSetPitch'))
+      (this.OptionsForm.parameters as any[]).find(p => p.type === 'switches')?.switches.push({ name: 'Silent Keys', setting: 'keysSetPitch', value: !!this.Params.keysSetPitch, lit: true, mode: 'offOn' });
     // Glide is mono-only (the engine starts each poly note without it): Poly hides it (owner, 2026-11-12, CHG-0010).
     if (this.def.category === 'interaction' && this.OptionsForm && this.Params.isPolyphonic)
       this.OptionsForm.parameters = (this.OptionsForm.parameters as any[]).filter(p => p.setting !== 'glide');
@@ -71,7 +77,12 @@ export class V1Block {
     this.Searching = false;
     App.MainScene.OptionsPanel.Animating = false;
     // v1 SoundCloudTrack (ported) shortens and capitalises titles/users as v1 showed them.
-    this.SearchResults = results.map(s => Object.assign(new SoundCloudTrack(s.name, s.username, `freesound:${s.id}`, s.url), { Sound: s }));
+    // Owner (2026-11-14): the results also show each sound's length ("By User · 0:07"; the panel draws "By " + User).
+    this.SearchResults = results.map(s => {
+      const t = Object.assign(new SoundCloudTrack(s.name, s.username, `freesound:${s.id}`, s.url), { Sound: s });
+      t.User = `${t.User} · ${formatLength(s.duration)}`;
+      return t;
+    });
   }
   /** v1 Sample.LoadTrack: show the new track at once, then the app fetches and decodes it. */
   LoadTrack(track: SoundCloudTrack & { Sound: FreesoundSound }): void {
@@ -82,6 +93,12 @@ export class V1Block {
     this.RefreshOptionsPanel();
   }
 
+  /** v1 Block.Connections (the tour asks what a block is connected to, CHG-0035): the engine's proximity connections. */
+  get Connections(): { Count: number; ToArray(): V1Block[] } {
+    const ids = new Set<number>(App.MainScene?.host?.connectedIds(this.Id) ?? []);
+    const list = (App.Blocks as V1Block[]).filter(b => ids.has(b.Id));
+    return { Count: list.length, ToArray: () => list };
+  }
   /** v1 Recorder: recording now (RecorderPanel draws the button lit). */
   IsRecording = false;
   ToggleRecording(): void { App.MainScene.host.toggleRecording(this.Id); }
@@ -91,6 +108,15 @@ export class V1Block {
     // Action buttons (v1 Recorder "download", SampleGen "generate") are commands, not params.
     if (key === 'download') { App.MainScene.host.downloadRecording(this.Id); return; }
     if (key === 'generate') { App.MainScene.host.generateSample(this.Id); return; }
+    if (key === 'sound') {  // SampleGen's SOUND (CHG-0035): a number, not a button; the wave follows it
+      const n = Math.max(1, Math.min(SOUND_MAX, Math.round(Number(value))));
+      if (n === this.Params.sound) return;
+      this.Params.sound = n;
+      App.MainScene.host.setSound(this.Id, n, false);  // the wave is made when the slider is let go (newBlocks.ts)
+      return;
+    }
+    if (key === 'openStage') { App.MainScene.host.openStage(this.Id); return; }          // a Stage's OPEN STAGE (CHG-0021)
+    if (key === 'resetCounter') { App.MainScene.host.resetCounter(this.Id); return; }  // a Counter's Reset (R2c)
     // Samplers: reverse flips the waveform and mirrors the region at once (the app updates Params and the engine).
     if (key === 'reverse' && this.def.params.some(q => q.key === 'startPosition')) { App.MainScene.host.reverseSample(this.Id, !!value); return; }
     // MIDI Input's device slider picks an input by index (0 = all): the patch keeps its name (web only, CHG-0004).
@@ -114,6 +140,12 @@ export class V1Block {
       App.MainScene.setParam(this, 'delayBeats', beats);
       return;
     }
+    if (key === 'pulseDelayIndex') {  // a synced Pulse's Delay (CHG-0029)
+      const beats = PULSE_DELAY_STEPS[Math.max(0, Math.min(PULSE_DELAY_STEPS.length - 1, Math.round(Number(value))))].beats;
+      this.Params.delayBeats = beats; this.Params.pulseDelayIndex = Math.round(Number(value));
+      App.MainScene.setParam(this, 'delayBeats', beats);
+      return;
+    }
     if (key === 'divisionIndex' || key === 'lengthIndex') {
       const beats = BEAT_STEPS[Math.max(0, Math.min(BEAT_STEPS.length - 1, Math.round(Number(value))))].beats;
       const target = key === 'divisionIndex' ? 'division' : 'pulseBeats';
@@ -127,6 +159,9 @@ export class V1Block {
       App.MainScene.setParam(this, 'gain', g);
       return;
     }
+    if (key === 'lfoTarget') { setLfoTarget(this, Number(value)); this.RefreshOptionsPanel(); return; }  // an LFO's Target carousel (AUDIO-0003)
+    const conv = convertSetting(key, value);  // a new block's slider in other units (ms → s, …)
+    if (conv) { this.Params[conv.param] = conv.value; App.MainScene.setParam(this, conv.param, conv.value); if (conv.refresh) this.RefreshOptionsPanel(); return; }
     if (key === 'sync') { this.Params.sync = !!value; App.MainScene.setParam(this, 'sync', value ? 1 : 0); this.RefreshOptionsPanel(); return; }
     // MPE switches (PLUGIN-0004): the panel shows the mapping rows only while MPE is on.
     if (key === 'mpe') { const p = this.def.params.find(q => q.key === 'mpe'); if (p) { this.Params.mpe = !!value; App.MainScene.setParam(this, 'mpe', value ? 1 : 0); this.RefreshOptionsPanel(); } return; }
@@ -141,6 +176,7 @@ export class V1Block {
     else if (t.transform === 'Divide') v = v / t.k;
     this.Params[key] = typeof value === 'boolean' ? value : v;
     if (Number.isFinite(v)) App.MainScene.setParam(this, key, v);
+    if (settingRefreshes(key)) this.RefreshOptionsPanel();
   }
 
   /** ToneSource.DisplayNote: transpose value → note name + octave. */
@@ -161,6 +197,11 @@ export class V1Block {
   }
 }
 
+/** A sample length as m:ss (h:mm:ss from an hour; a sound under a second shows 0:01). */
+export function formatLength(sec: number): string {
+  const n = Number(sec) || 0, t = n > 0 ? Math.max(1, Math.round(n)) : 0, h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, s = String(t % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
+}
 const CATEGORY: Record<string, string> = { source: 'Source', effect: 'Effect', power: 'Power', interaction: 'Interaction' };
 function catOf(def: BlockDef): string { return CATEGORY[def.category] ?? 'Source'; }
 /** l10n key for a block: v1 uses e.g. Blocks.Source.Blocks.Tone for ToneSource. */
@@ -169,6 +210,37 @@ function nameKey(def: BlockDef): string {
   const byType: Record<string, string> = { ToneSource: 'Tone', ParticleEmitter: 'ParticleEmitter', ComputerKeyboard: 'ComputerKeyboard', MIDIController: 'MIDIController' };
   const k = byType[def.v1Type ?? ''] ?? def.v1Type ?? '';
   return k in cat ? k : Object.keys(cat).find(n => n.toLowerCase() === (def.v1Type ?? '').toLowerCase()) ?? k;
+}
+
+/** SampleGen's numbered sounds (CHG-0035). */
+export const SOUND_MAX = 999;
+/**
+ * Run v1's SampleGen generator (ported verbatim: it draws every choice from Math.random) on sound `n`'s own random
+ * numbers (mulberry32), so a number always makes the same wave. 0: as v1, unseeded.
+ */
+export function withSound<T>(n: number, run: () => T): T {
+  if (!(n > 0)) return run();
+  let a = (Math.imul(n, 0x9e3779b1) ^ 0x5bd1e995) >>> 0;
+  const random = Math.random;
+  Math.random = () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  try { return run(); } finally { Math.random = random; }
+}
+/**
+ * SampleGen (owner, 2026-11-17, CHG-0035): v1's GENERATE WAVE button rolled a new random wave; a SOUND slider picks one
+ * of 999 instead. Each number seeds v1's generator, so a number is always the same wave and can be found again.
+ */
+function soundForm(b: V1Block): void {
+  const params = b.OptionsForm.parameters as any[], i = params.findIndex(p => p.setting === 'generate');
+  if (i < 0) return;
+  params[i] = { type: 'slider', name: 'Sound', setting: 'sound',
+    props: { value: Math.max(1, Number(b.Params.sound) || 1), min: 1, max: SOUND_MAX, quantised: true, centered: false,
+      convertDisplay: (v: number) => `#${Math.round(v)}` } };
 }
 
 /**
@@ -236,6 +308,8 @@ const DELAY_STEPS = [
   { beats: 0.375, label: '1/16D' }, { beats: 0.5, label: '1/8' }, { beats: 2 / 3, label: '1/4T' }, { beats: 0.75, label: '1/8D' },
   { beats: 1, label: '1/4' }, { beats: 4 / 3, label: '1/2T' }, { beats: 1.5, label: '1/4D' }, { beats: 2, label: '1/2' },
 ];
+/** A synced Pulse's Delay (CHG-0029): off, then the musical lengths up to a bar. */
+const PULSE_DELAY_STEPS = [{ beats: 0, label: 'OFF' }, ...BEAT_STEPS.filter(s => s.beats <= 4)];
 /** Blocks with a Tempo Sync switch. */
 const SYNCED = new Set(['power.emitter', 'power.pulse', 'power.laser', 'fx.stereo-delay']);
 
@@ -252,18 +326,36 @@ function extendSyncForm(b: V1Block): void {
   const kind = b.def.id === 'power.emitter' ? 'emitter' : b.def.id === 'power.pulse' ? 'pulse' : b.def.id === 'fx.stereo-delay' ? 'delay' : 'laser';
   const sync = { type: 'switches', name: '', setting: '', props: { value: 0, min: 0, max: 1, quantised: true },
     switches: [{ name: 'Tempo Sync', setting: 'sync', value: !!b.Params.sync, lit: true, mode: 'offOn' }] };
+  // The Laser's Restart (R9a): each power-on starts again from its Angle; beside Tempo Sync, synced or not.
+  if (kind === 'laser') sync.switches.push({ name: 'Restart', setting: 'restart', value: !!b.Params.restart, lit: true, mode: 'offOn' });
   const synced: any[] = [];
   if (b.Params.sync) {
     if (kind === 'emitter') {
       synced.push(stepSlider('Division', 'divisionIndex', BEAT_STEPS, stepOf(Number(b.Params.division ?? 1))));
       synced.push({ type: 'slider', name: 'Swing', setting: 'swing', props: { value: Number(b.Params.swing ?? 0), min: 0, max: 1, quantised: false, centered: false,
         convertDisplay: (v: number) => `${Math.round(v * 100)}%` } });
-    } else if (kind === 'pulse') synced.push(stepSlider('Length', 'lengthIndex', BEAT_STEPS, stepOf(Number(b.Params.pulseBeats ?? 0.25))));
+    } else if (kind === 'pulse') {
+      synced.push(stepSlider('Length', 'lengthIndex', BEAT_STEPS, stepOf(Number(b.Params.pulseBeats ?? 0.25))));
+      synced.push(stepSlider('Delay', 'pulseDelayIndex', PULSE_DELAY_STEPS, nearest(PULSE_DELAY_STEPS, Number(b.Params.delayBeats ?? 0))));
+    }
     else if (kind === 'delay') synced.push(stepSlider('Delay', 'delayIndex', DELAY_STEPS, nearest(DELAY_STEPS, Number(b.Params.delayBeats ?? 0.5))));
     else synced.push(stepSlider('Turn', 'turnIndex', SIGNED_TURNS, nearest(SIGNED_TURNS, Number(b.Params.turnBeats ?? 4)), true));
   }
   const free = new Set(b.Params.sync ? ({ emitter: ['rate', 'speed'], pulse: ['pulseLength'], delay: ['delayTime'], laser: ['rotate'] })[kind] : []);
   const kept = params.filter(p => !free.has(p.setting));
+  if (kind === 'emitter') {
+    // Offset (CHG-0014): a nudge, as a share of the interval: after Swing when synced, after Fire Rate when not.
+    const offset = { type: 'slider', name: 'Offset', setting: 'offset', props: { value: Number(b.Params.offset ?? 0), min: 0, max: 1, quantised: false, centered: false,
+      convertDisplay: (v: number) => `${Math.round(v * 100)}%` } };
+    if (b.Params.sync) synced.push(offset);
+    else kept.splice(kept.findIndex(p => p.setting === 'rate') + 1, 0, offset);
+  }
+  if (kind === 'pulse' && !b.Params.sync) {
+    // Delay (CHG-0029, SIMULATION-0010): each hit waits this long before it powers the sources; after Pulse length.
+    kept.splice(kept.findIndex(p => p.setting === 'pulseLength') + 1, 0, { type: 'slider', name: 'Delay', setting: 'delay',
+      props: { value: Number(b.Params.delay ?? 0), min: 0, max: 4, quantised: false, centered: false,
+        convertDisplay: (v: number) => (v < 0.005 ? 'OFF' : v < 1 ? `${Math.round(v * 1000)} ms` : `${v.toFixed(2)} s`) } });
+  }
   // Pulse and Stereo Delay: their first row (Pulse length, Delay Time) is hidden when synced, so the sync rows go first.
   const at = kind === 'pulse' || kind === 'delay' ? 0 : 1;
   b.OptionsForm.parameters = [...kept.slice(0, at), sync, ...synced, ...kept.slice(at)];

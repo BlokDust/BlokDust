@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**44 decisions** · proposed: 0 · accepted: 38 · deferred: 3 · rejected: 1 · superseded: 2 · deprecated: 0
+**72 decisions** · proposed: 18 · accepted: 48 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -20,6 +20,9 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | ID | Decision | Status | Date | Tags |
 |---|---|---|---|---|
 | [AUDIO-0001](audio/AUDIO-0001-match-v1-sound-by-porting-chromium-web-audio.md) | Match v1 sound by porting Chromium Web Audio algorithms | **accepted** | 2026-11-06 | audio, parity, dsp, chromium |
+| [AUDIO-0002](audio/AUDIO-0002-note-effects-act-before-a-source-plays.md) | Note effects act before a source plays | **proposed** | 2026-11-13 | audio, notes, post-2-0 |
+| [AUDIO-0003](audio/AUDIO-0003-lfos-modulate-one-param-and-add-up.md) | LFOs modulate one param and add up | **proposed** | 2026-11-13 | audio, modulation, post-2-0 |
+| [AUDIO-0004](audio/AUDIO-0004-wavetable-block-with-built-in-tables.md) | Wavetable block with built-in tables | **proposed** | 2026-11-17 | audio, source, post-2-0 |
 
 ## [data](data/README.md)
 
@@ -37,6 +40,7 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 |---|---|---|---|---|
 | [LICENSING-0001](licensing/LICENSING-0001-license-blokdust-2-under-agpl-3-0-or-later.md) | License BlokDust 2 under AGPL-3.0-or-later | **accepted** | 2026-11-05 | license, agpl |
 | [LICENSING-0002](licensing/LICENSING-0002-contributor-terms-that-keep-app-store.md) | Contributor terms that keep app-store distribution possible | **deferred** | 2026-11-05 | license, contributors, ios |
+| [LICENSING-0003](licensing/LICENSING-0003-use-the-juce-8-starter-licence-for-the-ipad-app.md) | Use the JUCE 8 Starter licence for the iPad App Store build | **accepted** | 2026-11-15 | license, juce, ios, app-store |
 
 ## [plugin](plugin/README.md)
 
@@ -64,8 +68,10 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 |---|---|---|---|---|
 | [SCOPE-0001](scope/SCOPE-0001-no-user-programmable-dsp-or-custom-code-blocks.md) | No user-programmable DSP or custom code blocks | **rejected** | 2026-11-05 | scope, blocks |
 | [SCOPE-0002](scope/SCOPE-0002-macros-grouped-blocks.md) | Macros (grouped blocks) | **deferred** | 2026-11-05 | scope, macros |
-| [SCOPE-0003](scope/SCOPE-0003-user-accounts-galleries-and-moderation.md) | User accounts, galleries and moderation | **deferred** | 2026-11-05 | scope, backend |
+| [SCOPE-0003](scope/SCOPE-0003-user-accounts-galleries-and-moderation.md) | User accounts, galleries and moderation | **superseded** | 2026-11-05 | scope, backend |
 | [SCOPE-0004](scope/SCOPE-0004-faithful-v1-parity-same-blocks-same-look-same-feel.md) | Faithful v1 parity: same blocks, same look, same feel | **accepted** | 2026-11-05 | scope, parity |
+| [SCOPE-0005](scope/SCOPE-0005-the-post-2-0-block-set.md) | The post-2.0 block set | **proposed** | 2026-11-13 | scope, blocks, post-2-0 |
+| [SCOPE-0006](scope/SCOPE-0006-stage-block-nested-patches.md) | Stage block: a patch inside a block (macros, depth 2) | **proposed** | 2026-11-13 | scope, macros, stage |
 
 ## [sharing](sharing/README.md)
 
@@ -77,6 +83,11 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [SHARING-0004](sharing/SHARING-0004-host-on-a-placeholder-cloudflare-url.md) | Host on a placeholder Cloudflare URL with a configurable base path | **accepted** | 2026-11-05 | hosting, domain |
 | [SHARING-0005](sharing/SHARING-0005-host-release-1-at-funputs-com-blokdust-with-a.md) | Host Release 1 at funputs.com/blokdust with a Worker route | **superseded** | 2026-11-11 | hosting, domain, release-1 |
 | [SHARING-0006](sharing/SHARING-0006-host-at-blokdust-funputs-com-with-funputs-com.md) | Host at blokdust.funputs.com with funputs.com/blokdust redirecting | **accepted** | 2026-11-12 | hosting, domain, release-1 |
+| [SHARING-0007](sharing/SHARING-0007-video-export-renders-the-patch-offline-and.md) | Video export renders the patch offline and encodes in the browser | **proposed** | 2026-11-15 | sharing, video, determinism, cost |
+| [SHARING-0008](sharing/SHARING-0008-optional-accounts-with-passkeys-and-google.md) | Optional accounts with passkeys, Google and Apple, sessions in D1 | **proposed** | 2026-11-15 | sharing, accounts, security, cost |
+| [SHARING-0009](sharing/SHARING-0009-a-public-gallery-of-published-patches-with-likes.md) | A public gallery of published patches with likes and reports | **proposed** | 2026-11-15 | sharing, gallery, moderation |
+| [SHARING-0010](sharing/SHARING-0010-usage-analytics-on-workers-analytics-engine.md) | Usage analytics on Workers Analytics Engine | **proposed** | 2026-11-16 | analytics, privacy, plugin, cloudflare |
+| [SHARING-0011](sharing/SHARING-0011-plugins-sign-in-with-their-own-revocable-key.md) | Plugins sign in with their own revocable key, approved on the website or by Apple and passkeys on iPad | **accepted** | 2026-11-19 | sharing, accounts, plugin, ipad, security |
 
 ## [simulation](simulation/README.md)
 
@@ -86,6 +97,20 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [SIMULATION-0002](simulation/SIMULATION-0002-preserve-v1-proximity-connections-exactly.md) | Preserve v1 proximity connections exactly, computed in the engine | **accepted** | 2026-11-05 | simulation, connections, parity |
 | [SIMULATION-0003](simulation/SIMULATION-0003-time-is-musical-and-tempo-aware-v1-frame-timing.md) | Time is musical and tempo-aware; v1 frame timing is not reproduced exactly | **accepted** | 2026-11-05 | simulation, tempo, parity |
 | [SIMULATION-0004](simulation/SIMULATION-0004-a-particle-that-enters-another-emitter-fires-it.md) | A particle that enters another emitter fires it | **accepted** | 2026-11-11 | particles, release-1, v1-deviation |
+| [SIMULATION-0005](simulation/SIMULATION-0005-counter-and-chance-are-switches-that-hits-set.md) | Counter and Chance are switches that hits set | **proposed** | 2026-11-13 | simulation, particles, lasers, post-2-0 |
+| [SIMULATION-0006](simulation/SIMULATION-0006-prism-redirects-and-splits-hits.md) | Prism redirects and splits hits | **proposed** | 2026-11-13 | simulation, particles, lasers, post-2-0 |
+| [SIMULATION-0007](simulation/SIMULATION-0007-sound-can-drive-the-simulation.md) | Sound can drive the simulation (Sound Laser) | **proposed** | 2026-11-13 | simulation, audio, determinism, post-2-0 |
+| [SIMULATION-0008](simulation/SIMULATION-0008-every-particle-hit-strikes-the-source-again.md) | Every particle hit strikes the source again | **accepted** | 2026-11-14 | particles, power, v1-deviation |
+| [SIMULATION-0009](simulation/SIMULATION-0009-a-power-block-can-be-cut-by-hits.md) | A Power block can be cut by hits | **accepted** | 2026-11-14 | power, particles, lasers, v1-deviation |
+| [SIMULATION-0010](simulation/SIMULATION-0010-a-pulse-can-wait-before-it-fires.md) | A Pulse can wait before it fires | **accepted** | 2026-11-17 | power, pulse, timing, v1-extension |
+| [SIMULATION-0011](simulation/SIMULATION-0011-gate-is-a-void-that-power-opens.md) | Gate is a Void that power opens | **proposed** | 2026-11-17 | simulation, particles, lasers, power, post-2-0 |
+| [SIMULATION-0012](simulation/SIMULATION-0012-every-hit-reaches-through-what-earlier-hits-hold.md) | Every hit reaches through what earlier hits hold | **accepted** | 2026-11-17 | lasers, particles, power, v1-deviation |
+
+## [support](support/README.md)
+
+| ID | Decision | Status | Date | Tags |
+|---|---|---|---|---|
+| [SUPPORT-0001](support/SUPPORT-0001-isolate-support-reports-from-shared-patches.md) | Isolate support reports from shared patches | **accepted** | 2026-11-12 | support, privacy, storage |
 
 ## [ui](ui/README.md)
 
@@ -99,3 +124,11 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [UI-0006](ui/UI-0006-multi-touch-the-first-finger-is-v1-s-pointer-more.md) | Multi-touch: the first finger is v1's pointer; more fingers take blocks, sliders or a pinch | **accepted** | 2026-11-11 | touch, input, release-1 |
 | [UI-0007](ui/UI-0007-multi-select-a-set-beside-v1-s-one-selected-block.md) | Multi-select: a set beside v1's one selected block, ringed by its outline | **accepted** | 2026-11-11 | selection, input, release-1 |
 | [UI-0008](ui/UI-0008-a-power-switch-for-the-whole-world-on-the-stage.md) | A power switch for the whole world, on the stage | **accepted** | 2026-11-11 | power, release-1 |
+| [UI-0009](ui/UI-0009-stage-inside-view-is-a-window-that-points-at-its-block.md) | Stage inside view is a window that points at its block | **proposed** | 2026-11-13 | ui, stage, post-2-0 |
+| [UI-0010](ui/UI-0010-grid-plays-in-its-options-panel.md) | Touchpad plays in its options panel | **proposed** | 2026-11-13 | ui, touch, post-2-0 |
+| [UI-0011](ui/UI-0011-labels-are-text-on-the-stage.md) | Labels are text on the stage | **proposed** | 2026-11-13 | ui, stage, post-2-0 |
+| [UI-0012](ui/UI-0012-a-stage-is-played-from-outside-through-its.md) | A Stage is played from outside through its controllers and Stage In | **accepted** | 2026-11-14 | stage, controllers, selection |
+| [UI-0013](ui/UI-0013-waveforms-zoom-as-a-view-window-over-v1-s-panel.md) | Waveforms zoom as a view window over v1's panel | **proposed** | 2026-11-15 | ui, options-panel, samples, post-2-0 |
+| [UI-0014](ui/UI-0014-the-envelope-graph-uses-a-curved-time-axis.md) | The Envelope graph uses a curved time axis | **accepted** | 2026-11-17 | ui, options-panel, envelope, post-2-0 |
+| [UI-0015](ui/UI-0015-host-the-power-switch-s-third-cell-hands-power-to.md) | HOST: the power switch's third cell hands power to the DAW transport | **accepted** | 2026-11-16 | power, plugin, ipad |
+| [UI-0016](ui/UI-0016-note-bars-and-a-range-slider-in-the-options-panel.md) | Note bars and a range slider in the options panel | **proposed** | 2026-11-19 | ui, options-panel, note-effects, post-2-0 |

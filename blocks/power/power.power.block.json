@@ -66,7 +66,18 @@
     ],
     "menuOffset": [0, 0]
   },
-  "params": [],
+  "params": [
+    {
+      "key": "cutByHits",
+      "default": 0,
+      "unit": "enum",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Hits Cut Power: when on, a particle that hits the Power cuts its power for a moment, and a laser beam cuts it for as long as it touches it; the blocks it powers play again when the power comes back"
+    }
+  ],
   "review": [
     "params: units/ranges in real units not yet defined (draft)"
   ]

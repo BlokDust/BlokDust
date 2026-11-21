@@ -1,0 +1,76 @@
+{
+  "description": "CHG-0018: an LFO swings a self-powered Laser's Angle across three Tones; a second LFO, out of reach of its target, does nothing.",
+  "render": {
+    "seconds": 6,
+    "sampleRate": 44100
+  },
+  "patch": {
+    "format": "blokdust.patch",
+    "version": 2,
+    "seed": 9,
+    "blocks": [
+      {
+        "id": "l",
+        "type": "power.laser",
+        "x": 0,
+        "y": 0,
+        "params": {
+          "angle": 0,
+          "selfPoweredMode": true,
+          "range": 200
+        }
+      },
+      {
+        "id": "lfo",
+        "type": "fx.lfo",
+        "x": 0,
+        "y": 3,
+        "params": {
+          "target": "l:angle",
+          "rate": 0.5,
+          "depth": 0.3
+        }
+      },
+      {
+        "id": "a",
+        "type": "source.tone",
+        "x": 9,
+        "y": -5,
+        "params": {
+          "waveform": 0
+        }
+      },
+      {
+        "id": "b",
+        "type": "source.tone",
+        "x": 10,
+        "y": 0,
+        "params": {
+          "waveform": 0,
+          "transpose": 4
+        }
+      },
+      {
+        "id": "c",
+        "type": "source.tone",
+        "x": 9,
+        "y": 5,
+        "params": {
+          "waveform": 0,
+          "transpose": 7
+        }
+      },
+      {
+        "id": "far",
+        "type": "fx.lfo",
+        "x": 30,
+        "y": 20,
+        "params": {
+          "target": "b:transpose",
+          "rate": 2,
+          "depth": 1
+        }
+      }
+    ]
+  }
+}

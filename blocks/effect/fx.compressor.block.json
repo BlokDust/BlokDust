@@ -1,0 +1,155 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.compressor",
+  "draft": false,
+  "category": "effect",
+  "kind": "post-effect",
+  "name": "Compressor",
+  "description": "Automatically reduces loud peaks to keep your overall volume consistent.",
+  "v1": {
+    "type": null
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 5,
+        "points": [
+          [
+            1,
+            -1
+          ],
+          [
+            2,
+            -1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            -1,
+            1
+          ]
+        ]
+      },
+      {
+        "palette": 6,
+        "points": [
+          [
+            2,
+            -1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        1,
+        -1
+      ],
+      [
+        2,
+        -1
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        -1,
+        1
+      ]
+    ],
+    "menuOffset": [
+      -0.5,
+      0
+    ]
+  },
+  "params": [
+    {
+      "key": "threshold",
+      "default": -24,
+      "unit": "dB",
+      "range": [
+        -60,
+        0
+      ],
+      "description": "Level above which the sound is turned down"
+    },
+    {
+      "key": "ratio",
+      "default": 4,
+      "unit": "ratio",
+      "range": [
+        1,
+        20
+      ],
+      "description": "How much: 4 means 4 dB over the threshold comes out as 1 dB over"
+    },
+    {
+      "key": "knee",
+      "default": 10,
+      "unit": "dB",
+      "range": [
+        0,
+        40
+      ],
+      "description": "How gradually compression sets in above the threshold"
+    },
+    {
+      "key": "attack",
+      "default": 0.003,
+      "unit": "s",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Time to turn the sound down"
+    },
+    {
+      "key": "release",
+      "default": 0.25,
+      "unit": "s",
+      "range": [
+        0.01,
+        1
+      ],
+      "description": "Time to let it back up"
+    },
+    {
+      "key": "makeup",
+      "default": 0,
+      "unit": "dB",
+      "range": [
+        -24,
+        24
+      ],
+      "description": "Gain added (or taken off) after compression"
+    }
+  ]
+}

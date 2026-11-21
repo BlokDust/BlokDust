@@ -4,7 +4,12 @@ cmake_minimum_required(VERSION 3.28)
 # CMAKE_OSX_DEPLOYMENT_TARGET as an empty cache entry, and a later set() without FORCE does nothing: every binary then
 # silently requires the build machine's macOS (the host version). Overwrite an empty
 # value, leave a deliberate one alone. Check: `vtool -show-build <binary>` shows minos 11.0.
-if(APPLE)
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+  # iPadOS AUv3 (CHG-0025): iPadOS 16+ (the WebView editor needs a current WKWebView; AUv3 hosts require 15+ anyway).
+  if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "16.0" CACHE STRING "Minimum iPadOS version" FORCE)
+  endif()
+elseif(APPLE)
   if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version" FORCE)
   endif()

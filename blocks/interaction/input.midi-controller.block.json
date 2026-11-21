@@ -5,7 +5,7 @@
   "category": "interaction",
   "kind": "controller",
   "name": "MIDI Controller",
-  "description": "Trigger sources using any connected USB MIDI device. Chrome only",
+  "description": "Trigger sources using any connected USB MIDI device.",
   "v1": {
     "type": "MIDIController",
     "class": [
@@ -194,13 +194,13 @@
         0,
         16
       ],
-      "description": "MIDI channel filter: 0 = Omni, 1\u201316 (CHG-0004; ignored with MPE on, where the zone's member channels are used)"
+      "description": "MIDI channel: Omni or 1\u201316 (ignored with MPE on, where each note has its own channel)"
     },
     {
       "key": "mpe",
       "default": false,
       "unit": "enum",
-      "description": "MPE (PLUGIN-0004): each note's own channel carries its pitch bend, pressure and slide"
+      "description": "MPE: each note's own channel carries its pitch bend, pressure and slide"
     },
     {
       "key": "pressureTo",
@@ -210,7 +210,7 @@
         0,
         1
       ],
-      "description": "MPE pressure \u2192 0 off, 1 note volume (owner default)"
+      "description": "MPE pressure: off, or the note's volume"
     },
     {
       "key": "slideTo",
@@ -220,7 +220,7 @@
         0,
         1
       ],
-      "description": "MPE slide (CC74) \u2192 0 off, 1 timbre: Tone brightness, Sample start, Granular grain position (owner default)"
+      "description": "MPE slide (CC74): off, or timbre (Tone brightness, Sample start, Granular grain position)"
     },
     {
       "key": "bendRange",
@@ -237,6 +237,12 @@
       "default": "",
       "unit": null,
       "description": "Web only: the MIDI input device by name; \"\" = all devices (in a DAW the track picks the device). Host-side, never reaches the engine."
+    },
+    {
+      "key": "keysSetPitch",
+      "default": false,
+      "unit": "enum",
+      "description": "Silent Keys: held keys make no sound; they set the notes that power, particles and lasers play on the connected sources"
     }
   ],
   "review": [

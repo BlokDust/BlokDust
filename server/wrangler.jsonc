@@ -1,6 +1,11 @@
 // BlokDust 2 Worker (SPEC-SHARING-BACKEND). Top level = local dev/tests (`pnpm bd server dev`, `pnpm test:sharing`);
 // `--env staging` = owner review, `--env production` = the public site (deployed after a phase merges).
-// Secrets (never in the repo): TURNSTILE_SECRET, FREESOUND_TOKEN — `pnpm bd server secret --env <env>`.
+// Secrets (never in the repo): TURNSTILE_SECRET, FREESOUND_TOKEN, GOOGLE_CLIENT_SECRET, APPLE_PRIVATE_KEY — `pnpm bd server secret --env <env>`.
+// GOOGLE_CLIENT_ID (a var) turns on Sign in with Google with the secret (SPEC-SHARING-ACCOUNTS R2a); without both, passkeys only.
+// APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID (vars) with APPLE_PRIVATE_KEY turn on Sign in with Apple (R2b).
+// ACTIVITY_BEACON="off" (a var, or `wrangler secret put ACTIVITY_BEACON` to flip it without a deploy) stops the page-close
+// activity request if D1's free writes run short (SPEC-SHARING-ACCOUNTS R16). Unset = on.
+// ACCOUNTS_PER_DAY: new accounts a network may make in a UTC day (SPEC-SHARING-ACCOUNTS R1b). Unset = 10.
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "blokdust-dev",
@@ -10,21 +15,31 @@
     "directory": "../web/dist",
     "binding": "ASSETS",
     // Only these reach the Worker; every other file is served straight from the asset store (no request cost).
-    "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*"]
+    "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/admin/*"]
   },
   // Per-IP limits (SPEC-SHARING-BACKEND R5a); bindings are per environment.
+  "triggers": { "crons": ["17 3 * * *"] },
   "ratelimits": [
     { "name": "SAVE_LIMIT", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
-    { "name": "SEARCH_LIMIT", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } }
+    { "name": "SEARCH_LIMIT", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } },
+    { "name": "EVENTS_LIMIT", "namespace_id": "1003", "simple": { "limit": 30, "period": 60 } },
+    { "name": "SUPPORT_LIMIT", "namespace_id": "1004", "simple": { "limit": 5, "period": 60 } }
   ],
+  // Usage analytics (SHARING-0010): one Analytics Engine dataset per environment.
+  "analytics_engine_datasets": [{ "binding": "EVENTS", "dataset": "blokdust_events_dev" }],
   "d1_databases": [
-    { "binding": "DB", "database_name": "blokdust-dev", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+    { "binding": "DB", "database_name": "blokdust-dev", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" },
+    { "binding": "SUPPORT_DB", "database_name": "blokdust-support-dev", "database_id": "00000000-0000-0000-0000-000000000001", "migrations_dir": "support-migrations" }
   ],
   "vars": {
     "PUBLIC_BASE_URL": "",
     "BASE_PATH": "",
     // Cloudflare's always-passes invisible test key (local only).
-    "TURNSTILE_SITE_KEY": "1x00000000000000000000BB"
+    "TURNSTILE_SITE_KEY": "1x00000000000000000000BB",
+    // Usage analytics (SHARING-0010 R5): every local session sends events; the dashboard needs no Access locally.
+    "ANALYTICS_RATE": "1",
+    "ANALYTICS_DATASET": "blokdust_events_dev",
+    "ADMIN_LOCAL": "1"
   },
   "observability": { "enabled": true },
   "env": {
@@ -36,41 +51,57 @@
       "assets": {
         "directory": "../.cache/server/site",
         "binding": "ASSETS",
-        "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/blokdust", "/blokdust/", "/blokdust/index.html", "/blokdust/embed/*", "/blokdust/oembed", "/blokdust/api/*"]
+        "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/blokdust", "/blokdust/", "/blokdust/index.html", "/blokdust/embed/*", "/blokdust/oembed", "/blokdust/api/*", "/admin/*", "/blokdust/admin/*"]
       },
       "ratelimits": [
         { "name": "SAVE_LIMIT", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
-        { "name": "SEARCH_LIMIT", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } }
+        { "name": "SEARCH_LIMIT", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } },
+        { "name": "EVENTS_LIMIT", "namespace_id": "1003", "simple": { "limit": 30, "period": 60 } },
+        { "name": "SUPPORT_LIMIT", "namespace_id": "1004", "simple": { "limit": 5, "period": 60 } }
       ],
+      // Usage analytics (SHARING-0010): one Analytics Engine dataset per environment.
+      "analytics_engine_datasets": [{ "binding": "EVENTS", "dataset": "blokdust_events_dev" }],
       "d1_databases": [
-        { "binding": "DB", "database_name": "blokdust-dev", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+        { "binding": "DB", "database_name": "blokdust-dev", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" },
+        { "binding": "SUPPORT_DB", "database_name": "blokdust-support-dev", "database_id": "00000000-0000-0000-0000-000000000001", "migrations_dir": "support-migrations" }
       ],
-      "vars": { "PUBLIC_BASE_URL": "", "BASE_PATH": "/blokdust", "ASSET_BASE": "/blokdust", "TURNSTILE_SITE_KEY": "1x00000000000000000000BB" }
+      "vars": { "PUBLIC_BASE_URL": "", "BASE_PATH": "/blokdust", "ASSET_BASE": "/blokdust", "TURNSTILE_SITE_KEY": "1x00000000000000000000BB", "ANALYTICS_RATE": "1", "ANALYTICS_DATASET": "blokdust_events_dev", "ADMIN_LOCAL": "1" }
     },
     "staging": {
+      "triggers": { "crons": ["17 3 * * *"] },
       "name": "blokdust-staging",
       "workers_dev": true,
       // At the root, as production (SHARING-0006); review links from before, under /blokdust/, redirect there.
       "assets": {
         "directory": "../web/dist",
         "binding": "ASSETS",
-        "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/blokdust", "/blokdust/*"]
+        "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/admin/*", "/blokdust", "/blokdust/*"]
       },
       "ratelimits": [
         { "name": "SAVE_LIMIT", "namespace_id": "2001", "simple": { "limit": 20, "period": 60 } },
-        { "name": "SEARCH_LIMIT", "namespace_id": "2002", "simple": { "limit": 60, "period": 60 } }
+        { "name": "SEARCH_LIMIT", "namespace_id": "2002", "simple": { "limit": 60, "period": 60 } },
+        { "name": "EVENTS_LIMIT", "namespace_id": "2003", "simple": { "limit": 30, "period": 60 } },
+        { "name": "SUPPORT_LIMIT", "namespace_id": "2004", "simple": { "limit": 5, "period": 60 } }
       ],
+      // Usage analytics (SHARING-0010): one Analytics Engine dataset per environment.
+      "analytics_engine_datasets": [{ "binding": "EVENTS", "dataset": "blokdust_events_staging" }],
       "d1_databases": [
-        { "binding": "DB", "database_name": "blokdust-staging", "database_id": "REMOTE_DATABASE_ID", "migrations_dir": "migrations" }
+        { "binding": "DB", "database_name": "blokdust-staging", "database_id": "REMOTE_DATABASE_ID", "migrations_dir": "migrations" },
+        { "binding": "SUPPORT_DB", "database_name": "blokdust-support-staging", "database_id": "REMOTE_SUPPORT_DATABASE_ID", "migrations_dir": "support-migrations" }
       ],
       "vars": {
         "PUBLIC_BASE_URL": "https://staging.example.invalid",
         "BASE_PATH": "",
         "LEGACY_BASE_PATH": "/blokdust",
-        "TURNSTILE_SITE_KEY": "REMOTE_TURNSTILE_SITE_KEY"
+        "TURNSTILE_SITE_KEY": "REMOTE_TURNSTILE_SITE_KEY",
+        // Usage analytics (SHARING-0010): on for owner review. Access and Sentry settings come from local config.
+        "ANALYTICS_RATE": "1",
+        "ANALYTICS_DATASET": "blokdust_events_staging",
+        "SENTRY_ENVIRONMENT": "staging"
       }
     },
     "production": {
+      "triggers": { "crons": ["17 3 * * *"] },
       "name": "blokdust",
       // workers.dev stays on: its page links redirect to blokdust.funputs.com and its API keeps answering.
       "workers_dev": true,
@@ -84,20 +115,30 @@
       "assets": {
         "directory": "../web/dist",
         "binding": "ASSETS",
-        "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/blokdust", "/blokdust/*"]
+        "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/admin/*", "/blokdust", "/blokdust/*"]
       },
       "ratelimits": [
         { "name": "SAVE_LIMIT", "namespace_id": "3001", "simple": { "limit": 20, "period": 60 } },
-        { "name": "SEARCH_LIMIT", "namespace_id": "3002", "simple": { "limit": 60, "period": 60 } }
+        { "name": "SEARCH_LIMIT", "namespace_id": "3002", "simple": { "limit": 60, "period": 60 } },
+        { "name": "EVENTS_LIMIT", "namespace_id": "3003", "simple": { "limit": 30, "period": 60 } },
+        { "name": "SUPPORT_LIMIT", "namespace_id": "3004", "simple": { "limit": 5, "period": 60 } }
       ],
+      // Usage analytics (SHARING-0010): one Analytics Engine dataset per environment.
+      "analytics_engine_datasets": [{ "binding": "EVENTS", "dataset": "blokdust_events" }],
       "d1_databases": [
-        { "binding": "DB", "database_name": "blokdust", "database_id": "REMOTE_DATABASE_ID", "migrations_dir": "migrations" }
+        { "binding": "DB", "database_name": "blokdust", "database_id": "REMOTE_DATABASE_ID", "migrations_dir": "migrations" },
+        { "binding": "SUPPORT_DB", "database_name": "blokdust-support-production", "database_id": "REMOTE_SUPPORT_DATABASE_ID", "migrations_dir": "support-migrations" }
       ],
       "vars": {
         "PUBLIC_BASE_URL": "https://blokdust.funputs.com",
         "BASE_PATH": "",
         "LEGACY_BASE_PATH": "/blokdust",
-        "TURNSTILE_SITE_KEY": "REMOTE_TURNSTILE_SITE_KEY"
+        "TURNSTILE_SITE_KEY": "REMOTE_TURNSTILE_SITE_KEY",
+        // Usage analytics (SHARING-0010): OFF ("0") until the owner switches it on (BLOKDUST_PRODUCTION_ANALYTICS_RATE
+        // in local config overrides it at deploy); the kill switch is setting it back to "0".
+        "ANALYTICS_RATE": "0",
+        "ANALYTICS_DATASET": "blokdust_events",
+        "SENTRY_ENVIRONMENT": "production"
       }
     }
   }

@@ -1,0 +1,7 @@
+{
+  "name": "gallery",
+  "summary": "Review the public gallery (SPEC-SHARING-GALLERY): list reported or hidden patches with their reasons, then hide one, keep it (clear its reports) or remove it from the gallery. Manage the site's own @blokdust account (R16): publish the built-in presets as its EXAMPLES, hand it the sign-ins of an account made for it, and move its patches between EXAMPLES and TUTORIALS. Works on a deployed env's D1 or a local test state.",
+  "usage": ["pnpm bd gallery reports --env production", "pnpm bd gallery hide <id> --env production", "pnpm bd gallery keep <id> --env production", "pnpm bd gallery remove <id> --local gallery", "pnpm bd gallery presets --env staging", "pnpm bd gallery official <name> --env staging", "pnpm bd gallery kind <id> tutorial --env staging"],
+  "outputs": "JSON on stdout: the reported patches, or what was done",
+  "deterministic": false
+}

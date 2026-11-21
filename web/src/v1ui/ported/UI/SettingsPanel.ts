@@ -126,18 +126,18 @@ export class SettingsPanel extends DisplayObject{
         ctx.textAlign = "left";
         var catWidth = [];
         if (App.Metrics.Device === Device.mobile) {
-            var menuWidth = (this.DrawTo.Width/7)*5;
+            var menuWidth = App.SettingsMenuWidth(this.DrawTo.Width);
         } else {
             var menuWidth = (this.DrawTo.Width/7)*4;
         }
 
         // total text width //
         for (var i=0; i<n; i++) {
-            catWidth[i] = ctx.measureText(json.categories[i].name.toUpperCase()).width + (gutter*units);
+            catWidth[i] = App.SettingsPhone ? App.SettingsTabsWidth(this.DrawTo.Width) / n : ctx.measureText(json.categories[i].name.toUpperCase()).width + (gutter*units);
         }
 
         // start x for positioning //
-        var catX = ((this.DrawTo.Width*0.5) - (menuWidth*0.5));
+        var catX = App.SettingsPhone ? 0 : ((this.DrawTo.Width*0.5) - (menuWidth*0.5));
 
 
         // POPULATE MENU //
@@ -187,7 +187,7 @@ export class SettingsPanel extends DisplayObject{
         var centerY = this.OffsetY + (App.Height * 0.5);
         var tabY = this.OffsetY;
         if (App.Metrics.Device === Device.mobile) {
-            var menuWidth = (this.DrawTo.Width/7)*5;
+            var menuWidth = App.SettingsMenuWidth(this.DrawTo.Width);
         } else {
             var menuWidth = (this.DrawTo.Width/7)*4;
         }
@@ -258,8 +258,8 @@ export class SettingsPanel extends DisplayObject{
 
             this.Options[0].Draw(ctx,units,0,this,pageY + tab);
             this.Options[1].Draw(ctx,units,1,this,pageY + tab + (60*units));
-            this.Options[2].Draw(ctx,units,2,this,pageY + tab + (108*units));
-            this.Options[3].Draw(ctx,units,3,this,pageY + tab + (156*units));
+            this.Options[2].Draw(ctx,units,2,this,pageY + tab + ((60+App.SettingsRow)*units));
+            this.Options[3].Draw(ctx,units,3,this,pageY + tab + ((60+2*App.SettingsRow)*units));
 
 
 
@@ -393,6 +393,7 @@ export class SettingsPanel extends DisplayObject{
             this.WordWrap(ctx, this._Attribution.about, dx - halfWidth, pageY + tab, units*16, Math.ceil(menuWidth));
 
 
+            if (!App.SettingsPhone) {
             var xs = [x1,x2,x3];
             var widths = [];
             var strings = [
@@ -524,6 +525,7 @@ export class SettingsPanel extends DisplayObject{
             ctx.fill();
 
 
+            }
             // END TAB 3 //
             ctx.restore();
 
@@ -538,8 +540,8 @@ export class SettingsPanel extends DisplayObject{
 
             // Horizontal //
             ctx.beginPath();
-            ctx.moveTo(dx - halfWidth,tabY + (60*units)-1);
-            ctx.lineTo(dx + halfWidth,tabY + (60*units)-1);
+            ctx.moveTo(App.SettingsPhone ? 0 : dx - halfWidth,tabY + (60*units)-1);
+            ctx.lineTo(App.SettingsPhone ? App.Width : dx + halfWidth,tabY + (60*units)-1);
 
             //vertical //
             for (var i=0;i<this.MenuItems.length;i++) {
@@ -663,7 +665,7 @@ export class SettingsPanel extends DisplayObject{
         var pageY = tabY + (120*units);
         var dx = (this.DrawTo.Width*0.5);
         if (App.Metrics.Device === Device.mobile) {
-            var menuWidth = (this.DrawTo.Width/7)*5;
+            var menuWidth = App.SettingsMenuWidth(this.DrawTo.Width);
         } else {
             var menuWidth = (this.DrawTo.Width/7)*4;
         }
@@ -694,13 +696,13 @@ export class SettingsPanel extends DisplayObject{
         var sliderSetting = "volume";
         var sliderX = this.linPosition(0, this.Range, 0, 60, sliderValue);
         var sliderO = this.Margin;
-        optionList.push(new Slider(new Point(sliderX,pageY + this.MenuItems[1].YOffset + (60*units)),new Size(1,48*App.Unit),sliderO,sliderValue,0,60,true,optionNames[1],sliderSetting,false));
+        optionList.push(new Slider(new Point(sliderX,pageY + this.MenuItems[1].YOffset + (60*units)),new Size(1,App.SettingsRow*App.Unit),sliderO,sliderValue,0,60,true,optionNames[1],sliderSetting,false));
 
         // METER //
         optionList.push(new OptionMeter(optionNames[2]));
 
         // TUTORIAL //
-        optionList.push(new OptionActionButton(new Point(0,pageY + this.MenuItems[1].YOffset + (156*units)),new Size(1,48*App.Unit),optionNames[3],"Launch Tutorial","tutorial"));
+        optionList.push(new OptionActionButton(new Point(0,pageY + this.MenuItems[1].YOffset + ((60+2*App.SettingsRow)*units)),new Size(1,App.SettingsRow*App.Unit),optionNames[3],"Launch Tutorial","tutorial"));
 
 
 
@@ -846,7 +848,7 @@ export class SettingsPanel extends DisplayObject{
         var closeY = tabY + (30*units);
         var dx = (this.DrawTo.Width*0.5);
         if (App.Metrics.Device === Device.mobile) {
-            var menuWidth = (this.DrawTo.Width/7)*5;
+            var menuWidth = App.SettingsMenuWidth(this.DrawTo.Width);
         } else {
             var menuWidth = (this.DrawTo.Width/7)*4;
         }
@@ -892,10 +894,10 @@ export class SettingsPanel extends DisplayObject{
         tab = this.MenuItems[0].YOffset;
         for (var i=0;i<this.Options.length;i++) {
             if (this.Options[i].Type == "slider") {
-                this._OptionsRoll[i] = Dimensions.hitRect(this.Margin - (10*units), pageY + tab + (60*units), this.Range + (20*units), 48*App.Unit, point.x, point.y);
+                this._OptionsRoll[i] = Dimensions.hitRect(this.Margin - (10*units), pageY + tab + (60*units), this.Range + (20*units), App.SettingsRow*App.Unit, point.x, point.y);
             }
             if (this.Options[i].Type == "meter") {
-                this._OptionsRoll[i] = Dimensions.hitRect(this.Margin - (10*units), pageY + tab + (108*units), this.Range + (20*units), 48*App.Unit, point.x, point.y);
+                this._OptionsRoll[i] = Dimensions.hitRect(this.Margin - (10*units), pageY + tab + ((60+App.SettingsRow)*units), this.Range + (20*units), App.SettingsRow*App.Unit, point.x, point.y);
             }
             if (this.Options[i].Type == "themeSelector") {
                 this._OptionsRoll[i] = Dimensions.hitRect(this.Margin - (10*units), pageY + tab, this.Range + (20*units), 60*App.Unit, point.x, point.y);
@@ -903,8 +905,8 @@ export class SettingsPanel extends DisplayObject{
                 this.Options[i].HandleRoll[1] = Dimensions.hitRect(this.Margin + this.Range - (30*units), pageY + tab, 40*units, 60*units, point.x, point.y);
             }
             if (this.Options[i].Type == "actionbutton") {
-                this._OptionsRoll[i] = Dimensions.hitRect(this.Margin - (10*units), pageY + tab + (156*units), this.Range + (20*units), 48*App.Unit, point.x, point.y);
-                this.Options[i].HandleRoll[0] = Dimensions.hitRect(this.Margin + (this.Range * 0.25), pageY + tab + (156*units), (this.Range * 0.5), this.Options[i].Size.height, point.x, point.y);
+                this._OptionsRoll[i] = Dimensions.hitRect(this.Margin - (10*units), pageY + tab + ((60+2*App.SettingsRow)*units), this.Range + (20*units), App.SettingsRow*App.Unit, point.x, point.y);
+                this.Options[i].HandleRoll[0] = Dimensions.hitRect(this.Margin + (this.Range * 0.25), pageY + tab + ((60+2*App.SettingsRow)*units), (this.Range * 0.5), this.Options[i].Size.height, point.x, point.y);
             }
         }
     }

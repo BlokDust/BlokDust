@@ -7,3 +7,4 @@
 |---|---|---|---|---|
 | [LICENSING-0001](LICENSING-0001-license-blokdust-2-under-agpl-3-0-or-later.md) | License BlokDust 2 under AGPL-3.0-or-later | **accepted** | 2026-11-05 | license, agpl |
 | [LICENSING-0002](LICENSING-0002-contributor-terms-that-keep-app-store.md) | Contributor terms that keep app-store distribution possible | **deferred** | 2026-11-05 | license, contributors, ios |
+| [LICENSING-0003](LICENSING-0003-use-the-juce-8-starter-licence-for-the-ipad-app.md) | Use the JUCE 8 Starter licence for the iPad App Store build | **accepted** | 2026-11-15 | license, juce, ios, app-store |

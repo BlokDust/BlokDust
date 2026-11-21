@@ -11,7 +11,7 @@
     "id": { "type": "string", "pattern": "^(source|fx|power|input)\\.[a-z0-9]+(-[a-z0-9]+)*$" },
     "draft": { "type": "boolean" },
     "category": { "enum": ["source", "effect", "power", "interaction"] },
-    "kind": { "enum": ["audio-source", "pre-effect", "post-effect", "power-source", "power-effect", "logic", "void", "controller"] },
+    "kind": { "enum": ["audio-source", "pre-effect", "post-effect", "power-source", "power-effect", "logic", "void", "controller", "gate", "path", "listener", "modulator"] },
     "name": { "type": "string" },
     "description": { "type": "string" },
     "v1": {
@@ -49,6 +49,7 @@
             }
           }
         },
+        "openLayers": { "type": "array", "description": "Drawn instead of layers while a Gate is open (SIMULATION-0011)", "items": { "$ref": "#/properties/geometry/properties/layers/items" } },
         "outline": { "$ref": "#/$defs/polygon", "description": "Hit-test polygon in grid units" },
         "menuOffset": { "$ref": "#/$defs/point", "description": "Grid offset used when drawing the menu icon (v1 unscaled sprite)" },
         "overlays": {

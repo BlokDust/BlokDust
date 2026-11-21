@@ -5,7 +5,7 @@
   "category": "power",
   "kind": "power-source",
   "name": "Particle Emitter",
-  "description": "Fires energy particles. When a particle hits a source block, that source is momentarily triggered.",
+  "description": "Fires energy particles. When a particle hits a source or a power, that block is momentarily triggered.",
   "v1": {
     "type": "ParticleEmitter",
     "class": [
@@ -184,7 +184,7 @@
       "key": "sync",
       "default": false,
       "unit": "enum",
-      "description": "Tempo sync (SIMULATION-0003, CHG-0004 3.5): emit on the beat grid instead of every `rate` frames. Off in saved patches without it (v1); a new Emitter starts synced (owner)"
+      "description": "Tempo sync: emits on the beat instead of at its Fire Rate. A new Emitter starts synced"
     },
     {
       "key": "division",
@@ -204,7 +204,17 @@
         0,
         1
       ],
-      "description": "Synced: every second emission is late by swing x division / 3 (0 straight, 1 = triplet shuffle) (owner)"
+      "description": "Synced: every second emission is late by swing × division ÷ 3 (0 straight, 1 triplet shuffle)"
+    },
+    {
+      "key": "offset",
+      "default": 0,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Nudge: fires late by this fraction of its interval (the Division when synced, the Fire Rate when not)"
     }
   ],
   "review": [

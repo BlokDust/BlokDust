@@ -1,0 +1,112 @@
+{
+  "description": "CHG-0017 (R10e): a keyboard with Keys set pitch holds chords (silent); an emitter's particles strum them on a Tone through a Chord-free chain; the chord changes half way.",
+  "render": {
+    "seconds": 6,
+    "sampleRate": 44100
+  },
+  "patch": {
+    "format": "blokdust.patch",
+    "version": 2,
+    "seed": 1,
+    "blocks": [
+      {
+        "id": "e",
+        "type": "power.emitter",
+        "x": -10,
+        "y": 0,
+        "params": {
+          "angle": 0,
+          "selfPoweredMode": true,
+          "rate": 30,
+          "speed": 10
+        }
+      },
+      {
+        "id": "t",
+        "type": "source.tone",
+        "x": 0,
+        "y": 0,
+        "params": {
+          "waveform": 3
+        }
+      },
+      {
+        "id": "k",
+        "type": "input.computer-keyboard",
+        "x": 0,
+        "y": -4,
+        "params": {
+          "keysSetPitch": true
+        }
+      },
+      {
+        "id": "rev",
+        "type": "fx.reverb",
+        "x": 4,
+        "y": 2
+      }
+    ]
+  },
+  "script": [
+    {
+      "atSample": 0,
+      "op": "noteOn",
+      "note": 48,
+      "controller": "input.computer-keyboard"
+    },
+    {
+      "atSample": 0,
+      "op": "noteOn",
+      "note": 55,
+      "controller": "input.computer-keyboard"
+    },
+    {
+      "atSample": 0,
+      "op": "noteOn",
+      "note": 64,
+      "controller": "input.computer-keyboard"
+    },
+    {
+      "atSample": 132300,
+      "op": "noteOff",
+      "note": 48,
+      "controller": "input.computer-keyboard"
+    },
+    {
+      "atSample": 132300,
+      "op": "noteOff",
+      "note": 55,
+      "controller": "input.computer-keyboard"
+    },
+    {
+      "atSample": 132300,
+      "op": "noteOff",
+      "note": 64,
+      "controller": "input.computer-keyboard"
+    },
+    {
+      "atSample": 132300,
+      "op": "noteOn",
+      "note": 50,
+      "controller": "input.computer-keyboard"
+    },
+    {
+      "atSample": 132300,
+      "op": "noteOn",
+      "note": 57,
+      "controller": "input.computer-keyboard"
+    },
+    {
+      "atSample": 132300,
+      "op": "noteOn",
+      "note": 65,
+      "controller": "input.computer-keyboard"
+    },
+    {
+      "atSample": 132300,
+      "op": "noteOn",
+      "note": 72,
+      "controller": "input.computer-keyboard"
+    }
+  ]
+}

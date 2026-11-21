@@ -28,7 +28,10 @@ struct Command {
   /// started, resync the world to x (SIMULATION-0003).
   /// Relink: blocks `id` and `value` (a block id) count as connected now, so they move to the end of each other's
   /// connection order (SPEC-CONNECTIONS-PROXIMITY R4a). Patch loaders replay a saved `connectionOrder` with it.
-  enum class Type : std::uint8_t { AddBlock, RemoveBlock, MoveBlock, SetParam, NoteOn, NoteOff, SetMaster, Press, NoteExpression, Tempo, WorldPower, Relink };
+  /// Reset: block `id` starts over (a Counter goes back to step 1, SIMULATION-0005).
+  /// Reset with id 0 (kInvalidBlock): the world starts over: the particles in flight, in its Stages too, are gone
+  /// (SPEC-SIMULATION-POWER-AND-PARTICLES R1b: CLEAR and opening a patch).
+  enum class Type : std::uint8_t { AddBlock, RemoveBlock, MoveBlock, SetParam, NoteOn, NoteOff, SetMaster, Press, NoteExpression, Tempo, WorldPower, Relink, Reset };
   enum class Expression : std::uint8_t { Bend = 0, Pressure = 1, Slide = 2 };
   Type type{};
   BlockId id = kInvalidBlock;
@@ -39,6 +42,10 @@ struct Command {
   /// Apply at the first tick boundary at or after this sample (-1 = as soon as possible). Lets offline renders and
   /// tests schedule edits sample-exactly, independent of audio buffer size.
   std::int64_t atSample = -1;
+  /// NoteOn/NoteOff/NoteExpression from outside a Stage block (CHG-0021, UI-0012): the note reaches every controller
+  /// of this inner world (its Keyboards, MIDI Inputs, Touchpads and Stage Ins) except those of type `blockType`, which
+  /// heard it already (the computer's keys and MIDI reach every world). Made by the engine only, never by a host.
+  bool outside = false;
 
   static Command add(BlockId id, BlockType t, double x, double y, std::int64_t at = -1) { Command c; c.type = Type::AddBlock; c.id = id; c.blockType = t; c.x = x; c.y = y; c.atSample = at; return c; }
   static Command remove(BlockId id, std::int64_t at = -1) { Command c; c.type = Type::RemoveBlock; c.id = id; c.atSample = at; return c; }
@@ -56,15 +63,19 @@ struct Command {
   static Command setMaster(double gain, std::int64_t at = -1) { Command c; c.type = Type::SetMaster; c.value = gain; c.atSample = at; return c; }
   /// The app's power switch (owner, 2026-11-11, CHG-0005): off, nothing in the world powers anything (Power and Toggle
   /// blocks, emitters, lasers; particles in flight vanish). What the player does still plays: held blocks, keys, MIDI.
-  static Command worldPower(bool on, std::int64_t at = -1) { Command c; c.type = Type::WorldPower; c.value = on ? 1.0 : 0.0; c.atSample = at; return c; }
+  /// WorldPower: value = on; x = 1: when off, particles in flight carry on (a Stage's Keep Particles, CHG-0021); else they vanish.
+  static Command worldPower(bool on, std::int64_t at = -1, bool keepParticles = false) { Command c; c.type = Type::WorldPower; c.value = on ? 1.0 : 0.0; c.atSample = at; c.x = keepParticles ? 1.0 : 0.0; return c; }
   /// v1 Source.MouseDown/MouseUp → AddPower/RemovePower: a held source (audio or power source) is powered.
   static Command relink(BlockId a, BlockId b, std::int64_t at = -1) { Command c; c.type = Type::Relink; c.id = a; c.value = static_cast<double>(b); c.atSample = at; return c; }
+  static Command reset(BlockId id, std::int64_t at = -1) { Command c; c.type = Type::Reset; c.id = id; c.atSample = at; return c; }
   static Command press(BlockId id, bool down, std::int64_t at = -1) { Command c; c.type = Type::Press; c.id = id; c.value = down ? 1.0 : 0.0; c.atSample = at; return c; }
   static Command noteOff(BlockType controllerType, std::uint8_t note, std::int64_t at = -1, int channel = 0) { Command c; c.type = Type::NoteOff; c.blockType = controllerType; c.param = note; c.atSample = at; c.x = channel; return c; }
 };
 
 struct Event {
-  enum class Type : std::uint8_t { Emit, Hit, Absorb, Expire, GateOn, GateOff, Connect, Disconnect, Logic };
+  /// Pass / Block (CHG-0015): a Chance's roll for a hit: it fired, or it did not.
+  /// Split: a Prism turned a particle into its streams.
+  enum class Type : std::uint8_t { Emit, Hit, Absorb, Expire, GateOn, GateOff, Connect, Disconnect, Logic, Pass, Block, Split };
   std::int64_t sample;   // absolute sample index (always a tick boundary)
   std::uint32_t tick;
   Type type;
@@ -79,6 +90,8 @@ struct Beam { BlockId laser; double x0, y0, x1, y1; };
 /// the audio thread, DATA-0005: samples are the user's own files); it must outlive the attachment.
 struct SampleBuffer { const float* left = nullptr; const float* right = nullptr; std::uint32_t frames = 0; double sampleRate = 48000.0; };
 
+class Engine;
+
 struct EngineConfig {
   int sampleRate = 48000;
   std::uint64_t seed = 1;
@@ -86,6 +99,11 @@ struct EngineConfig {
   /// Plugins: v1's Microphone is the DAW track ("Audio Input"), so it is passed through like Audio In (stereo, unity ×
   /// gain, skipping the master stage). The website keeps v1's Microphone level.
   bool hostInput = false;
+  /// A Stage block's inner world (CHG-0021, SCOPE-0006): no master stage of its own (its output is a source in the
+  /// outer patch), a quarter of the effect pools, and no Stage blocks of its own (depth 2). `parent`: the engine it
+  /// will be attached to, whose oscillator tables and built-in impulse response it shares (so making one is cheap).
+  bool child = false;
+  const Engine* parent = nullptr;
 };
 
 class Engine {
@@ -116,6 +134,12 @@ class Engine {
   /// Fresh loads set v1's region defaults (start 0, end = length, loop from half way to the end) unless the patch has
   /// a region already (endPosition > 0).
   bool attachSample(BlockId id, const SampleBuffer& s) noexcept;
+  /// Audio thread (between process calls): give a source.stage block its inner world, an Engine made with
+  /// EngineConfig::child. Host-owned: it must outlive the attachment (nullptr detaches; removing the block detaches).
+  /// The inner world then runs in step with this one: same ticks, same tempo, its world power following the block's.
+  bool attachStage(BlockId id, Engine* inner) noexcept;
+  /// The inner world attached to a source.stage block, or nullptr.
+  Engine* stage(BlockId id) const noexcept;
 
   // ---- introspection (audio thread / tests; a lock-free snapshot API for the UI comes with the web spike) ----
   std::int64_t sampleClock() const noexcept { return sample_; }
@@ -140,6 +164,14 @@ class Engine {
   /// panel's waveform is) and per sounding Granular grain, in seconds of the file. Returns the count (≤ max).
   struct Playhead { BlockId block; float seconds; };
   int playheads(Playhead* out, int max) const noexcept;
+  /// Live readouts for open options panels, one entry per block that has any (visual only; returns the count ≤ max).
+  /// fx.compressor (CHG-0014): v[0] input level in dB (peak, falling slowly), v[1] gain reduction in dB (≤ 0).
+  /// fx.lfo (CHG-0018): v[0] the target block's id (0: none), v[1] the target param's index, v[2] its value now.
+  /// power.sound-laser (CHG-0016): v[0] the level it hears in dB, v[1] 1 while its beam is on.
+  /// power.counter (CHG-0015): v[0] the step the next hit lands on, v[1] 1 if the last hit passed.
+  /// power.prism: v[0] its exit angle now (it may be rotating).
+  struct Monitor { BlockId block; float v[4]; };
+  int monitors(Monitor* out, int max) const noexcept;
 
  private:
   void applyDueCommands() noexcept;
@@ -151,19 +183,51 @@ class Engine {
   void emit(Block& emitter) noexcept;
   void emit(Block& emitter, double angleDeg) noexcept;
   void particleHit(Block& b) noexcept;
+  void restrike(int slot) noexcept;
+  void powerGap(Block& b) noexcept;
+  static bool gapsOnHit(const Block& b) noexcept;
   void pulse(Block& b, int ticks) noexcept;
+  void firePulse(Block& b) noexcept;
+  void pulseConnected(Block& b, int ticks) noexcept;
+  bool advanceCounter(Block& c) noexcept;
+  static bool heldOnlyByHits(const Block& b) noexcept;
+  void beamStrike(Block& b) noexcept;
+  void strikeAgain(Block& b) noexcept;
   void updateGates() noexcept;
   static std::int64_t beatSlotAt(const Block& e, double beat) noexcept;
-  void keyAim(Block& b, int note, bool down, bool poly) noexcept;
+  void keyAim(Block& b, int note, bool down) noexcept;
   void resyncToTransport(double beat) noexcept;
   void runLasers() noexcept;
+  void traceBeam(int laserSlot, double angleDeg, double len, std::bitset<kMaxBlocks>& hits, double& firstStop) noexcept;
+  bool chanceRoll(Block& c) noexcept;
+  bool gateOpen(const Block& g) const noexcept;
   void logicHit(Block& b) noexcept;
   void applyNote(const Command& c) noexcept;
   void applyExpression(const Command& c) noexcept;
+  bool controllerHears(const Block& ctrl, const Command& c) const noexcept;
+  void forwardToStage(const Block& stage, const Block& ctrl, const Command& c) noexcept;
+  void releaseStageNotes() noexcept;
+  bool keepsParticles(const Block& b) const noexcept;
   void renderGranular(Block& b, int n) noexcept;
   static bool acceptsChannel(const Block& ctrl, int channel) noexcept;
   // v1 Source voices (Source.NoteOn/NoteOff/GetVoice/RemoveVoice/SetPitch)
-  void voiceOn(int slot, BlockId controller, int key, bool poly, double glide, bool envFromChain, int channel = 0) noexcept;
+  void voiceOn(int slot, BlockId controller, int key, bool poly, double glide, bool envFromChain, int channel = 0, double offset = 0.0) noexcept;
+  // Arranged sources (CHG-0017, AUDIO-0002): see Block::arranged.
+  struct NoteFx { int random = -1, chord = -1, arp = -1; };
+  NoteFx noteFxFor(int slot) const noexcept;
+  bool wantsArranged(int slot) const noexcept;
+  void arrange(int slot, bool trigger, bool keyPress = false) noexcept;
+  void arrangedKey(int slot, const Block& ctrl, int key, int channel, bool on) noexcept;
+  void stepArps() noexcept;
+  void runModulators() noexcept;
+  void paramChanged(int slot, std::uint8_t param) noexcept;
+  bool arpTick_ = false;  // set while stepArps re-arranges a source: its Arpeggiator moves on
+  bool keysSetPitch(const Block& ctrl) const noexcept;
+  bool polyOf(const Block& ctrl) const noexcept;
+  double glideOf(const Block& ctrl) const noexcept;
+  /// Stage In's settings: the outside controller's, from the last note sent into this world (forwardToStage).
+  struct OutsideKeys { double glide = 0.05; bool poly = true; bool pitchOnly = false; } outsideKeys_;
+  void setOutsideKeys(const OutsideKeys& k) noexcept;
   void voiceOff(int slot, BlockId controller, int key, int channel = 0) noexcept;
   void releaseVoice(int slot, int v) noexcept;
   void setPitch(int slot, int v, double glide) noexcept;
@@ -248,7 +312,14 @@ class Engine {
   std::vector<dsp::Convolver> convolvers_;
   std::vector<dsp::ConvolutionKernel> userImpulses_;
   std::vector<std::int16_t> convolverOwner_;
-  dsp::ConvolutionKernel defaultImpulse_;
+  std::shared_ptr<const dsp::ConvolutionKernel> defaultImpulse_;  // a child shares its parent's
+  std::vector<dsp::MasterCompressor> compressors_;  // fx.compressor instances (pooled like the convolvers)
+  std::vector<std::int16_t> compressorOwner_;
+  // power.sound-laser (CHG-0016, SIMULATION-0007): what each hears this segment (mono), pooled.
+  std::vector<float> listenBuf_;
+  std::array<std::int16_t, kMaxListeners> listenerOwner_{};
+  double listenDecay_ = 1.0;
+  void listen(int n) noexcept;
 
   // Rewiring fade (SPEC-CONNECTIONS-PROXIMITY R5): audio follows `audioChains_`; when the topology changes, only the
   // chains that changed fade out on the old routing, the routing switches, and the new chains fade in.
@@ -262,11 +333,25 @@ class Engine {
   const float* inRight_ = nullptr;
   int inOffset_ = 0;
   dsp::MasterCompressor compressor_;
-  std::unique_ptr<const dsp::WavetableBank> wavetables_;  // shared oscillator tables, built once (allocates here only)
+  std::shared_ptr<const dsp::TableBank> tables_;  // the Wavetable block's tables (CHG-0031), built once like wavetables_
+  std::shared_ptr<const dsp::WavetableBank> wavetables_;  // oscillator tables, built once (allocates here only); a child shares its parent's
+  // source.stage (CHG-0021): inner worlds by pool index, and what each rendered this segment (stereo).
+  std::array<Engine*, kMaxStages> stages_{};
+  std::array<std::int16_t, kMaxStages> stageOwner_{};
+  // Notes an outer controller is holding inside each Stage (CHG-0021, UI-0012): the key as played and as sent in (with
+  // the outer controller's octave), so its NoteOff and expression reach the same inner key.
+  struct StageNote { BlockId ctrl; std::uint8_t key, channel, sent; };
+  static constexpr int kStageNotes = 32;
+  std::array<std::array<StageNote, kStageNotes>, kMaxStages> stageNotes_{};
+  std::array<int, kMaxStages> stageNoteCount_{};
+  std::vector<float> stageBuf_;
+  std::array<float, kMaxSegment> stageL_{}, stageR_{};
+  bool chainStage_ = false;
+  bool child_ = false;
   bool useCompressor_ = true;
   bool hostInput_ = false;
   double masterGain_ = kMasterGain;
-  std::array<Beam, kMaxBlocks> beams_{};
+  std::array<Beam, kMaxBeams> beams_{};
   int beamCount_ = 0;
 };
 

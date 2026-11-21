@@ -1,0 +1,16 @@
+{
+  "audioHash": "dac154fd33a71279",
+  "eventHash": "09000396e7e1e900",
+  "eventCount": 103,
+  "events": {
+    "connect": 2,
+    "emit": 12,
+    "gateOff": 39,
+    "gateOn": 39,
+    "hit": 11
+  },
+  "frames": 264600,
+  "sampleRate": 44100,
+  "rms": 0.057388,
+  "peak": 0.263192
+}

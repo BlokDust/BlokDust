@@ -1,54 +1,86 @@
-#include "blokdust/engine.hpp"
-
-#include <limits>
-
-#include <algorithm>
-#include <cmath>
-
-#include "blokdust/dmath.hpp"
-#include "blokdust/geometry.hpp"
+// The engine (ARCHITECTURE-0002): construction, Stage worlds, samples, DSP pools and lookups. The rest of Engine is
+// split by job: engine_commands.cpp, engine_notes.cpp, engine_arrange.cpp, engine_voices.cpp, engine_hits.cpp,
+// engine_tick.cpp, engine_render.cpp, engine_granular.cpp.
+#include "engine_internal.hpp"
 
 namespace blokdust {
-
-namespace P = gen::param;
 
 // Sample, Recorder and SampleGen are all v1 SamplerBase (Tone.Simpler): same params in the same order.
 static_assert(P::SourceRecorder::playbackRate == P::SourceSample::playbackRate && P::SourceRecorder::loopEnd == P::SourceSample::loopEnd &&
               P::SourceRecorder::volume == P::SourceSample::volume && P::SourceSampleGen::loopEnd == P::SourceSample::loopEnd &&
               P::SourceSampleGen::reverse == P::SourceSample::reverse, "sampler params must line up");
-namespace {
-bool isSampler(BlockType t) noexcept { return t == BlockType::SourceSample || t == BlockType::SourceRecorder || t == BlockType::SourceSampleGen; }
-}  // namespace
-
-namespace {
-constexpr double kBaseNoteHz = 261.6;  // v1 Config.BaseNote
-constexpr double kDegToRad = 3.14159265358979323846 / 180.0;
-}  // namespace
 
 Engine::Engine(const EngineConfig& cfg)
-    : sampleRate_(cfg.sampleRate), rng_(cfg.seed), wavetables_(std::make_unique<dsp::WavetableBank>(cfg.sampleRate)),
-      useCompressor_(cfg.masterCompressor), hostInput_(cfg.hostInput) {
+    : sampleRate_(cfg.sampleRate), rng_(cfg.seed),
+      tables_(cfg.parent ? cfg.parent->tables_ : std::make_shared<const dsp::TableBank>(cfg.sampleRate)),
+      wavetables_(cfg.parent ? cfg.parent->wavetables_ : std::make_shared<const dsp::WavetableBank>(cfg.sampleRate)),
+      useCompressor_(cfg.masterCompressor && !cfg.child), hostInput_(cfg.hostInput), child_(cfg.child) {
   compressor_.configure(cfg.sampleRate);
   seed_ = cfg.seed;
+  if (cfg.child) masterGain_ = 1.0;  // its mix is a source in the outer patch, which has the master stage
   gainGlide_ = 1.0 - dmath::exp(-1.0 / (0.005 * cfg.sampleRate));
   fadeLen_ = std::max(1, cfg.sampleRate / 200);  // 5 ms out + 5 ms in (SPEC-CONNECTIONS-PROXIMITY R5: ≤ 10 ms)
   const auto pow2 = [](double n) { std::uint32_t s = 2; while (s < n) s <<= 1; return s; };
   const double sr = cfg.sampleRate;
-  reverbPool_.init(8, pow2(0.0367 * sr + 4), kMaxReverbs);   // Freeverb combs (longest 1617/44100 s)
-  delayPool_.init(3, pow2(kMaxDelaySeconds * sr + 4), kMaxDelays);  // PingPong: v1 delayTime ≤ 0.5 s; synced ≤ 1 s
-  chorusPool_.init(4, pow2(0.0165 * sr + 132), kMaxChoruses); // modulated delays ≤ 16 ms, + 128-frame quanta
-  pitchPool_.init(4, pow2(dsp::PitchShiftFx::kWindow * sr + 4), kMaxPitchShifters);  // A/B delays per side
+  const int div = cfg.child ? 4 : 1;  // an inner world has a quarter of each pool
+  reverbPool_.init(8, pow2(0.0367 * sr + 4), kMaxReverbs / div);   // Freeverb combs (longest 1617/44100 s)
+  delayPool_.init(3, pow2(kMaxDelaySeconds * sr + 4), kMaxDelays / div);  // PingPong: v1 delayTime ≤ 0.5 s; synced ≤ 1 s
+  chorusPool_.init(4, pow2(0.0165 * sr + 132), kMaxChoruses / div); // modulated delays ≤ 16 ms, + 128-frame quanta
+  pitchPool_.init(4, pow2(dsp::PitchShiftFx::kWindow * sr + 4), kMaxPitchShifters / div);  // A/B delays per side
   const int maxTaps = static_cast<int>(kMaxImpulseSeconds * sr);
-  defaultImpulse_.reserve(maxTaps);
-  {
+  if (cfg.parent) defaultImpulse_ = cfg.parent->defaultImpulse_;
+  else {
+    auto kernel = std::make_shared<dsp::ConvolutionKernel>();
+    kernel->reserve(maxTaps);
     std::vector<float> l(static_cast<std::size_t>(maxTaps)), r(static_cast<std::size_t>(maxTaps));
     dsp::makeDefaultImpulse(l.data(), r.data(), maxTaps, sr);
-    defaultImpulse_.build(l.data(), r.data(), static_cast<std::uint32_t>(maxTaps), sr, sr);
+    kernel->build(l.data(), r.data(), static_cast<std::uint32_t>(maxTaps), sr, sr);
+    defaultImpulse_ = kernel;
   }
-  convolvers_.resize(kMaxConvolvers); userImpulses_.resize(kMaxConvolvers);
-  for (auto& c : convolvers_) c.reserve(defaultImpulse_.maxTailParts());
+  const int convolvers = kMaxConvolvers / div;
+  convolvers_.resize(static_cast<std::size_t>(convolvers)); userImpulses_.resize(static_cast<std::size_t>(convolvers));
+  for (auto& c : convolvers_) c.reserve(defaultImpulse_->maxTailParts());
   for (auto& k : userImpulses_) k.reserve(maxTaps);
-  convolverOwner_.assign(kMaxConvolvers, -1);
+  convolverOwner_.assign(static_cast<std::size_t>(convolvers), -1);
+  compressors_.resize(static_cast<std::size_t>(kMaxCompressors / div));
+  for (auto& c : compressors_) c.configure(cfg.sampleRate);
+  compressorOwner_.assign(compressors_.size(), -1);
+  listenBuf_.assign(static_cast<std::size_t>(kMaxListeners) * kMaxSegment, 0.0f);
+  listenerOwner_.fill(-1);
+  listenDecay_ = dmath::exp(-1.0 / (0.05 * cfg.sampleRate));
+  stageOwner_.fill(-1);
+  if (!cfg.child) stageBuf_.assign(static_cast<std::size_t>(kMaxStages) * 2 * kMaxSegment, 0.0f);
+}
+
+/// R13b: does Stage `b` keep its inner world's particles in flight when it loses power? Not while this world's POWER
+/// switch is off: that clears particles everywhere.
+bool Engine::keepsParticles(const Block& b) const noexcept {
+  return worldPower_ && b.params[P::SourceStage::keepParticles] != 0.0;
+}
+
+/// A Stage block's inner world (CHG-0021). From here its clock is this engine's: the same sample, the same tick grid
+/// and beat, so both worlds tick together however the host cuts the timeline. Its world power is the block's power.
+bool Engine::attachStage(BlockId id, Engine* inner) noexcept {
+  const int slot = slotOf(id);
+  if (slot < 0 || child_ || inner == this) return false;
+  Block& b = blocks_[static_cast<std::size_t>(slot)];
+  if (b.type != BlockType::SourceStage || b.poolIndex < 0 || (inner && !inner->child_)) return false;
+  stages_[static_cast<std::size_t>(b.poolIndex)] = inner;
+  stageNoteCount_[static_cast<std::size_t>(b.poolIndex)] = 0;
+  if (!inner) return true;
+  inner->hostInput_ = hostInput_;  // the plugins' Microphone is the host input, inside a Stage too
+  inner->sample_ = sample_; inner->tick_ = tick_; inner->tickOrigin_ = tickOrigin_; inner->tickBase_ = tickBase_;
+  inner->tempo_ = tempo_; inner->beat_ = beat_;
+  inner->worldPower_ = true;
+  inner->apply(Command::worldPower(b.powerOn, -1, keepsParticles(b)));
+  return true;
+}
+
+Engine* Engine::stage(BlockId id) const noexcept {
+  const int slot = slotOf(id);
+  if (slot < 0) return nullptr;
+  const Block& b = blocks_[static_cast<std::size_t>(slot)];
+  return b.type == BlockType::SourceStage && b.poolIndex >= 0 ? stages_[static_cast<std::size_t>(b.poolIndex)] : nullptr;
 }
 
 bool Engine::attachSample(BlockId id, const SampleBuffer& sb) noexcept {
@@ -104,10 +136,37 @@ void Engine::acquireDsp(Block& b, int slot) noexcept {
   if (b.type == BlockType::SourceNoise)  // voice 0 keeps the original seed (golden renders); the others derive from it
     for (int v = 0; v < kVoices; ++v) b.voices[static_cast<std::size_t>(v)].noise.seed(seed_ * 0x9E3779B97F4A7C15ULL + b.id + static_cast<std::uint64_t>(v) * 0x1000193ULL);
   if (b.type == BlockType::FxConvolver) {
-    for (int i = 0; i < kMaxConvolvers; ++i) if (convolverOwner_[static_cast<std::size_t>(i)] < 0) {
+    for (int i = 0; i < static_cast<int>(convolverOwner_.size()); ++i) if (convolverOwner_[static_cast<std::size_t>(i)] < 0) {
       convolverOwner_[static_cast<std::size_t>(i)] = static_cast<std::int16_t>(slot);
       convolvers_[static_cast<std::size_t>(i)].reset();
       b.poolIndex = static_cast<std::int16_t>(i); b.userImpulse = false;
+      break;
+    }
+    return;
+  }
+  if (b.type == BlockType::SourceStage) {  // a place for an inner world (none in a child: depth 2, SCOPE-0006)
+    if (!child_) for (int i = 0; i < kMaxStages; ++i) if (stageOwner_[static_cast<std::size_t>(i)] < 0) {
+      stageOwner_[static_cast<std::size_t>(i)] = static_cast<std::int16_t>(slot);
+      stages_[static_cast<std::size_t>(i)] = nullptr;
+      stageNoteCount_[static_cast<std::size_t>(i)] = 0;
+      b.poolIndex = static_cast<std::int16_t>(i);
+      break;
+    }
+    return;
+  }
+  if (b.type == BlockType::PowerSoundLaser) {
+    for (int i = 0; i < kMaxListeners; ++i) if (listenerOwner_[static_cast<std::size_t>(i)] < 0) {
+      listenerOwner_[static_cast<std::size_t>(i)] = static_cast<std::int16_t>(slot);
+      b.poolIndex = static_cast<std::int16_t>(i);
+      break;
+    }
+    return;
+  }
+  if (b.type == BlockType::FxCompressor) {
+    for (int i = 0; i < static_cast<int>(compressorOwner_.size()); ++i) if (compressorOwner_[static_cast<std::size_t>(i)] < 0) {
+      compressorOwner_[static_cast<std::size_t>(i)] = static_cast<std::int16_t>(slot);
+      compressors_[static_cast<std::size_t>(i)].reset();
+      b.poolIndex = static_cast<std::int16_t>(i); b.mon[0] = -100.0f;
       break;
     }
     return;
@@ -135,6 +194,9 @@ void Engine::releaseDsp(Block& b) noexcept {
   if (b.type == BlockType::FxChorus) chorusPool_.release(b.poolIndex);
   if (b.type == BlockType::FxPitchShifter) pitchPool_.release(b.poolIndex);
   if (b.type == BlockType::FxConvolver && b.poolIndex >= 0) convolverOwner_[static_cast<std::size_t>(b.poolIndex)] = -1;
+  if (b.type == BlockType::SourceStage && b.poolIndex >= 0) { stageOwner_[static_cast<std::size_t>(b.poolIndex)] = -1; stages_[static_cast<std::size_t>(b.poolIndex)] = nullptr; }
+  if (b.type == BlockType::PowerSoundLaser && b.poolIndex >= 0) listenerOwner_[static_cast<std::size_t>(b.poolIndex)] = -1;
+  if (b.type == BlockType::FxCompressor && b.poolIndex >= 0) compressorOwner_[static_cast<std::size_t>(b.poolIndex)] = -1;
   b.poolIndex = -1;
 }
 
@@ -171,1172 +233,4 @@ void Engine::log(Event::Type t, BlockId a, BlockId b) noexcept {
   events_[eventCount_++] = Event{sample_, tick_, t, a, b};
 }
 
-// ---------------------------------------------------------------------------------------------------------------
-// commands
-// ---------------------------------------------------------------------------------------------------------------
-
-void Engine::applyDueCommands() noexcept {
-  while (const Command* c = queue_.front()) {
-    if (c->atSample > sample_) break;  // FIFO: later commands wait for this one
-    apply(*c);
-    queue_.pop();
-  }
-}
-
-void Engine::configureDsp(Block& b) noexcept {
-  const double sr = sampleRate_;
-  const auto& p = b.params;
-  // Load-time params arrive as SetParam at the block's creation sample: they initialise, they do not glide.
-  const bool first = !b.dspConfigured || sample_ == b.addedAt;
-  b.dspConfigured = true;
-  using T = dsp::Biquad::Type;
-  switch (b.type) {
-    case BlockType::SourceTone: case BlockType::SourceSample: case BlockType::SourceNoise:
-    case BlockType::SourceRecorder: case BlockType::SourceSampleGen: case BlockType::SourceGranular: {
-      const int slot = static_cast<int>(&b - blocks_.data());
-      for (int v = 0; v < kVoices; ++v) {
-        Voice& vo = b.voices[static_cast<std::size_t>(v)];
-        if (first) vo.env.configure({}, sr);
-        if (b.type == BlockType::SourceTone) vo.osc.setWaveform(static_cast<dsp::Waveform>(std::clamp(static_cast<int>(p[P::SourceTone::waveform]), 0, 3)));
-        if (b.type == BlockType::SourceNoise) vo.noise.setType(static_cast<int>(p[P::SourceNoise::waveform]));
-        if (b.type != BlockType::SourceNoise) setPitch(slot, v, 0.0);  // v1 NoteUpdate: re-pitch with the new mods
-      }
-      break;
-    }
-    case BlockType::FxFilter: {
-      // Type (CHG-0010): Peak is v1's filter (Q 1 unless set). Gain is the Peak's gain, the Low/High pass resonance
-      // (Web Audio's Q, in dB) or the Band pass level (a Web Audio band pass has no gain).
-      const int type = std::clamp(static_cast<int>(p[P::FxFilter::type]), 0, 3);
-      const double hz = p[P::FxFilter::frequency], gain = p[P::FxFilter::gain], q = p[P::FxFilter::Q];
-      if (type == 1 || type == 2) b.filter.set(0, type == 1 ? T::Lowpass : T::Highpass, hz, gain, 0.0, sr);
-      else b.filter.set(0, type == 3 ? T::Bandpass : T::Peaking, hz, q, gain, sr);
-      b.filterLevel = type == 3 ? static_cast<float>(dmath::exp10(gain / 20.0)) : 1.0f;
-      break;
-    }
-    case BlockType::FxEq:
-      b.eq.set(0, T::Lowshelf, p[P::FxEq::frequency_1], p[P::FxEq::Q_1], p[P::FxEq::gain_1], sr);
-      b.eq.set(1, T::Peaking, p[P::FxEq::frequency_2], p[P::FxEq::Q_2], p[P::FxEq::gain_2], sr);
-      b.eq.set(2, T::Peaking, p[P::FxEq::frequency_3], p[P::FxEq::Q_3], p[P::FxEq::gain_3], sr);
-      b.eq.set(3, T::Highshelf, p[P::FxEq::frequency_4], p[P::FxEq::Q_4], p[P::FxEq::gain_4], sr);
-      break;
-    case BlockType::FxVolume: b.volume.set(p[P::FxVolume::gain]); break;
-    case BlockType::FxDistortion: b.distortion.set(p[P::FxDistortion::drive], p[P::FxDistortion::mix]); break;
-    case BlockType::FxBitCrusher: b.crusher.set(p[P::FxBitCrusher::bits], p[P::FxBitCrusher::mix]); break;
-    case BlockType::FxPhaser:
-      b.phaser.configure(p[P::FxPhaser::rate], p[P::FxPhaser::depth], p[P::FxPhaser::baseFrequency], p[P::FxPhaser::mix], sr, first);
-      break;
-    case BlockType::FxChorus:
-      b.chorus.configure(p[P::FxChorus::rate], p[P::FxChorus::delayTime], p[P::FxChorus::depth], p[P::FxChorus::feedback], sr, first);
-      break;
-    case BlockType::FxReverb:
-      b.reverb.configure(p[P::FxReverb::mix], sr);
-      if (sample_ == b.addedAt) {
-        // v1 bug kept for parity: Reverb.Init calls new Tone.Freeverb(dampening, roomSize) but Freeverb's arguments are
-        // (roomSize, dampening), so a freshly created or loaded v1 Reverb runs with the two swapped. Moving a slider
-        // later (SetParam) sets the named one correctly. Measured: matches v1 within 0.02 dB (SPEC-AUDIO-V1-PARITY).
-        b.reverb.setRoomSize(p[P::FxReverb::dampening]);
-        b.reverb.setDampening(p[P::FxReverb::roomSize]);
-      } else if (b.lastParam == P::FxReverb::roomSize) {
-        b.reverb.setRoomSize(p[P::FxReverb::roomSize]);
-      } else if (b.lastParam == P::FxReverb::dampening) {
-        b.reverb.setDampening(p[P::FxReverb::dampening]);
-      }
-      break;
-    case BlockType::FxStereoDelay: {
-      // Synced (owner, 2026-11-10): beats at the patch's or host's tempo, gliding to a new tempo as to a new time.
-      const double t = p[P::FxStereoDelay::sync] != 0.0 ? std::min(p[P::FxStereoDelay::delayBeats] * 60.0 / tempo_, kMaxDelaySeconds)
-                                                        : std::clamp(p[P::FxStereoDelay::delayTime], 0.0, 0.5);
-      b.pingpong.configure(t, p[P::FxStereoDelay::feedback], p[P::FxStereoDelay::mix], sr, first);
-      break;
-    }
-    case BlockType::FxAutoWah:
-      b.autowah.configure(p[P::FxAutoWah::octaves], p[P::FxAutoWah::baseFrequency], p[P::FxAutoWah::mix], p[P::FxAutoWah::attack], p[P::FxAutoWah::release], sr);
-      break;
-    case BlockType::FxChomp:
-      b.chomp.configure(p[P::FxChomp::rate], p[P::FxChomp::Q], p[P::FxChomp::gain], sr, first, seed_ * 0x9E3779B97F4A7C15ULL + b.id);
-      break;
-    case BlockType::FxChopper:
-      b.chopper.configure(p[P::FxChopper::rate], p[P::FxChopper::depth], p[P::FxChopper::spread], static_cast<int>(p[P::FxChopper::waveform]), p[P::FxChopper::mix], sr, first);
-      break;
-    case BlockType::FxPitchShifter: b.pitchshift.configure(p[P::FxPitchShifter::pitchOffset], p[P::FxPitchShifter::mix], sr, first); break;
-    case BlockType::FxVibrato: case BlockType::FxScuzz: {
-      const bool vib = b.type == BlockType::FxVibrato;
-      const double rate = vib ? p[P::FxVibrato::rate] : p[P::FxScuzz::rate], depth = vib ? p[P::FxVibrato::depth] : p[P::FxScuzz::depth];
-      const auto wave = static_cast<dsp::Waveform>(std::clamp(static_cast<int>(vib ? p[P::FxVibrato::waveform] : p[P::FxScuzz::waveform]), 0, 3));
-      if (first) b.lfo.set(rate, wave, 0, -depth, depth, sr);
-      else { b.lfo.setRate(rate); b.lfo.setRange(-depth, depth); b.lfo.set(rate, wave, 0, -depth, depth, sr); }
-      break;
-    }
-    default: break;
-  }
-}
-
-/// The ADSR an Envelope block in `slot`'s chain imposes (v1 Envelope.UpdateConnections; the last one in chain order
-/// wins), or the source default.
-dsp::Envelope::Settings Engine::envelopeFor(int slot) const noexcept {
-  dsp::Envelope::Settings s{};
-  const int c = chains_.chainOf[static_cast<std::size_t>(slot)];
-  if (c < 0) return s;
-  const auto r = chains_.chains[static_cast<std::size_t>(c)];
-  for (int m = 0; m < r.count; ++m) {
-    const Block& e = blocks_[chains_.members[r.start + m]];
-    if (e.type != BlockType::FxEnvelope) continue;
-    s.attack = e.params[P::FxEnvelope::attack]; s.decay = e.params[P::FxEnvelope::decay];
-    s.sustain = e.params[P::FxEnvelope::sustain]; s.release = e.params[P::FxEnvelope::release];
-  }
-  return s;
-}
-
-void Engine::apply(const Command& c) noexcept {
-  switch (c.type) {
-    case Command::Type::AddBlock: {
-      if (slotOf(c.id) >= 0 || c.id == kInvalidBlock) return;
-      int slot = -1;
-      for (int i = 0; i < kMaxBlocks; ++i) if (!blocks_[i].alive) { slot = i; break; }
-      if (slot < 0) return;
-      Block& b = blocks_[slot];
-      b = Block{};
-      b.alive = true; b.id = c.id; b.type = c.blockType; b.x = c.x; b.y = c.y; b.order = nextOrder_++; b.addedAt = sample_;
-      const auto& inf = gen::info(c.blockType);
-      for (int p = 0; p < inf.paramCount; ++p) b.params[p] = inf.params[p].defaultValue;
-      if (b.type == BlockType::PowerLaser) b.laserAngle0 = b.params[P::PowerLaser::angle];
-      // v1 ParticleEmitter.Init sets _rateCounter = 0: a self-powered emitter first fires after one interval;
-      // an unpowered emitter primes its counter each tick, so it fires immediately once powered (runTick).
-      b.emitCounter = 0;
-      b.grainRng = Pcg32(0x6A1A5EEDULL ^ c.id, c.id);
-      acquireDsp(b, slot);
-      configureDsp(b);
-      order_[orderCount_++] = static_cast<std::uint16_t>(slot);
-      const auto before = graph_.row(slot);
-      graph_.updateSlot(blocks_, slot);
-      onTopologyChanged(slot, before);
-      break;
-    }
-    case Command::Type::RemoveBlock: {
-      const int slot = slotOf(c.id);
-      if (slot < 0) return;
-      const auto before = graph_.row(slot);
-      if (blocks_[slot].gated()) log(Event::Type::GateOff, blocks_[slot].id);
-      if (blocks_[slot].type == BlockType::PowerLaser) releaseLaser(blocks_[slot]);
-      for (int k = 0; k < orderCount_; ++k) blocks_[order_[k]].laserHits.reset(static_cast<std::size_t>(slot));  // slot may be reused
-      blocks_[slot].alive = false;
-      const auto end = std::remove(order_.begin(), order_.begin() + orderCount_, static_cast<std::uint16_t>(slot));
-      orderCount_ = static_cast<int>(end - order_.begin());
-      graph_.updateSlot(blocks_, slot);
-      onTopologyChanged(slot, before);
-      releaseDsp(blocks_[slot]);
-      blocks_[slot] = Block{};
-      break;
-    }
-    case Command::Type::MoveBlock: {
-      const int slot = slotOf(c.id);
-      if (slot < 0) return;
-      blocks_[slot].x = c.x; blocks_[slot].y = c.y;
-      const auto before = graph_.row(slot);
-      if (graph_.updateSlot(blocks_, slot)) onTopologyChanged(slot, before);
-      break;
-    }
-    case Command::Type::SetParam: {
-      const int slot = slotOf(c.id);
-      if (slot < 0) return;
-      Block& b = blocks_[slot];
-      if (c.param >= b.info().paramCount) return;
-      // v1 SamplerBase.ReverseTrack → SwitchBuffer → RetriggerActiveVoices: reversing restarts sounding voices at the
-      // region start (owner review 2026-11-07).
-      const bool reversed = isSampler(b.type) && c.param == P::SourceSample::reverse && (b.params[c.param] != 0.0) != (c.value != 0.0);
-      b.params[c.param] = c.value;
-      if (b.type == BlockType::PowerLaser && c.param == P::PowerLaser::angle) b.laserAngle0 = c.value;
-      if (reversed) for (auto& v : b.voices) if (v.active && b.sampleFrames) {
-        v.playhead = b.params[P::SourceSample::startPosition] * b.sampleRate; v.samplePlaying = true; v.env.gateOn();
-      }
-      b.lastParam = c.param;
-      configureDsp(b);
-      b.lastParam = 255;
-      if (b.type == BlockType::PowerToggle) recomputeStaticPower();
-      if (b.kind() == BlockKind::Controller)  // transpose re-pitches, Mono/Poly re-voices (v1 Keyboard.SetParam)
-        for (int k = 0; k < orderCount_; ++k) if (graph_.row(slot)[order_[k]] && blocks_[order_[k]].kind() == BlockKind::AudioSource) refreshVoices(order_[k]);
-      break;
-    }
-    case Command::Type::NoteOn:
-    case Command::Type::NoteOff: applyNote(c); break;
-    case Command::Type::NoteExpression: applyExpression(c); break;
-    case Command::Type::SetMaster: masterGain_ = std::clamp(c.value, 0.0, 4.0); break;
-    case Command::Type::WorldPower: {
-      const bool on = c.value != 0.0;
-      if (on == worldPower_) break;
-      worldPower_ = on;
-      if (!on) {  // everything the world was powering lets go at once
-        particleCount_ = 0;
-        for (int k = 0; k < orderCount_; ++k) {
-          Block& b = blocks_[order_[k]];
-          b.pulsePower = 0;
-          if (b.type == BlockType::PowerLaser) releaseLaser(b);
-        }
-      }
-      recomputeStaticPower();
-      break;
-    }
-    case Command::Type::Tempo: {  // host tempo/transport or the patch's tempo (SIMULATION-0003)
-      const double was = tempo_;
-      tempo_ = std::clamp(c.value, 20.0, 400.0);
-      if (tempo_ != was)  // synced delays follow the tempo
-        for (int k = 0; k < orderCount_; ++k) {
-          Block& d = blocks_[order_[k]];
-          if (d.type == BlockType::FxStereoDelay && d.params[P::FxStereoDelay::sync] != 0.0) configureDsp(d);
-        }
-      // c.x is the position *now* (sample_); beat_ is the position at the next tick, where the simulation reads it.
-      // Transport start: the tick grid restarts here, so the next tick is now and every take ticks alike.
-      if (c.y != 0.0 && c.x >= 0.0) { tickOrigin_ = sample_; tickBase_ = tick_; resyncToTransport(c.x); }
-      if (c.x >= 0.0) beat_ = c.x + static_cast<double>(tickSample(tick_) - sample_) / sampleRate_ * tempo_ / 60.0;
-      break;
-    }
-    case Command::Type::Press: {  // only v1 Source subclasses (audio and power sources) power themselves when pressed
-      const int slot = slotOf(c.id);
-      if (slot < 0) return;
-      Block& b = blocks_[slot];
-      if (b.kind() == BlockKind::AudioSource || b.kind() == BlockKind::PowerSource) b.pressPower = c.value != 0.0 ? 1 : 0;
-      break;
-    }
-    case Command::Type::Relink: {  // R4a: replays a saved connection order
-      const int a = slotOf(c.id), b = slotOf(static_cast<BlockId>(c.value));
-      if (a < 0 || b < 0 || !graph_.touch(a, b)) return;
-      chains_.rebuild(blocks_, graph_, order_, orderCount_);
-      routingDirty_ = true;
-      break;
-    }
-  }
-}
-
-namespace {
-bool polyOf(const Block& c) noexcept { return c.params[P::InputComputerKeyboard::isPolyphonic] != 0.0 || c.params[P::InputComputerKeyboard::polyphonic] != 0.0; }
-}  // namespace
-
-/// v1 Controller.NoteOn/NoteOff: the controller messages every connected source with its id, the key, its polyphony
-/// and glide (computer keyboard and MIDI controller share Keyboard's params).
-/// MIDI Input's channel filter (CHG-0004): Omni (0) or 1–16; with MPE on, every channel (the zone's member channels
-/// are chosen by the host's MPE parser). The computer keyboard has no channel.
-bool Engine::acceptsChannel(const Block& ctrl, int channel) noexcept {
-  if (ctrl.type != BlockType::InputMidiController) return true;
-  const int want = static_cast<int>(ctrl.params[P::InputMidiController::channel]);
-  return ctrl.params[P::InputMidiController::mpe] != 0.0 || want <= 0 || want == channel + 1;
-}
-
-namespace {
-/// A key's clock position: C = 12 o'clock (the default −90°), each semitone 30° clockwise, in the lasers' range (−270, 90].
-double keyAngle(int note) noexcept {
-  const double a = -90.0 + 30.0 * (note % 12);
-  return a > 90.0 ? a - 360.0 : a;
-}
-}  // namespace
-
-/// A keyboard's key on a connected Emitter or Laser (owner review 2, beyond v1): held keys power it, like a Toggle;
-/// the newest held key aims it, the 12 notes of the octave as 12 clock positions (letting it go aims at the newest
-/// one left). Every key pressed fires an Emitter once at its own angle, legato and chords too (CHG-0009); held, a
-/// mono keyboard's newest key repeats at the Emitter's rate, a polyphonic keyboard's every held key.
-void Engine::keyAim(Block& b, int note, bool down, bool poly) noexcept {
-  if (note < 0 || note >= 128) return;
-  const auto key = static_cast<std::uint8_t>(note);
-  int n = 0;
-  for (int i = 0; i < b.keyCount; ++i) if (b.keysHeld[static_cast<std::size_t>(i)] != key) b.keysHeld[static_cast<std::size_t>(n++)] = b.keysHeld[static_cast<std::size_t>(i)];
-  b.keyCount = n;
-  if (down) {
-    if (b.keyCount == static_cast<int>(b.keysHeld.size())) {  // full: the oldest goes
-      std::copy(b.keysHeld.begin() + 1, b.keysHeld.end(), b.keysHeld.begin());
-      --b.keyCount;
-    }
-    b.keysHeld[static_cast<std::size_t>(b.keyCount++)] = key;
-    b.keyPoly = poly;
-    if (b.type == BlockType::PowerEmitter && b.keyPressCount < static_cast<int>(b.keyPresses.size()))
-      b.keyPresses[static_cast<std::size_t>(b.keyPressCount++)] = key;
-  }
-  b.keyPower = b.keyCount > 0 ? 1 : 0;
-  if (b.keyCount == 0) return;
-  const double a = keyAngle(b.keysHeld[static_cast<std::size_t>(b.keyCount - 1)]);
-  if (b.type == BlockType::PowerLaser) { b.params[P::PowerLaser::angle] = a; b.laserAngle0 = a; }
-  else if (b.type == BlockType::PowerEmitter) b.params[P::PowerEmitter::angle] = a;
-}
-
-void Engine::applyNote(const Command& c) noexcept {
-  const int ch = std::clamp(static_cast<int>(c.x), 0, 15);
-  for (int k = 0; k < orderCount_; ++k) {
-    const Block& ctrl = blocks_[order_[k]];
-    if (ctrl.kind() != BlockKind::Controller || (c.id != kInvalidBlock ? ctrl.id != c.id : ctrl.type != c.blockType)) continue;
-    if (!acceptsChannel(ctrl, ch)) continue;
-    const auto row = graph_.row(order_[k]);
-    for (int i = 0; i < orderCount_; ++i) {
-      const int s = order_[i];
-      if (row[s] && blocks_[s].kind() == BlockKind::PowerSource) { keyAim(blocks_[static_cast<std::size_t>(s)], c.param, c.type == Command::Type::NoteOn, polyOf(ctrl)); continue; }
-      if (!row[s] || blocks_[s].kind() != BlockKind::AudioSource) continue;
-      if (c.type != Command::Type::NoteOn) { voiceOff(s, ctrl.id, c.param, ch); continue; }
-      voiceOn(s, ctrl.id, c.param, polyOf(ctrl), std::max(0.0, ctrl.params[P::InputComputerKeyboard::glide]), true, ch);
-      // MIDI Input velocity (owner review 3): the note sounds at 0.2 + 0.8 × velocity² (1 at full velocity, never
-      // silent), MPE or not. MPE pressure → volume (PLUGIN-0004) swells it from there to full, so the strike is heard
-      // before the controller's first pressure message. (The Computer Keyboard keeps v1's fixed level.)
-      if (ctrl.type == BlockType::InputMidiController) {
-        const double v = std::clamp(c.value, 0.0, 1.0), level = 0.2 + 0.8 * v * v;
-        for (auto& vo : blocks_[static_cast<std::size_t>(s)].voices)
-          if (vo.active && vo.controller == ctrl.id && vo.key == c.param && vo.channel == ch && vo.trigTick == tick_)
-            vo.pressureFloor = vo.exprGain = vo.gainNow = level;
-      }
-    }
-  }
-}
-
-/// Per-note expression (PLUGIN-0004): the voices playing this note on this channel for this controller follow it.
-/// Bend re-pitches (semitones); pressure sets the voice's volume and slide its timbre, as the MIDI Input maps them
-/// (owner defaults: pressure → volume, slide → Tone brightness / Sample start).
-void Engine::applyExpression(const Command& c) noexcept {
-  const int ch = std::clamp(static_cast<int>(c.x), 0, 15);
-  const auto dim = static_cast<Command::Expression>(std::clamp(static_cast<int>(c.y), 0, 2));
-  for (int k = 0; k < orderCount_; ++k) {
-    const Block& ctrl = blocks_[order_[k]];
-    if (ctrl.kind() != BlockKind::Controller || (c.id != kInvalidBlock ? ctrl.id != c.id : ctrl.type != c.blockType)) continue;
-    if (!acceptsChannel(ctrl, ch)) continue;
-    const bool midi = ctrl.type == BlockType::InputMidiController;
-    const bool pressureOn = !midi || ctrl.params[P::InputMidiController::pressureTo] >= 0.5;
-    const bool slideOn = !midi || ctrl.params[P::InputMidiController::slideTo] >= 0.5;
-    const auto row = graph_.row(order_[k]);
-    for (int i = 0; i < orderCount_; ++i) {
-      const int s = order_[i];
-      if (!row[s] || blocks_[s].kind() != BlockKind::AudioSource) continue;
-      Block& b = blocks_[static_cast<std::size_t>(s)];
-      for (int v = 0; v < kVoices; ++v) {
-        Voice& vo = b.voices[static_cast<std::size_t>(v)];
-        if (!vo.active || vo.controller != ctrl.id || vo.key != c.param || vo.channel != ch) continue;
-        if (dim == Command::Expression::Bend) { vo.bend = std::clamp(c.value, -96.0, 96.0); setPitch(s, v, 0.0); }
-        else if (dim == Command::Expression::Pressure) vo.exprGain = pressureOn ? vo.pressureFloor + (1.0 - vo.pressureFloor) * std::clamp(c.value, 0.0, 1.0) : vo.pressureFloor;
-        else if (slideOn) {
-          const double x = std::clamp(c.value, 0.0, 1.0);
-          if (b.type == BlockType::SourceTone) {
-            // Brightness: a one-pole low-pass from 78 Hz (slide 0) to 20 kHz (slide 1), 8 octaves.
-            const double fc = 20000.0 * dmath::exp2((x - 1.0) * 8.0);
-            vo.lpA = std::min(1.0, 1.0 - dmath::exp(-2.0 * 3.141592653589793 * fc / sampleRate_));
-          } else if (b.type == BlockType::SourceGranular) {
-            vo.slide = x;  // grain position across the file
-          } else if (isSampler(b.type) && vo.trigTick == tick_ && b.sampleFrames) {
-            // Sample start: a slide sent with the note picks where in the region it starts.
-            const double st = b.params[P::SourceSample::startPosition], en = b.params[P::SourceSample::endPosition] > 0 ? b.params[P::SourceSample::endPosition] : b.sampleFrames / b.sampleRate;
-            vo.playhead = (st + x * std::max(0.0, en - st)) * b.sampleRate;
-          }
-        }
-      }
-    }
-  }
-}
-
-/// v1 Source.NoteOn + GetVoice: mono takes (or keeps) the mono voice, poly the first free voice; with none free the
-/// oldest active voice is stolen without retriggering. Glide only when nothing is triggered and ≤ 1 voice is active.
-void Engine::voiceOn(int slot, BlockId controller, int key, bool poly, double glide, bool envFromChain, int channel) noexcept {
-  Block& b = blocks_[static_cast<std::size_t>(slot)];
-  const auto freeVoice = [&b]() {
-    int best = -1;
-    for (int v = 0; v < b.voiceCount; ++v) {
-      const Voice& vo = b.voices[static_cast<std::size_t>(v)];
-      if (!vo.active && (best < 0 || vo.freedAt < b.voices[static_cast<std::size_t>(best)].freedAt)) best = v;
-    }
-    return best;
-  };
-  const auto oldestActive = [&b]() {
-    int best = -1;
-    for (int v = 0; v < b.voiceCount; ++v) {
-      const Voice& vo = b.voices[static_cast<std::size_t>(v)];
-      if (vo.active && (best < 0 || vo.activeAt < b.voices[static_cast<std::size_t>(best)].activeAt)) best = v;
-    }
-    return best;
-  };
-  int v = -1;
-  bool trigger = true, fromRelease = false;
-  if (!poly && controller != 0) {  // mono: remember the key (owner review 3: return to it when a newer one is let go)
-    int n = 0;
-    for (int i = 0; i < b.monoHeldCount; ++i) {
-      const auto& h = b.monoHeld[static_cast<std::size_t>(i)];
-      if (h.key != key || h.controller != controller || h.channel != channel) b.monoHeld[static_cast<std::size_t>(n++)] = h;
-    }
-    if (n == static_cast<int>(b.monoHeld.size())) { std::copy(b.monoHeld.begin() + 1, b.monoHeld.end(), b.monoHeld.begin()); --n; }
-    b.monoHeld[static_cast<std::size_t>(n++)] = {static_cast<std::int16_t>(key), static_cast<std::int16_t>(channel), controller};
-    b.monoHeldCount = n;
-  }
-  if (!poly && b.monoVoice >= 0) { v = b.monoVoice; trigger = false; }
-  else if (!poly && controller != 0 && b.lastMonoVoice >= 0 && b.lastMonoVoice < b.voiceCount &&
-           !b.voices[static_cast<std::size_t>(b.lastMonoVoice)].active && b.lastMonoOff >= 0 && sample_ - b.lastMonoOff <= sampleRate_ / 4) {
-    // Mono, a key pressed within 250 ms of letting go of the last one (keys played quickly rarely overlap): play the
-    // envelope again and glide from the last pitch, instead of starting cold on the new one (owner review 3).
-    v = b.monoVoice = b.lastMonoVoice;
-    fromRelease = true;
-  } else {
-    v = freeVoice();
-    if (v < 0) { v = oldestActive(); trigger = false; }
-    if (v < 0) return;
-    if (!poly) b.monoVoice = v;
-  }
-  if (!poly) b.lastMonoVoice = v;
-  Voice& vo = b.voices[static_cast<std::size_t>(v)];
-  vo.key = key; vo.controller = controller;
-  // A new note starts with neutral expression (PLUGIN-0004); its controller sends any initial values right after.
-  vo.channel = channel; vo.bend = 0.0; vo.exprGain = vo.gainNow = vo.pressureFloor = 1.0; vo.lpA = 1.0; vo.trigTick = tick_; vo.slide = -1.0;
-  if (!vo.active) { vo.active = true; vo.activeAt = ++b.voiceClock; }
-  int active = 0;
-  for (int i = 0; i < b.voiceCount; ++i) active += b.voices[static_cast<std::size_t>(i)].active ? 1 : 0;
-  if ((trigger && !fromRelease) || active > 1) glide = 0.0;
-  setPitch(slot, v, glide);
-  if (trigger) {
-    b.envFromChain = envFromChain;
-    vo.env.configure(envFromChain ? envelopeFor(slot) : dsp::Envelope::Settings{}, sampleRate_);
-    vo.env.gateOn();
-    if (isSampler(b.type)) { vo.playhead = b.params[P::SourceSample::startPosition] * b.sampleRate; vo.samplePlaying = b.sampleFrames > 0; }
-    log(Event::Type::GateOn, b.id);
-  }
-  updateNotePower(b);
-}
-
-/// v1 Source.NoteOff + RemoveVoice: the voice playing this key for this controller is released, unless it is the
-/// mono voice of a powered source (then power takes it back at the default note).
-void Engine::voiceOff(int slot, BlockId controller, int key, int channel) noexcept {
-  Block& b = blocks_[static_cast<std::size_t>(slot)];
-  int n = 0;
-  for (int i = 0; i < b.monoHeldCount; ++i) {
-    const auto& h = b.monoHeld[static_cast<std::size_t>(i)];
-    if (h.key != key || h.controller != controller || h.channel != channel) b.monoHeld[static_cast<std::size_t>(n++)] = h;
-  }
-  b.monoHeldCount = n;
-  for (int v = 0; v < kVoices; ++v) {
-    Voice& vo = b.voices[static_cast<std::size_t>(v)];
-    if (!vo.active || vo.key != key || vo.controller != controller || vo.channel != channel) continue;
-    if (v == b.monoVoice) {
-      // Mono: back to the newest key still held, gliding (owner review 3; v1 released here).
-      if (b.monoHeldCount > 0) {
-        const auto h = b.monoHeld[static_cast<std::size_t>(b.monoHeldCount - 1)];
-        const int c = slotOf(h.controller);
-        vo.key = h.key; vo.controller = h.controller; vo.channel = h.channel; vo.bend = 0.0;
-        setPitch(slot, v, c >= 0 ? std::max(0.0, blocks_[static_cast<std::size_t>(c)].params[P::InputComputerKeyboard::glide]) : 0.0);
-        continue;
-      }
-      if (b.sourcePower() > 0 && controller != 0) { vo.controller = 0; vo.key = -1; setPitch(slot, v, 0.0); continue; }
-      b.monoVoice = -1;
-      b.lastMonoOff = sample_;
-    }
-    releaseVoice(slot, v);
-  }
-  updateNotePower(b);
-}
-
-void Engine::releaseVoice(int slot, int v) noexcept {
-  Block& b = blocks_[static_cast<std::size_t>(slot)];
-  Voice& vo = b.voices[static_cast<std::size_t>(v)];
-  vo.active = false; vo.freedAt = ++b.voiceClock;
-  vo.env.gateOff();
-  log(Event::Type::GateOff, b.id);
-}
-
-void Engine::updateNotePower(Block& b) noexcept {
-  b.notePower = 0;
-  for (const auto& vo : b.voices) if (vo.active && vo.controller != 0) b.notePower = 1;
-}
-
-/// v1 Controller.GetPitchMods summed over connected controllers: transposition (12 × octaves).
-double Engine::controllerMods(int slot) const noexcept {
-  double m = 0.0;
-  const auto& row = graph_.row(slot);
-  for (int k = 0; k < orderCount_; ++k)
-    if (row[order_[k]] && blocks_[order_[k]].kind() == BlockKind::Controller) m += 12.0 * static_cast<double>(std::lround(blocks_[order_[k]].params[0]));  // param 0 = transpose
-  return m;
-}
-
-/// v1 Source.SetPitch: frequency (oscillators) or playback rate (samplers), linearly ramped over `glide` seconds.
-void Engine::setPitch(int slot, int v, double glide) noexcept {
-  Block& b = blocks_[static_cast<std::size_t>(slot)];
-  Voice& vo = b.voices[static_cast<std::size_t>(v)];
-  const auto& p = b.params;
-  double target = 0.0;
-  if (b.type == BlockType::SourceTone) {
-    const double semis = p[P::SourceTone::transpose] + p[P::SourceTone::fine];
-    // Power plays v1 Config.BaseNote; a controller key is midiToFrequency(key + controller mods + source mods).
-    target = vo.key >= 0 ? 440.0 * dmath::exp2((vo.key + controllerMods(slot) + semis + vo.bend - 69.0) / 12.0) : kBaseNoteHz * dmath::exp2(semis / 12.0);
-  } else if (isSampler(b.type) || b.type == BlockType::SourceGranular) {  // Granular's playbackRate/detune line up
-    // playbackRate = 2^((note − DefaultNote + playbackRate + detune) / 12) × buffer/engine rate (AudioBufferSourceNode).
-    const double semis = p[P::SourceSample::playbackRate] + p[P::SourceSample::detune] + (vo.key >= 0 ? vo.key + controllerMods(slot) + vo.bend - 60.0 : 0.0);
-    target = dmath::exp2(semis / 12.0) * (b.sampleRate / sampleRate_);
-  } else return;
-  const int n = static_cast<int>(std::lround(glide * sampleRate_));
-  if (n > 0 && vo.pitch > 0.0) { vo.glideTo = target; vo.glideLeft = n; vo.glideStep = (target - vo.pitch) / n; }
-  else { vo.pitch = target; vo.glideLeft = 0; applyPitch(b, vo); }
-}
-
-void Engine::applyPitch(Block& b, Voice& vo) noexcept {
-  if (b.type == BlockType::SourceTone) vo.osc.setFrequency(vo.pitch, *wavetables_);
-}
-
-/// After the topology or a controller changes: voice count follows the connected controllers' polyphony (v1
-/// CreateVoices / RemoveExtraVoices), voices of disconnected controllers are released (DeactivateDisconnectedVoices),
-/// and active voices are re-pitched (NoteUpdate).
-void Engine::refreshVoices(int slot) noexcept {
-  Block& b = blocks_[static_cast<std::size_t>(slot)];
-  if (b.kind() != BlockKind::AudioSource) return;
-  const auto& row = graph_.row(slot);
-  bool poly = false;
-  for (int k = 0; k < orderCount_; ++k) if (row[order_[k]] && blocks_[order_[k]].kind() == BlockKind::Controller && polyOf(blocks_[order_[k]])) poly = true;
-  const int want = poly && b.type != BlockType::SourceGranular ? kVoices : 1;
-  if (want != b.voiceCount) {
-    if (want < b.voiceCount) {  // RemoveExtraVoices: everything released, back to one free voice
-      for (int v = 0; v < kVoices; ++v) if (b.voices[static_cast<std::size_t>(v)].active) releaseVoice(slot, v);
-      b.monoVoice = b.lastMonoVoice = -1;
-      b.monoHeldCount = 0;
-      if (b.powerOn) b.powerOn = false;  // power re-takes the voice on the next gate update
-    }
-    b.voiceCount = want;
-  }
-  {  // held mono keys of controllers no longer connected are gone
-    int n = 0;
-    for (int i = 0; i < b.monoHeldCount; ++i) {
-      const auto h = b.monoHeld[static_cast<std::size_t>(i)];
-      bool connected = false;
-      for (int k = 0; k < orderCount_; ++k) if (row[order_[k]] && blocks_[order_[k]].id == h.controller) connected = true;
-      if (connected) b.monoHeld[static_cast<std::size_t>(n++)] = h;
-    }
-    b.monoHeldCount = n;
-  }
-  for (int v = 0; v < kVoices; ++v) {
-    Voice& vo = b.voices[static_cast<std::size_t>(v)];
-    if (!vo.active || vo.controller == 0) continue;
-    bool connected = false;
-    for (int k = 0; k < orderCount_; ++k) if (row[order_[k]] && blocks_[order_[k]].id == vo.controller) connected = true;
-    if (connected) continue;
-    if (v == b.monoVoice) {
-      if (b.sourcePower() > 0) { vo.controller = 0; vo.key = -1; setPitch(slot, v, 0.0); continue; }
-      b.monoVoice = -1;
-    }
-    releaseVoice(slot, v);
-  }
-  for (int v = 0; v < kVoices; ++v) if (b.voices[static_cast<std::size_t>(v)].active) setPitch(slot, v, 0.0);
-  updateNotePower(b);
-}
-
-int Engine::connections(std::uint32_t* pairs, int maxPairs) const noexcept {
-  int n = 0;
-  const int cap = std::min(maxPairs, static_cast<int>(pairScratch_.size()));
-  for (int i = 0; i < kMaxBlocks && n < cap; ++i) {
-    if (!blocks_[i].alive) continue;
-    const auto& row = graph_.row(i);
-    for (int j = i + 1; j < kMaxBlocks && n < cap; ++j)
-      if (row[static_cast<std::size_t>(j)]) pairScratch_[static_cast<std::size_t>(n++)] = {graph_.since(i, j), static_cast<std::uint16_t>(i), static_cast<std::uint16_t>(j)};
-  }
-  std::sort(pairScratch_.begin(), pairScratch_.begin() + n, [](const PairAge& x, const PairAge& y) { return x.since < y.since; });
-  for (int k = 0; k < n; ++k) {
-    const auto& p = pairScratch_[static_cast<std::size_t>(k)];
-    pairs[k * 2] = blocks_[p.a].id; pairs[k * 2 + 1] = blocks_[p.b].id;
-  }
-  return n;
-}
-
-void Engine::onTopologyChanged(int slot, const ConnectionGraph::Row& before) noexcept {
-  const auto& after = graph_.row(slot);
-  const BlockId self = blocks_[slot].id;
-  for (int k = 0; k < orderCount_; ++k) {  // log in creation order for deterministic event streams
-    const int j = order_[k];
-    if (before[j] != after[j]) log(after[j] ? Event::Type::Connect : Event::Type::Disconnect, self, blocks_[j].id);
-  }
-  chains_.rebuild(blocks_, graph_, order_, orderCount_);
-  routingDirty_ = true;
-  recomputeStaticPower();
-  for (int k = 0; k < orderCount_; ++k) refreshVoices(order_[k]);
-}
-
-void Engine::recomputeStaticPower() noexcept {
-  for (int k = 0; k < orderCount_; ++k) blocks_[order_[k]].staticPower = 0;
-  if (!worldPower_) return;
-  for (int k = 0; k < orderCount_; ++k) {
-    const Block& p = blocks_[order_[k]];
-    const bool powers = p.type == BlockType::PowerPower ||
-                        (p.type == BlockType::PowerToggle && p.params[P::PowerToggle::logic] != 0.0);
-    if (!powers) continue;
-    const auto& row = graph_.row(order_[k]);
-    for (int i = 0; i < orderCount_; ++i) {
-      const int s = order_[i];
-      if (row[s] && isSourceSide(blocks_[s].kind())) blocks_[s].staticPower++;
-    }
-  }
-}
-
-// ---------------------------------------------------------------------------------------------------------------
-// simulation (SPEC-SIMULATION-POWER-AND-PARTICLES)
-// ---------------------------------------------------------------------------------------------------------------
-
-void Engine::pulse(Block& b, int ticks) noexcept {
-  if (b.pulsePower >= kMaxPulsesPerBlock) return;
-  b.pulseEndTick[b.pulsePower++] = tick_ + static_cast<std::uint32_t>(std::max(1, ticks));
-}
-
-void Engine::emit(Block& e) noexcept { emit(e, e.params[P::PowerEmitter::angle]); }
-
-void Engine::emit(Block& e, double angleDeg) noexcept {
-  if (particleCount_ >= kMaxParticles) return;
-  const double angle = angleDeg * kDegToRad;
-  const double speed = e.params[P::PowerEmitter::speed];  // v1 units per frame
-  const double range = e.params[P::PowerEmitter::range];  // v1 units
-  const double perTick = speed / kV1UnitsPerGrid / kTicksPerV1Frame;  // grid units per tick
-  Particle& p = particles_[particleCount_++];
-  p.x = e.x; p.y = e.y;
-  p.vx = dmath::cos(angle) * perTick; p.vy = dmath::sin(angle) * perTick;
-  p.life = static_cast<int>(std::lround(range / speed)) * kTicksPerV1Frame;
-  p.size = 2.0f + rng_.nextFloat();
-  p.fresh = true;
-  log(Event::Type::Emit, e.id);
-}
-
-void Engine::particleHit(Block& b) noexcept {
-  if (b.kind() == BlockKind::Logic) { logicHit(b); return; }
-  pulse(b, kPulseTicks);  // sources (incl. lasers) get a momentary pulse of power
-}
-
-void Engine::logicHit(Block& b) noexcept {
-  if (b.type == BlockType::PowerToggle) {
-    b.params[P::PowerToggle::logic] = b.params[P::PowerToggle::logic] != 0.0 ? 0.0 : 1.0;
-    log(Event::Type::Logic, b.id);
-    recomputeStaticPower();
-    return;
-  }
-  if (b.type == BlockType::PowerPulse) {
-    log(Event::Type::Logic, b.id);
-    const auto& row = graph_.row(slotOf(b.id));
-    // v1 Pulse: each hit powers the connected sources for `pulseLength` s (its slider); synced, `pulseBeats` at the
-    // current tempo (CHG-0004 3.5).
-    const int ticks = static_cast<int>(std::lround((b.params[P::PowerPulse::sync] != 0.0
-      ? b.params[P::PowerPulse::pulseBeats] * 60.0 / tempo_ : b.params[P::PowerPulse::pulseLength]) * kTickRate));
-    for (int k = 0; k < orderCount_; ++k) {
-      Block& s = blocks_[order_[k]];
-      if (row[order_[k]] && isSourceSide(s.kind())) pulse(s, ticks);
-    }
-  }
-}
-
-void Engine::releaseLaser(Block& laser) noexcept {
-  for (int k = 0; k < orderCount_; ++k) {
-    Block& t = blocks_[order_[k]];
-    if (laser.laserHits[static_cast<std::size_t>(order_[k])] && t.kind() != BlockKind::Logic && t.laserPower > 0) t.laserPower--;
-  }
-  laser.laserHits.reset();
-  laser.beamOn = false;
-}
-
-/// SPEC-SIMULATION R7–R10. Beams are recomputed every tick in creation order, so a laser powered by an earlier laser
-/// this tick fires this tick. Unlike v1, the beam stops at the *nearest* Void before any block is tested.
-void Engine::runLasers() noexcept {
-  beamCount_ = 0;
-  for (int k = 0; k < orderCount_; ++k) {
-    Block& l = blocks_[order_[k]];
-    if (l.type != BlockType::PowerLaser) continue;
-    const bool running = worldPower_ && (l.params[P::PowerLaser::selfPoweredMode] != 0.0 || l.power() > 0);
-    if (!running) { if (l.laserHits.any() || l.beamOn) releaseLaser(l); continue; }
-    // v1 rotates only while *powered* (IsPowered: PowerAmount > 0), not when merely self-powered.
-    const double rotate = l.params[P::PowerLaser::rotate];
-    const bool synced = l.params[P::PowerLaser::sync] != 0.0;
-    if (synced) {
-      // Synced (owner): one full turn every |turnBeats| (negative: anticlockwise), locked to the beat: at beat 0 it
-      // points at the Angle set, so every take from the same position turns the same (owner review 2).
-      const double tb = l.params[P::PowerLaser::turnBeats];
-      double a = std::fmod(l.laserAngle0 + (tb < 0.0 ? -360.0 : 360.0) * beat_ / std::max(0.25, std::abs(tb)) + 270.0, 360.0);
-      if (a <= 0.0) a += 360.0;
-      l.params[P::PowerLaser::angle] = a - 270.0;
-    } else if (l.power() > 0 && std::lround(rotate) != 0) {
-      double a = l.params[P::PowerLaser::angle] + rotate / 100.0 / kTicksPerV1Frame;
-      if (a > 90.0) a -= 360.0;
-      if (a < -270.0) a += 360.0;
-      l.params[P::PowerLaser::angle] = a;
-    }
-    const double angle = l.params[P::PowerLaser::angle] * kDegToRad;
-    const double len = l.params[P::PowerLaser::range] / kV1UnitsPerGrid;
-    const double x1 = l.x + dmath::cos(angle) * len, y1 = l.y + dmath::sin(angle) * len;
-    double stop = 1.0, t = 0.0;
-    for (int i = 0; i < orderCount_; ++i) {
-      const Block& v = blocks_[order_[i]];
-      if (v.kind() != BlockKind::Void) continue;
-      if (segmentPolygonFirstHit(l.x, l.y, x1, y1, v.info().outline, v.info().outlineCount, v.x, v.y, t)) stop = std::min(stop, t);
-    }
-    const double ex = l.x + (x1 - l.x) * stop, ey = l.y + (y1 - l.y) * stop;
-    std::bitset<kMaxBlocks> hits;
-    for (int i = 0; i < orderCount_; ++i) {
-      const int s = order_[i];
-      if (s == order_[k]) continue;
-      Block& b = blocks_[s];
-      if (!isSourceSide(b.kind()) && b.kind() != BlockKind::Logic) continue;
-      if (!segmentPolygonFirstHit(l.x, l.y, ex, ey, b.info().outline, b.info().outlineCount, b.x, b.y, t)) continue;
-      hits.set(static_cast<std::size_t>(s));
-      if (l.laserHits[static_cast<std::size_t>(s)]) continue;  // already hit last tick
-      log(Event::Type::Hit, b.id, l.id);
-      if (b.kind() == BlockKind::Logic) logicHit(b); else b.laserPower++;
-    }
-    for (int i = 0; i < orderCount_; ++i) {  // no longer hit: release continuous power
-      const int s = order_[i];
-      if (l.laserHits[static_cast<std::size_t>(s)] && !hits[static_cast<std::size_t>(s)] && blocks_[s].kind() != BlockKind::Logic && blocks_[s].laserPower > 0) blocks_[s].laserPower--;
-    }
-    l.laserHits = hits;
-    l.beamOn = true;
-    l.beamLength = len * stop;
-    beams_[beamCount_++] = Beam{l.id, l.x, l.y, ex, ey};
-  }
-}
-
-/// A synced emitter's slot on the beat grid at `beat`: it emits when this changes (CHG-0004 3.5).
-std::int64_t Engine::beatSlotAt(const Block& e, double beat) noexcept {
-  const double div = std::max(1.0 / 64.0, e.params[P::PowerEmitter::division]);
-  auto slot = static_cast<std::int64_t>(std::floor(beat / div + 1e-9));
-  // Swing (owner): the second of each pair of slots fires late, by up to a third of a division (triplet shuffle).
-  if (const double swing = std::clamp(e.params[P::PowerEmitter::swing], 0.0, 1.0); swing > 0.0) {
-    const auto pair = static_cast<std::int64_t>(std::floor(beat / (2.0 * div) + 1e-9));
-    const double within = beat - static_cast<double>(pair) * 2.0 * div;
-    slot = pair * 2 + (within + 1e-9 >= div * (1.0 + swing / 3.0) ? 1 : 0);
-  }
-  return slot;
-}
-
-/// The DAW's transport started at `beat` (owner review 2): nothing from before carries over, so every take from the
-/// same position plays the same. Particles in flight and pulses end; emitters start their timing again (synced ones
-/// fire on the next grid slot, or at once when `beat` is on one; free ones as when just added). Synced lasers need
-/// nothing: their angle follows the beat.
-void Engine::resyncToTransport(double beat) noexcept {
-  particleCount_ = 0;
-  for (int k = 0; k < orderCount_; ++k) {
-    Block& b = blocks_[order_[k]];
-    b.pulsePower = 0;
-    if (b.type != BlockType::PowerEmitter) continue;
-    b.beatSlot = beatSlotAt(b, beat - 1e-6);  // just before: a start on a grid slot fires at once
-    b.emitCounter = 0;  // as when added (v1 ParticleEmitter.Init)
-  }
-  updateGates();
-}
-
-void Engine::runTick() noexcept {
-  // 0. musical time (SIMULATION-0003): beat_ is the position at this tick; the next tick is 1/kTickRate s later.
-  struct Advance { double& beat; double bpm; ~Advance() { beat += bpm / 60.0 / kTickRate; } } advance{beat_, tempo_};
-  // 0b. keys held on an Emitter/Laser whose keyboard moved away power it no more
-  for (int k = 0; k < orderCount_; ++k) {
-    Block& b = blocks_[order_[k]];
-    if (b.keyPower == 0) continue;
-    bool kept = false;
-    const auto row = graph_.row(order_[k]);
-    for (int j = 0; j < orderCount_ && !kept; ++j) kept = row[order_[j]] && blocks_[order_[j]].kind() == BlockKind::Controller;
-    if (!kept) { b.keyCount = 0; b.keyPower = 0; }
-  }
-  // 1. expire pulses that end at this tick
-  for (int k = 0; k < orderCount_; ++k) {
-    Block& b = blocks_[order_[k]];
-    int n = 0;
-    for (int i = 0; i < b.pulsePower; ++i) if (b.pulseEndTick[i] != tick_) b.pulseEndTick[n++] = b.pulseEndTick[i];
-    b.pulsePower = n;
-  }
-  // 2. emitters (v1 ParticleEmitter.Update, frame counts scaled to ticks)
-  for (int k = 0; k < orderCount_; ++k) {
-    Block& e = blocks_[order_[k]];
-    if (e.type != BlockType::PowerEmitter) continue;
-    const bool running = worldPower_ && (e.params[P::PowerEmitter::selfPoweredMode] != 0.0 || e.power() > 0);
-    const bool synced = e.params[P::PowerEmitter::sync] != 0.0;
-    // Keys pressed since the last tick (CHG-0009): each fires once at its own angle, now, and the repeat starts over.
-    if (e.keyPressCount > 0) {
-      if (worldPower_) for (int i = 0; i < e.keyPressCount; ++i) emit(e, keyAngle(e.keyPresses[static_cast<std::size_t>(i)]));
-      e.keyPressCount = 0;
-      if (worldPower_) {
-        e.emitCounter = 0;
-        if (synced) e.beatSlot = beatSlotAt(e, beat_);
-        continue;
-      }
-    }
-    // Repeats: held keys on a polyphonic keyboard repeat together, one particle each; otherwise the Angle (which the
-    // newest held key sets).
-    auto fire = [this](Block& b) {
-      if (b.keyPoly && b.keyCount > 0) for (int i = 0; i < b.keyCount; ++i) emit(b, keyAngle(b.keysHeld[static_cast<std::size_t>(i)]));
-      else emit(b);
-    };
-    if (synced) {
-      // Synced (CHG-0004 3.5): emit when the beat crosses the next multiple of `division` (song grid in the plugin).
-      const auto slot = beatSlotAt(e, beat_);
-      // Starting (or re-synced, or turned on) mid-slot: v1 fires at once when powered, as the unsynced counter does.
-      if (running && slot != e.beatSlot) fire(e);
-      e.beatSlot = slot;
-      if (!running) e.beatSlot = std::numeric_limits<std::int64_t>::min();
-      continue;
-    }
-    const int rateTicks = std::max(1, static_cast<int>(std::lround(e.params[P::PowerEmitter::rate]))) * kTicksPerV1Frame;
-    if (!running) { e.emitCounter = rateTicks; continue; }
-    if (++e.emitCounter >= rateTicks) { fire(e); e.emitCounter = 0; }
-  }
-  // 2b. lasers (v1 LaserBeams.UpdateCollisions)
-  runLasers();
-  // 3. particles: age, collide at current position (topmost block first), then move (v1 ParticleLayer order)
-  // R5b (owner, 2026-11-11; SIMULATION-0004): another emitter catches a particle and fires one at once. Those fire
-  // after this pass (in hit order), so a new particle starts moving next tick, as an emitter's own do.
-  int kept = 0, caughtCount = 0;
-  std::array<int, kMaxParticles> caught;  // block slots, filled before read
-  for (int i = 0; i < particleCount_; ++i) {
-    Particle p = particles_[i];
-    if (--p.life < 1) { continue; }
-    bool consumed = false;
-    for (int k = orderCount_ - 1; k >= 0 && !consumed; --k) {
-      Block& b = blocks_[order_[k]];
-      if (b.type == BlockType::PowerEmitter) {
-        // Only a particle that came in from outside: not its own emitter's, nor one born inside overlapping emitters
-        // (which would pass it back and forth every tick).
-        if (p.fresh) continue;
-        const auto& inf = b.info();
-        if (!pointInPolygon(p.x, p.y, inf.outline, inf.outlineCount, b.x, b.y)) continue;
-        if (pointInPolygon(p.x - p.vx, p.y - p.vy, inf.outline, inf.outlineCount, b.x, b.y)) continue;
-        consumed = true;
-        log(Event::Type::Hit, b.id);
-        caught[static_cast<std::size_t>(caughtCount++)] = order_[k];
-        continue;
-      }
-      const BlockKind kind = b.kind();
-      const bool absorbs = kind == BlockKind::Void;
-      const bool reacts = isSourceSide(kind) || kind == BlockKind::Logic;
-      if (!absorbs && !reacts) continue;
-      const auto& inf = b.info();
-      if (!pointInPolygon(p.x, p.y, inf.outline, inf.outlineCount, b.x, b.y)) continue;
-      consumed = true;
-      if (absorbs) log(Event::Type::Absorb, b.id);
-      else { log(Event::Type::Hit, b.id); particleHit(b); }
-    }
-    if (consumed) continue;
-    p.x += p.vx; p.y += p.vy; p.fresh = false;
-    particles_[kept++] = p;
-  }
-  particleCount_ = kept;
-  for (int i = 0; i < caughtCount; ++i) emit(blocks_[caught[static_cast<std::size_t>(i)]]);
-  // 4. gates follow power
-  updateGates();
-}
-
-/// Power (Power, Toggle, pulses, lasers, a press) holds the source's mono voice at the default note, as v1's
-/// AddPower → NoteOn("power"); losing it releases that voice unless a controller took it over.
-void Engine::updateGates() noexcept {
-  for (int k = 0; k < orderCount_; ++k) {
-    Block& b = blocks_[order_[k]];
-    if (b.kind() != BlockKind::AudioSource) continue;
-    const bool want = b.sourcePower() > 0;
-    if (want == b.powerOn) continue;
-    b.powerOn = want;
-    // v1 rule (Source/ConnectionManager): a Power-held source always plays the default envelope (Power triggers
-    // before the chain's Envelope block applies its settings); particle, pulse, laser, press and key triggers use it.
-    if (want) voiceOn(order_[k], 0, -1, false, 0.0, b.staticPower == 0);
-    else voiceOff(order_[k], 0, -1);
-  }
-}
-
-// ---------------------------------------------------------------------------------------------------------------
-// audio
-// ---------------------------------------------------------------------------------------------------------------
-
-/// Is chain `a` of `A` identical (same members, same order) to the chain `B` holds for the same first member?
-static bool sameChain(const Chains& A, int a, const Chains& B) noexcept {
-  const auto ra = A.chains[static_cast<std::size_t>(a)];
-  if (ra.count == 0) return false;
-  const int b = B.chainOf[A.members[ra.start]];
-  if (b < 0) return false;
-  const auto rb = B.chains[static_cast<std::size_t>(b)];
-  if (ra.count != rb.count) return false;
-  for (int m = 0; m < ra.count; ++m) if (A.members[ra.start + m] != B.members[rb.start + m]) return false;
-  return true;
-}
-
-/// Switch audio to the current chains and fade in every chain that did not exist identically before.
-void Engine::switchRouting() noexcept {
-  prevChains_ = audioChains_;
-  audioChains_ = chains_;
-  fadingChains_.reset();
-  for (int c = 0; c < audioChains_.chainCount; ++c) if (!sameChain(audioChains_, c, prevChains_)) fadingChains_.set(static_cast<std::size_t>(c));
-  fadePos_ = 0;
-  fade_ = fadingChains_.any() ? Fade::In : Fade::Idle;
-}
-
-/// A topology change reached the audio side (SPEC-CONNECTIONS-PROXIMITY R5): chains that changed fade out on the
-/// old routing (5 ms), the routing switches, and the new chains fade in (5 ms). Unchanged chains are never touched.
-void Engine::beginRoutingFade() noexcept {
-  routingDirty_ = false;
-  if (fade_ == Fade::Out) return;  // already fading out: the switch will take the latest chains_
-  std::bitset<kMaxBlocks> changed;
-  for (int c = 0; c < audioChains_.chainCount; ++c) if (!sameChain(audioChains_, c, chains_)) changed.set(static_cast<std::size_t>(c));
-  if (changed.none()) { switchRouting(); return; }  // only additions: nothing to fade out
-  fadePos_ = fade_ == Fade::In ? fadeLen_ - fadePos_ : 0;  // reverse an in-progress fade-in without a jump
-  fadingChains_ = changed;
-  fade_ = Fade::Out;
-}
-
-/// Audio In (and the plugins' Microphone, labelled Audio Input): always on, the host input in stereo at unity × gain.
-/// Its chain skips the master stage (see renderChain/render), so alone it is a true bypass (owner review 2).
-void Engine::addHostInput(const Block& b, int n) noexcept {
-  static_assert(P::SourceAudioIn::gain == P::SourceMicrophone::gain);
-  if (!chainDirect_) { chainDirect_ = true; std::fill_n(hostL_.begin(), n, 0.0f); std::fill_n(hostR_.begin(), n, 0.0f); }
-  if (!inLeft_ && !inRight_) return;
-  const float g = static_cast<float>(b.params[P::SourceAudioIn::gain]);
-  for (int i = 0; i < n; ++i) {
-    const float l = inLeft_ ? inLeft_[inOffset_ + i] : 0.0f, r = inRight_ ? inRight_[inOffset_ + i] : l;
-    hostL_[i] += l * g;
-    hostR_[i] += r * g;
-  }
-}
-
-void Engine::renderChain(int c, int n) noexcept {
-  const auto r = audioChains_.chains[static_cast<std::size_t>(c)];
-  std::fill_n(chainL_.begin(), n, 0.0f);
-  chainDirect_ = false;
-  // Pre-effects (v1 LFObase): Vibrato/Scuzz LFOs drive every source's oscillator detune in this chain, summed.
-  bool detuned = false;
-  for (int m = 0; m < r.count; ++m) {
-    Block& b = blocks_[audioChains_.members[r.start + m]];
-    if (!b.alive || (b.type != BlockType::FxVibrato && b.type != BlockType::FxScuzz)) continue;
-    if (!detuned) { std::fill_n(detune_.begin(), n, 0.0); detuned = true; }
-    for (int i = 0; i < n; ++i) detune_[i] += b.lfo.next(*wavetables_);
-  }
-  for (int m = 0; m < r.count; ++m) {  // sources sum (mono, through Tone.Mono's −10 dB) into the chain
-    Block& b = blocks_[audioChains_.members[r.start + m]];
-    if (!b.alive) continue;
-    switch (b.type) {
-      case BlockType::SourceAudioIn: addHostInput(b, n); break;
-      case BlockType::SourceMicrophone: {  // always on: mic input summed to mono at v1's source level × gain
-        if (hostInput_) { addHostInput(b, n); break; }
-        if (!inLeft_ && !inRight_) break;
-        const double g = kSourceGain * b.params[P::SourceMicrophone::gain];
-        for (int i = 0; i < n; ++i) {
-          const double l = inLeft_ ? inLeft_[inOffset_ + i] : 0.0, rr = inRight_ ? inRight_[inOffset_ + i] : l;
-          chainL_[i] += static_cast<float>((l + rr) * 0.5 * g);
-        }
-        break;
-      }
-      case BlockType::SourceTone:
-        for (int v = 0; v < kVoices; ++v) {
-          Voice& vo = b.voices[static_cast<std::size_t>(v)];
-          // Voice 0 free-runs like v1's always-started oscillators (phase never depends on segmentation); the extra
-          // poly voices only advance while sounding.
-          for (int i = 0; i < n; ++i) {
-            if (vo.glideLeft > 0) { vo.pitch = --vo.glideLeft ? vo.pitch + vo.glideStep : vo.glideTo; applyPitch(b, vo); }
-            if (!vo.env.active()) {
-              if (vo.glideLeft > 0) continue;
-              if (v == 0) vo.osc.skip(n - i);
-              break;
-            }
-            double x = detuned ? vo.osc.next(detune_[i]) : vo.osc.next();
-            if (vo.lpA < 1.0) x = vo.lpY += vo.lpA * (x - vo.lpY);  // MPE slide → brightness
-            chainL_[i] += static_cast<float>(x * vo.env.next() * kSourceGain * glideGain(vo));
-          }
-        }
-        break;
-      case BlockType::SourceSample: case BlockType::SourceRecorder: case BlockType::SourceSampleGen: {
-        // Tone.Simpler: plays from startPosition to endPosition; with loop, wraps loopEnd → loopStart once reached.
-        // Reverse reads the region mirrored (v1 plays a reversed copy of the buffer). Linear interpolation, (L+R)/2.
-        const auto& pp = b.params;
-        const double len = b.sampleFrames, sr0 = b.sampleRate;
-        const double end = std::clamp(pp[P::SourceSample::endPosition] > 0 ? pp[P::SourceSample::endPosition] * sr0 : len, 1.0, std::max(1.0, len));
-        double ls = std::clamp(pp[P::SourceSample::loopStart] * sr0, 0.0, end - 1), le = std::clamp(pp[P::SourceSample::loopEnd] * sr0, 0.0, len);
-        if (le <= ls) le = end;
-        const bool loop = pp[P::SourceSample::loop] != 0.0, rev = pp[P::SourceSample::reverse] != 0.0;
-        // v1 Recorder sets Simpler volume to its `volume` param (Tone dB, default +20); Sample/SampleGen never apply it.
-        const double gain = kSourceGain * (b.type == BlockType::SourceRecorder ? dsp::toneDbToGain(pp[P::SourceRecorder::volume]) : 1.0);
-        for (auto& vo : b.voices) {
-          if (!vo.samplePlaying || !b.sampleL) { for (int i = 0; i < n; ++i) if (vo.env.active()) vo.env.next(); continue; }
-          for (int i = 0; i < n; ++i) {
-            if (vo.glideLeft > 0) vo.pitch = --vo.glideLeft ? vo.pitch + vo.glideStep : vo.glideTo;
-            if (!vo.samplePlaying) break;
-            double pos = vo.playhead;
-            if (rev) pos = len - 1.0 - pos;
-            const auto k = static_cast<std::uint32_t>(std::clamp(pos, 0.0, len - 1.0));
-            const double f = std::clamp(pos, 0.0, len - 1.0) - k;
-            const std::uint32_t k1 = std::min<std::uint32_t>(k + 1, b.sampleFrames - 1);
-            const double sl = b.sampleL[k] + f * (b.sampleL[k1] - b.sampleL[k]), sr2 = b.sampleR[k] + f * (b.sampleR[k1] - b.sampleR[k]);
-            const double e = vo.env.active() ? vo.env.next() : 0.0;
-            chainL_[i] += static_cast<float>(0.5 * (sl + sr2) * e * gain * glideGain(vo));
-            vo.playhead += vo.pitch;
-            if (loop && vo.playhead >= le) vo.playhead = ls + std::fmod(vo.playhead - ls, std::max(1.0, le - ls));
-            else if (!loop && vo.playhead >= end) vo.samplePlaying = false;
-          }
-        }
-        break;
-      }
-      case BlockType::SourceGranular: renderGranular(b, n); break;
-      case BlockType::SourceNoise:
-        for (int v = 0; v < kVoices; ++v) {
-          Voice& vo = b.voices[static_cast<std::size_t>(v)];
-          for (int i = 0; i < n; ++i) {
-            if (v > 0 && !vo.env.active()) break;  // voice 0 free-runs (golden renders); poly voices only while sounding
-            const double x = vo.noise.next();
-            if (vo.env.active()) chainL_[i] += static_cast<float>(x * vo.env.next() * kSourceGain * glideGain(vo));
-          }
-        }
-        break;
-      default: break;
-    }
-  }
-  std::copy_n(chainL_.begin(), n, chainR_.begin());
-  if (chainDirect_) {
-    // An Audio In chain skips the master stage, so its other sources take the master volume here, and the host
-    // input joins at its own level: effects see the track as it is, and with no effects it is passed through as is.
-    const float mg = static_cast<float>(masterGain_);
-    for (int i = 0; i < n; ++i) {
-      chainL_[i] = chainL_[i] * mg + hostL_[i];
-      chainR_[i] = chainR_[i] * mg + hostR_[i];
-    }
-  }
-  // Post-effects in series, chain (DFS) order. Effects always run, even on silence: their state (filter memory,
-  // reverb/delay tails, LFO phase) must evolve identically however the timeline is segmented.
-  for (int m = 0; m < r.count; ++m) {
-    Block& b = blocks_[audioChains_.members[r.start + m]];
-    if (!b.alive) continue;
-    float* L = chainL_.data(); float* R = chainR_.data();
-    switch (b.type) {
-      case BlockType::FxFilter:
-        b.filter.process(L, R, n);
-        if (b.filterLevel != 1.0f) for (int i = 0; i < n; ++i) { L[i] *= b.filterLevel; R[i] *= b.filterLevel; }
-        break;
-      case BlockType::FxEq: b.eq.process(L, R, n); break;
-      case BlockType::FxVolume: b.volume.process(L, R, n); break;
-      case BlockType::FxDistortion: b.distortion.process(L, R, n); break;
-      case BlockType::FxBitCrusher: b.crusher.process(L, R, n); break;
-      case BlockType::FxPhaser: b.phaser.process(L, R, n, *wavetables_); break;
-      case BlockType::FxChorus: b.chorus.process(L, R, n, *wavetables_); break;
-      case BlockType::FxReverb: b.reverb.process(L, R, n); break;
-      case BlockType::FxStereoDelay: b.pingpong.process(L, R, n); break;
-      case BlockType::FxAutoWah: b.autowah.process(L, R, n); break;
-      case BlockType::FxChomp: b.chomp.process(L, R, n); break;
-      case BlockType::FxChopper: b.chopper.process(L, R, n, *wavetables_); break;
-      case BlockType::FxPitchShifter: b.pitchshift.process(L, R, n, *wavetables_); break;
-      case BlockType::FxConvolver:
-        if (b.poolIndex >= 0) {
-          dsp::EqualPower mix; mix.set(b.params[P::FxConvolver::mix]);
-          const auto& k = b.userImpulse ? userImpulses_[static_cast<std::size_t>(b.poolIndex)] : defaultImpulse_;
-          convolvers_[static_cast<std::size_t>(b.poolIndex)].process(k, L, R, n, mix.dry, mix.wet);
-        }
-        break;
-      default: break;
-    }
-  }
-}
-
-void Engine::render(float* left, float* right, int n) noexcept {
-  std::fill_n(mixL_.begin(), n, 0.0f);
-  std::fill_n(mixR_.begin(), n, 0.0f);
-  bool anyDirect = false;
-  for (int c = 0; c < audioChains_.chainCount; ++c) {
-    renderChain(c, n);
-    if (chainDirect_ && !anyDirect) { anyDirect = true; std::fill_n(directL_.begin(), n, 0.0f); std::fill_n(directR_.begin(), n, 0.0f); }
-    const bool fading = fade_ != Fade::Idle && fadingChains_[static_cast<std::size_t>(c)];
-    for (int i = 0; i < n; ++i) {
-      double g = 1.0;
-      if (fading) {
-        const double t = static_cast<double>(fadePos_ + i) / fadeLen_;
-        g = fade_ == Fade::Out ? 1.0 - t : t;
-      }
-      float* toL = chainDirect_ ? directL_.data() : mixL_.data();
-      float* toR = chainDirect_ ? directR_.data() : mixR_.data();
-      if (fading) { toL[i] += static_cast<float>(chainL_[i] * g); toR[i] += static_cast<float>(chainR_[i] * g); }
-      else { toL[i] += chainL_[i]; toR[i] += chainR_[i]; }
-    }
-  }
-  // Pre-effect LFOs outside any chain keep their phase (Tone LFOs run from block creation).
-  for (int k = 0; k < orderCount_; ++k) {
-    Block& b = blocks_[order_[k]];
-    if ((b.type == BlockType::FxVibrato || b.type == BlockType::FxScuzz) && audioChains_.chainOf[order_[k]] < 0) b.lfo.skip(n);
-  }
-  for (int i = 0; i < n; ++i) {
-    // v1 order: chains -> master compressor (Chromium DynamicsCompressor) -> master volume.
-    float l = mixL_[i], r = mixR_[i];
-    if (useCompressor_) compressor_.process(l, r);
-    left[i] = static_cast<float>(l * masterGain_);
-    right[i] = static_cast<float>(r * masterGain_);
-    if (anyDirect) { left[i] += directL_[i]; right[i] += directR_[i]; }
-  }
-  if (fade_ != Fade::Idle) {
-    fadePos_ += n;
-    if (fadePos_ >= fadeLen_) {
-      if (fade_ == Fade::Out) switchRouting();
-      else { fade_ = Fade::Idle; fadePos_ = 0; fadingChains_.reset(); }
-    }
-  }
-}
-
-void Engine::process(float* left, float* right, std::uint32_t frames) noexcept { process(nullptr, nullptr, left, right, frames); }
-
-void Engine::process(const float* inLeft, const float* inRight, float* left, float* right, std::uint32_t frames) noexcept {
-  inLeft_ = inLeft; inRight_ = inRight;
-  std::uint32_t done = 0;
-  while (done < frames) {
-    const std::int64_t nextTick = tickSample(tick_);
-    if (sample_ == nextTick) {
-      applyDueCommands();
-      runTick();
-      ++tick_;
-      continue;
-    }
-    if (routingDirty_) beginRoutingFade();
-    std::int64_t limit = kMaxSegment;
-    if (fade_ != Fade::Idle) limit = std::min<std::int64_t>(limit, fadeLen_ - fadePos_);  // switch exactly at the fade end
-    const auto len = static_cast<int>(std::min<std::int64_t>({static_cast<std::int64_t>(frames - done), nextTick - sample_, limit}));
-    inOffset_ = static_cast<int>(done);
-    render(left + done, right + done, len);
-    done += static_cast<std::uint32_t>(len);
-    sample_ += len;
-  }
-}
-
-}  // namespace blokdust
-
-namespace blokdust {
-/// v1 Granular.GrainLoop on 12 Tone.SimplePlayers with AmplitudeEnvelopes, sample-accurate: while the block plays
-/// (powered or a note held), a grain starts every grainlength × 3 / density s (v1's setTimeout of
-/// round(grainlength × 2 / density × 1500) ms) at region ± spread/2 (uniform, clamped to [0, duration − grainlength]),
-/// cycling through `density` players. Each grain plays at the note's playback rate; its envelope rises over 40% of the
-/// grain length (v1 _RampLength), holds, and releases over the last 40%. The sum goes through the lead voice's envelope.
-/// MPE (PLUGIN-0004): pressure scales the volume; slide places the grains (0 = start … 1 = end of the file).
-void Engine::renderGranular(Block& b, int n) noexcept {
-  const auto& p = b.params;
-  Voice* lead = nullptr;
-  for (auto& vo : b.voices) if (vo.env.active() && (!lead || vo.activeAt > lead->activeAt)) lead = &vo;
-  for (auto& vo : b.voices) if (&vo != lead && vo.env.active()) for (int i = 0; i < n; ++i) vo.env.next();
-  if (!lead) { for (auto& g : b.grains) g.on = false; return; }
-  const double gl = std::clamp(p[P::SourceGranular::grainlength], 0.01, 2.0);
-  const int density = std::clamp(static_cast<int>(std::lround(p[P::SourceGranular::density])), 1, static_cast<int>(b.grains.size()));
-  const double dur = b.sampleFrames > 0 ? b.sampleFrames / b.sampleRate : 0.0;
-  const int interval = std::max(1, static_cast<int>(std::lround(std::round(gl * 2.0 / density * 1500.0) / 1000.0 * sampleRate_)));
-  const int len = std::max(4, static_cast<int>(std::lround(gl * sampleRate_)));
-  const int attack = std::max(1, static_cast<int>(std::lround(gl * 0.4 * sampleRate_)));
-  const int releaseAt = static_cast<int>(std::lround(gl * 0.6 * sampleRate_));
-  const int release = std::max(1, len - releaseAt);
-  for (int i = 0; i < n; ++i) {
-    if (lead->active && b.sampleL && dur > gl && --b.grainTimer <= 0) {
-      b.grainTimer = interval;
-      Block::Grain& g = b.grains[static_cast<std::size_t>(b.grainIndex)];
-      b.grainIndex = (b.grainIndex + 1) % density;
-      const double centre = lead->slide >= 0.0 ? lead->slide * dur : p[P::SourceGranular::region];
-      const double spread = std::max(0.0, p[P::SourceGranular::spread]);
-      const double at = std::clamp(centre - spread * 0.5 + b.grainRng.nextFloat() * spread, 0.0, dur - gl);
-      g.on = true; g.pos = at * b.sampleRate; g.rate = lead->pitch; g.age = 0; g.len = len;
-    }
-    double sum = 0.0;
-    for (auto& g : b.grains) {
-      if (!g.on) continue;
-      const double e = g.age < attack ? static_cast<double>(g.age) / attack : g.age < releaseAt ? 1.0 : std::max(0.0, 1.0 - static_cast<double>(g.age - releaseAt) / release);
-      const double pos = std::min(g.pos, static_cast<double>(b.sampleFrames) - 1.0);
-      const auto k = static_cast<std::uint32_t>(pos);
-      const double f = pos - k;
-      const std::uint32_t k1 = std::min<std::uint32_t>(k + 1, b.sampleFrames - 1);
-      const double sl = b.sampleL[k] + f * (b.sampleL[k1] - b.sampleL[k]), sr = b.sampleR[k] + f * (b.sampleR[k1] - b.sampleR[k]);
-      sum += 0.5 * (sl + sr) * e;
-      g.pos += g.rate;
-      if (++g.age >= g.len || g.pos >= b.sampleFrames - 1) g.on = false;
-    }
-    const double env = lead->env.next();
-    chainL_[i] += static_cast<float>(sum * env * kSourceGain * glideGain(*lead));
-  }
-}
-int Engine::playheads(Playhead* out, int max) const noexcept {
-  int n = 0;
-  for (int k = 0; k < orderCount_ && n < max; ++k) {
-    const Block& b = blocks_[order_[k]];
-    if (!b.sampleL || b.sampleFrames == 0 || b.sampleRate <= 0.0) continue;
-    if (isSampler(b.type)) {
-      for (const auto& vo : b.voices)
-        if (vo.samplePlaying && vo.env.active() && n < max) out[n++] = {b.id, static_cast<float>(vo.playhead / b.sampleRate)};
-    } else if (b.type == BlockType::SourceGranular) {
-      for (const auto& g : b.grains)
-        if (g.on && n < max) out[n++] = {b.id, static_cast<float>(g.pos / b.sampleRate)};
-    }
-  }
-  return n;
-}
 }  // namespace blokdust

@@ -43,7 +43,7 @@ test('R1–R4: dotenv stays outside checkout; environment wins; values are not s
     assert.equal(r.stdout.trim(), 'public-default');
     const config = {
       CLOUDFLARE_ACCOUNT_ID: 'account-for-test', BLOKDUST_STAGING_PUBLIC_URL: 'https://staging.example.com/blokdust',
-      BLOKDUST_STAGING_DATABASE_ID: '11111111-1111-4111-8111-111111111111', BLOKDUST_STAGING_TURNSTILE_SITE_KEY: 'test-site-key',
+      BLOKDUST_STAGING_DATABASE_ID: '11111111-1111-4111-8111-111111111111', BLOKDUST_STAGING_SUPPORT_DATABASE_ID: '22222222-2222-4222-8222-222222222222', BLOKDUST_STAGING_TURNSTILE_SITE_KEY: 'test-site-key',
     };
     r = run("import { remoteConfig } from './tools/server/config.ts'; console.log(remoteConfig('staging'));", config);
     assert.equal(r.status, 0, r.stderr);
@@ -53,10 +53,11 @@ test('R1–R4: dotenv stays outside checkout; environment wins; values are not s
     assert.equal(parsed.account_id, config.CLOUDFLARE_ACCOUNT_ID);
     assert.equal(parsed.env.staging.vars.PUBLIC_BASE_URL, config.BLOKDUST_STAGING_PUBLIC_URL);
     assert.equal(parsed.env.staging.d1_databases[0].database_id, config.BLOKDUST_STAGING_DATABASE_ID);
+    assert.equal(parsed.env.staging.d1_databases[1].database_id, config.BLOKDUST_STAGING_SUPPORT_DATABASE_ID);
     assert.equal(parsed.main, resolve('server/src/index.ts'));
     assert.equal(parsed.env.staging.d1_databases[0].migrations_dir, resolve('server/migrations'));
     const assets = parsed.env.staging.assets ?? parsed.assets;
-    assert.equal(assets.directory, resolve(parsed.env.staging.assets ? '.cache/server/site' : 'web/dist'));
+    assert.equal(assets.directory, resolve('web/dist'));
     assert(!parsed.env.production);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

@@ -154,7 +154,7 @@
       "key": "sync",
       "default": false,
       "unit": "enum",
-      "description": "Tempo sync (SIMULATION-0003, CHG-0004 3.5): pulse length in beats"
+      "description": "Tempo sync: the pulse length is set in beats"
     },
     {
       "key": "pulseBeats",
@@ -165,6 +165,26 @@
         4
       ],
       "description": "Synced: pulse length in beats"
+    },
+    {
+      "key": "delay",
+      "default": 0,
+      "unit": "s",
+      "range": [
+        0,
+        4
+      ],
+      "description": "Delay: each hit waits this long before it powers the sources; 0 powers them at once. Every hit keeps its own wait"
+    },
+    {
+      "key": "delayBeats",
+      "default": 0,
+      "unit": "beats",
+      "range": [
+        0,
+        4
+      ],
+      "description": "Synced: the wait in beats (0 = at once)"
     }
   ],
   "review": [

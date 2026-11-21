@@ -121,7 +121,7 @@
       "key": "sync",
       "default": false,
       "unit": "enum",
-      "description": "Tempo sync (SIMULATION-0003, CHG-0005, owner 2026-11-10): delay time in beats"
+      "description": "Tempo sync: the delay time is set in beats"
     },
     {
       "key": "delayBeats",

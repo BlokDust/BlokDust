@@ -1,0 +1,146 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "source.wavetable",
+  "draft": false,
+  "category": "source",
+  "kind": "audio-source",
+  "name": "Wavetable",
+  "description": "Morphs smoothly through a sequence of different wave shapes like bells, chimes and more.",
+  "v1": {
+    "type": null
+  },
+  "connection": null,
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 5,
+        "points": [
+          [
+            -1,
+            -1
+          ],
+          [
+            0,
+            -2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "palette": 7,
+        "points": [
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            -1
+          ]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [
+            -1,
+            -1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            -1,
+            1
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        -1,
+        -1
+      ],
+      [
+        0,
+        -2
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        -1,
+        1
+      ]
+    ],
+    "menuOffset": [
+      -0.5,
+      0.5
+    ]
+  },
+  "params": [
+    {
+      "key": "table",
+      "default": 0,
+      "unit": "enum",
+      "range": [
+        0,
+        8
+      ],
+      "description": "Built-in table (engine TableBank): 0 bell, 1 chime, 2 glass, 3 gong, 4 voice, 5 sweep, 6 sync, 7 fold, 8 pulse"
+    },
+    {
+      "key": "position",
+      "default": 0,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Where in the table (0 = first frame, 1 = last): fades between neighbouring frames"
+    },
+    {
+      "key": "transpose",
+      "default": 0,
+      "unit": "semitones",
+      "range": [
+        -48,
+        48
+      ],
+      "description": "Note, as the Tone's"
+    },
+    {
+      "key": "fine",
+      "default": 0,
+      "unit": "semitones",
+      "range": [
+        -1,
+        1
+      ],
+      "description": "Fine tuning, as the Tone's"
+    }
+  ]
+}

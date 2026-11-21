@@ -21,7 +21,7 @@ struct LoadedSample {
   double duration = 0.0;
   nlohmann::json ref;               // patch `refs` entry (provider "file" with path, or "freesound")
   std::string track;                // ref key: "file:<name>" or "freesound:<id>"
-  std::vector<float> preview;       // ≤ 4096 mono points for the UI's v1 waveform (it never gets the audio)
+  std::vector<float> preview;       // ≤ 4000 peaks (loudest |sample| per stretch) for the UI's waveform (it never gets the audio)
 };
 
 using SampleResult = std::function<void(std::shared_ptr<LoadedSample> ok, std::string error)>;
@@ -38,8 +38,13 @@ class SampleLoader {
 
   /// DATA-0005 fingerprint, identical to the web's: size + SHA-256 of the first and last 64 KB.
   static nlohmann::json fingerprint(const juce::File& file);
-  /// A file that moved: the same name beside its last known folder (that folder, its parent, their subfolders).
-  static juce::File relink(const nlohmann::json& ref);
+  /// iPad (CHG-0025 task 6): a document-picker URL is only readable while it is picked, and not by the extension in
+  /// another host. Copy it into `dir` (the shared BlokDust/Samples), reusing a same-named copy with the same
+  /// fingerprint. `done` gets the copy, or {} and an error, on the message thread. Local only (DATA-0005).
+  void copyIn(const juce::URL& url, const juce::File& dir, std::function<void(juce::File, std::string)> done);
+  /// A file that moved: the same name beside its last known folder (that folder, its parent, their subfolders), then
+  /// in `samplesDir` if given (iPad: a patch from another device, or after a reinstall moved the App Group).
+  static juce::File relink(const nlohmann::json& ref, const juce::File& samplesDir = {});
 
  private:
   std::shared_ptr<LoadedSample> decode(std::unique_ptr<juce::InputStream> in, std::string& error);

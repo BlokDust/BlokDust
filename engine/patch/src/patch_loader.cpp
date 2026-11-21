@@ -27,11 +27,33 @@ bool addBlock(const nlohmann::json& b, Loaded& out, std::int64_t at, std::string
   if (b.contains("params")) {
     for (const auto& [pk, pv] : b["params"].items()) {
       std::uint8_t idx; double v;
-      if (!paramIndex(t, pk, idx)) { err = "unknown param " + pk + " on " + key; return false; }
+      // R3: a param this build doesn't know (a newer BlokDust saved it) is dropped with a warning; the rest loads.
+      if (!paramIndex(t, pk, idx)) { out.warnings.push_back("unknown param " + pk + " on " + key); continue; }
+      // An LFO's target (AUDIO-0003) is saved as "<block id>:<param key>"; the engine ids it becomes are this
+      // session's, so saved ones are never read. Resolved once every block is known (resolveTargets).
+      if (pk == "targetBlock" || pk == "targetParam") continue;
+      if (pk == "target") { if (pv.is_string()) out.targets.emplace_back(id, pv.get<std::string>()); continue; }
       if (toNumber(pv, v)) out.commands.push_back(Command::setParam(id, idx, v, at));
     }
   }
   return true;
+}
+/// "<block id>:<param key>" → SetParam targetBlock / targetParam on the block that names it. Unknown blocks or
+/// params are skipped (the LFO idles).
+void resolveTargets(Loaded& out) {
+  for (const auto& [id, text] : out.targets) {
+    const auto colon = text.rfind(':');
+    if (colon == std::string::npos) continue;
+    const auto it = out.ids.find(text.substr(0, colon));
+    if (it == out.ids.end()) continue;
+    BlockType own{}, theirs{};
+    for (const auto& c : out.commands) if (c.type == Command::Type::AddBlock) { if (c.id == id) own = c.blockType; if (c.id == it->second) theirs = c.blockType; }
+    std::uint8_t tb, tp, idx;
+    if (!paramIndex(own, "targetBlock", tb) || !paramIndex(own, "targetParam", tp) || !paramIndex(theirs, text.substr(colon + 1), idx)) continue;
+    out.commands.push_back(Command::setParam(id, tb, static_cast<double>(it->second)));
+    out.commands.push_back(Command::setParam(id, tp, static_cast<double>(idx)));
+  }
+  out.targets.clear();
 }
 }  // namespace
 
@@ -43,6 +65,23 @@ bool load(const nlohmann::json& patch, Loaded& out, std::string& err) {
   // exactly their command list.
   if (patch.contains("tempo") && patch["tempo"].is_number()) out.commands.push_back(Command::tempo(patch["tempo"].get<double>()));
   for (const auto& b : patch["blocks"]) if (!addBlock(b, out, -1, err)) return false;
+  resolveTargets(out);
+  // R7: `macros` holds what is inside each Stage block: { block: "<stage block id>", blocks: […], connectionOrder? }.
+  // One level only (SCOPE-0006): a Stage inside a Stage stays empty.
+  if (patch.contains("macros") && patch["macros"].is_array())
+    for (const auto& m : patch["macros"]) {
+      if (!m.is_object() || !m.contains("block") || !m["block"].is_string() || !m.contains("blocks") || !m["blocks"].is_array()) continue;
+      const auto it = out.ids.find(m["block"].get<std::string>());
+      if (it == out.ids.end()) continue;
+      // One inner world per Stage: the first entry wins. Repeats were each built into an Engine of their own
+      // (security review, PR 13: a crafted file could exhaust memory). web/src/patch/loadPatch.ts does the same.
+      if (std::any_of(out.stages.begin(), out.stages.end(), [&](const auto& s) { return s.first == it->second; })) continue;
+      auto inner = std::make_shared<Loaded>();
+      nlohmann::json body = {{"blocks", m["blocks"]}};
+      if (m.contains("connectionOrder")) body["connectionOrder"] = m["connectionOrder"];
+      if (!load(body, *inner, err)) return false;
+      out.stages.emplace_back(it->second, std::move(inner));
+    }
   // R4a: the order the pairs connected in, oldest first (SPEC-PATCH-FORMAT-V2 R4). Unknown or unconnected pairs are
   // skipped (the engine ignores them); without the list, pairs connect in block order.
   if (patch.contains("connectionOrder") && patch["connectionOrder"].is_array())
@@ -52,6 +91,25 @@ bool load(const nlohmann::json& patch, Loaded& out, std::string& err) {
       if (a != out.ids.end() && b != out.ids.end()) out.commands.push_back(Command::relink(a->second, b->second));
     }
   return true;
+}
+
+std::map<BlockId, std::unique_ptr<Engine>> attachStagesById(Engine& root, const Loaded& loaded, int sampleRate) {
+  std::map<BlockId, std::unique_ptr<Engine>> made;
+  root.prime();
+  for (const auto& [block, inner] : loaded.stages) {
+    EngineConfig cfg;
+    cfg.sampleRate = sampleRate; cfg.seed = loaded.seed; cfg.child = true; cfg.parent = &root;
+    auto e = std::make_unique<Engine>(cfg);
+    for (const auto& c : inner->commands) e->push(c);
+    if (root.attachStage(block, e.get())) made[block] = std::move(e);
+  }
+  return made;
+}
+
+std::vector<std::unique_ptr<Engine>> attachStages(Engine& root, const Loaded& loaded, int sampleRate) {
+  std::vector<std::unique_ptr<Engine>> out;
+  for (auto& [block, e] : attachStagesById(root, loaded, sampleRate)) out.push_back(std::move(e));
+  return out;
 }
 
 bool loadScript(const nlohmann::json& script, Loaded& io, std::string& err) {

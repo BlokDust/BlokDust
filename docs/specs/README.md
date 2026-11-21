@@ -10,11 +10,17 @@
 | ID | Spec | Domain | Status | ADRs |
 |---|---|---|---|---|
 | [SPEC-AUDIO-V1-PARITY](domains/audio/v1-parity.md) | Audio parity with v1 | audio | **draft** | SCOPE-0004, PROCESS-0004, SIMULATION-0001, AUDIO-0001 |
+| [SPEC-AUDIO-WAVETABLE](domains/audio/wavetable.md) | The Wavetable block | audio | **draft** | AUDIO-0004, AUDIO-0001, SIMULATION-0001, DATA-0005, SCOPE-0005 |
 | [SPEC-CONNECTIONS-PROXIMITY](domains/connections/proximity.md) | Proximity connections | connections | **draft** | SIMULATION-0002, ARCHITECTURE-0002 |
 | [SPEC-PATCH-FORMAT-V2](domains/patch-format/patch-v2.md) | Patch format v2 | patch-format | **draft** | DATA-0001, DATA-0005, DATA-0004, SCOPE-0002, PLUGIN-0003 |
 | [SPEC-PROCESS-PRIVATE-OPERATIONAL-CONFIGURATION](domains/process/private-operational-configuration.md) | Private operational configuration | process | **active** | PROCESS-0005 |
+| [SPEC-SHARING-ACCOUNTS](domains/sharing/accounts.md) | Accounts | sharing | **draft** | SHARING-0008, SHARING-0001, DATA-0005 |
 | [SPEC-SHARING-BACKEND](domains/sharing/backend.md) | Sharing backend, embeds and sample references | sharing | **draft** | SHARING-0001, SHARING-0002, SHARING-0004, DATA-0005, SCOPE-0003 |
-| [SPEC-SIMULATION-POWER-AND-PARTICLES](domains/simulation/power-and-particles.md) | Power, particles, lasers and logic | simulation | **draft** | SIMULATION-0001, SIMULATION-0003 |
+| [SPEC-SHARING-GALLERY](domains/sharing/gallery.md) | Gallery | sharing | **draft** | SHARING-0009, SHARING-0008, DATA-0005 |
+| [SPEC-SHARING-USAGE-ANALYTICS](domains/sharing/usage-analytics.md) | Usage analytics | sharing | **draft** | SHARING-0010 |
+| [SPEC-SHARING-VIDEO-EXPORT](domains/sharing/video-export.md) | Video export | sharing | **draft** | SHARING-0007, SIMULATION-0001, DATA-0005, UI-0005 |
+| [SPEC-SIMULATION-POWER-AND-PARTICLES](domains/simulation/power-and-particles.md) | Power, particles, lasers and logic | simulation | **draft** | SIMULATION-0001, SIMULATION-0003, SIMULATION-0010 |
+| [SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS](domains/support/in-app-feedback-and-diagnostic-reports.md) | In-app feedback and diagnostic reports | support | **draft** | SUPPORT-0001, DATA-0005 |
 | [SPEC-VISUAL-V1-PARITY](domains/visual/v1-parity.md) | Visual parity with v1 | visual | **draft** | UI-0001, UI-0002, UI-0003, SCOPE-0004 |
 
 ## Changes
@@ -32,3 +38,32 @@
 | [CHG-0011](changes/0011-effects-run-in-the-order-they-connected/proposal.md) | Effects run in the order they connected | **proposed** | SPEC-CONNECTIONS-PROXIMITY, SPEC-PATCH-FORMAT-V2 |
 | [CHG-0012](changes/0012-dust-automation-moves-the-sliders/proposal.md) | Dust automation moves the sliders | **proposed** | SPEC-PATCH-FORMAT-V2 |
 | [CHG-0013](changes/0013-post-launch-fixes-2-0-2/proposal.md) | Post-launch fixes (2.0.2) | **proposed** | SPEC-PATCH-FORMAT-V2, SPEC-SIMULATION-POWER-AND-PARTICLES |
+| [CHG-0014](changes/0014-compressor-and-emitter-offset/proposal.md) | Compressor block and emitter Offset | **proposed** | SPEC-AUDIO-V1-PARITY, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |
+| [CHG-0015](changes/0015-counter-chance-and-prism/proposal.md) | Counter, Chance and Prism | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-CONNECTIONS-PROXIMITY |
+| [CHG-0016](changes/0016-sound-laser/proposal.md) | Sound Laser | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-AUDIO-V1-PARITY |
+| [CHG-0017](changes/0017-keys-set-pitch-and-note-effects/proposal.md) | Silent Keys, and note effects (Chord, Arpeggiator, Random Note) | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-AUDIO-V1-PARITY |
+| [CHG-0018](changes/0018-lfo/proposal.md) | LFO | **proposed** | SPEC-AUDIO-V1-PARITY, SPEC-PATCH-FORMAT-V2 |
+| [CHG-0019](changes/0019-grid/proposal.md) | Touchpad | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |
+| [CHG-0020](changes/0020-labels/proposal.md) | Labels on the stage | **proposed** | SPEC-PATCH-FORMAT-V2, SPEC-VISUAL-V1-PARITY |
+| [CHG-0021](changes/0021-stage-block/proposal.md) | Stage block | **proposed** | SPEC-PATCH-FORMAT-V2, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-CONNECTIONS-PROXIMITY |
+| [CHG-0022](changes/0022-video-export/proposal.md) | Video export | **proposed** | SPEC-SHARING-VIDEO-EXPORT |
+| [CHG-0023](changes/0023-optional-accounts/proposal.md) | Optional accounts | **proposed** | SPEC-SHARING-ACCOUNTS, SPEC-SHARING-BACKEND |
+| [CHG-0024](changes/0024-public-gallery/proposal.md) | Public gallery | **proposed** | SPEC-SHARING-GALLERY, SPEC-SHARING-ACCOUNTS |
+| [CHG-0025](changes/0025-ipad-auv3/proposal.md) | iPad AUv3 | **proposed** |  |
+| [CHG-0026](changes/0026-usage-analytics/proposal.md) | Usage analytics | **proposed** | SPEC-SHARING-USAGE-ANALYTICS, SPEC-SHARING-BACKEND |
+| [CHG-0027](changes/0027-account-stats/proposal.md) | Account stats | **proposed** | SPEC-SHARING-ACCOUNTS |
+| [CHG-0028](changes/0028-waveform-zoom-in-the-options-panel/proposal.md) | Waveform zoom in the options panel | **proposed** | SPEC-VISUAL-V1-PARITY |
+| [CHG-0029](changes/0029-pulse-delay/proposal.md) | Pulse delay | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES |
+| [CHG-0030](changes/0030-envelope-graph-easier-to-set/proposal.md) | Envelope graph easier to set | **proposed** | SPEC-VISUAL-V1-PARITY |
+| [CHG-0031](changes/0031-wavetable-block/proposal.md) | Wavetable block | **proposed** | SPEC-AUDIO-WAVETABLE, SPEC-AUDIO-V1-PARITY |
+| [CHG-0032](changes/0032-gate-block/proposal.md) | Gate block | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-CONNECTIONS-PROXIMITY |
+| [CHG-0033](changes/0033-quick-save-and-unsaved-marker/proposal.md) | Quick save and unsaved marker | **proposed** | SPEC-SHARING-BACKEND |
+| [CHG-0034](changes/0034-laser-restart/proposal.md) | Laser restart and re-strike | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES |
+| [CHG-0035](changes/0035-playtest-tweaks/proposal.md) | Playtest tweaks: tour, menu order, hints, microphone power, SampleGen sound | **proposed** | SPEC-VISUAL-V1-PARITY, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-SHARING-VIDEO-EXPORT, SPEC-SHARING-GALLERY, SPEC-SHARING-ACCOUNTS |
+| [CHG-0036](changes/0036-add-in-app-feedback-and-private-support-reports/proposal.md) | Add in-app feedback and private support reports | **done** | SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS |
+| [CHG-0037](changes/0037-pre-release-polish-particles-save-connect-account/proposal.md) | Pre-release polish: particles, save, Connect, account, patches lists | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2, SPEC-SHARING-ACCOUNTS, SPEC-SHARING-BACKEND, SPEC-VISUAL-V1-PARITY, SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS |
+| [CHG-0038](changes/0038-stage-in-the-plugins/proposal.md) | Stage in the plugins | **done** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |
+| [CHG-0039](changes/0039-sign-in-methods-plugin-gallery-and-plugin-sign-in/proposal.md) | Sign-in methods, plugin gallery and plugin sign-in | **done** | SPEC-SHARING-ACCOUNTS, SPEC-SHARING-GALLERY |
+| [CHG-0040](changes/0040-note-bars-for-random-note-and-chord/proposal.md) | Note bars for Random Note and Chord | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |
+| [CHG-0041](changes/0041-feedback-tab-reporting-patches-and-other-people-s/proposal.md) | Feedback tab, reporting patches, and other people's patches on the website | **done** | SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS, SPEC-SHARING-GALLERY |
+| [CHG-0042](changes/0042-owner-tweaks-keys-never-aim-synced-to-host-short/proposal.md) | Owner tweaks: keys never aim, SYNCED TO HOST, short menu, clean block edges | **proposed** | SPEC-CONNECTIONS-PROXIMITY, SPEC-VISUAL-V1-PARITY |

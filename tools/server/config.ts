@@ -2,7 +2,7 @@
 import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
-import { CONFIG_DIR, requiredSetting } from '../lib/local-config.ts';
+import { CONFIG_DIR, requiredSetting, setting } from '../lib/local-config.ts';
 
 export type EnvName = 'staging' | 'production';
 export const envKey = (env: EnvName, suffix: string) => `BLOKDUST_${env.toUpperCase()}_${suffix}`;
@@ -22,8 +22,26 @@ export function remoteConfig(env: EnvName): string {
   }
   const target = config.env[env];
   target.d1_databases[0].database_id = requiredSetting(envKey(env, 'DATABASE_ID'));
+  target.d1_databases[1].database_id = requiredSetting(envKey(env, 'SUPPORT_DATABASE_ID'));
   target.vars.PUBLIC_BASE_URL = publicUrl(env);
   target.vars.TURNSTILE_SITE_KEY = requiredSetting(envKey(env, 'TURNSTILE_SITE_KEY'));
+  // Sign in with Google (SPEC-SHARING-ACCOUNTS R2a): optional; the client secret is a Worker secret (`bd server secret`).
+  const google = setting('BLOKDUST_GOOGLE_CLIENT_ID').trim();
+  if (google) target.vars.GOOGLE_CLIENT_ID = google;
+  // Sign in with Apple (R2b): optional; the Services ID, team id and key id are vars, the .p8 key a Worker secret.
+  for (const k of ['CLIENT_ID', 'TEAM_ID', 'KEY_ID']) { const v = setting(`BLOKDUST_APPLE_${k}`).trim(); if (v) target.vars[`APPLE_${k}`] = v; }
+  // The iPad app (SHARING-0011): Sign in with Apple in the app, and the site's apple-app-site-association. Its id is
+  // the app's bundle id (plugin/CMakeLists.txt); BLOKDUST_APPLE_APP_ID overrides it.
+  if (target.vars.APPLE_TEAM_ID) target.vars.APPLE_APP_ID = setting('BLOKDUST_APPLE_APP_ID', 'com.funputs.blokdust').trim();
+  // Usage analytics (SHARING-0010): optional, per environment, from local config. Access protects /admin/*; Sentry's
+  // DSN is public (it's in the page) but stays out of the repo with the rest; ANALYTICS_RATE overrides the committed
+  // default (production's is "0", off). The dashboard's account id and query token are secrets (`bd server secret`).
+  for (const [name, key] of [['ACCESS_TEAM_DOMAIN', 'ACCESS_TEAM_DOMAIN'], ['ACCESS_AUD', 'ACCESS_AUD'], ['SENTRY_DSN', 'SENTRY_DSN'], ['ANALYTICS_RATE', 'ANALYTICS_RATE']] as const) {
+    const v = setting(envKey(env, key));
+    if (v) target.vars[name] = v;
+  }
+  // The dashboard without Access is for local tests only (SPEC-SHARING-USAGE-ANALYTICS R10).
+  delete target.vars.ADMIN_LOCAL;
   // Avoid validating unrelated remote placeholders in the other environment.
   config.env = { [env]: target };
   const hash = createHash('sha256').update(server).digest('hex').slice(0, 16);

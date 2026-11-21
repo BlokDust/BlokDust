@@ -1,7 +1,7 @@
 {
   "name": "blokdust",
   "private": true,
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "BlokDust 2: a visual, physics-driven music playground for web, VST3, AU and standalone.",
   "license": "AGPL-3.0-or-later",
   "type": "module",
@@ -26,10 +26,18 @@
     "test:stage": "node tests/e2e/stage-e2e.ts",
     "test:e2e": "node tests/e2e/build-and-hear.ts",
     "test:ui-regressions": "node tests/e2e/ui-regressions.ts",
+    "test:new-blocks": "node tests/e2e/new-blocks.ts",
     "test:sharing": "node tests/e2e/sharing.ts",
+    "test:video": "node tests/e2e/video.ts",
+    "test:accounts": "node tests/e2e/accounts.ts",
+    "test:gallery": "node tests/e2e/gallery.ts",
     "test:sharing:base": "node tests/e2e/sharing.ts --base",
+    "test:analytics": "node tests/e2e/analytics.ts",
     "server:typecheck": "pnpm -C server typecheck",
-    "test:mpe": "node tests/mpe/run.ts"
+    "test:mpe": "node tests/mpe/run.ts",
+    "test:support": "node tests/e2e/support.ts",
+    "test:support:plugin": "node tests/e2e/support-plugin.ts",
+    "test:support:base": "node tests/e2e/support.ts --based"
   },
   "devDependencies": {
     "ajv": "8.20.0",

@@ -13,3 +13,11 @@
 | [UI-0006](UI-0006-multi-touch-the-first-finger-is-v1-s-pointer-more.md) | Multi-touch: the first finger is v1's pointer; more fingers take blocks, sliders or a pinch | **accepted** | 2026-11-11 | touch, input, release-1 |
 | [UI-0007](UI-0007-multi-select-a-set-beside-v1-s-one-selected-block.md) | Multi-select: a set beside v1's one selected block, ringed by its outline | **accepted** | 2026-11-11 | selection, input, release-1 |
 | [UI-0008](UI-0008-a-power-switch-for-the-whole-world-on-the-stage.md) | A power switch for the whole world, on the stage | **accepted** | 2026-11-11 | power, release-1 |
+| [UI-0009](UI-0009-stage-inside-view-is-a-window-that-points-at-its-block.md) | Stage inside view is a window that points at its block | **proposed** | 2026-11-13 | ui, stage, post-2-0 |
+| [UI-0010](UI-0010-grid-plays-in-its-options-panel.md) | Touchpad plays in its options panel | **proposed** | 2026-11-13 | ui, touch, post-2-0 |
+| [UI-0011](UI-0011-labels-are-text-on-the-stage.md) | Labels are text on the stage | **proposed** | 2026-11-13 | ui, stage, post-2-0 |
+| [UI-0012](UI-0012-a-stage-is-played-from-outside-through-its.md) | A Stage is played from outside through its controllers and Stage In | **accepted** | 2026-11-14 | stage, controllers, selection |
+| [UI-0013](UI-0013-waveforms-zoom-as-a-view-window-over-v1-s-panel.md) | Waveforms zoom as a view window over v1's panel | **proposed** | 2026-11-15 | ui, options-panel, samples, post-2-0 |
+| [UI-0014](UI-0014-the-envelope-graph-uses-a-curved-time-axis.md) | The Envelope graph uses a curved time axis | **accepted** | 2026-11-17 | ui, options-panel, envelope, post-2-0 |
+| [UI-0015](UI-0015-host-the-power-switch-s-third-cell-hands-power-to.md) | HOST: the power switch's third cell hands power to the DAW transport | **accepted** | 2026-11-16 | power, plugin, ipad |
+| [UI-0016](UI-0016-note-bars-and-a-range-slider-in-the-options-panel.md) | Note bars and a range slider in the options panel | **proposed** | 2026-11-19 | ui, options-panel, note-effects, post-2-0 |

@@ -206,10 +206,12 @@ export class Splash extends DisplayObject{
         var dx = (App.Width*0.5) + (this._Center.x*this._Scale) + (App.Width*(this._Offset.x+this.XOffset));
         var dy = (App.Height*0.5) + (this._Center.y*this._Scale) + (App.Height*(this._Offset.y+this.YOffset));
         var headerType = 100*units;
+        this.Ctx.font = "200 " + headerType + "px Dosis";
+        headerType = Math.min(headerType, headerType * App.Width * 0.8 / this.Ctx.measureText("BLOKDUST 2").width);
         App.FillColor(this.Ctx,App.Palette[App.ThemeManager.Txt]);
         this.Ctx.textAlign = "center";
         this.Ctx.font = "200 " + headerType + "px Dosis";
-        this.Ctx.fillText("BLOKDUST",dx,dy + (headerType * 0.38));
+        this.Ctx.fillText("BLOKDUST 2",dx,dy + (headerType * 0.38));
 
 
         // IOS BUTTON //

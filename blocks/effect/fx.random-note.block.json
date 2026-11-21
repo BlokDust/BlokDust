@@ -1,0 +1,241 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.random-note",
+  "draft": false,
+  "category": "effect",
+  "kind": "pre-effect",
+  "name": "Random Note",
+  "description": "Picks a random note for every note it is given, weighted per note, within a range.",
+  "v1": {
+    "type": null
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 5,
+        "points": [
+          [
+            -1,
+            -1
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            -1,
+            0
+          ]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [
+            -1,
+            -1
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        -1,
+        -1
+      ],
+      [
+        1,
+        -1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        -1,
+        0
+      ]
+    ],
+    "menuOffset": [
+      0,
+      0
+    ]
+  },
+  "params": [
+    {
+      "key": "w0",
+      "default": 1,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Weight of C (before Key)"
+    },
+    {
+      "key": "w1",
+      "default": 0,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Weight of C# (before Key)"
+    },
+    {
+      "key": "w2",
+      "default": 1,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Weight of D (before Key)"
+    },
+    {
+      "key": "w3",
+      "default": 0,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Weight of D# (before Key)"
+    },
+    {
+      "key": "w4",
+      "default": 1,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Weight of E (before Key)"
+    },
+    {
+      "key": "w5",
+      "default": 1,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Weight of F (before Key)"
+    },
+    {
+      "key": "w6",
+      "default": 0,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Weight of F# (before Key)"
+    },
+    {
+      "key": "w7",
+      "default": 1,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Weight of G (before Key)"
+    },
+    {
+      "key": "w8",
+      "default": 0,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Weight of G# (before Key)"
+    },
+    {
+      "key": "w9",
+      "default": 1,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Weight of A (before Key)"
+    },
+    {
+      "key": "w10",
+      "default": 0,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Weight of A# (before Key)"
+    },
+    {
+      "key": "w11",
+      "default": 1,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Weight of B (before Key)"
+    },
+    {
+      "key": "key",
+      "default": 0,
+      "unit": "semitones",
+      "range": [
+        0,
+        11
+      ],
+      "description": "Shifts the weights up this many semitones (0 = C … 11 = B)"
+    },
+    {
+      "key": "low",
+      "default": 60,
+      "unit": "midi",
+      "range": [
+        24,
+        107
+      ],
+      "description": "Lowest note (MIDI; 60 = middle C)"
+    },
+    {
+      "key": "high",
+      "default": 71,
+      "unit": "midi",
+      "range": [
+        24,
+        107
+      ],
+      "description": "Highest note (MIDI)"
+    }
+  ]
+}

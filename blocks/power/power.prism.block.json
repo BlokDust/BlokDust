@@ -1,0 +1,129 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "power.prism",
+  "draft": false,
+  "category": "power",
+  "kind": "path",
+  "name": "Prism",
+  "description": "Splits and diverts laser beams and particles.",
+  "v1": {
+    "type": null
+  },
+  "connection": null,
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 7,
+        "points": [
+          [
+            -1,
+            0
+          ],
+          [
+            -1,
+            -1
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [
+            0,
+            -1
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            -1,
+            -1
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        -1,
+        0
+      ],
+      [
+        -1,
+        -1
+      ],
+      [
+        0,
+        -1
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "menuOffset": [
+      0,
+      0
+    ]
+  },
+  "params": [
+    {
+      "key": "angle",
+      "default": -90,
+      "unit": "deg",
+      "range": [
+        -270,
+        90
+      ],
+      "description": "Exit direction (\u221290 = up), the middle of the fan"
+    },
+    {
+      "key": "rotate",
+      "default": 0,
+      "unit": null,
+      "range": [
+        -500,
+        500
+      ],
+      "description": "Rotates the exit direction of particles and beams"
+    },
+    {
+      "key": "streams",
+      "default": 1,
+      "unit": "count",
+      "range": [
+        1,
+        4
+      ],
+      "description": "How many streams each hit leaves as"
+    },
+    {
+      "key": "spread",
+      "default": 60,
+      "unit": "deg",
+      "range": [
+        0,
+        180
+      ],
+      "description": "Angle the streams fan across"
+    }
+  ]
+}

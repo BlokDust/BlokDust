@@ -1,0 +1,139 @@
+{
+  "description": "CHG-0021 (R13): two Stage blocks. One, held by a Power, holds a synced emitter hitting a Tone through a Stereo Delay; the other holds a Laser on a Tone and is struck by outer particles through a Reverb.",
+  "render": {
+    "seconds": 6,
+    "sampleRate": 44100
+  },
+  "patch": {
+    "format": "blokdust.patch",
+    "version": 2,
+    "seed": 11,
+    "tempo": 96,
+    "blocks": [
+      {
+        "id": "s1",
+        "type": "source.stage",
+        "x": 0,
+        "y": 0,
+        "params": {
+          "gain": 0.9
+        }
+      },
+      {
+        "id": "pw",
+        "type": "power.power",
+        "x": -3,
+        "y": 0
+      },
+      {
+        "id": "vol",
+        "type": "fx.volume",
+        "x": 3,
+        "y": 0,
+        "params": {
+          "gain": -3
+        }
+      },
+      {
+        "id": "e",
+        "type": "power.emitter",
+        "x": 10,
+        "y": 10,
+        "params": {
+          "angle": 0,
+          "selfPoweredMode": true,
+          "rate": 50,
+          "speed": 8
+        }
+      },
+      {
+        "id": "s2",
+        "type": "source.stage",
+        "x": 20,
+        "y": 10
+      },
+      {
+        "id": "rev",
+        "type": "fx.reverb",
+        "x": 23,
+        "y": 12
+      }
+    ],
+    "macros": [
+      {
+        "block": "s1",
+        "blocks": [
+          {
+            "id": "e",
+            "type": "power.emitter",
+            "x": -8,
+            "y": 0,
+            "params": {
+              "angle": 0,
+              "selfPoweredMode": true,
+              "sync": true,
+              "division": 0.5,
+              "speed": 8
+            }
+          },
+          {
+            "id": "t",
+            "type": "source.tone",
+            "x": 0,
+            "y": 0,
+            "params": {
+              "waveform": 2
+            }
+          },
+          {
+            "id": "d",
+            "type": "fx.stereo-delay",
+            "x": 3,
+            "y": 0,
+            "params": {
+              "sync": true,
+              "delayBeats": 0.75,
+              "feedback": 0.4
+            }
+          }
+        ]
+      },
+      {
+        "block": "s2",
+        "blocks": [
+          {
+            "id": "pw",
+            "type": "power.power",
+            "x": -3,
+            "y": 3
+          },
+          {
+            "id": "l",
+            "type": "power.laser",
+            "x": -3,
+            "y": 0,
+            "params": {
+              "angle": 0
+            }
+          },
+          {
+            "id": "t",
+            "type": "source.tone",
+            "x": 4,
+            "y": 0,
+            "params": {
+              "waveform": 0,
+              "transpose": 7
+            }
+          }
+        ],
+        "connectionOrder": [
+          [
+            "pw",
+            "l"
+          ]
+        ]
+      }
+    ]
+  }
+}

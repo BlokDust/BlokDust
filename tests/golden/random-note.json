@@ -1,0 +1,143 @@
+{
+  "description": "CHG-0017 (R10h): particles hit a Tone with a Random Note (D pentatonic, two octaves) and a fifth Chord; a second Tone picks among keys held with Keys set pitch.",
+  "render": {
+    "seconds": 6,
+    "sampleRate": 44100
+  },
+  "patch": {
+    "format": "blokdust.patch",
+    "version": 2,
+    "seed": 3,
+    "blocks": [
+      {
+        "id": "e",
+        "type": "power.emitter",
+        "x": -10,
+        "y": 0,
+        "params": {
+          "angle": 0,
+          "selfPoweredMode": true,
+          "rate": 18,
+          "speed": 10
+        }
+      },
+      {
+        "id": "t",
+        "type": "source.tone",
+        "x": 0,
+        "y": 0,
+        "params": {
+          "waveform": 0
+        }
+      },
+      {
+        "id": "rn",
+        "type": "fx.random-note",
+        "x": 3,
+        "y": 0,
+        "params": {
+          "key": 2,
+          "low": 48,
+          "high": 71,
+          "w0": 1,
+          "w1": 0,
+          "w2": 1,
+          "w3": 0,
+          "w4": 1,
+          "w5": 0,
+          "w6": 0,
+          "w7": 1,
+          "w8": 0,
+          "w9": 1,
+          "w10": 0,
+          "w11": 0
+        }
+      },
+      {
+        "id": "ch",
+        "type": "fx.chord",
+        "x": 3,
+        "y": 3,
+        "params": {
+          "q0": 3,
+          "q1": 3,
+          "q2": 3,
+          "q3": 3,
+          "q4": 3,
+          "q5": 3,
+          "q6": 3,
+          "q7": 3,
+          "q8": 3,
+          "q9": 3,
+          "q10": 3,
+          "q11": 3,
+          "key": 0,
+          "smooth": 0
+        }
+      },
+      {
+        "id": "e2",
+        "type": "power.emitter",
+        "x": -10,
+        "y": 12,
+        "params": {
+          "angle": 0,
+          "selfPoweredMode": true,
+          "rate": 27,
+          "speed": 10
+        }
+      },
+      {
+        "id": "t2",
+        "type": "source.tone",
+        "x": 0,
+        "y": 12,
+        "params": {
+          "waveform": 2
+        }
+      },
+      {
+        "id": "rn2",
+        "type": "fx.random-note",
+        "x": 3,
+        "y": 12,
+        "params": {}
+      },
+      {
+        "id": "k",
+        "type": "input.computer-keyboard",
+        "x": 0,
+        "y": 16,
+        "params": {
+          "keysSetPitch": true
+        }
+      }
+    ]
+  },
+  "script": [
+    {
+      "atSample": 0,
+      "op": "noteOn",
+      "note": 57,
+      "controller": "input.computer-keyboard"
+    },
+    {
+      "atSample": 0,
+      "op": "noteOn",
+      "note": 60,
+      "controller": "input.computer-keyboard"
+    },
+    {
+      "atSample": 0,
+      "op": "noteOn",
+      "note": 64,
+      "controller": "input.computer-keyboard"
+    },
+    {
+      "atSample": 0,
+      "op": "noteOn",
+      "note": 69,
+      "controller": "input.computer-keyboard"
+    }
+  ]
+}

@@ -1,0 +1,168 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "power.sound-laser",
+  "draft": false,
+  "category": "power",
+  "kind": "listener",
+  "name": "Sound Laser",
+  "description": "Connects to a source and triggers a laser beam when the sound is louder than the threshold.",
+  "v1": {
+    "type": null
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 7,
+        "points": [
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      },
+      {
+        "palette": 3,
+        "points": [
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      },
+      {
+        "palette": 4,
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            1,
+            -1
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        -1,
+        0
+      ],
+      [
+        0,
+        -1
+      ],
+      [
+        1,
+        -1
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "menuOffset": [
+      0,
+      0
+    ]
+  },
+  "params": [
+    {
+      "key": "angle",
+      "default": -90,
+      "unit": "deg",
+      "range": [
+        -270,
+        90
+      ],
+      "description": "Beam direction (\u221290 = up)"
+    },
+    {
+      "key": "range",
+      "default": 150,
+      "unit": null,
+      "range": [
+        50,
+        1200
+      ],
+      "description": "Beam length (15 = one grid cell), as the Laser's"
+    },
+    {
+      "key": "band",
+      "default": 0,
+      "unit": "enum",
+      "range": [
+        0,
+        3
+      ],
+      "description": "What it listens to: 0 everything, 1 lows (under 250 Hz), 2 mids, 3 highs (over 2.5 kHz)"
+    },
+    {
+      "key": "threshold",
+      "default": -30,
+      "unit": "dB",
+      "range": [
+        -60,
+        0
+      ],
+      "description": "Level that turns the beam on"
+    },
+    {
+      "key": "invert",
+      "default": false,
+      "unit": "enum",
+      "description": "On: the beam is on while the sound is below the threshold"
+    },
+    {
+      "key": "hold",
+      "default": 0.1,
+      "unit": "s",
+      "range": [
+        0,
+        2
+      ],
+      "description": "Shortest time the beam stays on"
+    }
+  ]
+}

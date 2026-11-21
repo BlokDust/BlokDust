@@ -7,7 +7,7 @@
 using namespace blokdust;
 
 TEST_CASE("catalogue has every v1 block with kinds and catchments from manifests") {
-  STATIC_REQUIRE(gen::kBlockTypeCount == 33);  // 32 v1 blocks + source.audio-in (PLUGIN-0002)
+  STATIC_REQUIRE(gen::kBlockTypeCount >= 33);  // 32 v1 blocks + source.audio-in (PLUGIN-0002) + the post-2.0 blocks (SCOPE-0005)
   int fromV1 = 0;
   for (const auto& b : gen::kBlocks) fromV1 += !b.v1Type.empty();
   CHECK(fromV1 == 32);
@@ -31,7 +31,7 @@ TEST_CASE("every effect-side block has a catchment; every source-side block has 
   for (const auto& b : gen::kBlocks) {
     INFO(b.id);
     if (isEffectSide(b.kind)) CHECK(b.catchment > 0.0f);
-    if (isSourceSide(b.kind) || b.kind == BlockKind::Void) CHECK(b.catchment == 0.0f);
+    if (isSourceSide(b.kind) || b.kind == BlockKind::Void || b.kind == BlockKind::Gate) CHECK(b.catchment == 0.0f);
     CHECK(b.outlineCount >= 3);
   }
 }

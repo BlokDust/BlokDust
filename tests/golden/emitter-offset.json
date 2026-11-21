@@ -1,0 +1,13 @@
+{
+  "description": "CHG-0014 (R4 Offset): two synced emitters on quarter notes, the second half a beat late, each hitting its own Tone.",
+  "render": { "seconds": 5, "sampleRate": 44100 },
+  "patch": {
+    "format": "blokdust.patch", "version": 2, "seed": 5, "tempo": 120,
+    "blocks": [
+      { "id": "e1", "type": "power.emitter", "x": -8, "y": 0, "params": { "angle": 0, "selfPoweredMode": true, "sync": true, "division": 1, "speed": 6 } },
+      { "id": "t1", "type": "source.tone", "x": 0, "y": 0, "params": { "waveform": 0 } },
+      { "id": "e2", "type": "power.emitter", "x": -8, "y": 8, "params": { "angle": 0, "selfPoweredMode": true, "sync": true, "division": 1, "speed": 6, "offset": 0.5 } },
+      { "id": "t2", "type": "source.tone", "x": 0, "y": 8, "params": { "waveform": 1, "transpose": 7 } }
+    ]
+  }
+}

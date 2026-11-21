@@ -11,6 +11,7 @@ namespace blokdust::plugin {
 
 struct Snapshot {
   std::uint64_t seq = 0;
+  std::uint32_t view = 0;                    // the world it shows: a Stage block's inner world, or 0 (CHG-0038)
   int particleCount = 0;
   std::array<float, kMaxParticles * 3> particles{};
   int pairCount = 0;
@@ -18,9 +19,11 @@ struct Snapshot {
   int poweredCount = 0;
   std::array<std::uint32_t, kMaxBlocks> powered{};
   int beamCount = 0;
-  std::array<float, kMaxBlocks * 4> beams{};
+  std::array<float, kMaxBeams * 4> beams{};  // a laser through Prisms casts several (CHG-0015)
   int playheadCount = 0;                     // sampler playheads [blockId, seconds]* (the open panel's playback lines)
   std::array<float, 64 * 2> playheads{};
+  int monitorCount = 0;                      // live panel readouts [blockId, v0, v1, v2, v3]* (Engine::monitors)
+  std::array<float, 64 * 5> monitors{};
   int toggleCount = 0;                       // every Toggle and whether it is on: hits flip them (CHG-0013)
   std::array<std::uint32_t, kMaxBlocks> toggles{};
   std::array<std::uint8_t, kMaxBlocks> toggleOn{};

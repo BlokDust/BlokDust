@@ -4,7 +4,7 @@ title: Sharing backend, embeds and sample references
 status: draft
 domain: sharing
 adrs: [SHARING-0001, SHARING-0002, SHARING-0004, DATA-0005, SCOPE-0003]
-updated: 2026-11-07
+updated: 2026-11-17
 ---
 # Sharing backend, embeds and sample references
 
@@ -21,7 +21,14 @@ never as audio (DATA-0005). The Worker is `server/`; the client is `web/src/patc
 - **R3.** `POST /api/patches` (v1 SAVE_AS: Generate share link, Create new) MUST create a new id and return a secret edit
   token. Only the token's SHA-256 is stored. `parent` records the patch it came from (a remix).
 - **R4.** `PUT /api/patches/:id` (v1 SAVE: Overwrite) MUST require `Authorization: Bearer <edit token>` and adds a
-  revision under the same id. `DELETE` needs the token too and removes every revision. Without the token: 403.
+  revision under the same id. `DELETE` needs the token too and removes every revision. Without the token: 403, unless
+  the request is signed in to the account that owns the patch (SPEC-SHARING-ACCOUNTS R9).
+- **R4b.** *(CHG-0037, owner 2026-11-18)* A deleted patch's id stays taken, and `GET /api/patches/:id` answers 410 for
+  it (404: never a patch). A link that opens no patch starts a blank stage, leaves the address bar, keeps this
+  browser's autosave, and v1's message bar says why: deleted ("This patch has been deleted."), never a patch or a
+  malformed link ("This link doesn't lead to a patch. Check it was copied in full."), or no server ("This patch couldn't
+  be loaded. Check your connection and try again."). OPEN and GALLERY's OPEN and INSERT say the same, and a deleted
+  patch's row leaves the list.
 - **R5.** Every save (R3, R4) MUST carry a Turnstile token that Cloudflare's siteverify accepts. Without a configured
   secret, saving is refused (it fails closed).
 - **R5a.** Per-IP limits (Workers rate limiting): 20 saves a minute, and 60 Freesound lookups a minute (one shared API
@@ -42,6 +49,11 @@ never as audio (DATA-0005). The Worker is `server/`; the client is `web/src/patc
 - **R9.** `/` with `?c=<id>` and `/embed/<id>` MUST serve the app with Open Graph tags (title, description, url, a
   1200×630 PNG `og:image` saved with that revision), `twitter:card=player` with `twitter:player`, and an oEmbed
   discovery link. Every absolute URL comes from `PUBLIC_BASE_URL` (SHARING-0004).
+  - `og:title` is the patch title alone (`og:site_name` already says BlokDust); `og:description` says what BlokDust
+    is: "Connect blocks to make sounds, instruments and self-playing music. Free on the web and as a VST/AU plugin."
+  - The image is the share card the app draws when saving: the stage cropped around its blocks, with the title (and
+    "— by <handle>" once accounts exist) bottom left and a dimmed "BLOKDUST" bottom right, in v1's Dosis and the
+    theme's text colour. Untitled patches show the mark alone.
 - **R10.** `/oembed?url=<share or embed URL>` MUST return oEmbed 1.0 `rich` JSON: an iframe to `/embed/<id>`, 640×400
   by default, scaled down to fit `maxwidth` and `maxheight`, plus the thumbnail. Other hosts and unknown ids return 404.
   Only `format=json` is supported (501 otherwise).
@@ -79,6 +91,17 @@ never as audio (DATA-0005). The Worker is `server/`; the client is `web/src/patc
   waveform at once and mirrors the start, end and loop points (owner request; v1 kept the numbers, which selected
   different audio). The engine restarts sounding voices on reverse, as v1's RetriggerActiveVoices did.
 
+**Quick save** (client, CHG-0033)
+- **R18.** Cmd/Ctrl+S saves the patch over this device's own link (R7, or the account's): the same id and title, the
+  gallery left as it is, no video and no panel. v1's message bar (MessagePanel) then says SAVED; with nothing changed
+  it says SAVED without sending anything. A failed save says v1's "Save failed, please try again." and changes nothing
+  (never a `?c=p…` link). With no link of its own (never saved, someone else's patch), and in the standalone app,
+  Cmd/Ctrl+S opens Patches › SAVE. In a DAW the key is left to the DAW. It never opens the browser's "Save page".
+- **R19.** On the stage, top left (where another person's patch shows "TITLE BY @NAME"), your own saved patch shows its
+  title. Changed since it was saved, it reads `TITLE  ·  UNSAVED` (UNSAVED dimmed). Under the mouse UNSAVED reads SAVE,
+  underlined like the corner's other links; pressing it does R18. While saving it reads SAVING.
+- **R20.** Unsaved edits to your own link come back after a reload (R7) and show as UNSAVED. Nothing saves on its own.
+
 ## Scenarios
 - **S1.** Given a patch, when its creator presses Generate share link and someone else opens the link in a fresh
   browser, then they get the same blocks and an identical offline render hash (R2, R3).
@@ -105,6 +128,7 @@ never as audio (DATA-0005). The Worker is `server/`; the client is `web/src/patc
   - `share-and-load`: R2, R3, R4, R7, R9, R10, S1, S2.
   - `embed`: R10, R11, S3.
   - `samples`: R12–R15, S4.
+  - `quick-save`: R18–R20 (and `pnpm test:ui-regressions` `quick-save-no-link-opens-save`, `quick-save-plugin-keys`).
   - `share-new-tab`: S1 with the owner's steps (blocks added from the menus, one moved, link opened in a new tab).
 - **`pnpm test:ui-regressions`**: `sample-loop-region`, `sample-reverse-mirrors`, `sample-loading-indicator` and
   `convolver-downloads-only-what-it-uses` (R16, R17); engine `test_review_fixes.cpp` (reverse restarts voices).

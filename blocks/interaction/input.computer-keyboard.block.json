@@ -31,31 +31,76 @@
       {
         "palette": 8,
         "points": [
-          [-1, 0],
-          [0, -1],
-          [2, 1],
-          [1, 2],
-          [-1, 2]
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            -1,
+            2
+          ]
         ]
       },
       {
         "palette": 4,
         "points": [
-          [0, -1],
-          [0, 1],
-          [1, 1],
-          [1, 0]
+          [
+            0,
+            -1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            0
+          ]
         ]
       }
     ],
     "outline": [
-      [-1, 0],
-      [0, -1],
-      [2, 1],
-      [1, 2],
-      [-1, 2]
+      [
+        -1,
+        0
+      ],
+      [
+        0,
+        -1
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        -1,
+        2
+      ]
     ],
-    "menuOffset": [0, 0]
+    "menuOffset": [
+      0,
+      0
+    ]
   },
   "params": [
     {
@@ -119,6 +164,12 @@
         },
         "uiValueExpr": "this.Params.isPolyphonic"
       }
+    },
+    {
+      "key": "keysSetPitch",
+      "default": false,
+      "unit": "enum",
+      "description": "Silent Keys: held keys make no sound; they set the notes that power, particles and lasers play on the connected sources"
     }
   ],
   "review": [

@@ -1,0 +1,126 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "power.chance",
+  "draft": false,
+  "category": "power",
+  "kind": "logic",
+  "name": "Chance",
+  "description": "Randomly triggers connected sources and emitters based on a set probability when hit.",
+  "v1": {
+    "type": null
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 3,
+        "points": [
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            -2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            -1,
+            1
+          ]
+        ]
+      },
+      {
+        "palette": 9,
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            -2
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        -1,
+        0
+      ],
+      [
+        1,
+        -2
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        -1,
+        1
+      ]
+    ],
+    "menuOffset": [
+      0,
+      0
+    ]
+  },
+  "params": [
+    {
+      "key": "chance",
+      "default": 0.5,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Probability a hit turns it on"
+    }
+  ]
+}

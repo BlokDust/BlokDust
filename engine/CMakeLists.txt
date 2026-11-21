@@ -3,6 +3,15 @@ add_library(blokdust_engine STATIC
   src/connections.cpp
   src/convolver.cpp
   src/engine.cpp
+  src/engine_arrange.cpp
+  src/engine_commands.cpp
+  src/engine_granular.cpp
+  src/engine_hits.cpp
+  src/engine_notes.cpp
+  src/engine_render.cpp
+  src/engine_tick.cpp
+  src/engine_voices.cpp
+  src/tablebank.cpp
   src/wavetable.cpp
 )
 target_include_directories(blokdust_engine PUBLIC include)
@@ -70,12 +79,23 @@ if(BLOKDUST_BUILD_TESTS)
     tests/test_world_power.cpp
     tests/test_emitter_hit.cpp
     tests/test_granular.cpp
+    tests/test_compressor.cpp
+    tests/test_wavetable_block.cpp
+    tests/test_prism.cpp
+    tests/test_chance.cpp
+    tests/test_gate.cpp
+    tests/test_counter.cpp
+    tests/test_sound_laser.cpp
+    tests/test_note_effects.cpp
+    tests/test_lfo.cpp
+    tests/test_stage.cpp
+    tests/test_pulse_delay.cpp
   )
   target_link_libraries(blokdust_engine_tests PRIVATE blokdust_engine Catch2::Catch2WithMain)
   # Shared MIDI/MPE streams (tests/mpe/*.json), also run by the web parser (PLUGIN-0004).
   if(BLOKDUST_BUILD_TOOLS)
-    target_sources(blokdust_engine_tests PRIVATE tests/test_mpe_parser.cpp)
-    target_link_libraries(blokdust_engine_tests PRIVATE nlohmann_json::nlohmann_json)
+    target_sources(blokdust_engine_tests PRIVATE tests/test_mpe_parser.cpp tests/test_patch_loader.cpp)
+    target_link_libraries(blokdust_engine_tests PRIVATE nlohmann_json::nlohmann_json blokdust_patch)
     target_compile_definitions(blokdust_engine_tests PRIVATE BD_MPE_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/../tests/mpe")
   endif()
   if(NOT MSVC)

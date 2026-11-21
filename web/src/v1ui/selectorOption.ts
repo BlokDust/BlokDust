@@ -8,6 +8,9 @@ import { App, Dimensions } from './shim.ts';
 
 /** Settings shown as selectors. */
 const SELECTORS = new Set(['deviceIndex']);
+/** The post-2.0 blocks' carousels (newBlocks.ts) register their settings here. */
+export const addSelector = (setting: string): void => { SELECTORS.add(setting); };
+export const isSelector = (setting: string): boolean => SELECTORS.has(setting);
 
 /** Fit `text` in `width` px, ending in "…" when cut. */
 function fit(ctx: CanvasRenderingContext2D, text: string, width: number): string {

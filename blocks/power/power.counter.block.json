@@ -1,0 +1,123 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "power.counter",
+  "draft": false,
+  "category": "power",
+  "kind": "logic",
+  "name": "Counter",
+  "description": "Steps through a sequence on every hit and triggers connected sources and emitters on enabled steps.",
+  "v1": {
+    "type": null
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 3,
+        "points": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [
+            0,
+            -1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        0,
+        -1
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        0,
+        2
+      ]
+    ],
+    "menuOffset": [
+      -1,
+      -0.5
+    ]
+  },
+  "params": [
+    {
+      "key": "steps",
+      "default": 8,
+      "unit": "steps",
+      "range": [
+        1,
+        16
+      ],
+      "description": "Length of the pattern: each hit moves one step on"
+    },
+    {
+      "key": "hits",
+      "default": 3,
+      "unit": "steps",
+      "range": [
+        0,
+        16
+      ],
+      "description": "How many steps are on, spread as evenly as the length allows (Euclidean)"
+    },
+    {
+      "key": "rotate",
+      "default": 0,
+      "unit": "steps",
+      "range": [
+        0,
+        15
+      ],
+      "description": "Where in the pattern the count starts"
+    },
+    {
+      "key": "pattern",
+      "default": -1,
+      "unit": "bitmask",
+      "range": [
+        -1,
+        65535
+      ],
+      "description": "Steps set by hand (bit k = step k is on, from the first one counted); -1 = the Euclidean pattern from steps, hits and rotate"
+    }
+  ]
+}
