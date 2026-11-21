@@ -2,7 +2,7 @@
 import BlockList from './BlockList.astro';
 import { categories, categoryPath, categoryTitle, guide, siteCopy } from '../catalogue';
 
-const pages = ['about', 'guide/get-started', 'guide/keyboard-shortcuts', 'guide/synths', 'guide/features', 'guide/faq', 'guide/whats-new', 'downloads'];
+const pages = ['about', 'guide/get-started', 'guide/keyboard-shortcuts', 'guide/synths', 'guide/features', 'guide/faq', 'guide/whats-new', 'downloads', 'privacy'];
 const features = pages.map(route => ({
   href: `/${route}/`,
   label: guide.find(entry => entry.data.route === route)!.data.title,
