@@ -17,8 +17,8 @@ import { BLOCKS, BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts'
 import { drawBlocks } from '../stage/drawWorld.ts';
 import { THEMES, type Theme } from '../generated/palettes.gen.ts';
 import { loadPatch, relinks, targetCommands, type Macro, type Patch, type PatchBlock, type PatchSource } from '../patch/loadPatch.ts';
-import { decodePatch, encodePatch, loadLocal, loadSession, saveLocal, saveSession } from '../patch/share.ts';
-import { type GalleryState, type Missing, MISSING_TEXT, accountOwned, canOverwrite, editToken, isServerId, load as loadShared, loadOrWhy, remove as removeShared, save as saveShared } from '../patch/server.ts';
+import { encodePatch, loadSession, saveLocal, saveSession } from '../patch/share.ts';
+import { type GalleryState, MISSING_TEXT, accountOwned, canOverwrite, editToken, isServerId, load as loadShared, loadOrWhy, remove as removeShared, save as saveShared } from '../patch/server.ts';
 import * as account from '../account/client.ts';
 import { appKey, setAppKey } from '../account/appKey.ts';
 import { appPost, pollDevice, startDevice } from '../account/device.ts';
@@ -27,7 +27,6 @@ import { audioInAsMicrophone } from '../patch/webInputs.ts';
 import { activity } from '../account/activity.ts';
 import * as gallery from '../gallery/client.ts';
 import { DEFAULT_SOUNDS, PUBLIC_SITE, isDeadDefault, fetchFreesound, fingerprint, isPortable, openRemembered, pickAudioFile, refKey, rememberHandle, searchFreesound, type FileRef, type FreesoundRef, type SampleRef } from '../patch/samples.ts';
-import { importV1, type V1Composition } from '../patch/importV1.ts';
 import { Stage } from '../stage/Stage.ts';
 import { drawLabels, labelAt, labelCssFont, labelRect, type Label } from '../stage/labels.ts';
 import { drawInside, frameFor, inWindow, onClose } from '../stage/insideView.ts';
@@ -35,7 +34,7 @@ import { drawMakeStage, inBox, makeStageBox, type ButtonBox, type Rect } from '.
 import { frameBlocks } from '../stage/frameBlocks.ts';
 import { starPos } from '../stage/starPos.ts';
 import { gridToPx } from '../stage/metrics.ts';
-import demo from '../demo/demo.patch.json';
+import { initialPatch } from './startPatch.ts';
 import { attachNoteInputs, type MidiDevice } from '../input/keys.ts';
 import { MpeParser } from '../input/mpe.ts';
 import { loadV1Fonts } from '../chrome/v1Chrome.ts';
@@ -78,40 +77,10 @@ const SESSION_PARAMS = new Set(['targetBlock', 'targetParam']);
 const DEF_BY_V1 = new Map<string, BlockDef>();
 for (const d of BLOCKS) DEF_BY_V1.set(d.menuId, d);  // v1's type names, plus the post-2.0 blocks' menu ids
 
-interface View { theme?: number; zoom?: number; drag?: { x: number; y: number } }
 /** A server share id from `/embed/<id>` (the Worker also names it in a meta tag). */
 function embedIdFromPage(): string | null {
   const meta = document.querySelector<HTMLMetaElement>('meta[name="blokdust-embed"]')?.content;
   return meta || (location.pathname.match(/\/embed\/([^/]+)\/?$/)?.[1] ?? null);
-}
-interface Start { patch: Patch; view: View; id: string | null; title?: string; /** The link opened no patch, and why. */ missing?: Missing; /** Its account's handle, when someone else's (SPEC-SHARING-GALLERY R15). */ by?: string | null; mine?: boolean; published?: boolean; liked?: boolean; likes?: number; views?: number;
-  /** Where the patch came from (SPEC-SHARING-USAGE-ANALYTICS patch_opened). */ source?: 'link' | 'embed' | 'autosave' | 'demo' | 'v1' }
-/** Start-up patch: a `?c=` share (server id: CHG-0003; `p…` token: Phase 1), else a `?v1=` v1 composition JSON
- * (DATA-0004, with its theme/zoom/offset), else the autosave, else the demo. */
-async function initialPatch(params: URLSearchParams, embedId: string | null, plugin = false): Promise<Start> {
-  // The plugin's patch comes only from the processor (bd_patch, with the DAW project). The web view keeps
-  // localStorage between sessions, so its autosave would flash up first (owner, Logic, 2026-11-12).
-  if (plugin) return { patch: { format: 'blokdust.patch', version: 2, blocks: [] }, view: {}, id: null };
-  const c = embedId ?? params.get('c');
-  if (c && isServerId(c)) {
-    const session = loadSession(), local = loadLocal();
-    // Unsaved edits to this same composition (autosave) win over its saved version, as before a reload.
-    if (!embedId && session.id === c && session.dirty && local) return { patch: local, view: {}, id: c, source: 'autosave' };
-    const r = await loadOrWhy(c);
-    if (!('missing' in r)) return { patch: r.patch, view: {}, id: c, title: r.title, by: r.by ?? null, mine: !!r.mine, published: !!r.published, liked: !!r.liked, likes: r.likes ?? 0, views: r.views ?? 0, source: embedId ? 'embed' : 'link' };
-    return { patch: { format: 'blokdust.patch', version: 2, blocks: [] }, view: {}, id: null, missing: r.missing };
-  }
-  if (c) {
-    const p = await decodePatch(c);
-    if (p) return { patch: p, view: {}, id: null, source: 'link' };
-    // Not a patch link at all (a made-up or cut-off id): say so on a blank stage, not this browser's last one.
-    return { patch: { format: 'blokdust.patch', version: 2, blocks: [] }, view: {}, id: null, missing: 'unknown' };
-  }
-  const v1 = params.get('v1');
-  if (v1) { try { const r = importV1(JSON.parse(v1) as V1Composition); return { patch: r.patch, view: r.view, id: null, source: 'v1' }; } catch { /* fall through */ } }
-  if (params.has('demo')) return { patch: demo as Patch, view: {}, id: null, source: 'demo' };
-  const local = loadLocal();
-  return { patch: local ?? (demo as Patch), view: {}, id: loadSession().id, source: local ? 'autosave' : 'demo' };
 }
 
 /** v1 App.SessionId: the right to save over a composition: this browser's edit token, or, when the signed-in account
@@ -2029,10 +1998,10 @@ async function main() {
   keepBlocksInView();  // its saved view may be far from its blocks (owner, 2026-11-19)
   // Someone else's patch from a link, or an embed (CHG-0041): guarded. One this browser or the account made is not.
   setGuarded(!!embedId || (start.source === 'link' && !(start.id && (start.mine || canOverwrite(start.id)))));
-  // Unsaved changes are counted from what was opened: a link, a v1 composition or the demo. Work restored from the last
+  // Unsaved changes are counted from what was opened: a link, a v1 composition or a first visit. Work restored from the last
   // visit counts from where it was last saved (or, never saved, as unsaved).
   if (start.missing) baseline = contentOf(toPatch());  // blank: nothing unsaved, and the kept baseline stays the autosave's
-  else if (start.id || params.has('c') || params.has('v1') || params.has('demo') || start.patch === demo) setBaseline();
+  else if (start.id || params.has('c') || params.has('v1') || params.has('demo') || start.source === 'demo') setBaseline();
   else try { baseline = localStorage.getItem(BASELINE_KEY) ?? ''; } catch { /* private mode */ }
   {
     const title = params.get('t') ?? start.title ?? '';
@@ -2378,7 +2347,7 @@ async function main() {
   async function begin(): Promise<void> {
     begun = true;
     let shown = !splash, ready = false;
-    // A first visit (the demo, no link) is asked whether to take v1's tour once the stage shows (CHG-0035). Automated
+    // A first visit (no link, nothing kept) is asked whether to take v1's tour once the stage shows (CHG-0035). Automated
     // browsers are not, unless the URL asks (`tour=1`).
     const tour = !juce && !embedId && start.source === 'demo' && (!navigator.webdriver || params.get('tour') === '1');
     const reveal = () => {

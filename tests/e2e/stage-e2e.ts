@@ -17,7 +17,7 @@ try {
   // browser logs as "Failed to load resource" without the URL. Those are expected; any other failed request is not.
   page.on('console', m => { if (m.type() === 'error' && !m.text().startsWith('Failed to load resource')) errors.push(m.text()); });
   page.on('response', r => { if (r.status() >= 400 && !new URL(r.url()).pathname.startsWith('/api/')) errors.push(`${r.status()} ${r.url()}`); });
-  await page.goto(`${url}/index.html`);
+  await page.goto(`${url}/index.html?demo`);  // the test scene: a first visit opens an empty stage
   await page.waitForFunction(() => (window as any).__bd_probe);
   await page.click('#start');
   await page.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 20, null, { timeout: 15000 });
