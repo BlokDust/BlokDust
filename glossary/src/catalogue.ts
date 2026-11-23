@@ -30,7 +30,7 @@ export { blocks, guide, routes, siteCopy, blockPath, categoryPath };
 
 const linksByPath = new Map(articles.map(entry => [
   articlePath(entry),
-  new Set(Array.from((entry.body ?? '').matchAll(/\]\((\/[a-z0-9/-]+\/)(?:[#?][^\s)]*)?\)/g), ([, path]) => path)),
+  new Set(Array.from((entry.body ?? '').matchAll(/\]\((\/[a-z0-9/-]+\/)(?:[#?][^\s)]*)?\)/g), ([, path]) => path).filter(path => path !== undefined)),
 ]));
 
 export const categoryLinks = (category: Category) => blocks

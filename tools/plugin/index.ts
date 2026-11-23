@@ -29,8 +29,6 @@ const FX_VST3 = `${FX_ART}/VST3/BlokDust FX.vst3`;
 const FX_AU = `${FX_ART}/AU/BlokDust FX.component`;
 const HOST = 'build/plugin/plugin/blokdust_host_test_artefacts/Release/blokdust_host_test';
 const PLUGINVAL = '.cache/pluginval/pluginval.app/Contents/MacOS/pluginval';
-// Plugin state is a patch, so timeline scripts cannot be replayed: use the script-free golden fixtures.
-const FIXTURES = ['tests/golden/emitter-tone.json', 'tests/golden/toggle-pulse.json'];
 
 const run = (cmd: string, args: string[], quiet = false) => spawnSync(cmd, args, { encoding: 'utf8', stdio: quiet ? 'pipe' : ['ignore', 'inherit', 'inherit'] });
 

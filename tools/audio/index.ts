@@ -3,12 +3,12 @@
 //                                                 and compare descriptors with the v1 reference (tests/audio/reference/v1)
 //   pnpm bd audio selftest                        prove the check fails on detuned, filtered and louder copies of v1
 // v1 references come from `pnpm bd v1 audio`. Exact v2 regressions are guarded separately by golden hashes (bd render).
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { WasmEngine } from '../../web/src/engine/wasmEngine.ts';
 import { importV1 } from '../../web/src/patch/importV1.ts';
 import { loadPatch } from '../../web/src/patch/loadPatch.ts';
-import { compare, describe, type Descriptors, type Thresholds } from '../lib/audio-descriptors.ts';
+import { compare, describe, type Thresholds } from '../lib/audio-descriptors.ts';
 import { readWav, writeWav, type Audio } from '../lib/wav.ts';
 import { loadAudioFixtures } from '../v1/audio.ts';
 

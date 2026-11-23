@@ -22,9 +22,9 @@ export function migrateBlock(b: Block): boolean {
     const scale = SCALES[Math.max(0, Math.min(5, Math.round(num(p.scale, 0))))];
     for (let i = 0; i < 12; i++) p[`w${i}`] = scale.includes(i) ? 1 : 0;
     p.key = Math.max(0, Math.min(11, Math.round(num(p.key, 0))));
-    p.low = 60 + 12 * Math.max(-3, Math.min(3, Math.round(num(p.low, 0))));
-    p.high = 71 + 12 * Math.max(-3, Math.min(3, Math.round(num(p.high, 0))));
-    if (p.low > p.high) [p.low, p.high] = [p.high - 11, p.low + 11];
+    const low = 60 + 12 * Math.max(-3, Math.min(3, Math.round(num(p.low, 0))));
+    const high = 71 + 12 * Math.max(-3, Math.min(3, Math.round(num(p.high, 0))));
+    [p.low, p.high] = low > high ? [high - 11, low + 11] : [low, high];
     delete p.scale;
     return true;
   }

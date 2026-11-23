@@ -1,5 +1,5 @@
 // Stage block tests: playing into a Stage, its panel and its particles (CHG-0021, UI-0012); run by tests/e2e/new-blocks.ts.
-import { OUT, browser, blk, state, open, idOf, openPanel, rows, type Tests } from './harness.ts';
+import { OUT, browser, blk, state, open, idOf, openPanel, type Tests } from './harness.ts';
 
 export const stagePlayTests: Tests = {
   // Owner review 3 (2026-11-14, UI-0012): opening a Stage shows its blocks. Its blocks sit far from the centre, and the

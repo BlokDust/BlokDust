@@ -61,7 +61,6 @@ async function makeLink(p: Page): Promise<string> {
   return p.evaluate(() => (document.getElementById('patchUrlText') as HTMLInputElement).value);
 }
 const toCss = (p: Page, x: number, y: number) => p.evaluate(([gx, gy]) => (window as any).__bd_probe.toCss(gx, gy), [x, y]) as Promise<[number, number]>;
-const samplerState = (p: Page) => p.evaluate(() => (window as any).__bd_probe.samples as { id: number; track: string; loaded: boolean; frames: number }[]);
 /** The (only) sampler's region as the open options panel shows it and as the patch (→ engine) holds it. */
 const regionOf = (p: Page, _id: number) => p.evaluate(() => {
   const s = (window as any).__bd_probe, v = s.scene.OptionsPanel.SelectedBlock, m = s.state.patch.blocks[0];
@@ -143,7 +142,7 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     const seen: Record<string, number> = {}, flying: Record<string, number> = {};
     for (const [name, at] of [['settings', [1233, 45]], ['patches', [1138, 45]]] as const) {
       const p = await open(browser, [blk(1, 'ParticleEmitter', 0, 8), blk(2, 'Power', -3, 8)], errors);
-      await p.mouse.click(...at); await p.mouse.move(5, 795); await p.waitForTimeout(1500);
+      await p.mouse.click(at[0], at[1]); await p.mouse.move(5, 795); await p.waitForTimeout(1500);
       flying[name] = await maxOver(p, 'particles', 300);
       await p.screenshot({ path: `${OUT}/particles-under-${name}.png` });
       seen[name] = await maxChange(p, { x: 0, y: 100, width: 1280, height: 620 }, 300);
@@ -296,7 +295,7 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     await p.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 10);
     await p.waitForTimeout(1200);
     const cdp = await ctx.newCDPSession(p);
-    const touch = (type: string, x: number, y: number) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y }] });
+    const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd' | 'touchCancel', x: number, y: number) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y }] });
     const [ax, ay] = await toCss(p, -6, 0), [bx, by] = await toCss(p, 6, 0);
     await touch('touchStart', ax + 4, ay + 4);
     for (let i = 1; i <= 12; i++) { await touch('touchMove', ax + 4 + (1250 - ax) * i / 12, ay + 4 + (770 - ay) * i / 12); await p.waitForTimeout(16); }
@@ -938,7 +937,7 @@ Object.assign(tests, {
     const saved = await pg.evaluate(() => (window as any).__bd_probe.state.patch.blocks.map((b: any) => b.params));
     await close();
     const drive = (p: any[]) => p.find(x => x[0] === 'drive')?.[1];
-    const ok = drive(before) !== 0.9 && drive(live) === 0.9 && filter.find(x => x[0] === 'gain')?.[1] === 17.5 && saved[0].drive === 0.9 && saved[1].gain === 17.5;
+    const ok = drive(before) !== 0.9 && drive(live) === 0.9 && filter.find((x: unknown[]) => x[0] === 'gain')?.[1] === 17.5 && saved[0].drive === 0.9 && saved[1].gain === 17.5;
     return [ok, { before, live, filter, saved }];
   },
 
@@ -1626,7 +1625,7 @@ Object.assign(tests, {
     const innerAdds1 = cmds1.filter((c: any) => c.type === 0 && c.stage === made);
     const stray1 = cmds1.filter((c: any) => c.type === 0 && !c.stage && c.blockType !== undefined && c.id !== made);
     const m1 = sent1.filter(e => e.id === 'bd_macros').pop()?.v.macros ?? [];
-    const uid = await pg.evaluate(i => (window as any).__bd_probe.state.patch.blocks.find((b: any) => b.type === 'source.stage')?.id, made);
+    const uid = await pg.evaluate(() => (window as any).__bd_probe.state.patch.blocks.find((b: any) => b.type === 'source.stage')?.id);
     // copy it
     await pg.evaluate(() => { (window as any).__sent.length = 0; });
     await pg.evaluate(i => (window as any).__bd_probe.select([i]), made);
@@ -2218,7 +2217,7 @@ Object.assign(tests, {
     await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start');
     await p.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 10); await p.waitForTimeout(1200);
     const cdp = await ctx.newCDPSession(p);
-    const touch = (type: string, x: number, y: number) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y }] });
+    const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd' | 'touchCancel', x: number, y: number) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y }] });
     const tap = async (x: number, y: number) => { await touch('touchStart', x, y); await p.waitForTimeout(40); await touch('touchEnd', 0, 0); await p.waitForTimeout(700); };
     await keepPresets(p);
     await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.OpenPanel(1)); await p.waitForTimeout(1200);
@@ -2299,7 +2298,7 @@ Object.assign(tests, {
     r.esc = await sel();
     // Touch: hold a finger still on the stage, then drag a box over the two tones.
     const cdp = await ctx.newCDPSession(p);
-    const touch = (type: string, x: number, y: number) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y }] });
+    const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd' | 'touchCancel', x: number, y: number) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y }] });
     const [t1x, t1y] = await at(eid[0]), [t2x, t2y] = await at(eid[1]);
     const view0 = await p.evaluate(() => ({ ...(window as any).__bd_probe.v1App.DragOffset }));
     await touch('touchStart', Math.min(t1x, t2x) - 50, Math.min(t1y, t2y) - 80); await p.waitForTimeout(650);
@@ -2784,7 +2783,7 @@ Object.assign(tests, {
     await p.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 10); await p.waitForTimeout(1200);
     const cdp = await ctx.newCDPSession(p);
     const down = new Map<number, { x: number; y: number }>();
-    const send = (type: string) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: [...down.entries()].map(([id, q]) => ({ id, x: q.x, y: q.y })) });
+    const send = (type: 'touchStart' | 'touchMove' | 'touchEnd' | 'touchCancel') => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: [...down.entries()].map(([id, q]) => ({ id, x: q.x, y: q.y })) });
     const start = async (id: number, x: number, y: number) => { down.set(id, { x, y }); await send('touchStart'); await p.waitForTimeout(30); };
     const move = async (moves: [number, number, number][], steps = 8) => {
       const from = moves.map(([id]) => ({ ...down.get(id)! }));
@@ -2882,7 +2881,7 @@ Object.assign(tests, {
    * note key's repeats are the page's too, and in the standalone app (no DAW to pass keys to) every plain key outside
    * a text field is; Cmd/Ctrl shortcuts still reach the menus. In a DAW, keys BlokDust doesn't use still reach it. */
   async 'plugin-key-repeat-no-beep'(errors: string[]) {
-    const press = (pg: Page, code: string, key: string, more: KeyboardEventInit = {}) => pg.evaluate(([c, k, m]) => {
+    const press = (pg: Page, code: string, key: string, more: { repeat?: boolean; metaKey?: boolean; ctrlKey?: boolean; shiftKey?: boolean; altKey?: boolean } = {}) => pg.evaluate(([c, k, m]) => {
       const e = new KeyboardEvent('keydown', { code: c, key: k, bubbles: true, cancelable: true, ...m });
       document.body.dispatchEvent(e);
       document.body.dispatchEvent(new KeyboardEvent('keyup', { code: c, key: k, bubbles: true, cancelable: true }));

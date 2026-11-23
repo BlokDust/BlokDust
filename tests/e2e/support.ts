@@ -13,7 +13,7 @@ const local = await startLocal({ name: 'support-test', vars: {}, fresh: true, ..
 const service = { ...local, url: local.url + (based ? '/blokdust' : '') };
 const browser = await chromium.launch({ headless: true });
 let count = 0;
-function check(name: string, ok: unknown) { assert.ok(ok, name); count++; console.error(`PASS ${name}`); }
+function check(name: string, ok: unknown, detail?: unknown) { assert.ok(ok, detail === undefined ? name : `${name}: ${JSON.stringify(detail)}`); count++; console.error(`PASS ${name}`); }
 async function sql(command: string, db = 'blokdust-support-dev'): Promise<any[]> {
   const r = await run([WRANGLER, 'd1', 'execute', db, '--local', '--persist-to', state, '--command', command, '--json'], { quiet: true });
   assert.equal(r.code, 0, r.out);

@@ -2,9 +2,10 @@
 // reads it, and most reads only need part of it. Files over the limit today are in baseline.json and may only shrink.
 //   pnpm bd size check [--staged]   every tracked file, or (the pre-commit hook) what is staged
 //   pnpm bd size baseline           write baseline.json from the files over the limit now (after splitting one)
-//   pnpm bd size install            set this checkout's pre-commit hook (tools/size/pre-commit)
+//   pnpm bd size install            set the clone's pre-commit hook (bd size + bd lint, tools/lib/pre-commit-hook.ts)
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { installPreCommitHook } from '../lib/pre-commit-hook.ts';
 
 export const LIMIT_TOKENS = 5000;
 const BYTES_PER_TOKEN = 4;  // an estimate: code tokenises a little denser, prose a little looser
@@ -38,12 +39,7 @@ so the baseline drops with it. Never shrink a file by deleting comments or squee
 
 const cmd = process.argv[2] ?? 'check';
 if (cmd === 'install') {
-  const hook = '.git/hooks/pre-commit', top = git('rev-parse', '--git-path', 'hooks/pre-commit').stdout.trim() || hook;
-  // Hooks are shared by every worktree of the clone: branches without this tool commit as before.
-  writeFileSync(top, '#!/bin/sh\n# bd size (tools/size): staged files may not grow past ~5,000 tokens.\n' +
-    '[ -f tools/size/index.ts ] || exit 0\nexec node tools/bd.ts size check --staged\n');
-  chmodSync(top, 0o755);
-  console.log(JSON.stringify({ installed: top }));
+  console.log(JSON.stringify({ installed: installPreCommitHook() }));
 } else if (cmd === 'baseline') {
   const over: Baseline = {};
   for (const { file, text } of files(false)) if (counted(file, text) && tokens(Buffer.byteLength(text)) > LIMIT_TOKENS) over[file] = tokens(Buffer.byteLength(text));

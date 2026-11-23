@@ -108,7 +108,7 @@ export function iosArchive(args: string[]): void {
   collectDsyms(archive);
   const check = checkArchive(archive, version, build);
   if (!check.ok) {
-    console.log(JSON.stringify({ ok: false, version, build, archive, ...check }));
+    console.log(JSON.stringify({ version, build, archive, ...check }));
     process.exit(1);
   }
 

@@ -1,0 +1,12 @@
+# CHG-0045: Prettier formats code (TypeScript, JavaScript, Astro, CSS, HTML); data and docs keep their own shape.
+*.json
+*.md
+*.yaml
+*.yml
+**/generated/**
+web/src/v1ui/ported/**
+web/public/**
+tests/golden/**
+tests/visual/**
+tests/audio/**
+.cache/**

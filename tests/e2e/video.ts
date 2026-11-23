@@ -1,5 +1,4 @@
 // Video export (CHG-0022, SPEC-SHARING-VIDEO-EXPORT): the real app, real AudioWorklet, real pointer.
-// (dragBlock is kept for tests that move blocks while a video is being made.)
 //   pnpm test:video [--only name,name] [--chromium]
 // Runs in Google Chrome (H.264 + AAC encoders, as users have) unless --chromium; checks the MP4 with ffprobe.
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -56,14 +55,6 @@ async function openVideoTab(p: Page): Promise<void> {
 const startVideo = (p: Page) => p.evaluate(() => { void (window as any).__bd_probe.scene.PatchesPanel.makeVideo(); });
 const panel = (p: Page) => p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel, v = document.getElementById('patchVideo') as HTMLVideoElement;
   return { state: pp.VideoState, view: pp.View, message: pp.VideoMessage, progress: pp.VideoProgress, videoOn: pp.videoOn, seconds: (window as any).__bd_probe.scene.host.video.seconds(), player: { shown: v.style.display === 'block', src: !!v.src } }; });
-/** Drag block `id` by (dx, dy) grid cells with the real pointer. */
-async function dragBlock(p: Page, id: number, dx: number, dy: number): Promise<void> {
-  const [x, y] = await p.evaluate(i => (window as any).__bd_probe.blockPoint(i), id) as [number, number];
-  const g = await p.evaluate(() => { const s = (window as any).__bd_probe; const [a] = s.toCss(0, 0), [b] = s.toCss(1, 0); return b - a; });
-  await p.mouse.move(x, y); await p.mouse.down();
-  for (let k = 1; k <= 10; k++) { await p.mouse.move(x + (dx * g * k) / 10, y + (dy * g * k) / 10); await p.waitForTimeout(30); }
-  await p.mouse.up();
-}
 /** Make the video and save what downloads (desktop Chrome can't share files: it downloads once made). */
 async function makeAndSave(p: Page, name: string): Promise<{ file: string; ms: number; state: Awaited<ReturnType<typeof panel>> }> {
   const t0 = Date.now();
@@ -129,7 +120,7 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
   },
   /** R5 (owner review 2): the length is whole cycles of the longest timer, 10–30 s. */
   'length-from-timers': async () => {
-    const d = (type: string, key: string) => ({ sync: false, turnBeats: 4, division: 1, pulseBeats: 0.25, rate: 1, steps: 8 } as Record<string, unknown>)[key];
+    const d = (_type: string, key: string) => ({ sync: false, turnBeats: 4, division: 1, pulseBeats: 0.25, rate: 1, steps: 8 } as Record<string, unknown>)[key];
     const cases: [string, number, number][] = [
       ['none', videoSeconds([{ type: 'source.tone', params: {} }], 120, d), 15],
       ['lfo 1 Hz', videoSeconds([{ type: 'fx.lfo', params: { rate: 1 } }], 120, d), 10],

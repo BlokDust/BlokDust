@@ -178,8 +178,8 @@ try {
     for (const category of ['Source blocks', 'Effect blocks', 'Power blocks', 'Interaction blocks']) {
       assert.equal(await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: category, exact: true }).count(), 1);
     }
-    assert.equal(await toggle.evaluate(button => button.offsetParent?.className), 'guide-menu');
-    assert.equal(await page.locator('.menu-panel').evaluate(panel => panel.offsetParent?.className), 'guide-menu');
+    assert.equal(await toggle.evaluate(button => (button as HTMLElement).offsetParent?.className), 'guide-menu');
+    assert.equal(await page.locator('.menu-panel').evaluate(panel => (panel as HTMLElement).offsetParent?.className), 'guide-menu');
     console.log(JSON.stringify({ pages: paths.size, internalLinks: links.size, socialImages: images.size }));
   } finally {
     await browser.close();

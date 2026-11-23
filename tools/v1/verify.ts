@@ -2,7 +2,7 @@
 // Re-renders each per-block reference scene from blocks/**/*.block.json with Canvas2D, using the exact stage
 // metrics and palette recorded at capture time, then diffs the block's bounding box against the v1 screenshot.
 // This validates the extraction AND is an early measurement for UI-0005 (Canvas2D-baked sprites).
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 interface Layer { palette: number; points: number[][]; units?: 'unit'; anchor?: 'randomStar' }

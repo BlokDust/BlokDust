@@ -3,7 +3,7 @@
 // (tests/e2e/mock-services.ts), and Chrome's virtual WebAuthn authenticator standing in for a phone or laptop.
 // The app is opened on http://localhost:<port>: passkeys need a domain, not an IP address.
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { chromium, type Browser, type BrowserContext, type CDPSession, type Page } from 'playwright';
+import { chromium, type BrowserContext, type CDPSession, type Page } from 'playwright';
 import { startLocal } from '../../tools/server/lib.ts';
 import { sineWav, startMockServices } from './mock-services.ts';
 import { rates } from '../../web/src/account/activity.ts';

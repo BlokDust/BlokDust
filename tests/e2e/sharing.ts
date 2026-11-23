@@ -250,7 +250,7 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
     await closeShare(a);
     const c0 = await corner();
     await a.screenshot({ path: `${OUT}/quick-save-clean.png` });
-    check('R19: your saved link: the corner names it, nothing unsaved', c0.own?.title === title && !c0.own.dirty && !c0.saveAt, c0);
+    check('R19: your saved link: the corner names it, nothing unsaved', c0.own?.title === title && !c0.own?.dirty && !c0.saveAt, c0);
 
     await transpose(5); await a.waitForTimeout(800);
     const c1 = await corner();
@@ -299,7 +299,7 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
     await a.click('#start'); await a.waitForFunction(() => (window as any).__bd_probe.state.started, null, { timeout: 20000 });
     await a.waitForTimeout(1500);
     const c4 = await corner(), kept = (await probe(a)).patch.blocks.some((x: any) => x.params?.transpose === 4);
-    check('R20: after a reload the unsaved edit is back and marked UNSAVED', kept && c4.own?.title === title && !!c4.own.dirty, { kept, own: c4.own });
+    check('R20: after a reload the unsaved edit is back and marked UNSAVED', kept && c4.own?.title === title && !!c4.own?.dirty, { kept, own: c4.own });
     await a.context().close();
   },
 
@@ -517,7 +517,7 @@ tests.samples = async browser => {
   await a.waitForFunction(() => { const b = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock; return b && !b.Searching && b.SearchResults.length > 0; }, null, { timeout: 20000 }).catch(() => {});
   const first = await block();
   // v1's random two-word query can match nothing on real Freesound; the mock always answers (typed search below needs results).
-  check('sample panel opens with v1\'s random search, results from Freesound', (remote || first.results > 0) && !!first.query && !first.searching, first);
+  check('sample panel opens with v1\'s random search, results from Freesound', (remote !== null || first.results > 0) && !!first.query && !first.searching, first);
   await a.screenshot({ path: `${OUT}/sample-search.png` });
 
   // Type a search (Enter submits, as v1's EnterCheck), without reloading the page or playing notes.
