@@ -1,4 +1,4 @@
-/* Same transparent DOM text layer as v1 SharePanel and Patches; all chrome is drawn with the existing canvas UI. */
+/* The same transparent DOM text layer as v1 SharePanel and Patches; canvas UI draws the rest. */
 #feedback-panel[hidden] {
   display: none;
 }
