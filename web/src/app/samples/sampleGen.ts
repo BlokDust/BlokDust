@@ -7,11 +7,28 @@ import { changed } from '../model/autosave.ts';
 import { model, v1Blocks } from '../model/patchModel.ts';
 import { samples, useBuffer } from './userSamples.ts';
 
-// ---- v1 SampleGen: v1's own generator (ported verbatim) renders a random arpeggio; its recipe is saved ----
-// SOUND (CHG-0035): a SampleGen with a sound number makes its wave from that number (v1's generator on a seeded
-// random); one without (v1 patches, and v2 ones from before) plays its saved recipe as v1 did.
-/** The sound each SampleGen's wave was last made from (a release on the same number makes nothing new). */
+// v1 SampleGen's own generator (ported verbatim) renders a random arpeggio, its recipe saved. With
+// a SOUND number (CHG-0035) the random is seeded by it; without, the saved recipe plays as in v1.
+
+/** The sound each SampleGen's wave was last made from (a release on the same number makes nothing
+ * new). */
 export const soundMade = new Map<number, number>();
+
+/** v1's SampleGen methods, run on an object holding its state and our PopulateBuffer. */
+interface SampleGenRun {
+  DataToBuffer(): void;
+}
+function sampleGenRun<State extends object>(state: State): SampleGenRun & State {
+  return Object.assign(Object.create(SAMPLE_GEN) as SampleGenRun, state);
+}
+/** Renders the run's buffer on a timeout, as v1 does, with Math.random seeded by `sound`. */
+function renderLater(run: SampleGenRun, sound: number): void {
+  setTimeout(() => {
+    withSound(sound, () => {
+      run.DataToBuffer();
+    });
+  }, 16);
+}
 
 export function generateSample(id: number, fromSeed: boolean): void {
   const v1Block = v1Blocks.get(id);
@@ -20,7 +37,7 @@ export function generateSample(id: number, fromSeed: boolean): void {
   v1Block.RefreshOptionsPanel();
   const sound = Number(v1Block.Params.sound) || 0;
   if (sound) soundMade.set(id, sound);
-  const ctx = Object.assign(Object.create(SAMPLE_GEN), {
+  const run = sampleGenRun({
     Params: v1Block.Params,
     _LoadFromShare: fromSeed && !sound,
     _SeedLoad: true,
@@ -38,19 +55,21 @@ export function generateSample(id: number, fromSeed: boolean): void {
       useBuffer(id, buf, fromSeed ? 'keep' : 'reset');
     },
   });
-  setTimeout(() => withSound(sound, () => ctx.DataToBuffer()), 16); // v1 runs it on a timeout too
+  renderLater(run, sound);
 }
 
-/** v1 SampleGen for a block that is not on show (inside a Stage): its saved recipe, or a new one kept in `params`. */
+/** v1 SampleGen for a block that is not on show (inside a Stage): its saved recipe, or a new one
+ * kept in `params`. */
 export function generateBuffer(params: Record<string, unknown>): Promise<AudioBuffer> {
-  const def = BLOCKS_BY_ID.get('source.sample-gen')!;
+  const def = BLOCKS_BY_ID.get('source.sample-gen');
+  if (!def) throw new Error('no source.sample-gen manifest');
   const Params = {
     ...Object.fromEntries(def.params.map((param) => [param.key, param.default])),
     ...params,
   };
   return new Promise((res) => {
     const sound = Number(Params.sound) || 0;
-    const ctx = Object.assign(Object.create(SAMPLE_GEN), {
+    const run = sampleGenRun({
       Params,
       _LoadFromShare: !sound && !!(params.seed as { waveVoices?: unknown } | undefined)?.waveVoices,
       _SeedLoad: true,
@@ -67,11 +86,12 @@ export function generateBuffer(params: Record<string, unknown>): Promise<AudioBu
         res(buf);
       },
     });
-    setTimeout(() => withSound(sound, () => ctx.DataToBuffer()), 16);
+    renderLater(run, sound);
   });
 }
 
-/** A block's audio as it was (looking into a Stage): shown in its panel, not sent (the engine has it). */
+/** A block's audio as it was (looking into a Stage): shown in its panel, not sent (the engine has
+ * it). */
 export function showBuffer(id: number, buffer: AudioBuffer): void {
   const b = model.get(id),
     v1Block = v1Blocks.get(id);

@@ -32,7 +32,7 @@ declare global {
   }
 }
 
-export const DEFAULT_SOUNDS: Readonly<Record<string, FreesoundRef>> = {
+export const DEFAULT_SOUNDS: Readonly<Partial<Record<string, FreesoundRef>>> = {
   'source.sample': {
     provider: 'freesound',
     id: 223835,

@@ -7,7 +7,6 @@ import {
   isDeadDefault,
   openRemembered,
   refKey,
-  type FreesoundRef,
 } from '../../patch/samples.ts';
 import { refs } from '../model/patchModel.ts';
 import { generateBuffer } from './sampleGen.ts';
@@ -18,7 +17,7 @@ const maxSecondsOf = (type: string) => (type === 'fx.convolver' ? 2.5 : undefine
 
 /** v1's default file is gone: v2's default Freesound sound takes its place, saved in the patch. */
 async function defaultSoundBytes(block: PatchBlock, params: Record<string, unknown>) {
-  const sound = DEFAULT_SOUNDS[block.type] as FreesoundRef | undefined;
+  const sound = DEFAULT_SOUNDS[block.type];
   if (!sound) return null;
   const ref = { ...sound };
   const bytes = await fetchFreesound(ref, maxSecondsOf(block.type));
