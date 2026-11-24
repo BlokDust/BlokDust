@@ -1,4 +1,5 @@
 // Undo and redo, and the label moves they carry.
+import { endLabelEdit, labelEdit } from '../labels/labelEditing.ts';
 import { usage } from '../boot/sessionAnalytics.ts';
 import { type Label } from '../../stage/labels.ts';
 import { stage } from '../boot/pixi.ts';
@@ -14,7 +15,7 @@ import {
   undoStack,
 } from './undoSteps.ts';
 import { setSelection } from '../input/selection.ts';
-import { addLabels, endLabelEdit, labelEdit, labelsChanged } from '../labels/labels.ts';
+import { addLabels, labelsChanged } from '../labels/labels.ts';
 import { labels, model, selectedLabels } from '../model/patchModel.ts';
 
 /** A drag that ended: one move step for the blocks it moved. */
@@ -36,16 +37,16 @@ export function recordMove(
 }
 
 export const removeUids = (uids: string[]) => {
-  for (const u of uids) {
-    const id = idOfUid(u);
+  for (const uid of uids) {
+    const id = idOfUid(uid);
     if (id !== undefined) removeBlock(id);
   }
 };
 
 export const moveUids = (moves: { uid: string; from: XY; to: XY }[], to: boolean) => {
-  for (const m of moves) {
-    const id = idOfUid(m.uid),
-      at = to ? m.to : m.from;
+  for (const move of moves) {
+    const id = idOfUid(move.uid),
+      at = to ? move.to : move.from;
     if (id !== undefined) moveBlock(id, at.x, at.y);
   }
 };

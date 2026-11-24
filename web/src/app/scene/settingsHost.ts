@@ -1,4 +1,5 @@
 // Settings and the header: theme, view, tempo, master volume, the world's power, a new patch.
+import { endLabelEdit } from '../labels/labelEditing.ts';
 import { analyticsAllowed, setAnalyticsAllowed, track } from '../../analytics/client.ts';
 import { CommandType } from '../../engine/wasmEngine.ts';
 import { THEMES } from '../../generated/palettes.gen.ts';
@@ -10,7 +11,6 @@ import { THEME_KEY, setTheme, theme } from '../boot/theme.ts';
 import { removeBlock } from '../editing/deleteBlocks.ts';
 import { endPlacing } from '../editing/placing.ts';
 import { redoStack, undoStack } from '../editing/undoSteps.ts';
-import { endLabelEdit } from '../labels/labels.ts';
 import { changed } from '../model/autosave.ts';
 import { sendRaw } from '../model/engineLink.ts';
 import { labels, model, selectedLabels, setSources, setTempo, tempo } from '../model/patchModel.ts';

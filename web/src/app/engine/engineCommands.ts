@@ -1,4 +1,5 @@
 // The commands that build the whole patch in an engine.
+import { stageCommands } from '../stageBlock/buildStage.ts';
 import { type Command, CommandType } from '../../engine/wasmEngine.ts';
 import { BLOCKS_BY_ID } from '../../generated/blocks.gen.ts';
 import { relinks } from '../../patch/loadPatch.ts';
@@ -11,7 +12,6 @@ import {
   typeIndex,
   uidToId,
 } from '../model/patchModel.ts';
-import { stageCommands } from '../model/stageWorlds.ts';
 
 // ---- engine ----
 /** The engine starts from the model (blocks may have been added/moved before audio started). Engine ids = model ids:

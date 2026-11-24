@@ -1,4 +1,5 @@
 // Engine snapshots: what the stage draws, and the patch state they change.
+import { toPatch } from '../model/toPatch.ts';
 import { saveLocal } from '../../patch/share.ts';
 import { type Snapshot } from '../../audio/protocol.ts';
 import { activity } from '../../account/activity.ts';
@@ -13,7 +14,6 @@ import {
   model,
   setConnectionOrder,
   tempo,
-  toPatch,
   v1Blocks,
 } from '../model/patchModel.ts';
 import { scene } from '../scene/scene.ts';

@@ -1,4 +1,5 @@
 // The FEEDBACK panel and what it reports about the system (CHG-0036, CHG-0041).
+import { toPatch } from '../model/toPatch.ts';
 import { openAccountSettings } from '../scene/hostParts.ts';
 import { SupportClient } from '../../support/client.ts';
 import { FeedbackPanel } from '../../support/panel.ts';
@@ -6,7 +7,6 @@ import { App } from '../../v1ui/shim.ts';
 import * as gallery from '../../gallery/client.ts';
 import { embedId, juce } from '../boot/page.ts';
 import { stage } from '../boot/pixi.ts';
-import { toPatch } from '../model/patchModel.ts';
 import { accountPage, credit } from '../stage/corners.ts';
 
 export const hostSystem: Record<string, unknown> = {};

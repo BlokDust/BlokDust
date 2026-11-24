@@ -2,13 +2,12 @@
 import { init as initPage } from './boot/page.ts';
 import { init as initTheme } from './boot/theme.ts';
 import { init as initPixi } from './boot/pixi.ts';
-import { init as initPatchModel } from './model/patchModel.ts';
-import { init as initView } from './model/view.ts';
+import { init as initView } from './model/viewSync.ts';
 import { init as initFeedback } from './support/feedback.ts';
 import { init as initAutosave } from './model/autosave.ts';
 import { init as initScene } from './scene/scene.ts';
 import { init as initOverlays } from './stage/overlays.ts';
-import { init as initLabels } from './labels/labels.ts';
+import { init as initLabels } from './labels/labelEditing.ts';
 import { init as initFillStage } from './stageBlock/fillStage.ts';
 import { init as initPluginPatches } from './patchFiles/pluginPatches.ts';
 import { init as initOpenPatch } from './patchFiles/openPatch.ts';
@@ -38,7 +37,6 @@ async function main(): Promise<void> {
   await initPage();
   initTheme();
   await initPixi();
-  initPatchModel();
   initView();
   initFeedback();
   initAutosave();

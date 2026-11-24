@@ -4,7 +4,6 @@ import { moveBlock, removeBlock } from './deleteBlocks.ts';
 import { pushUndo, uidsOf, undoStack } from './undoSteps.ts';
 import { model } from '../model/patchModel.ts';
 
-// ---- Insert: the new blocks follow the pointer until a click (or, on a touch screen, a drag) puts them down ----
 export let placing: {
   ids: number[];
   at: { x: number; y: number };
@@ -25,7 +24,7 @@ export function startPlacing(ids: number[], touch: boolean, at: { x: number; y: 
   stage.redraw();
 }
 
-/** Move the placed blocks with the pointer, a whole grid cell at a time (as a dragged block moves). */
+/** Move the placed blocks with the pointer, a whole grid cell at a time, as a drag does. */
 export function placeAt(gx: number, gy: number): void {
   if (!placing) return;
   const x = Math.round(gx),

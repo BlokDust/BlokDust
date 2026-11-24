@@ -1,3 +1,4 @@
+import { labelDrag, moveLabel } from '../labels/labelDrag.ts';
 import { inBox } from '../../stage/makeStageButton.ts';
 import { padMove } from '../../v1ui/touchpadPanel.ts';
 import { CommandType } from '../../engine/wasmEngine.ts';
@@ -32,7 +33,6 @@ import {
   showBox,
 } from './selection.ts';
 import { padHost } from './touchpad.ts';
-import { labelDrag, moveLabel } from '../labels/labels.ts';
 import { send } from '../model/engineLink.ts';
 import { model, selLabels, v1Blocks } from '../model/patchModel.ts';
 import { samples, useBuffer } from '../samples/userSamples.ts';

@@ -1,7 +1,7 @@
 // The patches saved from this browser (MY PATCHES).
+import { toPatch } from '../model/toPatch.ts';
 import { type Patch } from '../../patch/loadPatch.ts';
 import { embedId, juce } from '../boot/page.ts';
-import { toPatch } from '../model/patchModel.ts';
 
 /**
  * Web: the patches this browser saved (to a file or a link) are listed in OPEN above the presets (owner, 2026-11-10),

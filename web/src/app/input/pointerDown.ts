@@ -1,3 +1,5 @@
+import { measure } from '../labels/labelEditing.ts';
+import { labelDrag, setLabelDrag } from '../labels/labelDrag.ts';
 import { inBox } from '../../stage/makeStageButton.ts';
 import { padDown } from '../../v1ui/touchpadPanel.ts';
 import { onClose, inWindow } from '../../stage/insideView.ts';
@@ -32,7 +34,6 @@ import {
   showBox,
 } from './selection.ts';
 import { padHost } from './touchpad.ts';
-import { labelDrag, measure, setLabelDrag } from '../labels/labels.ts';
 import { labels, model, selectedLabels } from '../model/patchModel.ts';
 import { inside } from '../model/stageWorlds.ts';
 import { scene } from '../scene/scene.ts';

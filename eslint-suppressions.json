@@ -1518,39 +1518,8 @@
       "count": 1
     }
   },
-  "web/src/app/blocks/addBlock.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
-    "id-length": {
-      "count": 2
-    }
-  },
-  "web/src/app/blocks/lfoTargets.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
-    "id-length": {
-      "count": 1
-    }
-  },
   "web/src/app/darkTheme.ts": {
     "id-length": {
-      "count": 1
-    }
-  },
-  "web/src/app/editing/deleteBlocks.ts": {
-    "id-length": {
-      "count": 2
-    }
-  },
-  "web/src/app/editing/undoRedo.ts": {
-    "id-length": {
-      "count": 2
-    }
-  },
-  "web/src/app/editing/undoSteps.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
       "count": 1
     }
   },
@@ -1639,52 +1608,6 @@
       "count": 3
     }
   },
-  "web/src/app/labels/labels.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 13
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "id-length": {
-      "count": 6
-    }
-  },
-  "web/src/app/model/engineLink.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    }
-  },
-  "web/src/app/model/patchModel.ts": {
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 2
-    },
-    "id-length": {
-      "count": 6
-    }
-  },
-  "web/src/app/model/stageWorlds.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 3
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 1
-    },
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
-      "count": 1
-    },
-    "id-length": {
-      "count": 5
-    }
-  },
-  "web/src/app/model/view.ts": {
-    "id-length": {
-      "count": 4
-    }
-  },
   "web/src/app/patchFiles/applyPatch.ts": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 1
@@ -1714,7 +1637,7 @@
   },
   "web/src/app/patchFiles/pluginPatches.ts": {
     "@typescript-eslint/no-non-null-assertion": {
-      "count": 4
+      "count": 2
     },
     "@typescript-eslint/no-unnecessary-type-assertion": {
       "count": 1
@@ -1902,14 +1825,6 @@
   "web/src/app/startPatch.ts": {
     "id-length": {
       "count": 4
-    }
-  },
-  "web/src/app/testing/probe.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
-    "id-length": {
-      "count": 14
     }
   },
   "web/src/app/video/videoExport.ts": {

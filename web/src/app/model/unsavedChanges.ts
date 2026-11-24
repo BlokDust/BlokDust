@@ -1,20 +1,23 @@
+// Unsaved changes: the patch as last saved, shared or opened.
+import { toPatch } from './toPatch.ts';
 import { type Patch } from '../../patch/loadPatch.ts';
 import { type GalleryState } from '../../patch/server.ts';
 import { embedId, juce } from '../boot/page.ts';
-import { toPatch } from './patchModel.ts';
 
-// ---- unsaved changes (owner, 2026-11-10): the patch as last saved, shared or opened ----
-/** What Open would lose: blocks, their params and the tempo (not the view); not a Toggle's on/off, which a
- * running scene flips by itself (CHG-0013). */
+/** Not a Toggle's on/off, which a running scene flips by itself (CHG-0013). */
 export const withoutLogic = (blocks: Patch['blocks']) =>
-  blocks.map((b) =>
-    b.type === 'power.toggle' && b.params && 'logic' in b.params
+  blocks.map((block) =>
+    block.type === 'power.toggle' && block.params && 'logic' in block.params
       ? {
-          ...b,
-          params: Object.fromEntries(Object.entries(b.params).filter(([k]) => k !== 'logic')),
+          ...block,
+          params: Object.fromEntries(
+            Object.entries(block.params).filter(([key]) => key !== 'logic'),
+          ),
         }
-      : b,
+      : block,
   );
+
+/** What Open would lose: blocks, their params, the tempo and labels; not the view. */
 
 export const contentOf = (patch: Patch) =>
   JSON.stringify([

@@ -1,3 +1,4 @@
+import { toPatch } from '../model/toPatch.ts';
 import { PUBLIC_SITE, type FreesoundRef, type SampleRef } from '../../patch/samples.ts';
 import { type Credit } from '../../video/frame.ts';
 import { type PatchSample, startSource } from '../../video/sources.ts';
@@ -7,7 +8,7 @@ import { videoFileName } from '../../video/share.ts';
 import { theme } from '../boot/theme.ts';
 import { engineCommands } from '../engine/engineCommands.ts';
 import { engine } from '../model/engineLink.ts';
-import { labels, model, seed, toPatch } from '../model/patchModel.ts';
+import { labels, model, seed } from '../model/patchModel.ts';
 import { innerIds, innerSamples, inside } from '../model/stageWorlds.ts';
 import { shareLink } from '../model/unsavedChanges.ts';
 import { samples } from '../samples/userSamples.ts';

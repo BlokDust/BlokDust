@@ -1,8 +1,9 @@
+import { buildStage } from '../stageBlock/buildStage.ts';
 import { addBlock } from '../blocks/addBlock.ts';
 import { stage } from '../boot/pixi.ts';
 import { dpr, drag } from './pointerState.ts';
 import { labels, model, selLabels, selectedLabels } from '../model/patchModel.ts';
-import { buildStage, innerSamples, macros } from '../model/stageWorlds.ts';
+import { innerSamples, macros } from '../model/stageWorlds.ts';
 import { samples, useBuffer } from '../samples/userSamples.ts';
 
 // ---- multi-select (CHG-0005 task 9, owner): Shift+click adds or removes a block; Shift+drag on the stage (or, on a

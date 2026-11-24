@@ -40,10 +40,10 @@ export function deleteBlocks(
     const b = model.get(id);
     return b ? [{ b: { ...structuredClone(b), ...from?.get(id) }, buf: samples.get(id) }] : [];
   });
-  const gone = labelSnapsOf(labelIds).map((l) => ({ ...l, ...labelFrom?.get(l.id) }));
+  const gone = labelSnapsOf(labelIds).map((label) => ({ ...label, ...labelFrom?.get(label.id) }));
   if (!snaps.length && !gone.length) return;
   for (const id of ids) removeBlock(id);
-  deleteLabels(gone.map((l) => l.id));
+  deleteLabels(gone.map((label) => label.id));
   pushUndo({ kind: 'remove', snaps, ...(gone.length ? { labels: gone } : {}) });
 }
 

@@ -1,4 +1,5 @@
 // Looking into a Stage block (CHG-0021, UI-0009).
+import { endLabelEdit } from '../labels/labelEditing.ts';
 import { frameFor } from '../../stage/insideView.ts';
 import { gridToPx } from '../../stage/metrics.ts';
 import { BLOCKS_BY_ID } from '../../generated/blocks.gen.ts';
@@ -10,7 +11,7 @@ import { embedId, juce } from '../boot/page.ts';
 import { stage } from '../boot/pixi.ts';
 import { endPlacing } from '../editing/placing.ts';
 import { redoStack, undoStack } from '../editing/undoSteps.ts';
-import { addLabels, endLabelEdit, readLabels } from '../labels/labels.ts';
+import { addLabels, readLabels } from '../labels/labels.ts';
 import { changed } from '../model/autosave.ts';
 import { viewWorld } from '../model/engineLink.ts';
 import {

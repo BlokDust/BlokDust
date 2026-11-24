@@ -5,10 +5,8 @@ import { addBlock } from '../blocks/addBlock.ts';
 import { type ModelBlock, countActivity, model } from '../model/patchModel.ts';
 import { samples, useBuffer } from '../samples/userSamples.ts';
 
-/** Undo and redo (owner, 2026-11-10/11, and 2026-11-12 CHG-0010): adding blocks (from the menu, Insert, Cmd/Ctrl+D,
- * Alt-drag copies), moving and deleting them, each one step however many blocks it took. Steps name blocks by
- * their patch id, which a block keeps when undo or redo brings it back; a removed block is kept whole (settings,
- * place, its sound). A new action clears what could be redone. Param changes are not steps. */
+// A step adds, moves or deletes blocks (however many) and labels; params and words are not steps.
+// Blocks are named by patch id, kept when they come back; a removed block is kept whole.
 export interface XY {
   x: number;
   y: number;
@@ -19,8 +17,6 @@ export interface Snap {
   buf?: AudioBuffer;
 }
 
-// Labels (owner, 2026-11-14) are in the same steps, by label id: made (with the blocks made), removed (kept whole) and
-// moved. Their words are not steps (as params are not).
 export interface LabelMove {
   id: string;
   from: XY;
@@ -32,13 +28,15 @@ export type UndoStep =
   | { kind: 'remove'; snaps: Snap[]; labels?: Label[] }
   | { kind: 'move'; moves: { uid: string; from: XY; to: XY }[]; labelMoves?: LabelMove[] };
 
-export const undoStack: UndoStep[] = [],
-  redoStack: UndoStep[] = [];
+const MAX_UNDO_STEPS = 100;
+export const undoStack: UndoStep[] = [];
+export const redoStack: UndoStep[] = [];
 
+/** A new action clears what could be redone. */
 export const pushUndo = (step: UndoStep) => {
   if (step.kind === 'add' && countActivity) activity.blockAdded(step.uids.length);
   undoStack.push(step);
-  if (undoStack.length > 100) undoStack.shift();
+  if (undoStack.length > MAX_UNDO_STEPS) undoStack.shift();
   redoStack.length = 0;
 };
 
@@ -54,9 +52,9 @@ export const uidsOf = (ids: Iterable<number>) =>
   });
 
 export const snapOf = (uid: string): Snap | null => {
-  const id = idOfUid(uid),
-    b = id === undefined ? undefined : model.get(id);
-  return b ? { b: structuredClone(b), buf: samples.get(id!) } : null;
+  const id = idOfUid(uid);
+  const block = id === undefined ? undefined : model.get(id);
+  return id !== undefined && block ? { b: structuredClone(block), buf: samples.get(id) } : null;
 };
 
 export function restore(snap: Snap): void {

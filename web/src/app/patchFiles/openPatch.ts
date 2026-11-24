@@ -1,4 +1,5 @@
 // Opening a patch: from a link, the account, a preset or a file.
+import { toPatch } from '../model/toPatch.ts';
 import { loadOrWhy, MISSING_TEXT, canOverwrite } from '../../patch/server.ts';
 import { App } from '../../v1ui/shim.ts';
 import { saveSession } from '../../patch/share.ts';
@@ -9,7 +10,6 @@ import { track } from '../../analytics/client.ts';
 import { setGuarded } from '../audio/microphone.ts';
 import { embedId, juce, session, sessionFor, setSession } from '../boot/page.ts';
 import { app, stage } from '../boot/pixi.ts';
-import { toPatch } from '../model/patchModel.ts';
 import { contentOf, setBaseline, setShareLink } from '../model/unsavedChanges.ts';
 import { applyPatch } from './applyPatch.ts';
 import { myPatches } from './myPatches.ts';

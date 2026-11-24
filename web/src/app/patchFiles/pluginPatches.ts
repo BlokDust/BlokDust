@@ -43,24 +43,21 @@ export async function nativePatches() {
   }));
 }
 
+const fileNameOf = (path: string) => path.slice(path.lastIndexOf('/') + 1);
+
 export function init(): void {
-  PRESETS = Object.entries(
-    import.meta.glob('../patch/presets/*.blokdust', {
-      query: '?raw',
-      import: 'default',
-      eager: true,
-    }) as Record<string, string>,
-  )
+  const presetFiles = import.meta.glob('../../patch/presets/*.blokdust', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  }) as Record<string, string>;
+  // A glob that matches nothing is no build error: say so here.
+  if (Object.keys(presetFiles).length === 0) throw new Error('BlokDust: no preset patches found');
+  PRESETS = Object.entries(presetFiles)
     .map(([path, text]) => ({
-      file: path.split('/').pop()!,
+      file: fileNameOf(path),
       text,
-      name: patchTitle(
-        parsePatchFile(text),
-        path
-          .split('/')
-          .pop()!
-          .replace(/\.blokdust$/, ''),
-      ),
+      name: patchTitle(parsePatchFile(text), fileNameOf(path).replace(/\.blokdust$/, '')),
     }))
     .sort((a, b) => a.file.localeCompare(b.file));
   // The plugin's page can't open browser windows: links (Settings › About, the code) open in the user's browser.

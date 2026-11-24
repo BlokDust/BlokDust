@@ -1,3 +1,5 @@
+import { editLabel } from '../labels/labelEditing.ts';
+import { labelDrag, setLabelDrag } from '../labels/labelDrag.ts';
 import { padUp } from '../../v1ui/touchpadPanel.ts';
 import { CommandType } from '../../engine/wasmEngine.ts';
 import { embedId } from '../boot/page.ts';
@@ -46,7 +48,7 @@ import {
   showBox,
 } from './selection.ts';
 import { padHost } from './touchpad.ts';
-import { editLabel, labelDrag, labelsChanged, setLabelDrag } from '../labels/labels.ts';
+import { labelsChanged } from '../labels/labels.ts';
 import { send } from '../model/engineLink.ts';
 import { model, selectedLabels } from '../model/patchModel.ts';
 import { scene } from '../scene/scene.ts';

@@ -1,4 +1,5 @@
 // The Patches panel (CHG-0005): SAVE, OPEN and SHARE for patch files, links and the account.
+import { toPatch } from '../model/toPatch.ts';
 import { track } from '../../analytics/client.ts';
 import { appKey } from '../../account/appKey.ts';
 import { encodePatch, saveLocal, saveSession } from '../../patch/share.ts';
@@ -8,7 +9,7 @@ import { App } from '../../v1ui/shim.ts';
 import { THUMB, juce, session, sessionFor, setSession } from '../boot/page.ts';
 import { stage } from '../boot/pixi.ts';
 import { ios } from '../model/engineLink.ts';
-import { model, toPatch } from '../model/patchModel.ts';
+import { model } from '../model/patchModel.ts';
 import { baseline, contentOf, setLastGallery, setShareLink } from '../model/unsavedChanges.ts';
 import { MINE_KEY, myPatches } from '../patchFiles/myPatches.ts';
 import {

@@ -1,8 +1,9 @@
 // Saving a patch file (SPEC-PATCH-FORMAT-V2 R10).
+import { toPatch } from '../model/toPatch.ts';
 import { fileNameFor, PATCH_EXT } from '../../patch/files.ts';
 import { track } from '../../analytics/client.ts';
 import { juce } from '../boot/page.ts';
-import { model, toPatch } from '../model/patchModel.ts';
+import { model } from '../model/patchModel.ts';
 import { setBaseline } from '../model/unsavedChanges.ts';
 import { keepMine } from './myPatches.ts';
 import { nativeReply } from './pluginPatches.ts';

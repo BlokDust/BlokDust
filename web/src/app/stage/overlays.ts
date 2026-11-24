@@ -1,4 +1,5 @@
 // What the stage draws over the blocks: corners, MAKE STAGE, labels.
+import { labelEdit, measure } from '../labels/labelEditing.ts';
 import { drawLabels, labelRect } from '../../stage/labels.ts';
 import { drawInside } from '../../stage/insideView.ts';
 import { BLOCKS_BY_ID } from '../../generated/blocks.gen.ts';
@@ -11,7 +12,6 @@ import {
 import { embedId } from '../boot/page.ts';
 import { stage } from '../boot/pixi.ts';
 import { theme } from '../boot/theme.ts';
-import { labelEdit, measure } from '../labels/labels.ts';
 import { labels, model, selLabels, selectedLabels, v1Blocks } from '../model/patchModel.ts';
 import { inside } from '../model/stageWorlds.ts';
 import { scene } from '../scene/scene.ts';

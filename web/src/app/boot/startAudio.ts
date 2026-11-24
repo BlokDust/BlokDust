@@ -1,4 +1,5 @@
 // START: the engine is built from what was prepared at load, and the stage shows once audio runs.
+import { fillStageSamples } from '../stageBlock/buildStage.ts';
 import { flushAnalytics, track } from '../../analytics/client.ts';
 import { EngineNode } from '../../audio/engineNode.ts';
 import { setAudioSession } from '../../audio/session';
@@ -9,7 +10,6 @@ import { engineCommands } from '../engine/engineCommands.ts';
 import { onSnapshot, overlay } from '../engine/snapshots.ts';
 import { afterStart, setEngine } from '../model/engineLink.ts';
 import { model, seed } from '../model/patchModel.ts';
-import { fillStageSamples } from '../model/stageWorlds.ts';
 import { samples } from '../samples/userSamples.ts';
 import { scene } from '../scene/scene.ts';
 import { probe } from '../testing/probe.ts';

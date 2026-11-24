@@ -1,4 +1,5 @@
 // Putting an opened patch on the stage, or inserting it.
+import { readSources } from '../model/toPatch.ts';
 import { type Patch, type PatchSource, relinks } from '../../patch/loadPatch.ts';
 import { audioInAsMicrophone } from '../../patch/webInputs.ts';
 import { BLOCKS_BY_ID } from '../../generated/blocks.gen.ts';
@@ -13,7 +14,6 @@ import { addLabels, readLabels } from '../labels/labels.ts';
 import { send, sendRaw } from '../model/engineLink.ts';
 import {
   model,
-  readSources,
   refs,
   setConnectionOrder,
   setSources,

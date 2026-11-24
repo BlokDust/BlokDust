@@ -1,4 +1,5 @@
 // Showing a patch on the stage, and the one the page opened with.
+import { readSources } from '../model/toPatch.ts';
 import { type Macro, type Patch } from '../../patch/loadPatch.ts';
 import { audioInAsMicrophone } from '../../patch/webInputs.ts';
 import { CommandType } from '../../engine/wasmEngine.ts';
@@ -16,7 +17,6 @@ import {
   labels,
   model,
   nextId,
-  readSources,
   refs,
   selectedLabels,
   setConnectionOrder,

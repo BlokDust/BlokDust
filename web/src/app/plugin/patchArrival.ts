@@ -1,4 +1,6 @@
 // The processor sends the patch it holds (bd_patch): the page shows it and says it is ready.
+import { setSentMacros } from '../model/macroSync.ts';
+import { toPatch } from '../model/toPatch.ts';
 import type { Patch } from '../../patch/loadPatch.ts';
 import { apiUrl } from '../../patch/site.ts';
 import { COPY as PATCH_COPY } from '../../v1ui/patches.ts';
@@ -8,8 +10,8 @@ import { juce } from '../boot/page.ts';
 import { stage } from '../boot/pixi.ts';
 import { startPlacing } from '../editing/placing.ts';
 import { ios, setIos, setStandalone, standalone } from '../model/engineLink.ts';
-import { automation, ccBySlot, model, toPatch } from '../model/patchModel.ts';
-import { innerIds, setSentMacros } from '../model/stageWorlds.ts';
+import { automation, ccBySlot, model } from '../model/patchModel.ts';
+import { innerIds } from '../model/stageWorlds.ts';
 import { setBaseline } from '../model/unsavedChanges.ts';
 import { pluginAfterLoad, setPluginAfterLoad } from '../patchFiles/applyPatch.ts';
 import { showPatch } from '../patchFiles/showPatch.ts';

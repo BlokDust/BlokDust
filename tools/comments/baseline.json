@@ -599,22 +599,8 @@
     "comment-block-lines": 2,
     "comment-line-length": 5
   },
-  "web/src/app/blocks/addBlock.ts": {
-    "comment-line-length": 5
-  },
-  "web/src/app/blocks/lfoTargets.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 1
-  },
   "web/src/app/darkTheme.ts": {
     "comment-line-length": 1
-  },
-  "web/src/app/editing/placing.ts": {
-    "comment-line-length": 2
-  },
-  "web/src/app/editing/undoSteps.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 4
   },
   "web/src/app/engine/engineCommands.ts": {
     "comment-block-lines": 1,
@@ -667,27 +653,11 @@
     "comment-block-lines": 1,
     "comment-line-length": 8
   },
-  "web/src/app/labels/labels.ts": {
-    "comment-line-length": 6
-  },
-  "web/src/app/model/engineLink.ts": {
-    "comment-line-length": 4
-  },
   "web/src/app/model/patchModel.ts": {
-    "comment-block-lines": 2,
-    "comment-line-length": 9
-  },
-  "web/src/app/model/stageWorlds.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 11
-  },
-  "web/src/app/model/unsavedChanges.ts": {
-    "comment-block-lines": 1,
     "comment-line-length": 1
   },
-  "web/src/app/model/view.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 3
+  "web/src/app/model/stageWorlds.ts": {
+    "comment-line-length": 1
   },
   "web/src/app/patchFiles/applyPatch.ts": {
     "comment-block-lines": 2,
@@ -763,9 +733,6 @@
   },
   "web/src/app/support/feedback.ts": {
     "comment-line-length": 1
-  },
-  "web/src/app/testing/probe.ts": {
-    "comment-line-length": 7
   },
   "web/src/app/video/videoExport.ts": {
     "comment-line-length": 2

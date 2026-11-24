@@ -1,10 +1,11 @@
 // The opened patch's unsaved baseline, title, own link and credit, and who is signed in.
+import { toPatch } from '../model/toPatch.ts';
 import { activity } from '../../account/activity.ts';
 import * as account from '../../account/client.ts';
 import { loadSession } from '../../patch/share.ts';
 import { App } from '../../v1ui/shim.ts';
 import { handleSignInArrival } from '../account/signInArrival.ts';
-import { setCountActivity, toPatch } from '../model/patchModel.ts';
+import { setCountActivity } from '../model/patchModel.ts';
 import {
   BASELINE_KEY,
   contentOf,

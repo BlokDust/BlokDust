@@ -6,30 +6,33 @@ import { inside } from './stageWorlds.ts';
 
 export let engine: EngineNode | null = null;
 
-/** The plugin runs as the standalone app (the processor says so with its patch): no DAW to pass keys on to. */
+/** The plugin runs as the standalone app: no DAW to pass keys on to. */
 export let standalone = false;
 
 /** The plugin runs on iPad (CHG-0025): no Trash. */
 export let ios = false;
 
-/** Run once START has started audio and the stage shows (panels opened before it never slide in). */
+/** Run once audio has started and the stage shows (a panel opened before never slides in). */
 export const afterStart: (() => void)[] = [];
 
 /** Commands to the engine (the plugin: to its processor), as given. */
-export let sendRaw = (cmds: Command[]) => engine?.send(cmds);
+export let sendRaw = (commands: Command[]) => engine?.send(commands);
 
 /** Commands for the world on screen: inside a Stage, they go to its inner world. */
-export const send = (cmds: Command[]) =>
-  sendRaw(inside ? cmds.map((command) => ({ ...command, stage: inside!.stageId })) : cmds);
+export const send = (commands: Command[]) => {
+  const stageId = inside?.stageId;
+  return sendRaw(
+    stageId === undefined ? commands : commands.map((command) => ({ ...command, stage: stageId })),
+  );
+};
 
-/** Which world the snapshots come from: Stage block `id`'s inner world, or 0 for the outer one (the plugin: its
- * processor, CHG-0038). */
+/** Which world the snapshots come from: Stage `id`'s inner world, or 0 for the outer one. */
 export const viewWorld = (id: number) => {
   engine?.setView(id);
   juce?.emitEvent('bd_stageView', { stage: id });
 };
 
-/** Plugin messages about a block name the world it is in: `stage` while looking into a Stage (CHG-0038). */
+/** Plugin messages name a block's world: `stage` while looking into one (CHG-0038). */
 export const atStage = () => (inside ? { stage: inside.stageId } : {});
 
 /** Audio to block `id` in the world on show. */

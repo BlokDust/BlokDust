@@ -1,3 +1,4 @@
+import { toPatch } from '../model/toPatch.ts';
 import { type GalleryState, isServerId, save as saveShared } from '../../patch/server.ts';
 import { PLUGIN_SITE } from '../../patch/site.ts';
 import { App } from '../../v1ui/shim.ts';
@@ -6,7 +7,7 @@ import { saveSession, saveLocal } from '../../patch/share.ts';
 import { setGuarded } from '../audio/microphone.ts';
 import { THUMB, embedId, juce, session, sessionFor, setSession } from '../boot/page.ts';
 import { stage } from '../boot/pixi.ts';
-import { model, toPatch } from '../model/patchModel.ts';
+import { model } from '../model/patchModel.ts';
 import {
   contentOf,
   lastGallery,

@@ -1,20 +1,22 @@
 // Every edit is autosaved here after it settles.
+import { syncMacros } from './macroSync.ts';
+import { toPatch } from './toPatch.ts';
 import { saveLocal, saveSession } from '../../patch/share.ts';
 import { embedId, juce, params, session } from '../boot/page.ts';
-import { toPatch } from './patchModel.ts';
-import { syncMacros } from './stageWorlds.ts';
 import { checkOwnDirty } from '../share/ownLink.ts';
 
-export let saveTimer: ReturnType<typeof setTimeout> | undefined;
+const SETTLE_MS = 300;
+let saveTimer: ReturnType<typeof setTimeout> | undefined;
 
 /** The autosave holds the patch on screen (it was restored from it, or edited since). */
-export let autosaveIsThis!: boolean;
+export let autosaveIsThis = false;
 
 export const changed = () => {
+  // In the plugin the DAW project keeps the patch (the processor has it).
   if (juce) {
     syncMacros();
     return;
-  } // in the plugin the DAW project keeps the patch (the processor has it)
+  }
   if (embedId) return; // the embed player never autosaves
   clearTimeout(saveTimer);
   autosaveIsThis = true;
@@ -25,7 +27,7 @@ export const changed = () => {
       saveSession(session);
     }
     checkOwnDirty();
-  }, 300);
+  }, SETTLE_MS);
 };
 
 export function init(): void {
