@@ -9,13 +9,15 @@ import {
   device,
   pp,
   api,
-  shared,
+  sharedDevice,
+  locationOf,
   type AccountTests,
 } from './harness.ts';
+import type { AppSettingsPanel } from '../pageGlobals.shared.ts';
 
 export const guardTests: AccountTests = {
-  /** R1b (CHG-0035): a network makes ACCOUNTS_PER_DAY new accounts a day (a second local Worker, 2 a day); the next
-   * is refused, by passkey and by Google; known accounts still sign in; back from Google the app says why. */
+  /** R1b (CHG-0035): a network makes ACCOUNTS_PER_DAY (here 2) new accounts a day, then is refused
+   * by passkey and Google; known accounts still sign in; back from Google the app says why. */
   async 'new-account-limit'() {
     const vars = {
       TURNSTILE_SECRET: 'test-secret',
@@ -28,7 +30,8 @@ export const guardTests: AccountTests = {
     };
     const lim = await startLocal({ name: 'accounts-limit', vars });
     try {
-      // Google sign-in by hand: start (its cookie), the mock's consent, the callback; where it lands.
+      // Google sign-in by hand: start (its cookie), the mock's consent, the callback; where it
+      // lands.
       const googleAs = async (user: string): Promise<string> => {
         await fetch(`${mocks.url}/google/next?user=${user}`);
         const start = await fetch(`${lim.url}/api/auth/google/start?return=%2F`, {
@@ -36,11 +39,9 @@ export const guardTests: AccountTests = {
         });
         const jar = start.headers
           .getSetCookie()
-          .map((x) => x.split(';')[0])
+          .map((setCookie) => setCookie.split(';')[0])
           .join('; ');
-        const callback = (
-          await fetch(start.headers.get('location')!, { redirect: 'manual' })
-        ).headers.get('location')!;
+        const callback = locationOf(await fetch(locationOf(start), { redirect: 'manual' }));
         return (
           new URL(
             (await fetch(callback, { redirect: 'manual', headers: { cookie: jar } })).headers.get(
@@ -73,14 +74,15 @@ export const guardTests: AccountTests = {
       await lim.stop();
     }
     // Back from Google refused: Settings › SIGN IN, saying why.
-    const f = await device();
-    await f.page.goto(`${base}/?account=limit`);
-    await f.page
+    const refused = await device();
+    await refused.page.goto(`${base}/?account=limit`);
+    await refused.page
       .waitForFunction(
         () => {
-          const settingsPanel = (window as any).__bd_probe?.scene?.SettingsPanel;
+          if (!('__bd_probe' in window)) return false;
+          const settingsPanel = window.__bd_probe.scene.SettingsPanel as AppSettingsPanel;
           return (
-            settingsPanel?.Open &&
+            settingsPanel.Open &&
             settingsPanel.OffsetY === 0 &&
             settingsPanel.accountPage.Account !== undefined
           );
@@ -89,8 +91,8 @@ export const guardTests: AccountTests = {
         { timeout: 20000 },
       )
       .catch(() => {});
-    await f.page.waitForTimeout(400);
-    const st = await pp(f.page);
+    await refused.page.waitForTimeout(400);
+    const st = await pp(refused.page);
     check(
       'R1b: back from Google refused, Settings › SIGN IN says why',
       st.settings &&
@@ -98,14 +100,15 @@ export const guardTests: AccountTests = {
         st.message === 'Cannot create any more new accounts today.',
       st,
     );
-    await f.page.screenshot({ path: `${OUT}/new-account-limit.png` });
-    await f.ctx.close();
+    await refused.page.screenshot({ path: `${OUT}/new-account-limit.png` });
+    await refused.ctx.close();
   },
 
   /** R5: cookie-authenticated changes only from this site. */
   async 'cross-site'() {
-    const a = shared.a!;
-    const cookie = (await a.ctx.cookies()).find((c) => c.name === 'bd_session')!;
+    const a = sharedDevice('a');
+    const cookie = (await a.ctx.cookies()).find((each) => each.name === 'bd_session');
+    if (!cookie) throw new Error('no session cookie');
     const evil = await fetch(`${server.url}/api/auth/logout`, {
       method: 'POST',
       headers: {
@@ -122,7 +125,7 @@ export const guardTests: AccountTests = {
     const still = await api(a, 'GET', 'me');
     check(
       'R5: another site (or no Origin) cannot sign out or delete with the cookie',
-      evil.status === 403 && none.status === 403 && still.json.user?.handle === 'tester_1',
+      evil.status === 403 && none.status === 403 && still.json?.user?.handle === 'tester_1',
       [evil.status, none.status],
     );
   },

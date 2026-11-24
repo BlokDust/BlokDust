@@ -13,26 +13,30 @@ import {
   corners,
   googleAccount,
   api,
+  locationOf,
   type AccountTests,
 } from './harness.ts';
+import type { AppSettingsPanel } from '../pageGlobals.shared.ts';
 
 export const signInMethodTests: AccountTests = {
-  /** R2a, R6: Sign in with Google (PKCE S256); a new Google account picks its name; the callback refuses a wrong state. */
+  /** R2a, R6: Sign in with Google (PKCE S256); a new Google account picks its name; the callback
+   * refuses a wrong state. */
   async google() {
-    const c = await device();
+    const carol = await device();
     await fetch(`${mocks.url}/google/next?user=carol`);
-    await openApp(c);
-    await openAccount(c.page);
+    await openApp(carol);
+    await openAccount(carol.page);
     await Promise.all([
-      c.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}),
-      press(c.page, 'google', 0),
+      carol.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}),
+      press(carol.page, 'google', 0),
     ]);
-    await c.page.waitForFunction(() => (window as any).__bd_probe, null, { timeout: 20000 });
-    // Back from Google (owner review 2026-11-15): no START and no intro; a new account names itself in Settings at once.
-    await c.page
+    await carol.page.waitForFunction(() => window.__bd_probe, null, { timeout: 20000 });
+    // Back from Google (owner review 2026-11-15): no START and no intro; a new account names itself
+    // in Settings at once.
+    await carol.page
       .waitForFunction(
         () => {
-          const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+          const settingsPanel = window.__bd_probe.scene.SettingsPanel as AppSettingsPanel;
           return (
             settingsPanel.Open &&
             settingsPanel.OffsetY === 0 &&
@@ -51,33 +55,33 @@ export const signInMethodTests: AccountTests = {
     );
     check(
       'R2a: back from Google there is no start screen',
-      !(await c.page.$('#start')) &&
-        !(await c.page.evaluate(() => location.search.includes('account='))),
+      !(await carol.page.$('#start')) &&
+        !(await carol.page.evaluate(() => location.search.includes('account='))),
     );
     check(
       'R6: a new Google account is asked for a name in Settings',
-      (await pp(c.page)).view === 'name' && (await pp(c.page)).settings === true,
-      await pp(c.page),
+      (await pp(carol.page)).view === 'name' && (await pp(carol.page)).settings,
+      await pp(carol.page),
     );
-    await c.page.fill('#accountHandleInput', 'carol_g');
-    await press(c.page, 'submit');
-    await settled(c.page);
+    await carol.page.fill('#accountHandleInput', 'carol_g');
+    await press(carol.page, 'submit');
+    await settled(carol.page);
     check(
       '… and has it',
-      (await pp(c.page)).account?.handle === 'carol_g' &&
-        (await pp(c.page)).account?.providers.includes('google'),
-      await pp(c.page),
+      (await pp(carol.page)).account?.handle === 'carol_g' &&
+        (await pp(carol.page)).account?.providers.includes('google') === true,
+      await pp(carol.page),
     );
-    const g = await pp(c.page);
+    const googleState = await pp(carol.page);
     check(
       "R13: a Google account's ways in read Google, and its button ADD PASSKEY (CHG-0035)",
-      g.methods.join(',') === 'Google' && g.addLabel === 'Add Passkey',
-      g,
+      googleState.methods.join(',') === 'Google' && googleState.addLabel === 'Add Passkey',
+      googleState,
     );
-    await press(c.page, 'methods');
-    await press(c.page, 'addPasskey');
-    await settled(c.page);
-    const g2 = await pp(c.page);
+    await press(carol.page, 'methods');
+    await press(carol.page, 'addPasskey');
+    await settled(carol.page);
+    const g2 = await pp(carol.page);
     check(
       'R7: ADD PASSKEY adds one to the Google account: no message, the methods line reads Google · 1 passkey, ADD ANOTHER PASSKEY',
       g2.message === '' &&
@@ -85,27 +89,32 @@ export const signInMethodTests: AccountTests = {
         g2.addLabel === 'Add Another Passkey',
       g2,
     );
-    await c.page.screenshot({ path: `${OUT}/account-methods.png` });
-    await press(c.page, 'methodsBack');
-    // The same Google account again, on another device: the same BlokDust account, straight to the stage.
-    const d = await device();
-    await openApp(d);
-    await openAccount(d.page);
+    await carol.page.screenshot({ path: `${OUT}/account-methods.png` });
+    await press(carol.page, 'methodsBack');
+    // The same Google account again, on another device: the same BlokDust account, straight to the
+    // stage.
+    const carolElsewhere = await device();
+    await openApp(carolElsewhere);
+    await openAccount(carolElsewhere.page);
     await Promise.all([
-      d.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}),
-      press(d.page, 'google', 0),
+      carolElsewhere.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}),
+      press(carolElsewhere.page, 'google', 0),
     ]);
-    await d.page
-      .waitForFunction(() => (window as any).__bd_probe?.corners?.me === 'carol_g', null, {
-        timeout: 20000,
-      })
+    await carolElsewhere.page
+      .waitForFunction(
+        () => '__bd_probe' in window && window.__bd_probe.corners.me === 'carol_g',
+        null,
+        {
+          timeout: 20000,
+        },
+      )
       .catch(() => {});
     check(
       'R2a: the same Google account signs in to the same account, no panel in the way',
-      (await corners(d.page)).me === 'carol_g' &&
-        !(await pp(d.page)).settings &&
-        !(await pp(d.page)).open,
-      { c: await corners(d.page), p: await pp(d.page) },
+      (await corners(carolElsewhere.page)).me === 'carol_g' &&
+        !(await pp(carolElsewhere.page)).settings &&
+        !(await pp(carolElsewhere.page)).open,
+      { c: await corners(carolElsewhere.page), p: await pp(carolElsewhere.page) },
     );
     const response = await fetch(`${base}/api/auth/google/callback?code=x&state=wrong`, {
       redirect: 'manual',
@@ -116,10 +125,8 @@ export const signInMethodTests: AccountTests = {
       response.status === 400,
       response.status,
     );
-    // Security review (PR 13): the return path must stay on this site. The URL parser drops tabs and newlines, so
-    // "/<TAB>/evil.example" used to pass the "starts with / but not //" check and then resolve to evil.example.
-    // One real start (sign-in starts are rate limited); then the callback, which does the redirect, is replayed with
-    // each return path in its cookie, as a start that let it through would have stored it.
+    // Security review (PR 13): the URL parser drops tabs and newlines, so "/<TAB>/evil.example"
+    // passed the "/ but not //" check. The callback is replayed with each return path.
     const start = await fetch(
       `${base}/api/auth/google/start?return=${encodeURIComponent('/\t/evil.example')}`,
       { redirect: 'manual' },
@@ -127,15 +134,11 @@ export const signInMethodTests: AccountTests = {
     const [oauthName, oauthValue] = (
       start.headers
         .getSetCookie()
-        .map((s) => s.split(';')[0])
-        .find((s) => /^(__Host-)?bd_oauth=/.test(s)) ?? '='
+        .map((setCookie) => setCookie.split(';')[0])
+        .find((cookie) => /^(__Host-)?bd_oauth=/.test(cookie)) ?? '='
     ).split('=');
     const [state, verifier] = oauthValue.split('.');
-    const consent = new URL(
-      (await fetch(start.headers.get('location')!, { redirect: 'manual' })).headers.get(
-        'location',
-      )!,
-    );
+    const consent = new URL(locationOf(await fetch(locationOf(start), { redirect: 'manual' })));
     const landOf = async (back: string | null): Promise<string> => {
       const cookie =
         back === null
@@ -161,7 +164,7 @@ export const signInMethodTests: AccountTests = {
     const landed = await Promise.all(tricks.map(landOf));
     check(
       'R2a: the return path after sign-in never leaves this site (tab, newline, backslash and // tricks)',
-      landed.every((l) => !!l && new URL(l).host === here),
+      landed.every((land) => !!land && new URL(land).host === here),
       landed,
     );
     const kept = await landOf('/?c=abcdefghij&t=Song');
@@ -172,25 +175,26 @@ export const signInMethodTests: AccountTests = {
         new URL(kept).searchParams.get('t') === 'Song',
       kept,
     );
-    await c.ctx.close();
-    await d.ctx.close();
+    await carol.ctx.close();
+    await carolElsewhere.ctx.close();
   },
 
-  /** R2b: Sign in with Apple (no scopes, query response; client secret signed with the key); a new account picks its name. */
+  /** R2b: Sign in with Apple (no scopes, query response; client secret signed with the key); a
+   * new account picks its name. */
   async apple() {
-    const e = await device();
+    const erin = await device();
     await fetch(`${mocks.url}/google/next?user=erin`); // the mock's next user, for Apple too
-    await openApp(e);
-    await openAccount(e.page);
+    await openApp(erin);
+    await openAccount(erin.page);
     await Promise.all([
-      e.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}),
-      press(e.page, 'apple', 0),
+      erin.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}),
+      press(erin.page, 'apple', 0),
     ]);
-    await e.page.waitForFunction(() => (window as any).__bd_probe, null, { timeout: 20000 });
-    await e.page
+    await erin.page.waitForFunction(() => window.__bd_probe, null, { timeout: 20000 });
+    await erin.page
       .waitForFunction(
         () => {
-          const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+          const settingsPanel = window.__bd_probe.scene.SettingsPanel as AppSettingsPanel;
           return (
             settingsPanel.Open &&
             settingsPanel.OffsetY === 0 &&
@@ -214,17 +218,17 @@ export const signInMethodTests: AccountTests = {
     );
     check(
       'R2b, R6: a new Apple account is asked for a name in Settings',
-      (await pp(e.page)).view === 'name' && (await pp(e.page)).settings === true,
-      await pp(e.page),
+      (await pp(erin.page)).view === 'name' && (await pp(erin.page)).settings,
+      await pp(erin.page),
     );
-    await e.page.fill('#accountHandleInput', 'erin_a');
-    await press(e.page, 'submit');
-    await settled(e.page);
+    await erin.page.fill('#accountHandleInput', 'erin_a');
+    await press(erin.page, 'submit');
+    await settled(erin.page);
     check(
       '… and has it, with Apple as its way in',
-      (await pp(e.page)).account?.handle === 'erin_a' &&
-        (await pp(e.page)).account?.providers.includes('apple'),
-      await pp(e.page),
+      (await pp(erin.page)).account?.handle === 'erin_a' &&
+        (await pp(erin.page)).account?.providers.includes('apple') === true,
+      await pp(erin.page),
     );
     const response = await fetch(`${base}/api/auth/apple/callback?code=x&state=s`, {
       redirect: 'manual',
@@ -235,53 +239,53 @@ export const signInMethodTests: AccountTests = {
       response.status === 400,
       response.status,
     );
-    await e.ctx.close();
+    await erin.ctx.close();
   },
 
-  /** R7a–R7c (CHG-0039, owner 2026-11-19): signed in, SIGN-IN METHODS lists the ways in, adds Google, Apple or a
-   * passkey to the same account, and removes one; never the last. A Google or Apple account that already belongs to
-   * another BlokDust account is refused, and you stay signed in as you were. */
+  /** R7a–R7c (CHG-0039): SIGN-IN METHODS adds Google, Apple or a passkey and removes one, never the
+   * last; a Google or Apple identity of another account is refused and you stay signed in. */
   async 'link-and-remove-methods'() {
     // Mia's account owns the Google identity "mia" (another device).
-    const m = await device();
-    await googleAccount(m, 'mia', 'mia_g');
+    const mia = await device();
+    await googleAccount(mia, 'mia', 'mia_g');
     // Lena: a Google account.
-    const l = await device();
-    await googleAccount(l, 'lena', 'lena_g');
-    await press(l.page, 'methods');
-    const one = await pp(l.page);
-    const noRemove = await l.page.evaluate(() =>
-      (window as any).__bd_probe.scene.SettingsPanel.accountCentre('remove0'),
+    const lena = await device();
+    await googleAccount(lena, 'lena', 'lena_g');
+    await press(lena.page, 'methods');
+    const one = await pp(lena.page);
+    const noRemove = await lena.page.evaluate(() =>
+      (window.__bd_probe.scene.SettingsPanel as AppSettingsPanel).accountCentre('remove0'),
     );
     check(
       'R7a: SIGN-IN METHODS lists Google; the only way in has no REMOVE',
       one.view === 'methods' && one.rows.join(',') === 'Google' && noRemove === null,
       { one, noRemove },
     );
-    await l.page.screenshot({ path: `${OUT}/methods-one.png` });
+    await lena.page.screenshot({ path: `${OUT}/methods-one.png` });
     // ADD APPLE: Apple's "lena_apple" joins Lena's account; back on the methods page, it says so.
     await fetch(`${mocks.url}/google/next?user=lena_apple`);
     await Promise.all([
-      l.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}),
-      press(l.page, 'addApple', 0),
+      lena.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}),
+      press(lena.page, 'addApple', 0),
     ]);
-    await l.page
+    await lena.page
       .waitForFunction(
         () => {
-          const settingsPanel = (window as any).__bd_probe?.scene.SettingsPanel,
-            x = settingsPanel?.accountPage;
+          if (!('__bd_probe' in window)) return false;
+          const settingsPanel = window.__bd_probe.scene.SettingsPanel as AppSettingsPanel,
+            account = settingsPanel.accountPage;
           return (
-            settingsPanel?.OffsetY === 0 &&
-            x?.View === 'methods' &&
-            x.Account?.providers?.includes('apple')
+            settingsPanel.OffsetY === 0 &&
+            account.View === 'methods' &&
+            (account.Account?.providers.includes('apple') ?? false)
           );
         },
         null,
         { timeout: 20000 },
       )
       .catch(() => {});
-    await l.page.waitForTimeout(400);
-    const two = await pp(l.page);
+    await lena.page.waitForTimeout(400);
+    const two = await pp(lena.page);
     check(
       'R7a: ADD APPLE adds Apple to the same account, and says so',
       two.account?.handle === 'lena_g' &&
@@ -291,49 +295,51 @@ export const signInMethodTests: AccountTests = {
     );
     // ADD GOOGLE with Mia's Google: refused, still Lena, nothing added.
     await fetch(`${mocks.url}/google/next?user=mia`);
-    await press(l.page, 'remove0');
-    await settled(l.page); // Lena's own Google goes first, so ADD GOOGLE shows
+    await press(lena.page, 'remove0');
+    await settled(lena.page); // Lena's own Google goes first, so ADD GOOGLE shows
     await Promise.all([
-      l.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}),
-      press(l.page, 'addGoogle', 0),
+      lena.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}),
+      press(lena.page, 'addGoogle', 0),
     ]);
-    await l.page
+    await lena.page
       .waitForFunction(
         () => {
-          const settingsPanel = (window as any).__bd_probe?.scene.SettingsPanel;
+          if (!('__bd_probe' in window)) return false;
+          const settingsPanel = window.__bd_probe.scene.SettingsPanel as AppSettingsPanel;
           return (
-            settingsPanel?.OffsetY === 0 &&
+            settingsPanel.OffsetY === 0 &&
             settingsPanel.accountPage.View === 'methods' &&
-            settingsPanel.accountPage.Account
+            !!settingsPanel.accountPage.Account
           );
         },
         null,
         { timeout: 20000 },
       )
       .catch(() => {});
-    await l.page.waitForTimeout(800);
-    const taken = await pp(l.page);
+    await lena.page.waitForTimeout(800);
+    const taken = await pp(lena.page);
     check(
       'R7b: a Google account used by another BlokDust account is refused; still signed in as Lena; nothing added',
       taken.account?.handle === 'lena_g' &&
         taken.rows.join(',') === 'Apple' &&
-        /already used by another BlokDust account/.test(taken.message),
+        taken.message.includes('already used by another BlokDust account'),
       taken,
     );
-    const miaStill = await api(m, 'GET', 'me');
+    const miaStill = await api(mia, 'GET', 'me');
     check(
       '… and Mia keeps her Google',
-      miaStill.json?.user?.handle === 'mia_g' && miaStill.json?.user?.providers.includes('google'),
+      miaStill.json?.user?.handle === 'mia_g' && miaStill.json.user.providers.includes('google'),
       miaStill.json,
     );
-    // ADD PASSKEY, then REMOVE it again; then the last way in can't be removed (the page hides REMOVE; the API refuses).
-    await press(l.page, 'addPasskey');
-    await settled(l.page);
-    const withKey = await pp(l.page);
-    await l.page.screenshot({ path: `${OUT}/methods-two.png` });
-    await press(l.page, 'remove1');
-    await settled(l.page);
-    const back = await pp(l.page);
+    // ADD PASSKEY, then REMOVE it again; then the last way in can't be removed (the page hides
+    // REMOVE; the API refuses).
+    await press(lena.page, 'addPasskey');
+    await settled(lena.page);
+    const withKey = await pp(lena.page);
+    await lena.page.screenshot({ path: `${OUT}/methods-two.png` });
+    await press(lena.page, 'remove1');
+    await settled(lena.page);
+    const back = await pp(lena.page);
     check(
       'R7c: a passkey added and removed',
       withKey.rows.length === 2 &&
@@ -341,17 +347,20 @@ export const signInMethodTests: AccountTests = {
         back.rows.join(',') === 'Apple',
       { withKey, back },
     );
-    const last = await api(l, 'DELETE', 'me/methods', { kind: 'apple' });
+    const last = await api(lena, 'DELETE', 'me/methods', { kind: 'apple' });
     check(
       'R7c: the last way in is never removed (409)',
-      last.status === 409 && (await pp(l.page)).rows.join(',') === 'Apple',
+      last.status === 409 && (await pp(lena.page)).rows.join(',') === 'Apple',
       last,
     );
-    // Leaving SIGN-IN METHODS (×, another tab) brings the account back on its own page (owner, 2026-11-19).
-    await l.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel());
-    await l.page.waitForTimeout(800);
-    await openAccount(l.page);
-    const reopened = (await pp(l.page)).view;
+    // Leaving SIGN-IN METHODS (×, another tab) brings the account back on its own page (owner,
+    // 2026-11-19).
+    await lena.page.evaluate(() => {
+      window.__bd_probe.scene.SettingsPanel.ClosePanel();
+    });
+    await lena.page.waitForTimeout(800);
+    await openAccount(lena.page);
+    const reopened = (await pp(lena.page)).view;
     check(
       '… leaving SIGN-IN METHODS and coming back shows the account page',
       reopened === 'main',
@@ -363,7 +372,7 @@ export const signInMethodTests: AccountTests = {
       body: JSON.stringify({ kind: 'apple' }),
     });
     check("R5: removing needs this site's Origin", cross.status === 403, cross.status);
-    await m.ctx.close();
-    await l.ctx.close();
+    await mia.ctx.close();
+    await lena.ctx.close();
   },
 };

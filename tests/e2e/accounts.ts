@@ -1,7 +1,5 @@
-// pnpm test:accounts — CHG-0023 acceptance (SPEC-SHARING-ACCOUNTS), black-box through the real app and the Worker:
-// `wrangler dev` on web/dist with a local D1, Cloudflare's test Turnstile key, siteverify and Google mocked
-// (tests/e2e/mock-services.ts), and Chrome's virtual WebAuthn authenticator standing in for a phone or laptop.
-// The app is opened on http://localhost:<port>: passkeys need a domain, not an IP address.
+// pnpm test:accounts — CHG-0023 (SPEC-SHARING-ACCOUNTS): the real app on a local Worker, mocked
+// Turnstile, siteverify and Google, virtual WebAuthn; on localhost as passkeys need a domain.
 import { writeFileSync } from 'node:fs';
 import {
   OUT,
@@ -51,7 +49,7 @@ console.log(
   JSON.stringify({
     ok,
     passed: results.filter((result) => result.ok).length,
-    failed: results.filter((result) => !result.ok).map((r) => r.name),
+    failed: results.filter((result) => !result.ok).map((result) => result.name),
   }),
 );
 process.exit(ok ? 0 : 1);

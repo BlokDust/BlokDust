@@ -15,14 +15,16 @@ import {
   api,
   saveLink,
   shared,
+  sharedDevice,
   type AccountTests,
 } from './harness.ts';
+import type { AppSettingsPanel } from '../pageGlobals.shared.ts';
 
 export const statsTests: AccountTests = {
-  /** R15 (CHG-0027): Settings › ACCOUNT shows the account's stats from the one `/api/me?stats=1` it already asks;
-   * favourite blocks come from the tally kept on each save (and patches saved before it are counted on the way). */
+  /** R15 (CHG-0027): ACCOUNT's stats come with the one `/api/me?stats=1` it asks; favourite blocks
+   * come from the tally kept on each save (older patches are counted on the way). */
   async stats() {
-    const a = shared.a!;
+    const a = sharedDevice('a');
     const patch = (types: string[]) => ({
       format: 'blokdust.patch',
       version: 2,
@@ -30,7 +32,8 @@ export const statsTests: AccountTests = {
     });
     const save = (device: Device, body: Record<string, unknown>) =>
       api(device, 'POST', 'patches', { turnstile: 'ok', ...body }, { origin: base });
-    // Someone else (signed out) remixes the account's first patch, twice; the account remixes theirs once.
+    // Someone else (signed out) remixes the account's first patch, twice; the account remixes
+    // theirs once.
     const anon = await device();
     await anon.page.goto(`${base}/api/config`);
     const theirs = await save(anon, {
@@ -46,20 +49,23 @@ export const statsTests: AccountTests = {
     const mine1 = await save(a, {
       patch: patch(['source.tone', 'source.tone', 'power.emitter', 'power.laser']),
       title: 'Lasers',
-      parent: theirs.json.id,
+      parent: theirs.json?.id,
     });
     await save(a, { patch: patch(['source.tone', 'power.emitter', 'fx.reverb']), title: 'Tones' });
     // A patch from before migration 0006 (blocks not counted yet): counted when the tab next asks.
-    await server.sql(`UPDATE patches SET blocks = '' WHERE id = '${mine1.json.id}'`);
+    await server.sql(`UPDATE patches SET blocks = '' WHERE id = '${mine1.json?.id}'`);
     const requests: string[] = [];
-    // Account requests only: usage analytics flushes on its own 60 s timer (SPEC-SHARING-USAGE-ANALYTICS), whenever.
-    a.page.on('request', (r) => {
-      if (r.url().includes('/api/') && !r.url().includes('/api/events'))
-        requests.push(new URL(r.url()).pathname + new URL(r.url()).search);
+    // Account requests only: usage analytics flushes on its own 60 s timer
+    // (SPEC-SHARING-USAGE-ANALYTICS), whenever.
+    a.page.on('request', (request) => {
+      const url = request.url();
+      if (url.includes('/api/') && !url.includes('/api/events'))
+        requests.push(new URL(url).pathname + new URL(url).search);
     });
     await openAccount(a.page);
     await a.page.waitForFunction(
-      () => !!(window as any).__bd_probe.scene.SettingsPanel.accountPage.Account?.stats,
+      () =>
+        !!(window.__bd_probe.scene.SettingsPanel as AppSettingsPanel).accountPage.Account?.stats,
       null,
       { timeout: 10000 },
     );
@@ -77,32 +83,29 @@ export const statsTests: AccountTests = {
         st.remixes === 1 &&
         st.remixed === 2 &&
         st.mostRemixed?.id === shared.firstPatch &&
-        st.mostRemixed.n === 2,
+        st.mostRemixed?.n === 2,
       st,
     );
-    const favs = st?.favourites.map(
-      (favourite: { type: string; patches: number; count: number }) =>
-        `${favourite.type}:${favourite.patches}:${favourite.count}`,
-    );
-    // The demo patch (the first save, with a Tone added on device B) has Tones and an Emitter: Tone is in 3 patches only
-    // if the older one was counted.
+    const favs =
+      st?.favourites.map(
+        (favourite) => `${favourite.type}:${favourite.patches}:${favourite.count}`,
+      ) ?? [];
+    // The demo patch (the first save, with a Tone added on device B) has Tones and an Emitter: Tone
+    // is in 3 patches only if the older one was counted.
     check(
       'R15: favourite blocks, in the most patches first, then the most of them (an older patch counted on the way)',
-      /^source\.tone:3:\d+$/.test(favs?.[0] ?? '') &&
-        favs?.[1].startsWith('power.emitter:3:') &&
+      /^source\.tone:3:\d+$/.test(favs[0] ?? '') &&
+        (favs[1]?.startsWith('power.emitter:3:') ?? false) &&
+        // Six: a phone shows two rows of three.
         favs.length === 6 &&
-        !favs
-          .slice(0, 5)
-          .some((f: string) =>
-            f.startsWith('power.laser'),
-          ) /* six: a phone shows two rows of three */,
+        !favs.slice(0, 5).some((favourite) => favourite.startsWith('power.laser')),
       favs,
     );
     const plain = await api(a, 'GET', 'me');
     check(
       'R15: /api/me without ?stats=1 does no stats work (loading the page)',
-      plain.json.user && !('stats' in plain.json.user),
-      plain.json.user,
+      !!plain.json?.user && !('stats' in plain.json.user),
+      plain.json?.user,
     );
     await a.page.screenshot({ path: `${OUT}/account-stats.png` });
     await a.page.setViewportSize({ width: 390, height: 844 });
@@ -110,18 +113,20 @@ export const statsTests: AccountTests = {
     await a.page.screenshot({ path: `${OUT}/account-stats-phone.png` });
     await a.page.setViewportSize({ width: 1280, height: 800 });
     await a.page.waitForTimeout(500);
-    await a.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel());
+    await a.page.evaluate(() => {
+      window.__bd_probe.scene.SettingsPanel.ClosePanel();
+    });
     await a.page.waitForTimeout(700);
     await anon.ctx.close();
   },
 
-  /** R16 (CHG-0027): running totals estimated in the page, credited with a save, and sent once when the page closes;
-   * ACTIVITY_BEACON=off stops that request. */
+  /** R16 (CHG-0027): running totals estimated in the page, credited with a save, and sent once
+   * when the page closes; ACTIVITY_BEACON=off stops that request. */
   async activity() {
-    // The estimates (owner: rough is fine): Emitter Rate is v1 frames per particle, synced it is one per Division;
-    // Laser Rotate is hundredths of a degree per v1 frame, only while powered; synced, one turn per Turn Beats.
+    // Rough estimates: Emitter Rate is v1 frames per particle (synced, one per Division); Laser
+    // Rotate is 1/100 degree per v1 frame while powered (synced, one turn per Turn Beats).
     const near = (a: number, b: number) => Math.abs(a - b) < 1e-9;
-    const r = [
+    const perSecond = [
       rates({ type: 'power.emitter', params: { rate: 80 } }, true, 120).particles,
       rates({ type: 'power.emitter', params: { sync: true, division: 1 } }, true, 120).particles,
       rates({ type: 'power.emitter', params: { rate: 80 } }, false, 120).particles,
@@ -131,33 +136,22 @@ export const statsTests: AccountTests = {
     ];
     check(
       'R16: particles and turns per second from the params',
-      near(r[0], 0.75) &&
-        near(r[1], 2) &&
-        r[2] === 0 &&
-        near(r[3], 1 / 6) &&
-        r[4] === 0 &&
-        near(r[5], 0.5),
-      r,
+      near(perSecond[0], 0.75) &&
+        near(perSecond[1], 2) &&
+        perSecond[2] === 0 &&
+        near(perSecond[3], 1 / 6) &&
+        perSecond[4] === 0 &&
+        near(perSecond[5], 0.5),
+      perSecond,
     );
 
-    const a = shared.a!;
-    const stats = async () =>
-      (await api(a, 'GET', 'me?stats=1')).json.user.stats as {
-        blocksAdded: number;
-        particles: number;
-        playMs: number;
-        laserTurns: number;
-      };
-    const pending = () =>
-      a.page.evaluate(
-        () =>
-          (window as any).__bd_probe.activity as {
-            playMs: number;
-            blocks: number;
-            particles: number;
-            laserTurns: number;
-          },
-      );
+    const a = sharedDevice('a');
+    const stats = async () => {
+      const totals = (await api(a, 'GET', 'me?stats=1')).json?.user?.stats;
+      if (!totals) throw new Error('no account stats');
+      return totals;
+    };
+    const pending = () => a.page.evaluate(() => window.__bd_probe.activity);
     await openApp(a);
     await a.page.evaluate(() => {
       localStorage.removeItem('bd_activity');
@@ -165,9 +159,9 @@ export const statsTests: AccountTests = {
     const before = await stats();
     // A self-powered Emitter (a new one starts synced: 2 a second at 120 BPM), added from the menu.
     await a.page.evaluate(() => {
-      const h = (window as any).__bd_probe.scene.host,
-        id = h.createBlock('ParticleEmitter', 6, 6);
-      h.setParam(id, 'selfPoweredMode', 1);
+      const host = window.__bd_probe.scene.host,
+        id = host.createBlock('ParticleEmitter', 6, 6);
+      if (id !== null) host.setParam(id, 'selfPoweredMode', 1);
     });
     await a.page.waitForTimeout(3000);
     const p1 = await pending();
@@ -176,43 +170,38 @@ export const statsTests: AccountTests = {
       p1.blocks >= 1 && p1.playMs >= 2000 && p1.particles >= 3,
       p1,
     );
-    // Bug (owner, 2026-11-16): the particle count was estimated from each Emitter's Rate while powered, so it didn't
-    // match what was fired (presses, laser hits, keys). Now every particle the engine emits counts, exactly: an
-    // unpowered Emitter held for 2 s, its particles slow enough (10 s of life) that none are gone when it is let go,
-    // so the particles on the stage are all it fired.
-    await a.page.evaluate(() => (window as any).__bd_probe.scene.host.resetScene());
+    // Every particle the engine emits counts (not an estimate from Rate): an unpowered Emitter held
+    // 2 s, its particles living 10 s, so the particles on the stage are all it fired.
+    await a.page.evaluate(() => {
+      window.__bd_probe.scene.host.resetScene();
+    });
     const held = await a.page.evaluate(() => {
-      const h = (window as any).__bd_probe.scene.host,
-        id = h.createBlock('ParticleEmitter', 0, 0);
-      h.setParam(id, 'sync', 0);
-      h.setParam(id, 'rate', 10);
-      h.setParam(id, 'speed', 1);
-      return id as number;
+      const host = window.__bd_probe.scene.host,
+        id = host.createBlock('ParticleEmitter', 0, 0);
+      if (id === null) throw new Error('no Emitter made');
+      host.setParam(id, 'sync', 0);
+      host.setParam(id, 'rate', 10);
+      host.setParam(id, 'speed', 1);
+      return id;
     });
     await a.page.mouse.click(40, 400);
-    // A block made from the menu is held until the pointer is let go (and a held Emitter fires): let go on the empty
-    // stage. Particles already flying go on until their range runs out: wait for an empty stage.
+    // A block made from the menu is held until the pointer is let go (a held Emitter fires): let
+    // go, then wait until the particles already flying are gone.
     await a.page
-      .waitForFunction(() => (window as any).__bd_probe.state.particles === 0, null, {
+      .waitForFunction(() => window.__bd_probe.state.particles === 0, null, {
         timeout: 20000,
       })
       .catch(() => {});
-    const pt = (await a.page.evaluate((id) => (window as any).__bd_probe.blockPoint(id), held)) as [
-      number,
-      number,
-    ];
-    const emptyBefore = await a.page.evaluate(
-      () => (window as any).__bd_probe.state.particles as number,
-    );
+    const pt = await a.page.evaluate((id) => window.__bd_probe.blockPoint(id), held);
+    if (!pt) throw new Error('the held Emitter is not on the stage');
+    const emptyBefore = await a.page.evaluate(() => window.__bd_probe.state.particles);
     const beforeHold = (await pending()).particles;
     await a.page.mouse.move(pt[0], pt[1]);
     await a.page.mouse.down();
     await a.page.waitForTimeout(2000);
     await a.page.mouse.up();
     await a.page.waitForTimeout(500);
-    const onStage = await a.page.evaluate(
-      () => (window as any).__bd_probe.state.particles as number,
-    );
+    const onStage = await a.page.evaluate(() => window.__bd_probe.state.particles);
     const counted = (await pending()).particles - beforeHold;
     check(
       'R16: every particle fired counts, exactly (an Emitter held, not powered)',
@@ -243,17 +232,18 @@ export const statsTests: AccountTests = {
       },
     );
     // One more block, then the page closes: one request takes it.
-    await a.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.ClosePanel());
+    await a.page.evaluate(() => {
+      window.__bd_probe.scene.PatchesPanel.ClosePanel();
+    });
     await a.page.waitForTimeout(600);
-    await a.page.evaluate(() =>
-      (window as any).__bd_probe.scene.host.createBlock('ToneSource', 10, 6),
-    );
+    await a.page.evaluate(() => window.__bd_probe.scene.host.createBlock('ToneSource', 10, 6));
     await a.page.waitForTimeout(500);
     await a.page.goto('about:blank');
     await new Promise((res) => setTimeout(res, 1500));
     await a.page.goto(`${base}/api/config`); // back on the site (its cookie) to ask
     const closed = await stats();
-    // (Playwright doesn't see a keepalive request from a page being unloaded: the account's total is the evidence.)
+    // (Playwright doesn't see a keepalive request from a page being unloaded: the account's total
+    // is the evidence.)
     check(
       'R16: closing the page sends what it counted (credited once)',
       closed.blocksAdded === after.blocksAdded + 1,
@@ -285,7 +275,7 @@ export const statsTests: AccountTests = {
         !cfg.activityBeacon &&
           onCfg.activityBeacon &&
           post.status === 200 &&
-          (await post.json()).added === false,
+          ((await post.json()) as { added?: boolean }).added === false,
         { cfg, onCfg },
       );
     } finally {

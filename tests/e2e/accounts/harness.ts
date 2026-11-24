@@ -1,9 +1,11 @@
-// The harness the account tests share (tests/e2e/accounts.ts and its groups here): mock services, the Worker,
-// one browser, devices with virtual passkey authenticators, and helpers that drive Settings › ACCOUNT.
+// The account tests' harness: mock services, the Worker, one browser, devices with virtual passkey
+// authenticators, and helpers that drive Settings › ACCOUNT.
 import { mkdirSync } from 'node:fs';
 import { chromium, type BrowserContext, type CDPSession, type Page } from 'playwright';
 import { startLocal } from '../../../tools/server/lib.ts';
 import { sineWav, startMockServices } from '../mock-services.ts';
+import type { AppSettingsPanel } from '../pageGlobals.shared.ts';
+import type { ApiAnswer } from './answers.ts';
 
 export type AccountTests = Record<string, () => Promise<void>>;
 
@@ -23,7 +25,8 @@ export const mocks = await startMockServices();
 export const server = await startLocal({
   name: 'accounts',
   vars: {
-    ACCOUNTS_PER_DAY: '100', // every test's accounts come from one address (new-account-limit has its own Worker)
+    // Every test's accounts come from one address (new-account-limit has its own Worker).
+    ACCOUNTS_PER_DAY: '100',
     TURNSTILE_SECRET: 'test-secret',
     TURNSTILE_VERIFY_URL: `${mocks.url}/siteverify`,
     GOOGLE_CLIENT_ID: 'test-google-client',
@@ -53,8 +56,8 @@ export interface Device {
 }
 export async function device(): Promise<Device> {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-  await ctx.route('https://cdn.freesound.org/**', (r) =>
-    r.fulfill({
+  await ctx.route('https://cdn.freesound.org/**', (route) =>
+    route.fulfill({
       status: 200,
       contentType: 'audio/wav',
       headers: { 'access-control-allow-origin': '*' },
@@ -62,8 +65,8 @@ export async function device(): Promise<Device> {
     }),
   );
   const page = await ctx.newPage();
-  page.on('pageerror', (e) => {
-    console.error(`  page error: ${e.message}`);
+  page.on('pageerror', (error) => {
+    console.error(`  page error: ${error.message}`);
   });
   const cdp = await ctx.newCDPSession(page);
   await cdp.send('WebAuthn.enable');
@@ -81,31 +84,32 @@ export async function device(): Promise<Device> {
 }
 export async function openApp(device: Device, query = ''): Promise<void> {
   await device.page.goto(`${base}/${query}`);
-  await device.page.waitForFunction(() => (window as any).__bd_probe);
+  await device.page.waitForFunction(() => window.__bd_probe);
   if (await device.page.$('#start')) {
     await device.page.click('#start');
-    await device.page.waitForFunction(() => (window as any).__bd_probe.state.started, null, {
+    await device.page.waitForFunction(() => window.__bd_probe.state.started, null, {
       timeout: 20000,
     });
   }
   await device.page.waitForTimeout(1500);
 }
 /** Patches open, and Settings › ACCOUNT's state (accountPage.ts). */
-export const pp = (p: Page) =>
-  p.evaluate(() => {
-    const s = (window as any).__bd_probe.scene,
-      x = s.SettingsPanel.accountPage;
+export const pp = (page: Page) =>
+  page.evaluate(() => {
+    const scene = window.__bd_probe.scene,
+      settings = scene.SettingsPanel as AppSettingsPanel,
+      account = settings.accountPage;
     return {
-      open: s.PatchesPanel.Open,
-      settings: s.SettingsPanel.Open,
-      tabName: s.SettingsPanel.MenuItems[4]?.Name,
-      view: x.View,
-      account: x.Account,
-      busy: x.Busy,
-      message: x.Message,
-      methods: x.Account ? (x.methods() as string[]) : [],
-      addLabel: x.addLabel as string,
-      rows: x.Account ? (x.methodRows().map((r: any) => r.label) as string[]) : [],
+      open: scene.PatchesPanel.Open,
+      settings: settings.Open,
+      tabName: settings.MenuItems.at(4)?.Name,
+      view: account.View,
+      account: account.Account,
+      busy: account.Busy,
+      message: account.Message,
+      methods: account.Account ? account.methods() : [],
+      addLabel: account.addLabel,
+      rows: account.Account ? account.methodRows().map((row) => row.label) : [],
     };
   });
 export const ACCOUNT_CONTROLS = new Set([
@@ -138,43 +142,51 @@ export const ACCOUNT_CONTROLS = new Set([
   'app0',
   'app1',
 ]);
-export async function press(p: Page, name: string, wait = 400): Promise<void> {
-  const at = await p.evaluate(
+export async function press(page: Page, name: string, wait = 400): Promise<void> {
+  const at = await page.evaluate(
     ([key, inSettings]) => {
-      const s = (window as any).__bd_probe.scene;
-      return inSettings ? s.SettingsPanel.accountCentre(key) : s.PatchesPanel.centreOf(key);
+      const scene = window.__bd_probe.scene;
+      return inSettings
+        ? (scene.SettingsPanel as AppSettingsPanel).accountCentre(key)
+        : scene.PatchesPanel.centreOf(key);
     },
     [name, ACCOUNT_CONTROLS.has(name)] as const,
   );
   if (!at) throw new Error(`no control ${name}`);
-  await p.mouse.move(at[0], at[1]);
-  await p.mouse.click(at[0], at[1]);
-  await p.waitForTimeout(wait);
+  await page.mouse.move(at[0], at[1]);
+  await page.mouse.click(at[0], at[1]);
+  await page.waitForTimeout(wait);
 }
 /** Settings › SIGN IN / ACCOUNT (the corner name and the Google return open it the same way). */
-export async function openAccount(p: Page): Promise<void> {
-  if ((await pp(p)).open) {
-    await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.ClosePanel());
-    await p.waitForTimeout(700);
+export async function openAccount(page: Page): Promise<void> {
+  if ((await pp(page)).open) {
+    await page.evaluate(() => {
+      window.__bd_probe.scene.PatchesPanel.ClosePanel();
+    });
+    await page.waitForTimeout(700);
   }
-  await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.openAccount());
-  await p.waitForFunction(
+  await page.evaluate(() => {
+    (window.__bd_probe.scene.SettingsPanel as AppSettingsPanel).openAccount();
+  });
+  await page.waitForFunction(
     () => {
-      const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+      const settingsPanel = window.__bd_probe.scene.SettingsPanel as AppSettingsPanel;
       return settingsPanel.OffsetY === 0 && settingsPanel.accountPage.Account !== undefined;
     },
     null,
     { timeout: 10000 },
   );
-  await p.waitForTimeout(300);
+  await page.waitForTimeout(300);
 }
-export const settled = (p: Page) =>
-  p.waitForFunction(() => !(window as any).__bd_probe.scene.SettingsPanel.accountPage.Busy, null, {
-    timeout: 30000,
-  });
-export const corners = (p: Page) => p.evaluate(() => (window as any).__bd_probe.corners);
-/** A new Google account named `handle` on device `d` (the mock's next user `user`). Sign-in starts share a per-minute
- * limit (SAVE_LIMIT 'auth'), which the tests before may have used up: refused (429), wait it out and try again. */
+export const settled = (page: Page) =>
+  page.waitForFunction(
+    () => !(window.__bd_probe.scene.SettingsPanel as AppSettingsPanel).accountPage.Busy,
+    null,
+    { timeout: 30000 },
+  );
+export const corners = (page: Page) => page.evaluate(() => window.__bd_probe.corners);
+/** A new Google account `handle` on `device` (the mock's next user `user`). Sign-in starts share a
+ * per-minute limit (SAVE_LIMIT 'auth'): refused (429), it waits that out and retries once. */
 export async function googleAccount(device: Device, user: string, handle: string): Promise<void> {
   for (let attempt = 0; attempt < 2; attempt++) {
     await fetch(`${mocks.url}/google/next?user=${user}`);
@@ -191,7 +203,8 @@ export async function googleAccount(device: Device, user: string, handle: string
     }
     await device.page
       .waitForFunction(
-        () => (window as any).__bd_probe?.scene.SettingsPanel.accountPage.View === 'name',
+        () =>
+          (window.__bd_probe.scene.SettingsPanel as AppSettingsPanel).accountPage.View === 'name',
         null,
         { timeout: 20000 },
       )
@@ -204,6 +217,7 @@ export async function googleAccount(device: Device, user: string, handle: string
   }
   throw new Error('Google sign-in refused twice (rate limit)');
 }
+/** The API called from `device`'s page (its cookies); `json` is null when the answer isn't JSON. */
 export const api = (
   device: Device,
   method: string,
@@ -212,44 +226,54 @@ export const api = (
   headers: Record<string, string> = {},
 ) =>
   device.page.evaluate(
-    async ([m, url, b, h]) => {
+    async ([verb, url, payload, extraHeaders]) => {
       const response = await fetch(url, {
-        method: m,
-        headers: { 'content-type': 'application/json', ...(h as object) },
-        body: b === undefined ? undefined : JSON.stringify(b),
+        method: verb,
+        headers: { 'content-type': 'application/json', ...extraHeaders },
+        body: payload === undefined ? undefined : JSON.stringify(payload),
       });
-      return { status: response.status, json: await response.json().catch(() => null) };
+      const json = (await response.json().catch(() => null)) as ApiAnswer | null;
+      return { status: response.status, json };
     },
     [method, `${base}/api/${path}`, body, headers] as const,
   );
-/** SAVE on the Patches › SAVE tab (a new link the first time, then saves over it). Returns the link's id. */
-export async function saveLink(p: Page): Promise<string> {
-  await press(p, 'tab0', 1100);
-  const before = await p.evaluate(
-    () => (window as any).__bd_probe.scene.host.links.current()?.url ?? '',
-  );
-  await press(p, 'share', 200);
-  await p.waitForFunction(
-    (prev) => {
-      const l = (window as any).__bd_probe.scene.host.links.current();
-      return (
-        !!l &&
-        !l.stale &&
-        !(window as any).__bd_probe.scene.PatchesPanel.Saving &&
-        (l.url !== prev || true)
-      );
+/** SAVE on the Patches › SAVE tab (a new link the first time, then saves over it). Returns the
+ * link's id. */
+export async function saveLink(page: Page): Promise<string> {
+  await press(page, 'tab0', 1100);
+  await press(page, 'share', 200);
+  await page.waitForFunction(
+    () => {
+      const link = window.__bd_probe.scene.host.links?.current();
+      return !!link && !link.stale && !window.__bd_probe.scene.PatchesPanel.Saving;
     },
-    before,
+    null,
     { timeout: 60000 },
   );
-  await p.waitForTimeout(500);
-  return /[?&]c=([^&]+)/.exec(
-    await p.evaluate(() => (window as any).__bd_probe.scene.host.links.current().url as string),
-  )![1];
+  await page.waitForTimeout(500);
+  const url = await page.evaluate(() => window.__bd_probe.scene.host.links?.current()?.url ?? '');
+  const id = /[?&]c=([^&]+)/.exec(url)?.[1];
+  if (!id) throw new Error(`no patch id in the saved link ${url}`);
+  return id;
 }
-export async function addBlock(p: Page): Promise<void> {
-  await p.evaluate(() => (window as any).__bd_probe.scene.host.createBlock('ToneSource', 4, 4));
-  await p.waitForTimeout(300);
+export async function addBlock(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    window.__bd_probe.scene.host.createBlock('ToneSource', 4, 4);
+  });
+  await page.waitForTimeout(300);
 }
 
+/** Devices and the first patch that later tests take over from passkey-account and
+ * second-device. */
 export const shared: { a?: Device; b?: Device; firstPatch?: string } = {};
+export function sharedDevice(key: 'a' | 'b'): Device {
+  const kept = shared[key];
+  if (!kept) throw new Error(`device ${key} is made by an earlier test`);
+  return kept;
+}
+/** Where a redirect points. */
+export function locationOf(response: Response): string {
+  const location = response.headers.get('location');
+  if (location === null) throw new Error(`no redirect (${response.status})`);
+  return location;
+}
