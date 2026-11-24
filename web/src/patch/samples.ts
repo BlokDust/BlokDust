@@ -1,7 +1,5 @@
-// Sample references (DATA-0005, SPEC-SHARING-BACKEND R12–R15): patches name their audio, never contain it.
-//   freesound:<id>  portable: anyone can fetch the preview from Freesound's CDN (search goes through our Worker)
-//   file:<name>     the user's own file: a fingerprint to recognise it, and on Chromium a File System Access handle
-//                   kept in IndexedDB so it reloads next visit without asking again
+// Sample references (DATA-0005, SPEC-SHARING-BACKEND R12–R15): patches name audio, never hold it:
+// `freesound:<id>` (anyone can fetch it) or `file:<name>` (fingerprinted; a kept handle reloads).
 import { PLUGIN_SITE, apiUrl } from './site.ts';
 export interface FreesoundSound {
   id: number;
@@ -25,11 +23,15 @@ export interface FileRef {
 }
 export type SampleRef = FreesoundRef | FileRef;
 
-/**
- * v2's default sounds. v1's (Teufelsberg and sequence_fuzz_pad2 on files.blokdust.io) are gone, and we host no audio
- * (DATA-0005), so new Sample and Granular blocks start with a CC0 Freesound sound: they play at once as in v1, and the
- * default is portable in share links. Convolver keeps its built-in hall (engine).
- */
+/** v2's default sounds: v1's are gone and we host no audio (DATA-0005), so new Sample and Granular
+ * blocks start with a portable CC0 Freesound sound. Convolver keeps the engine's built-in hall. */
+declare global {
+  interface Window {
+    /** File System Access (Chromium); not in every DOM typing. */
+    showOpenFilePicker?: (options: unknown) => Promise<FileSystemFileHandle[]>;
+  }
+}
+
 export const DEFAULT_SOUNDS: Readonly<Record<string, FreesoundRef>> = {
   'source.sample': {
     provider: 'freesound',
@@ -65,9 +67,9 @@ export const refKey = (ref: SampleRef) =>
 export const isPortable = (track: unknown) =>
   typeof track !== 'string' || !track.startsWith('file:');
 
-/** The sharing API: this page's Worker, or (inside the plugin's WebView, whose page it doesn't serve) the public site. */
 /** Where the plugins' links and requests go (site.ts). */
 export const PUBLIC_SITE = PLUGIN_SITE;
+/** The sharing API: this page's Worker, or the public site inside the plugin's WebView. */
 const api = apiUrl;
 
 // ---- Freesound ----
@@ -82,11 +84,8 @@ export async function searchFreesound(
   return ((await response.json()) as { results: FreesoundSound[] }).results;
 }
 
-/**
- * The sound's audio, fetched by the browser straight from Freesound's CDN (never through or onto our servers): its saved
- * preview URL, else a fresh lookup (previews can move). `maxSeconds`: only the start is used (the Convolver's 2.5 s), so
- * ask for just that much of the MP3 (an HTTP Range of ~40 kB/s, enough for 320 kbps; previews are 128 kbps).
- */
+/** The sound's audio, straight from Freesound's CDN: its saved preview, else a fresh lookup. With
+ * `maxSeconds`, an HTTP Range of ~40 kB/s fetches only the start (enough for 320 kbps MP3). */
 export async function fetchFreesound(ref: FreesoundRef, maxSeconds?: number): Promise<ArrayBuffer> {
   const headers: Record<string, string> = maxSeconds
     ? { range: `bytes=0-${Math.ceil((maxSeconds + 0.5) * 40_000)}` }
@@ -97,28 +96,30 @@ export async function fetchFreesound(ref: FreesoundRef, maxSeconds?: number): Pr
   } catch {
     /* fall through to a lookup */
   }
-  const s = await fetch(api(`freesound/sounds/${ref.id}`));
-  if (!s.ok) throw new Error(`Freesound sound ${ref.id} unavailable (${s.status})`);
-  const fresh = (await s.json()) as FreesoundSound;
-  const a = await fetch(fresh.preview, { headers });
-  if (!a.ok) throw new Error(`Freesound preview ${ref.id} unavailable (${a.status})`);
+  const soundResponse = await fetch(api(`freesound/sounds/${ref.id}`));
+  if (!soundResponse.ok)
+    throw new Error(`Freesound sound ${ref.id} unavailable (${soundResponse.status})`);
+  const fresh = (await soundResponse.json()) as FreesoundSound;
+  const previewResponse = await fetch(fresh.preview, { headers });
+  if (!previewResponse.ok)
+    throw new Error(`Freesound preview ${ref.id} unavailable (${previewResponse.status})`);
   ref.preview = fresh.preview;
-  return a.arrayBuffer();
+  return previewResponse.arrayBuffer();
 }
 
-// ---- the user's files ----
-/** Size + SHA-256 of the first and last 64 KB: recognises the same file again without reading all of it (DATA-0005). */
+/** Size + SHA-256 of the first and last 64 KB: recognises the same file again without reading all
+ * of it (DATA-0005). */
 export async function fingerprint(file: Blob): Promise<{ bytes: number; hash: string }> {
-  const K = 64 * 1024;
-  const head = new Uint8Array(await file.slice(0, K).arrayBuffer());
-  const tail = new Uint8Array(await file.slice(Math.max(0, file.size - K)).arrayBuffer());
+  const EDGE_BYTES = 64 * 1024;
+  const head = new Uint8Array(await file.slice(0, EDGE_BYTES).arrayBuffer());
+  const tail = new Uint8Array(await file.slice(Math.max(0, file.size - EDGE_BYTES)).arrayBuffer());
   const both = new Uint8Array(head.length + tail.length);
   both.set(head);
   both.set(tail, head.length);
-  const d = new Uint8Array(await crypto.subtle.digest('SHA-256', both));
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', both));
   return {
     bytes: file.size,
-    hash: 'sha256:' + [...d].map((b) => b.toString(16).padStart(2, '0')).join(''),
+    hash: 'sha256:' + [...digest].map((b) => b.toString(16).padStart(2, '0')).join(''),
   };
 }
 
@@ -132,7 +133,7 @@ function db(): Promise<IDBDatabase> {
       res(iDBOpenDBRequest.result);
     };
     iDBOpenDBRequest.onerror = () => {
-      rej(iDBOpenDBRequest.error);
+      rej(iDBOpenDBRequest.error ?? new Error('IndexedDB did not open'));
     };
   });
 }
@@ -147,7 +148,7 @@ async function tx<T>(
       res(iDBRequest.result);
     };
     iDBRequest.onerror = () => {
-      rej(iDBRequest.error);
+      rej(iDBRequest.error ?? new Error('IndexedDB request failed'));
     };
   });
 }
@@ -166,13 +167,18 @@ type PermissionHandle = FileSystemFileHandle & {
 
 export async function handleFor(hash: string): Promise<PermissionHandle | null> {
   try {
-    return (await tx<PermissionHandle | undefined>('readonly', (store) => store.get(hash))) ?? null;
+    const stored = await tx(
+      'readonly',
+      (store) => store.get(hash) as IDBRequest<PermissionHandle | undefined>,
+    );
+    return stored ?? null;
   } catch {
     return null;
   }
 }
 
-/** A remembered file, if the browser still lets us read it. `ask` (needs a user gesture) prompts when it would. */
+/** A remembered file, if the browser still lets us read it. `ask` (needs a user gesture) prompts
+ * when it would. */
 export async function openRemembered(hash: string, ask: boolean): Promise<File | null> {
   const permissionHandle = await handleFor(hash);
   if (!permissionHandle) return null;
@@ -211,19 +217,16 @@ export async function pickAudioFile(): Promise<{
   file: File;
   handle: FileSystemFileHandle | null;
 } | null> {
-  const w = window as unknown as {
-    showOpenFilePicker?: (o: unknown) => Promise<FileSystemFileHandle[]>;
-  };
-  if (w.showOpenFilePicker) {
+  if (window.showOpenFilePicker) {
     try {
-      const [handle] = await w.showOpenFilePicker({
+      const [handle] = await window.showOpenFilePicker({
         types: AUDIO_TYPES,
         excludeAcceptAllOption: false,
         multiple: false,
       });
       return { file: await handle.getFile(), handle };
     } catch (error) {
-      if ((error as DOMException)?.name === 'AbortError') return null; // cancelled
+      if (error instanceof DOMException && error.name === 'AbortError') return null; // cancelled
       // Not allowed here (e.g. cross-origin iframe): fall back to the plain input.
     }
   }
@@ -232,8 +235,8 @@ export async function pickAudioFile(): Promise<{
     input.type = 'file';
     input.accept = 'audio/*';
     input.onchange = () => {
-      const f = input.files?.[0];
-      res(f ? { file: f, handle: null } : null);
+      const file = input.files?.[0];
+      res(file ? { file: file, handle: null } : null);
     };
     input.oncancel = () => {
       res(null);
