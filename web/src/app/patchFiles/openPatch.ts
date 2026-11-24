@@ -17,6 +17,14 @@ import { PRESETS, nativeReply, savedOn } from './pluginPatches.ts';
 import { scene } from '../scene/scene.ts';
 import { setCredit } from '../stage/corners.ts';
 
+/** Browser-test hooks. */
+declare global {
+  interface Window {
+    /** A picked file without a picker. */
+    __bd_pickedFile: typeof showPicked;
+  }
+}
+
 /** Open a server patch by id as the current composition (the account's, or one from the gallery: SAVE then saves
  * over it if this device may, else makes a new link with `parent` set: a remix). Insert just adds its blocks. */
 /** Open or insert a saved patch; when it can't be had, the message bar's words for why (owner, 2026-11-18). */
@@ -178,5 +186,5 @@ export function setPicked<Value extends typeof picked>(value: Value): Value {
 }
 
 export function init(): void {
-  (window as unknown as { __bd_pickedFile: unknown }).__bd_pickedFile = showPicked;
+  window.__bd_pickedFile = showPicked;
 }

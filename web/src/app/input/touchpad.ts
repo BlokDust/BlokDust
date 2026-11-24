@@ -4,6 +4,13 @@ import { CommandType } from '../../engine/wasmEngine.ts';
 import { send } from '../model/engineLink.ts';
 import { typeIndex } from '../model/patchModel.ts';
 
+/** Browser-test hooks. */
+declare global {
+  interface Window {
+    __bd_pads: typeof padNotes;
+  }
+}
+
 // The Touchpad's pads (CHG-0019, UI-0010): any pointer that lands on a pad plays it and belongs to the pads until it
 // lifts; it never becomes v1's pointer or an extra finger. Notes go to that Touchpad block; a slide is a bend.
 export let TOUCHPAD_TYPE!: number;
@@ -37,5 +44,5 @@ export function init(): void {
         },
       ]),
   };
-  (window as unknown as { __bd_pads?: unknown }).__bd_pads = padNotes;
+  window.__bd_pads = padNotes;
 }

@@ -4,10 +4,19 @@
 // tools/plugin). The server allows only the plugins' origins, and never with cookies (CHG-0039).
 declare const __BD_PLUGIN_SITE__: string;
 
-export const inPlugin = (): boolean => !!(window as unknown as { __JUCE__?: unknown }).__JUCE__;
+declare global {
+  interface Window {
+    /** The plugin's WebView bridge (JUCE), absent on the website. */
+    __JUCE__?: unknown;
+    /** Tests point a page at a local plugin server with this. */
+    __bd_pluginSite?: string;
+  }
+}
+
+export const inPlugin = (): boolean => !!window.__JUCE__;
 /** The plugins' server, with a trailing slash. Tests may point a page at a local server first (`__bd_pluginSite`). */
 export const PLUGIN_SITE: string =
-  (window as unknown as { __bd_pluginSite?: string }).__bd_pluginSite ??
+  window.__bd_pluginSite ??
   (typeof __BD_PLUGIN_SITE__ === 'string' && __BD_PLUGIN_SITE__
     ? __BD_PLUGIN_SITE__
     : 'https://blokdust.funputs.com/');

@@ -114,7 +114,8 @@ export type BdProbe = ReturnType<typeof createProbe>;
 
 declare global {
   interface Window {
-    __bd_probe?: BdProbe;
+    /** Set at start-up; only the browser tests read it. */
+    __bd_probe: BdProbe;
   }
 }
 

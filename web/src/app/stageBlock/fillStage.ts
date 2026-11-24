@@ -20,6 +20,13 @@ import { samples } from '../samples/userSamples.ts';
 import { scene } from '../scene/scene.ts';
 import { enterStage, exitStage } from './lookInside.ts';
 
+/** Browser-test hooks. */
+declare global {
+  interface Window {
+    __bd_stage: { enter: typeof enterStage; exit: typeof exitStage; wrap: typeof wrapInStage };
+  }
+}
+
 /** Can blocks `ids` go inside a Stage? All of them or none: not with a Stage among them (one level, SCOPE-0006), so
  * no block is left behind with its connections cut (owner, 2026-11-14). */
 export const canGoInside = (ids: Iterable<number>, except?: number) =>
@@ -181,7 +188,7 @@ export function dropStageAt(x: number, y: number, moving: Set<number>): number |
 }
 
 export function init(): void {
-  (window as unknown as { __bd_stage?: unknown }).__bd_stage = {
+  window.__bd_stage = {
     enter: enterStage,
     exit: exitStage,
     wrap: wrapInStage,

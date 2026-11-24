@@ -6,6 +6,14 @@ import { labels, model, selLabels, selectedLabels } from '../model/patchModel.ts
 import { innerSamples, macros } from '../model/stageWorlds.ts';
 import { samples, useBuffer } from '../samples/userSamples.ts';
 
+/** Browser-test hooks. */
+declare global {
+  interface Window {
+    __bd_selection: () => number[];
+    __bd_label_selection: () => string[];
+  }
+}
+
 // ---- multi-select (CHG-0005 task 9, owner): Shift+click adds or removes a block; Shift+drag on the stage (or, on a
 // touch screen, holding a finger still on the stage for a moment, then dragging) draws a box that selects the blocks
 // in it. Dragging a selected block moves them all; Alt+drag copies them all; dropping them on the trash, or
@@ -101,8 +109,6 @@ export function setLongPress<Value extends typeof longPress>(value: Value): Valu
 
 export function init(): void {
   selection = stage.selected;
-  (window as unknown as { __bd_selection?: unknown }).__bd_selection = () => [...selection];
-  (window as unknown as { __bd_label_selection?: unknown }).__bd_label_selection = () => [
-    ...selectedLabels,
-  ];
+  window.__bd_selection = () => [...selection];
+  window.__bd_label_selection = () => [...selectedLabels];
 }

@@ -4,6 +4,13 @@ import { moveBlock, removeBlock } from './deleteBlocks.ts';
 import { pushUndo, uidsOf, undoStack } from './undoSteps.ts';
 import { model } from '../model/patchModel.ts';
 
+/** Browser-test hooks. */
+declare global {
+  interface Window {
+    __bd_placing: () => { ids: number[]; touch: boolean } | null;
+  }
+}
+
 export let placing: {
   ids: number[];
   at: { x: number; y: number };
@@ -63,6 +70,5 @@ export function setLastPointer<Value extends typeof lastPointer>(value: Value): 
 }
 
 export function init(): void {
-  (window as unknown as { __bd_placing: () => unknown }).__bd_placing = () =>
-    placing && { ids: [...placing.ids], touch: placing.touch };
+  window.__bd_placing = () => placing && { ids: [...placing.ids], touch: placing.touch };
 }

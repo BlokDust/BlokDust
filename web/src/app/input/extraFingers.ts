@@ -29,6 +29,19 @@ import { send } from '../model/engineLink.ts';
 import { model } from '../model/patchModel.ts';
 import { scene } from '../scene/scene.ts';
 
+/** Browser-test hooks. */
+declare global {
+  interface Window {
+    /** What each finger is doing. */
+    __bd_touch: () => {
+      primaryId: number | null;
+      primaryRole: string | null;
+      extras: [number, unknown][];
+      pinch: boolean;
+    };
+  }
+}
+
 export function extraDown(event: PointerEvent): void {
   const x = event.offsetX,
     y = event.offsetY;
@@ -134,8 +147,7 @@ export function extraUp(id: number): void {
 }
 
 export function init(): void {
-  /** Tests: what each finger is doing. */
-  (window as unknown as { __bd_touch?: unknown }).__bd_touch = () => ({
+  window.__bd_touch = () => ({
     primaryId,
     primaryRole,
     extras: [...extras.entries()],

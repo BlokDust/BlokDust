@@ -10,6 +10,13 @@ import { model, typeIndex } from '../model/patchModel.ts';
 import { innerIds, inside, macros } from '../model/stageWorlds.ts';
 import { scene } from '../scene/scene.ts';
 
+/** Browser-test hooks. */
+declare global {
+  interface Window {
+    __bd_midiDevices: () => MidiDevice[];
+  }
+}
+
 // ---- notes: computer keyboard → input.computer-keyboard blocks, Web MIDI → input.midi-controller blocks ----
 export let keyboardType!: number;
 export let midiType!: number;
@@ -110,6 +117,5 @@ export function init(): void {
       scene.setMidiDevices?.(list);
     },
   });
-  (window as unknown as { __bd_midiDevices: () => MidiDevice[] }).__bd_midiDevices = () =>
-    midiDevices;
+  window.__bd_midiDevices = () => midiDevices;
 }

@@ -10,6 +10,14 @@ import { sendSample } from '../model/engineLink.ts';
 import { model, refs, v1Blocks } from '../model/patchModel.ts';
 import { missing, samples, setParams } from './userSamples.ts';
 
+/** Browser-test hooks. */
+declare global {
+  interface Window {
+    /** Attach a file without a picker. */
+    __bd_loadSample: (id: number, name: string, bytes: ArrayBuffer) => ReturnType<typeof useSample>;
+  }
+}
+
 // ---- fx.convolver: the built-in impulse response's waveform (v1 showed its loaded response) ----
 export async function showBuiltInImpulse(id: number): Promise<void> {
   const v1Block = v1Blocks.get(id);
@@ -111,12 +119,7 @@ export async function useSample(
 }
 
 export function init(): void {
-  // Tests: attach a file without a picker.
-  (window as unknown as { __bd_loadSample: unknown }).__bd_loadSample = (
-    id: number,
-    name: string,
-    bytes: ArrayBuffer,
-  ) =>
+  window.__bd_loadSample = (id: number, name: string, bytes: ArrayBuffer) =>
     useSample(
       id,
       { provider: 'file', name, bytes: bytes.byteLength, durationSec: 0, hash: '' },
