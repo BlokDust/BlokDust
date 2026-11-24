@@ -1,7 +1,6 @@
-// The stage's world, drawn in v1's display-list order (UI-0005): connection lines, blocks, laser beams, overlays,
-// particles. The live Stage (Stage.ts) and the video renderer (web/src/video, SPEC-SHARING-VIDEO-EXPORT R6) both draw
-// with these, so a video looks exactly like the stage. Device px; `m` places the grid.
-import type { BlockDef } from '../generated/blocks.gen.ts';
+// The stage's world in v1's display-list order (UI-0005), device px. The live Stage and the video
+// renderer (SPEC-SHARING-VIDEO-EXPORT R6) both draw with these, so a video looks like the stage.
+import type { BlockDef, GeometryLayer, Overlay } from '../generated/blocks.gen.ts';
 import type { Theme } from '../generated/palettes.gen.ts';
 import { layerPoints } from '../render/bakeBlock.ts';
 import { flatLayers } from '../render/flatLayers.ts';
@@ -20,13 +19,15 @@ export interface DrawnBlock {
   def: BlockDef;
 }
 
-// The Gate (CHG-0032) takes power as a source does: its lines run from it, thick while it is powered.
+// The Gate (CHG-0032) takes power as a source does: its lines run from it, thick while it is
+// powered.
 const isSourceKind = (definition: BlockDef) =>
   definition.kind === 'audio-source' ||
   definition.kind === 'power-source' ||
   definition.kind === 'gate';
 
-/** v1 ConnectionLines: palette[15], 1 px unpowered then 2 px powered, each line routed source → effect. */
+/** v1 ConnectionLines: palette[15], 1 px unpowered then 2 px powered, each line routed source →
+ * effect. */
 export function drawConnections(
   ctx: CanvasRenderingContext2D,
   metrics: Metrics,
@@ -40,12 +41,14 @@ export function drawConnections(
     ctx.lineWidth = on ? 2 : 1;
     ctx.beginPath();
     for (let i = 0; i < pairs.length; i += 2) {
-      let s = blocks.get(pairs[i]),
-        t = blocks.get(pairs[i + 1]);
-      if (!s || !t) continue;
-      if (!isSourceKind(s.def)) [s, t] = [t, s]; // lines run source → effect
-      if (powered.has(s.block.id) !== on) continue;
-      routeConnection(s.block.x, s.block.y, t.block.x, t.block.y).forEach(([gx, gy], k) => {
+      let source = blocks.get(pairs[i]),
+        effect = blocks.get(pairs[i + 1]);
+      if (!source || !effect) continue;
+      // lines run source → effect
+      if (!isSourceKind(source.def)) [source, effect] = [effect, source];
+      if (powered.has(source.block.id) !== on) continue;
+      const route = routeConnection(source.block.x, source.block.y, effect.block.x, effect.block.y);
+      route.forEach(([gx, gy], k) => {
         const [px, py] = gridToPx(metrics, gx, gy);
         if (k) ctx.lineTo(px, py);
         else ctx.moveTo(px, py);
@@ -55,6 +58,15 @@ export function drawConnections(
   }
 }
 
+/** Adds a closed path through `pts` to the current path. */
+function tracePath(ctx: CanvasRenderingContext2D, pts: [number, number][]): void {
+  pts.forEach(([x, y], i) => {
+    if (i) ctx.lineTo(x, y);
+    else ctx.moveTo(x, y);
+  });
+  ctx.closePath();
+}
+
 function poly(
   ctx: CanvasRenderingContext2D,
   pts: [number, number][],
@@ -62,10 +74,7 @@ function poly(
   alpha = 1,
 ): void {
   ctx.beginPath();
-  pts.forEach(([x, y], i) => {
-    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-  });
-  ctx.closePath();
+  tracePath(ctx, pts);
   ctx.fillStyle = fill;
   ctx.globalAlpha = alpha;
   ctx.fill();
@@ -75,19 +84,13 @@ function poly(
 /** One fill of several closed paths (a flattened layer: no seams between its pieces). */
 function paths(ctx: CanvasRenderingContext2D, ps: [number, number][][], fill: string): void {
   ctx.beginPath();
-  for (const pts of ps) {
-    pts.forEach(([x, y], i) => {
-      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-    });
-    ctx.closePath();
-  }
+  for (const pts of ps) tracePath(ctx, pts);
   ctx.fillStyle = fill;
   ctx.fill();
 }
 
-/** Every block's layers, in the map's order (last drawn on top). `alpha`: v1 draws a pressed block at 50% (each layer
- * as v1 drew it, the ones beneath showing through); at full opacity the layers are flattened (render/flatLayers.ts:
- * no hairline of a hidden face along the outer edge, owner 2026-11-20). */
+/** Every block's layers, last drawn on top. Under full `alpha` (pressed: 50%) each layer as v1 drew
+ * it; at full opacity flattened, with no hairline of a hidden face on the edge (flatLayers.ts). */
 export function drawBlocks(
   ctx: CanvasRenderingContext2D,
   metrics: Metrics,
@@ -125,7 +128,8 @@ export function drawBlocks(
   }
 }
 
-/** v1 LaserBeams.Draw: width 2·unit·(0.8 + jitter·0.5), jitter in [0, 1) (v1: Math.random() every frame). */
+/** v1 LaserBeams.Draw: width 2·unit·(0.8 + jitter·0.5), jitter in [0, 1) (v1: Math.random() every
+ * frame). */
 export function drawBeams(
   ctx: CanvasRenderingContext2D,
   metrics: Metrics,
@@ -147,7 +151,13 @@ export function drawBeams(
   ctx.lineWidth = 1;
 }
 
-/** Manifest overlays in their idle state (e.g. the Recorder's button), unless drawn by live UI instead (`skip`). */
+/** An overlay's idle layers; a manifest may give an overlay no idle state. */
+function idleLayers(overlay: Overlay): GeometryLayer[] {
+  return Object.hasOwn(overlay.states, 'idle') ? overlay.states.idle : [];
+}
+
+/** Manifest overlays in their idle state (e.g. the Recorder's button), unless drawn by live UI
+ * instead (`skip`). */
 export function drawOverlays(
   ctx: CanvasRenderingContext2D,
   metrics: Metrics,
@@ -159,7 +169,7 @@ export function drawOverlays(
     const [bx, by] = gridToPx(metrics, block.x, block.y);
     for (const overlay of def.geometry.overlays ?? [])
       if (!skip.has(overlay.name))
-        for (const geometryLayer of overlay.states.idle ?? [])
+        for (const geometryLayer of idleLayers(overlay))
           poly(
             ctx,
             geometryLayer.points.map(

@@ -1,16 +1,25 @@
-// The BlokDust stage (CHG-0001 task 0.9): Pixi composites layers drawn to match v1 pixel-for-pixel (UI-0005).
-//   lines     Canvas2D layer, redrawn on topology/position/power changes (v1 ConnectionLines: palette[15], 1 px / 2 px)
-//             (renderer 'canvas': this one opaque Canvas2D layer also holds background, blocks and overlays, in v1 order)
-//   blocks    Canvas2D-baked sprites at v1's exact sub-pixel origin
-//   particles Pixi Graphics diamonds (palette power role), every frame; renderer 'canvas' draws them into the static
-//             layer instead, in v1's display-list order (under the UI: menus and panels cover them)
-import { selectionRing } from './ring.ts';
-import { Container, Graphics, RenderTexture, Sprite, Texture, type Application } from 'pixi.js';
-import { BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
+// The BlokDust stage (CHG-0001 task 0.9): layers drawn to match v1 pixel-for-pixel (UI-0005).
+// Renderer 'canvas' draws all of it into one opaque canvas in v1's display-list order.
+import { Container, Graphics, Sprite, Texture, type Application } from 'pixi.js';
+import { BLOCKS_BY_ID } from '../generated/blocks.gen.ts';
 import type { Theme } from '../generated/palettes.gen.ts';
-import { bakeBlock, bakeOverlays, layerPoints } from '../render/bakeBlock.ts';
-import { computeMetrics, gridToPx, pxToGrid, type Metrics } from './metrics.ts';
 import { drawV1Chrome } from '../chrome/v1Chrome.ts';
+import { computeMetrics, gridToPx, pxToGrid, type Metrics } from './metrics.ts';
+import { pointInPolygon } from './polygon.ts';
+import {
+  placeBakedBlock,
+  placeOverlay,
+  placeVectorBlock,
+  type BlockRenderer,
+  type StageEntry,
+} from './pixiBlocks.ts';
+import {
+  drawDropTarget,
+  drawSelection,
+  selectedBounds,
+  type PixelRect,
+} from './selectionOutlines.ts';
+import { drawThumbnail, type ThumbnailCaption } from './thumbnail.ts';
 import {
   drawBeams,
   drawBlocks,
@@ -20,28 +29,19 @@ import {
   type StageBlock,
 } from './drawWorld.ts';
 
-/** UI-0005 bake-off: how block geometry is rasterised. */
-export type BlockRenderer = 'baked' | 'msaa' | 'ss2' | 'canvas';
-
+export type { BlockRenderer } from './pixiBlocks.ts';
 export type { StageBlock } from './drawWorld.ts';
 
-/** Crossing-number test, grid units (same rule as the engine). */
-function pointInPolygon(
-  px: number,
-  py: number,
-  poly: [number, number][],
-  ox: number,
-  oy: number,
-): boolean {
-  let inside = false;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const xi = ox + poly[i][0],
-      yi = oy + poly[i][1],
-      xj = ox + poly[j][0],
-      yj = oy + poly[j][1];
-    if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
-  }
-  return inside;
+const PRESSED_ALPHA = 0.5;
+
+function copyCanvas(source: HTMLCanvasElement): HTMLCanvasElement {
+  const out = document.createElement('canvas');
+  out.width = source.width;
+  out.height = source.height;
+  const ctx = out.getContext('2d');
+  if (!ctx) throw new Error('no 2D canvas context');
+  ctx.drawImage(source, 0, 0);
+  return out;
 }
 
 export class Stage {
@@ -50,72 +50,91 @@ export class Stage {
   drag = { x: 0, y: 0 };
   theme: Theme;
   private readonly app: Application;
+  /** The static layer: connection lines, and in renderer 'canvas' everything else. */
   private readonly lineCanvas = document.createElement('canvas');
   private readonly lineSprite: Sprite;
   private readonly lineCtx: CanvasRenderingContext2D;
   private readonly blockLayer = new Container();
   private readonly overlayLayer = new Container();
+  /** Pixi diamonds, every frame (bake-off renderers; 'canvas' draws particles under the UI). */
   private readonly particles = new Graphics();
-  private readonly blocks = new Map<
-    number,
-    { block: StageBlock; def: BlockDef; sprite: Sprite; key: string; overlay?: Sprite }
-  >();
+  private readonly blocks = new Map<number, StageEntry>();
   private connections: Uint32Array = new Uint32Array();
   private powered = new Set<number>();
   private beams: Float32Array = new Float32Array();
   private particleData: Float32Array = new Float32Array();
-  /** v1 draws beams with width 2·unit·(0.8 + rand·0.5) each frame; tests pin the random term (v1 captures pin it too). */
+  /** v1 beam width is 2·unit·(0.8 + rand·0.5) each frame; tests pin the random term. */
   beamJitter: number | null = null;
   private linesDirty = true;
-  metrics!: Metrics;
+  metrics: Metrics;
   readonly renderer: BlockRenderer;
-  /** Draw v1's header, zoom buttons, bin and + icon into the stage canvas (needs loadV1Fonts first). */
-  /** Draws v1's UI layer onto the static canvas after the blocks (set by the app; replaces the closed-state chrome). */
+  /** Draws v1's UI layer after the blocks (replaces the closed-state chrome). */
   drawUi: ((ctx: CanvasRenderingContext2D) => void) | null = null;
+  /** Draw v1's header, zoom buttons, bin and + icon (needs loadV1Fonts first). */
   chrome = false;
-  /** Manifest overlays drawn by live v1 UI instead (the app's ported RecorderPanel draws 'recordButton' with its
-   * hover and recording states; the visual harness keeps the baked idle overlay). */
+  /** Manifest overlays drawn by live v1 UI instead (RecorderPanel draws 'recordButton'). */
   skipOverlays = new Set<string>();
+  /** Block drawn at 50% while pressed and dragged (v1). */
+  pressed: number | null = null;
+  /** Blocks being placed after an Insert: drawn like a pressed block (CHG-0005). */
+  placing = new Set<number>();
+  /** Blocks held by other fingers (multi-touch, CHG-0005 task 8): drawn like the pressed block. */
+  held = new Set<number>();
+  /** Multi-select (CHG-0005 task 9): selected blocks get their outline traced. */
+  selected = new Set<number>();
+  /** The Stage block a drag would go into if let go now (CHG-0021): ringed solid. */
+  dropTarget: number | null = null;
+  /** The selection box being dragged, device px. */
+  selectBox: PixelRect | null = null;
+  /** Gates that are open (CHG-0032): drawn faded, so what passes shows through. */
+  private openGates = new Set<number>();
 
   constructor(app: Application, theme: Theme, renderer: BlockRenderer = 'canvas') {
     this.app = app;
     this.theme = theme;
     this.renderer = renderer;
-    // Create the 2D context first, with its final options: later getContext calls (Pixi's Texture.from included) return
-    // the existing context. Opaque in the canvas renderer, like v1's main canvas (Chrome rasterises text differently).
-    this.lineCtx = this.lineCanvas.getContext('2d', { alpha: renderer !== 'canvas' })!;
+    // The context gets its final options first: later getContext calls (Pixi's included) reuse it.
+    // Opaque in the canvas renderer, like v1's main canvas (Chrome rasterises text differently).
+    const lineCtx = this.lineCanvas.getContext('2d', { alpha: renderer !== 'canvas' });
+    if (!lineCtx) throw new Error('no 2D canvas context');
+    this.lineCtx = lineCtx;
     this.lineSprite = new Sprite(
       renderer === 'canvas' ? Texture.EMPTY : Texture.from(this.lineCanvas),
     );
-    if (renderer === 'canvas') {
-      // The static layer is a *visible* canvas behind a transparent Pixi canvas (particles only), like v1's single
-      // on-screen canvas. As a texture source Chrome rasterises text differently (heavier), and every change would
-      // re-upload a full-screen texture; drawn on-page it matches v1 bit for bit and costs no upload.
-      const el = this.lineCanvas;
-      el.style.position = 'absolute';
-      el.style.left = '0';
-      el.style.top = '0';
-      app.canvas.parentElement?.insertBefore(el, app.canvas);
-      app.canvas.style.position = 'absolute';
-      app.canvas.style.left = '0';
-      app.canvas.style.top = '0';
-    } else {
-      this.root.addChild(this.lineSprite, this.blockLayer, this.overlayLayer, this.particles);
-    }
+    if (renderer === 'canvas') this.showStaticCanvasOnPage();
+    else this.root.addChild(this.lineSprite, this.blockLayer, this.overlayLayer, this.particles);
     app.stage.addChild(this.root);
+    this.metrics = this.measure();
     this.resize();
   }
 
-  resize(): void {
+  /** The static layer on-page behind a transparent Pixi canvas, like v1's one canvas: as a texture
+   * Chrome draws text heavier and each change re-uploads it; on-page it matches v1 exactly. */
+  private showStaticCanvasOnPage(): void {
+    const staticCanvas = this.lineCanvas;
+    staticCanvas.style.position = 'absolute';
+    staticCanvas.style.left = '0';
+    staticCanvas.style.top = '0';
+    this.app.canvas.parentElement?.insertBefore(staticCanvas, this.app.canvas);
+    this.app.canvas.style.position = 'absolute';
+    this.app.canvas.style.left = '0';
+    this.app.canvas.style.top = '0';
+  }
+
+  private measure(): Metrics {
     // app.screen is in CSS px; the renderer resolution is the device pixel ratio (autoDensity).
     const { width, height } = this.app.screen;
-    this.metrics = computeMetrics({
+    return computeMetrics({
       cssWidth: width,
       cssHeight: height,
       dpr: this.app.renderer.resolution,
       zoom: this.zoom,
       drag: this.drag,
     });
+  }
+
+  resize(): void {
+    this.metrics = this.measure();
     this.lineCanvas.width = Math.round(this.metrics.width);
     this.lineCanvas.height = Math.round(this.metrics.height);
     this.lineCanvas.style.width = `${this.app.screen.width}px`;
@@ -123,13 +142,14 @@ export class Stage {
     if (this.renderer !== 'canvas')
       this.lineSprite.texture.source.resize(this.lineCanvas.width, this.lineCanvas.height);
     this.lineSprite.scale.set(1 / this.metrics.dpr);
-    for (const b of this.blocks.values()) this.placeBlock(b.block.id);
+    for (const entry of this.blocks.values()) this.placeBlock(entry);
     this.linesDirty = true;
   }
 
   setTheme(theme: Theme): void {
     this.theme = theme;
-    if (this.renderer !== 'canvas') this.app.renderer.background.color = theme.colors[0]; // canvas: drawn by the static layer
+    // The canvas renderer draws the background in the static layer.
+    if (this.renderer !== 'canvas') this.app.renderer.background.color = theme.colors[0];
     this.resize();
   }
   setView(zoom: number, drag: { x: number; y: number }): void {
@@ -138,25 +158,26 @@ export class Stage {
     this.resize();
   }
 
-  upsertBlock(b: StageBlock): void {
-    const def = BLOCKS_BY_ID.get(b.type);
-    if (!def) throw new Error(`unknown block type ${b.type}`);
-    const existing = this.blocks.get(b.id);
-    if (existing) existing.block = b;
+  upsertBlock(block: StageBlock): void {
+    const def = BLOCKS_BY_ID.get(block.type);
+    if (!def) throw new Error(`unknown block type ${block.type}`);
+    let entry = this.blocks.get(block.id);
+    if (entry) entry.block = block;
     else {
       const sprite = new Sprite();
       this.blockLayer.addChild(sprite);
-      this.blocks.set(b.id, { block: b, def, sprite, key: '' });
+      entry = { block, def, sprite, key: '' };
+      this.blocks.set(block.id, entry);
     }
-    this.placeBlock(b.id);
+    this.placeBlock(entry);
     this.linesDirty = true;
   }
 
   removeBlock(id: number): void {
-    const b = this.blocks.get(id);
-    if (!b) return;
-    b.sprite.destroy({ texture: true });
-    b.overlay?.destroy({ texture: true });
+    const entry = this.blocks.get(id);
+    if (!entry) return;
+    entry.sprite.destroy({ texture: true });
+    entry.overlay?.destroy({ texture: true });
     this.blocks.delete(id);
     this.linesDirty = true;
   }
@@ -166,30 +187,19 @@ export class Stage {
   }
   /** v1 MainScene.BlockToFront: draw (and hit-test) the block last. */
   toFront(id: number): void {
-    const b = this.blocks.get(id);
-    if (!b) return;
+    const entry = this.blocks.get(id);
+    if (!entry) return;
     this.blocks.delete(id);
-    this.blocks.set(id, b);
+    this.blocks.set(id, entry);
     this.linesDirty = true;
   }
-  /** Block drawn at 50% while pressed and dragged (v1). */
-  pressed: number | null = null;
-  /** Blocks being placed after an Insert: drawn like a pressed block (CHG-0005, owner 2026-11-10). */
-  placing = new Set<number>();
-  /** Blocks held by other fingers (multi-touch, CHG-0005 task 8): drawn like the pressed block. */
-  held = new Set<number>();
-  /** Multi-select (CHG-0005 task 9): selected blocks get their outline traced; the box being dragged, device px. */
-  selected = new Set<number>();
-  /** A Stage block that what is being dragged would go into if let go now (CHG-0021): ringed solid. */
-  dropTarget: number | null = null;
-  selectBox: { x0: number; y0: number; x1: number; y1: number } | null = null;
   allBlocks(): StageBlock[] {
-    return [...this.blocks.values()].map((b) => b.block);
+    return [...this.blocks.values()].map((entry) => entry.block);
   }
 
   /** Topmost block whose outline contains the css-px point (v1 hit order: last created on top). */
   hitTest(cssX: number, cssY: number, skip?: (id: number) => boolean): StageBlock | undefined {
-    const [gx, gy] = pxToGrid(this.metrics, cssX * this.metrics.dpr, cssY * this.metrics.dpr);
+    const [gx, gy] = this.cssToGrid(cssX, cssY);
     const list = [...this.blocks.values()];
     for (let i = list.length - 1; i >= 0; i--) {
       const { block, def } = list[i];
@@ -199,27 +209,13 @@ export class Stage {
     return undefined;
   }
 
+  private selectedEntries(): StageEntry[] {
+    return [...this.selected].flatMap((id) => this.blocks.get(id) ?? []);
+  }
+
   /** The selected blocks' dashed rings together (device px), or null with nothing selected. */
-  selectedBounds(): { x0: number; y0: number; x1: number; y1: number } | null {
-    const m = this.metrics;
-    let b: { x0: number; y0: number; x1: number; y1: number } | null = null;
-    for (const id of this.selected) {
-      const e = this.blocks.get(id);
-      if (!e) continue;
-      for (const [x, y] of offsetPolygon(
-        selectionRing(e.def).map(([gx, gy]) => gridToPx(m, e.block.x + gx, e.block.y + gy)),
-        4 * m.scaledUnit,
-      )) {
-        if (!b) b = { x0: x, y0: y, x1: x, y1: y };
-        else {
-          b.x0 = Math.min(b.x0, x);
-          b.y0 = Math.min(b.y0, y);
-          b.x1 = Math.max(b.x1, x);
-          b.y1 = Math.max(b.y1, y);
-        }
-      }
-    }
-    return b;
+  selectedBounds(): PixelRect | null {
+    return selectedBounds(this.selectedEntries(), this.metrics);
   }
   cssToGrid(cssX: number, cssY: number): [number, number] {
     return pxToGrid(this.metrics, cssX * this.metrics.dpr, cssY * this.metrics.dpr);
@@ -229,8 +225,6 @@ export class Stage {
     this.connections = pairs;
     this.linesDirty = true;
   }
-  /** Gates that are open (CHG-0032): drawn faded, so what passes shows through (placeholder look until the design). */
-  private openGates = new Set<number>();
   setOpenGates(ids: number[]): void {
     if (ids.length !== this.openGates.size || ids.some((id) => !this.openGates.has(id))) {
       this.openGates = new Set(ids);
@@ -245,10 +239,11 @@ export class Stage {
     }
   }
 
-  /** Laser beams packed [x0, y0, x1, y1]* in grid units (canvas renderer draws them between blocks and overlays). */
-  setBeams(b: Float32Array): void {
-    if (b.length || this.beams.length) this.linesDirty = true; // v1 beams flicker: redraw every frame while any is on
-    this.beams = b;
+  /** Laser beams packed [x0, y0, x1, y1]* in grid units (drawn between blocks and overlays). */
+  setBeams(beams: Float32Array): void {
+    // v1 beams flicker: redraw every frame while any is on.
+    if (beams.length || this.beams.length) this.linesDirty = true;
+    this.beams = beams;
   }
 
   /** Particles packed [x, y, size]* in grid units. */
@@ -259,26 +254,26 @@ export class Stage {
       this.particleData = samples;
       return;
     }
-    const g = this.particles,
-      m = this.metrics,
-      d = m.dpr;
-    g.clear();
+    const graphics = this.particles,
+      metrics = this.metrics,
+      dpr = metrics.dpr;
+    graphics.clear();
     const color = this.theme.colors[this.theme.roles.power];
     for (let i = 0; i < samples.length; i += 3) {
-      const [px, py] = gridToPx(m, samples[i], samples[i + 1]);
-      const s = samples[i + 2] * m.scaledUnit;
-      g.poly([
-        (px - s) / d,
-        py / d,
-        px / d,
-        (py - s) / d,
-        (px + s) / d,
-        py / d,
-        px / d,
-        (py + s) / d,
+      const [px, py] = gridToPx(metrics, samples[i], samples[i + 1]);
+      const size = samples[i + 2] * metrics.scaledUnit;
+      graphics.poly([
+        (px - size) / dpr,
+        py / dpr,
+        px / dpr,
+        (py - size) / dpr,
+        (px + size) / dpr,
+        py / dpr,
+        px / dpr,
+        (py + size) / dpr,
       ]);
     }
-    if (samples.length) g.fill(color);
+    if (samples.length) graphics.fill(color);
   }
 
   /** Force the static layer to redraw (e.g. after fonts load or the canvas is first shown). */
@@ -292,272 +287,82 @@ export class Stage {
     if (this.linesDirty) this.drawLines();
   }
 
-  /** A picture of the stage as it is now, without v1's UI layer (the outer stage behind a Stage block's window,
-   * CHG-0021). Same size as the canvas, device px. */
-  snapshot(): HTMLCanvasElement {
-    const ui = this.drawUi,
-      out = document.createElement('canvas');
+  /** The static layer redrawn without v1's UI layer while `use` reads it. */
+  private withoutUi<T>(use: (staticCanvas: HTMLCanvasElement) => T): T {
+    const drawUi = this.drawUi;
     this.drawUi = null;
     this.redraw();
     try {
-      out.width = this.lineCanvas.width;
-      out.height = this.lineCanvas.height;
-      out.getContext('2d')!.drawImage(this.lineCanvas, 0, 0);
+      return use(this.lineCanvas);
     } finally {
-      this.drawUi = ui;
+      this.drawUi = drawUi;
       this.redraw();
     }
-    return out;
-  }
-  /**
-   * A link-preview image of the stage (SHARING-0002): blocks, lines and particles without the UI, cropped around the
-   * blocks to the output's aspect ratio and scaled to width × height. Canvas renderer only. With `caption`, the share
-   * card (SPEC-SHARING-BACKEND R9): "TITLE — BY AUTHOR" bottom left and "BLOKDUST" bottom right in v1's Dosis.
-   */
-  thumbnail(
-    width: number,
-    height: number,
-    caption?: { title: string; author?: string | null },
-  ): HTMLCanvasElement {
-    const ui = this.drawUi;
-    this.drawUi = null;
-    this.redraw();
-    const src = this.lineCanvas,
-      m = this.metrics,
-      out = document.createElement('canvas');
-    out.width = width;
-    out.height = height;
-    try {
-      // Bounding box of the blocks in canvas px (a block spans about ±2 cells from its anchor), plus a margin.
-      let x0 = Infinity,
-        y0 = Infinity,
-        x1 = -Infinity,
-        y1 = -Infinity;
-      for (const { block } of this.blocks.values()) {
-        const [ax, ay] = gridToPx(m, block.x - 3, block.y - 3),
-          [bx, by] = gridToPx(m, block.x + 3, block.y + 3);
-        x0 = Math.min(x0, ax);
-        y0 = Math.min(y0, ay);
-        x1 = Math.max(x1, bx);
-        y1 = Math.max(y1, by);
-      }
-      if (!Number.isFinite(x0)) {
-        x0 = 0;
-        y0 = 0;
-        x1 = src.width;
-        y1 = src.height;
-      }
-      const aspect = width / height;
-      let w = Math.max(x1 - x0, (y1 - y0) * aspect, src.width * 0.5),
-        h = w / aspect;
-      if (w > src.width) {
-        w = src.width;
-        h = w / aspect;
-      }
-      if (h > src.height) {
-        h = src.height;
-        w = h * aspect;
-      }
-      const cx = (x0 + x1) / 2,
-        cy = (y0 + y1) / 2;
-      const sx = Math.min(Math.max(cx - w / 2, 0), src.width - w),
-        sy = Math.min(Math.max(cy - h / 2, 0), src.height - h);
-      const ctx = out.getContext('2d')!;
-      ctx.fillStyle = this.theme.colors[0];
-      ctx.fillRect(0, 0, width, height);
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(src, sx, sy, w, h, 0, 0, width, height);
-      if (caption)
-        drawCaption(
-          ctx,
-          width,
-          height,
-          this.theme.colors[this.theme.roles.txt],
-          caption.title,
-          caption.author,
-        );
-    } finally {
-      this.drawUi = ui;
-      this.redraw();
-    }
-    return out;
   }
 
-  private placeBlock(id: number): void {
-    const b = this.blocks.get(id)!;
-    const m = this.metrics;
-    const [ox, oy] = gridToPx(m, b.block.x, b.block.y);
+  /** The stage now, without v1's UI layer (behind a Stage block's window, CHG-0021). Device px. */
+  snapshot(): HTMLCanvasElement {
+    return this.withoutUi(copyCanvas);
+  }
+  /** A link-preview image of the stage (SHARING-0002) without the UI, cropped around the blocks.
+   * Canvas renderer only. With `caption`, the share card (SPEC-SHARING-BACKEND R9). */
+  thumbnail(width: number, height: number, caption?: ThumbnailCaption): HTMLCanvasElement {
+    return this.withoutUi((staticCanvas) =>
+      drawThumbnail(
+        staticCanvas,
+        [...this.blocks.values()].map((entry) => entry.block),
+        this.metrics,
+        this.theme,
+        { width, height },
+        caption,
+      ),
+    );
+  }
+
+  private placeBlock(entry: StageEntry): void {
     if (this.renderer === 'canvas') {
       this.linesDirty = true;
       return;
     }
-    this.placeOverlay(b, ox, oy);
-    if (this.renderer !== 'baked') {
-      this.placeVector(b, ox, oy);
-      return;
-    }
-    const fx = ox - Math.floor(ox),
-      fy = oy - Math.floor(oy);
-    const key = `${this.theme.index}|${m.scaledGridSize}|${fx}|${fy}|${b.block.starPos?.x},${b.block.starPos?.y}`;
-    if (key !== b.key) {
-      const baked = bakeBlock(b.def, {
-        colors: this.theme.colors,
-        gridPx: m.scaledGridSize,
-        fracX: fx,
-        fracY: fy,
-        starPos: b.block.starPos,
-      });
-      const old = b.sprite.texture;
-      b.sprite.texture = Texture.from(baked.canvas);
-      if (old && old !== Texture.EMPTY) old.destroy(true);
-      b.sprite.label = `${baked.offsetX},${baked.offsetY}`;
-      b.key = key;
-    }
-    const [offX, offY] = b.sprite.label.split(',').map(Number);
-    b.sprite.scale.set(1 / m.dpr);
-    b.sprite.position.set((Math.floor(ox) + offX) / m.dpr, (Math.floor(oy) + offY) / m.dpr);
+    const [ox, oy] = gridToPx(this.metrics, entry.block.x, entry.block.y);
+    placeOverlay(entry, this.metrics, this.theme, { ox, oy }, this.overlayLayer);
+    if (this.renderer === 'baked') placeBakedBlock(entry, this.metrics, this.theme, { ox, oy });
+    else placeVectorBlock(entry, this.metrics, this.theme, { ox, oy }, this.renderer, this.app);
   }
 
-  private placeOverlay(b: { def: BlockDef; overlay?: Sprite }, ox: number, oy: number): void {
-    if (!b.def.geometry.overlays?.length) return;
-    const m = this.metrics;
-    const baked = bakeOverlays(b.def, 'idle', {
-      colors: this.theme.colors,
-      gridSize: m.gridSize,
-      fracX: ox - Math.floor(ox),
-      fracY: oy - Math.floor(oy),
-    });
-    if (!baked) return;
-    b.overlay?.destroy({ texture: true });
-    b.overlay = new Sprite(Texture.from(baked.canvas));
-    b.overlay.scale.set(1 / m.dpr);
-    b.overlay.position.set(
-      (Math.floor(ox) + baked.offsetX) / m.dpr,
-      (Math.floor(oy) + baked.offsetY) / m.dpr,
-    );
-    this.overlayLayer.addChild(b.overlay);
+  private isPressedLook(id: number): boolean {
+    return id === this.pressed || this.placing.has(id) || this.held.has(id);
   }
 
-  /** Bake-off candidates A (msaa: Pixi Graphics, GPU antialiasing) and B (ss2: Graphics at 2× into a texture, downsampled). */
-  private placeVector(
-    b: { block: StageBlock; def: BlockDef; sprite: Sprite; key: string },
-    ox: number,
-    oy: number,
-  ): void {
-    const m = this.metrics,
-      d = m.dpr;
-    const key = `${this.renderer}|${this.theme.index}|${m.scaledGridSize}|${ox}|${oy}`;
-    if (key === b.key) return;
-    b.key = key;
-    const graphics = new Graphics();
-    const upg = b.def.geometry.unitsPerGrid ?? 15;
-    const ss = this.renderer === 'ss2' ? 2 : 1;
-    for (const geometryLayer of b.def.geometry.layers) {
-      const pts = layerPoints(geometryLayer, upg, b.block.starPos).flatMap(([x, y]) => [
-        ((ox + x * m.scaledGridSize) / d) * ss,
-        ((oy + y * m.scaledGridSize) / d) * ss,
-      ]);
-      graphics.poly(pts).fill(this.theme.colors[geometryLayer.palette]);
-    }
-    const old = b.sprite.texture;
-    if (this.renderer === 'msaa') {
-      b.sprite.texture = Texture.EMPTY;
-      b.sprite.removeChildren().forEach((containerChild) => {
-        containerChild.destroy();
-      });
-      b.sprite.position.set(0, 0);
-      b.sprite.scale.set(1);
-      b.sprite.addChild(graphics);
-    } else {
-      const bounds = graphics.getLocalBounds();
-      const rt = RenderTexture.create({
-        width: Math.ceil(bounds.width) + 4,
-        height: Math.ceil(bounds.height) + 4,
-        resolution: d,
-        antialias: true,
-      });
-      graphics.position.set(-Math.floor(bounds.x) + 2, -Math.floor(bounds.y) + 2);
-      this.app.renderer.render({ container: graphics, target: rt });
-      graphics.destroy();
-      b.sprite.texture = rt;
-      b.sprite.scale.set(1 / ss);
-      b.sprite.position.set((Math.floor(bounds.x) - 2) / ss, (Math.floor(bounds.y) - 2) / ss);
-    }
-    if (old && old !== Texture.EMPTY) old.destroy(true);
-  }
-
-  /** Renderer 'canvas': blocks then overlays drawn straight into the opaque stage canvas, exactly as v1 does. */
+  /** Renderer 'canvas': blocks then overlays drawn into the opaque stage canvas, as v1 does. */
   private drawBlocksAndOverlays(ctx: CanvasRenderingContext2D): void {
-    const m = this.metrics;
+    const metrics = this.metrics;
     // v1 Block.Draw: pressed + selected → 50%
     drawBlocks(
       ctx,
-      m,
+      metrics,
       this.theme,
       this.blocks.values(),
-      (id) => (id === this.pressed || this.placing.has(id) || this.held.has(id) ? 0.5 : 1),
+      (id) => (this.isPressedLook(id) ? PRESSED_ALPHA : 1),
       (id) => this.openGates.has(id),
     );
-    // Multi-select (not in v1): each selected block ringed by its outline moved out 4 units on every side, and the box,
-    // dashed in the text colour at half strength (owner, 2026-11-11: quieter than a solid line).
-    if (this.selected.size || this.selectBox) {
-      ctx.save();
-      ctx.strokeStyle = this.theme.colors[this.theme.roles.txt];
-      ctx.lineWidth = 2;
-      ctx.globalAlpha = 0.5;
-      ctx.setLineDash([4 * m.unit, 3 * m.unit]);
-      ctx.beginPath();
-      for (const id of this.selected) {
-        const e = this.blocks.get(id);
-        if (!e) continue;
-        offsetPolygon(
-          selectionRing(e.def).map(([x, y]) => gridToPx(m, e.block.x + x, e.block.y + y)),
-          4 * m.scaledUnit,
-        ).forEach(([x, y], i) => {
-          i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-        });
-        ctx.closePath();
-      }
-      if (this.selectBox) {
-        const b = this.selectBox;
-        ctx.rect(
-          Math.min(b.x0, b.x1),
-          Math.min(b.y0, b.y1),
-          Math.abs(b.x1 - b.x0),
-          Math.abs(b.y1 - b.y0),
-        );
-      }
-      ctx.stroke();
-      ctx.restore();
-    }
-    if (this.dropTarget !== null && this.blocks.has(this.dropTarget)) {
-      const e = this.blocks.get(this.dropTarget)!;
-      ctx.save();
-      ctx.strokeStyle = this.theme.colors[this.theme.roles.txt];
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      offsetPolygon(
-        selectionRing(e.def).map(([x, y]) => gridToPx(m, e.block.x + x, e.block.y + y)),
-        6 * m.scaledUnit,
-      ).forEach(([x, y], i) => {
-        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-      });
-      ctx.closePath();
-      ctx.stroke();
-      ctx.restore();
-    }
-    drawBeams(ctx, m, this.theme, this.beams, this.beamJitter ?? Math.random()); // v1 LaserBeams.Draw
-    drawOverlays(ctx, m, this.theme, this.blocks.values(), this.skipOverlays);
-    drawParticles(ctx, m, this.theme, this.particleData); // v1 ParticleLayer.Draw
-    if (this.drawUi)
-      this.drawUi(ctx); // v1 chrome/panels (web/src/v1ui), drawn after blocks as in v1's display list
+    if (this.selected.size || this.selectBox)
+      drawSelection(ctx, metrics, this.theme, this.selectedEntries(), this.selectBox);
+    const dropTarget = this.dropTarget === null ? undefined : this.blocks.get(this.dropTarget);
+    if (dropTarget) drawDropTarget(ctx, metrics, this.theme, dropTarget);
+    // v1 LaserBeams.Draw
+    drawBeams(ctx, metrics, this.theme, this.beams, this.beamJitter ?? Math.random());
+    drawOverlays(ctx, metrics, this.theme, this.blocks.values(), this.skipOverlays);
+    drawParticles(ctx, metrics, this.theme, this.particleData); // v1 ParticleLayer.Draw
+    // v1's chrome and panels (web/src/v1ui), drawn after the blocks as in v1's display list
+    if (this.drawUi) this.drawUi(ctx);
     else if (this.chrome)
       drawV1Chrome({
         ctx,
         theme: this.theme,
         width: this.lineCanvas.width,
         height: this.lineCanvas.height,
-        units: m.unit,
+        units: metrics.unit,
         cssWidth: this.app.screen.width,
         cssHeight: this.app.screen.height,
         blockCount: this.blocks.size,
@@ -566,108 +371,14 @@ export class Stage {
 
   private drawLines(): void {
     const ctx = this.lineCtx;
-    const m = this.metrics;
     ctx.clearRect(0, 0, this.lineCanvas.width, this.lineCanvas.height);
     if (this.renderer === 'canvas') {
       ctx.fillStyle = this.theme.colors[0];
       ctx.fillRect(0, 0, this.lineCanvas.width, this.lineCanvas.height);
     }
-    drawConnections(ctx, m, this.theme, this.blocks, this.connections, this.powered);
+    drawConnections(ctx, this.metrics, this.theme, this.blocks, this.connections, this.powered);
     if (this.renderer === 'canvas') this.drawBlocksAndOverlays(ctx);
-    if (this.renderer !== 'canvas') this.lineSprite.texture.source.update();
+    else this.lineSprite.texture.source.update();
     this.linesDirty = false;
   }
-}
-
-/**
- * A polygon moved out by `d` on every side (each edge shifted along its outward normal, corners where the shifted
- * edges meet), so the gap is the same everywhere. A very sharp corner is capped at 3·d from the original vertex.
- */
-export function offsetPolygon(pts: [number, number][], d: number): [number, number][] {
-  const lengthValue = pts.length;
-  if (lengthValue < 3) return pts;
-  let area = 0;
-  for (let i = 0; i < lengthValue; i++) {
-    const [x0, y0] = pts[i],
-      [x1, y1] = pts[(i + 1) % lengthValue];
-    area += x0 * y1 - x1 * y0;
-  }
-  const sign = area > 0 ? 1 : -1; // outward normal side for this winding (screen y points down)
-  const normal = (a: [number, number], b: [number, number]): [number, number] => {
-    const dx = b[0] - a[0],
-      dy = b[1] - a[1],
-      l = Math.hypot(dx, dy) || 1;
-    return [(sign * dy) / l, (-sign * dx) / l];
-  };
-  // Drop repeated points (zero-length edges have no normal).
-  const p = pts.filter((pt, i) => {
-    const r = pts[(i + lengthValue - 1) % lengthValue];
-    return Math.hypot(pt[0] - r[0], pt[1] - r[1]) > 1e-6;
-  });
-  const m = p.length;
-  return p.map((v, i) => {
-    const a = p[(i + m - 1) % m],
-      c = p[(i + 1) % m],
-      n1 = normal(a, v),
-      n2 = normal(v, c);
-    const bx = n1[0] + n2[0],
-      by = n1[1] + n2[1],
-      dot = 1 + n1[0] * n2[0] + n1[1] * n2[1];
-    if (dot < 1e-6) return [v[0] + n1[0] * d, v[1] + n1[1] * d] as [number, number];
-    // Miter: v + (n1 + n2)·d / (1 + n1·n2) puts the corner d from both shifted edges; capped at 3·d.
-    const len = Math.hypot(bx, by),
-      scale = Math.min(d / dot, (3 * d) / len);
-    return [v[0] + bx * scale, v[1] + by * scale] as [number, number];
-  });
-}
-
-/** The share card's caption, sized for 1200 px wide (the mock-up the owner chose: layout C). */
-function drawCaption(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  colour: string,
-  title: string,
-  author?: string | null,
-): void {
-  const k = width / 1200,
-    size = Math.round(30 * k),
-    margin = Math.round(44 * k),
-    y = height - Math.round(36 * k);
-  ctx.save();
-  ctx.fillStyle = colour;
-  ctx.textBaseline = 'alphabetic';
-  if ('letterSpacing' in ctx) ctx.letterSpacing = `${Math.round(2 * k)}px`;
-  const font = (weight: number) => `${weight} ${size}px Dosis, Arial, Helvetica, sans-serif`;
-  ctx.font = font(200);
-  ctx.globalAlpha = 0.55;
-  ctx.textAlign = 'right';
-  const mark = 'BLOKDUST';
-  ctx.fillText(mark, width - margin, y);
-  const room = width - 2 * margin - ctx.measureText(mark).width - margin;
-  ctx.textAlign = 'left';
-  const name = title.trim().toUpperCase(),
-    by = author ? ` — BY ${author.toUpperCase()}` : '';
-  const fit = (s: string, max: number) => {
-    if (ctx.measureText(s).width <= max) return s;
-    while (s.length > 1 && ctx.measureText(`${s}…`).width > max) s = s.slice(0, -1);
-    return `${s.trimEnd()}…`;
-  };
-  if (!name) {
-    ctx.restore();
-    return;
-  } // untitled: the BLOKDUST mark alone
-  ctx.font = font(200);
-  const byW = Math.min(ctx.measureText(by).width, room / 2);
-  ctx.font = font(400);
-  ctx.globalAlpha = 1;
-  const shown = fit(name, room - byW);
-  ctx.fillText(shown, margin, y);
-  if (by) {
-    const x = margin + ctx.measureText(shown).width;
-    ctx.font = font(200);
-    ctx.globalAlpha = 0.7;
-    ctx.fillText(fit(by, room - (x - margin)), x, y);
-  }
-  ctx.restore();
 }
