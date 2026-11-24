@@ -39,7 +39,7 @@ export let byHover = false,
 
 export const accountPage = () =>
   (scene.SettingsPanel as any).accountPage as
-    import('../../v1ui/accountPage.ts').AccountPage | null | undefined;
+    import('../../v1ui/accountPage/accountPage.ts').AccountPage | null | undefined;
 
 export function drawCorners(ctx: CanvasRenderingContext2D): void {
   cornerBoxes = {};

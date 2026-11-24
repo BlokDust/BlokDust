@@ -1,5 +1,5 @@
 // What v1's scene asks of the app (SceneHost), in parts by topic.
-import type { AccountPage } from '../../v1ui/accountPage.ts';
+import { AccountPage } from '../../v1ui/accountPage/accountPage.ts';
 import type { SceneHost } from '../../v1ui/scene.ts';
 import { scene } from './scene.ts';
 
