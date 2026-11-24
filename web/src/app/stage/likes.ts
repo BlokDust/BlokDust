@@ -2,15 +2,12 @@
 import * as gallery from '../../gallery/client.ts';
 import { load as loadShared } from '../../patch/server.ts';
 import { stage } from '../boot/pixi.ts';
+import { openAccountSettings } from '../scene/hostParts.ts';
 import { scene } from '../scene/scene.ts';
 import { accountPage, credit } from './corners.ts';
 
-/**
- * Likes (SPEC-SHARING-GALLERY R8), from the stage or a gallery row: the user's latest wish shows at once, on both;
- * one request per patch at a time, and when it lands another only if the wish changed meanwhile, so fast presses
- * settle on the last without flicker (bug, owner review 3: a double press flipped back and forth as the answers
- * arrived) and send at most two requests. If it fails, the server's state shows again.
- */
+/** Likes (SPEC-SHARING-GALLERY R8): the latest wish shows at once; one request per patch at a time,
+ * then one more only if the wish changed, so fast presses settle without flicker. */
 export const likeWish = new Map<string, boolean>(),
   likeSent = new Set<string>();
 
@@ -30,7 +27,7 @@ export function showLike(id: string, liked: boolean, likes: number): void {
 export function wantLike(id: string, liked: boolean, likes: number): void {
   if (!accountPage()?.Account) {
     scene.PatchesPanel.ClosePanel();
-    (scene.SettingsPanel as any).openAccount?.();
+    openAccountSettings();
     return;
   }
   const want = !liked;
@@ -39,24 +36,32 @@ export function wantLike(id: string, liked: boolean, likes: number): void {
   if (likeSent.has(id)) return;
   likeSent.add(id);
   void (async () => {
-    let r: { liked: boolean; likes: number } | null = null;
-    try {
-      for (;;) {
-        const w = likeWish.get(id)!;
-        r = await gallery.like(id, w);
-        if (likeWish.get(id) === w) break;
-      }
-    } catch {
-      r = null;
-    }
+    const answer = await sendLikeWishes(id, want);
     likeSent.delete(id);
     likeWish.delete(id);
-    if (r) showLike(id, r.liked, r.likes);
+    if (answer) showLike(id, answer.liked, answer.likes);
     else {
+      // It failed: the server's state shows again.
       const loadedPatch = await loadShared(id).catch(() => null);
       if (loadedPatch) showLike(id, !!loadedPatch.liked, loadedPatch.likes ?? 0);
     }
   })();
+}
+
+/** Sends the wish, again while it changed meanwhile; the last answer, or null if one failed. */
+async function sendLikeWishes(
+  id: string,
+  firstWish: boolean,
+): Promise<{ liked: boolean; likes: number } | null> {
+  try {
+    for (;;) {
+      const wish = likeWish.get(id) ?? firstWish;
+      const answer = await gallery.like(id, wish);
+      if (likeWish.get(id) === wish) return answer;
+    }
+  } catch {
+    return null;
+  }
 }
 
 export function likeCredit(): void {
