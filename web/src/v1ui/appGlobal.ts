@@ -1,11 +1,11 @@
 // The shape of v1's global App (shim.ts): what the ported UI and v2's panels read and set.
+import { V1Scene } from './scene/v1Scene.ts';
 import type config from './ported/data/config.json';
 import type l10n from './ported/data/l10n.json';
 import type menu from './ported/data/menu.json';
 import type { Metrics } from './ported/Metrics';
 import type { AnimationsLayer } from './ported/UI/AnimationsLayer';
 import type { V1Block } from './blocks.ts';
-import type { V1Scene } from './scene.ts';
 import type { NullstoneEvent, Point } from './shim.ts';
 
 export interface V1ThemeManager {

@@ -1,10 +1,10 @@
 // The processor sends the patch it holds (bd_patch): the page shows it and says it is ready.
+import { hideLinks } from '../../v1ui/scene/about.ts';
 import { COPY as PATCH_COPY } from '../../v1ui/patches/copy.ts';
 import { setSentMacros } from '../model/macroSync.ts';
 import { toPatch } from '../model/toPatch.ts';
 import type { Patch } from '../../patch/loadPatch.ts';
 import { apiUrl } from '../../patch/site.ts';
-import { hideLinks } from '../../v1ui/scene.ts';
 import { App } from '../../v1ui/shim.ts';
 import { juce } from '../boot/page.ts';
 import { stage } from '../boot/pixi.ts';

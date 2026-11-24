@@ -1,9 +1,9 @@
 // window.__bd_probe: what the browser tests read and drive (tests import its type).
+import { hideLinks } from '../../v1ui/scene/about.ts';
 import { toPatch } from '../model/toPatch.ts';
 import { activity } from '../../account/activity.ts';
 import { BLOCKS_BY_ID } from '../../generated/blocks.gen.ts';
 import { drawBlocks } from '../../stage/drawWorld.ts';
-import { hideLinks } from '../../v1ui/scene.ts';
 import { App } from '../../v1ui/shim.ts';
 import { guarded } from '../audio/microphone.ts';
 import { stage } from '../boot/pixi.ts';

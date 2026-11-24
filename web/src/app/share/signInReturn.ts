@@ -1,6 +1,6 @@
 // Back from signing in during SAVE / SHARE (CHG-0035).
+import { SAVE_WARNING } from '../../v1ui/scene/shareSlot.ts';
 import { isPortable } from '../../patch/samples.ts';
-import { SAVE_WARNING } from '../../v1ui/scene.ts';
 import { AFTER_SIGN_IN } from '../boot/page.ts';
 import { stage } from '../boot/pixi.ts';
 import { model } from '../model/patchModel.ts';
