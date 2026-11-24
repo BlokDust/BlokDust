@@ -16,6 +16,6 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["tools", "tests", "shared", "eslint.config.ts"],
+  "include": ["tools", "shared", "eslint.config.ts"],
   "exclude": ["**/node_modules"]
 }

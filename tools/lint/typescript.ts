@@ -18,10 +18,12 @@ const TYPESCRIPT_PROJECTS: TypeScriptProject[] = [
   { directory: 'server', owns: /^server\//, command: TSC, args: ['-p', 'server'] },
   {
     directory: '.',
-    owns: /^(tools|tests|shared)\/|^eslint\.config\.ts$/,
+    owns: /^(tools|shared)\/|^eslint\.config\.ts$/,
     command: TSC,
     args: ['-p', '.'],
   },
+  // Node strips the tests' types; bundler resolution lets them import the web app's types.
+  { directory: 'tests', owns: /^(tests|web)\//, command: TSC, args: ['-p', 'tests'] },
   {
     directory: 'glossary',
     owns: /^glossary\//,
