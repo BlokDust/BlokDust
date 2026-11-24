@@ -15,10 +15,9 @@
   "tools/block-designer/page.html": 11923,
   "tools/plugin/index.ts": 10964,
   "tools/plugin/ios.ts": 5196,
-  "web/src/app/main.ts": 59039,
   "web/src/stage/Stage.ts": 6264,
   "web/src/v1ui/accountPage.ts": 12572,
-  "web/src/v1ui/blocks.ts": 6628,
+  "web/src/v1ui/blocks.ts": 6745,
   "web/src/v1ui/newBlocks.ts": 7201,
   "web/src/v1ui/patches.ts": 26382,
   "web/src/v1ui/scene.ts": 20892

@@ -10,8 +10,10 @@ import { filterForm } from './filterPanel.ts';
 import { convertSetting, newBlockForm, setLfoTarget, settingRefreshes } from './newBlocks.ts';
 
 /** v1 Config keys for each sampler's longest searchable track (seconds). */
-const MAX_TRACK: Record<string, string> = {
-  Sample: 'SoundCloudMaxTrackLength',
+type TrackLengthKey = 'GranularMaxTrackLength' | 'ConvolverMaxTrackLength';
+/** Other samplers: v1's config has no SoundCloudMaxTrackLength, so they always got 510 s. */
+const DEFAULT_MAX_TRACK_SECONDS = 510;
+const MAX_TRACK: Partial<Record<string, TrackLengthKey>> = {
   Granular: 'GranularMaxTrackLength',
   ConvolutionReverb: 'ConvolverMaxTrackLength',
 };
@@ -40,7 +42,7 @@ export class V1Block {
     this.Id = id;
     this.Position = new Point(x, y);
     this.BlockName = def.v1Type
-      ? (App.L10n.Blocks[catOf(def)]?.Blocks?.[nameKey(def)]?.name ?? def.name)
+      ? (L10N_BLOCKS[catOf(def)]?.Blocks[nameKey(def)]?.name ?? def.name)
       : def.name;
     this.Params = { ...Object.fromEntries(def.params.map((p) => [p.key, p.default])), ...params };
     // v1's default impulse response (Teufelsberg on files.blokdust.io) is gone; the engine's built-in one plays instead.
@@ -91,7 +93,8 @@ export class V1Block {
     this.ResultsPage = 1;
     this.SearchResults = [];
     const seq = ++this.searchSeq;
-    const max = App.Config[MAX_TRACK[this.def.v1Type ?? ''] ?? 'SoundCloudMaxTrackLength'] ?? 510;
+    const lengthKey = MAX_TRACK[this.def.v1Type ?? ''];
+    const max = lengthKey ? App.Config[lengthKey] : DEFAULT_MAX_TRACK_SECONDS;
     App.MainScene.host.searchSamples(query, max).then(
       (r: FreesoundSound[]) => {
         if (seq === this.searchSeq) this.SetSearchResults(r);
@@ -316,12 +319,18 @@ const CATEGORY: Record<string, string> = {
   power: 'Power',
   interaction: 'Interaction',
 };
+/** v1 l10n's block names and descriptions, by category. */
+interface L10nCategory {
+  Label: string;
+  Blocks: Partial<Record<string, { name: string; description: string }>>;
+}
+const L10N_BLOCKS: Partial<Record<string, L10nCategory>> = App.L10n.Blocks;
 function catOf(def: BlockDef): string {
   return CATEGORY[def.category] ?? 'Source';
 }
 /** l10n key for a block: v1 uses e.g. Blocks.Source.Blocks.Tone for ToneSource. */
 function nameKey(def: BlockDef): string {
-  const cat = App.L10n.Blocks[catOf(def)]?.Blocks ?? {};
+  const cat = L10N_BLOCKS[catOf(def)]?.Blocks ?? {};
   const byType: Record<string, string> = {
     ToneSource: 'Tone',
     ParticleEmitter: 'ParticleEmitter',

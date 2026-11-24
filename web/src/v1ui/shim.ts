@@ -6,6 +6,7 @@ import l10n from './ported/data/l10n.json';
 import menu from './ported/data/menu.json';
 import config from './ported/data/config.json';
 import { MAX_ASPECT } from '../stage/metrics.ts';
+import type { V1AppGlobal } from './appGlobal.ts';
 
 // v1 lib/extensions (MIT): the helpers the ported UI calls, defined non-enumerable so they never leak into for…in.
 const def = (o: object, k: string, v: unknown) => {
@@ -268,7 +269,7 @@ export const TWEEN = {
 (window as any).TWEEN = TWEEN;
 
 // ---- nullstone.Event (v1's event type; Splash raises AnimationFinished with it) ----
-class NullstoneEvent<T> {
+export class NullstoneEvent<T> {
   private handlers: { f: (s: unknown, e: T) => void; ctx: unknown }[] = [];
   on(f: (s: unknown, e: T) => void, ctx?: unknown) {
     this.handlers.push({ f, ctx });
@@ -283,7 +284,10 @@ class NullstoneEvent<T> {
 (window as any).nullstone = { Event: NullstoneEvent };
 
 /** v1's global App, as far as the UI reads it. scene.ts keeps the live fields (sizes, palette, theme) current. */
-export const App: any = {
+/** Before the scene is made: MainScene, Metrics and the rest arrive with it. */
+type V1AppAtStart = Omit<V1AppGlobal, LateMembers>;
+type LateMembers = 'MainScene' | 'Stage' | 'Metrics' | 'AnimationsLayer' | 'BlockSprites';
+const appAtStart: V1AppAtStart = {
   L10n: l10n,
   L: l10n,
   Config: config, // v1 config.json, ported verbatim
@@ -307,10 +311,10 @@ export const App: any = {
    * the tabs share the width from the left edge to there; each row is taller (v1: 4/7 of the width, 48-unit rows).
    * Desktop keeps v1's. */
   get SettingsPhone(): boolean {
-    return this.Metrics?.Device === 0;
+    return (this as Partial<V1AppGlobal>).Metrics?.Device === 0;
   },
   SettingsCrossX(w: number): number {
-    const dd = this.MainScene?.Header?.DropDownHeight;
+    const dd = (this as Partial<V1AppGlobal>).MainScene?.Header.DropDownHeight;
     return typeof dd === 'number' && dd > 0
       ? w - dd * 0.5 * this.Unit + 30 * this.Unit
       : w - 40 * this.Unit;
@@ -336,7 +340,7 @@ export const App: any = {
   },
   /** Links can't open here (a plugin inside another iPad app): scene.ts hideLinks. */
   NoLinks: false,
-  Blocks: [] as any[],
+  Blocks: [],
   SubCanvas: [] as HTMLCanvasElement[],
   CompositionId: null as string | null,
   SessionId: null as string | null,
@@ -409,6 +413,7 @@ export const App: any = {
   CommandManager: { ExecuteCommand: (_c: string, _a?: unknown) => {} },
   Canvas: { Ctx: null as CanvasRenderingContext2D | null, Style: { cursor: 'default' } },
 };
+export const App = appAtStart as V1AppGlobal;
 
 /**
  * Plugin-only block labels (CHG-0004 3.3, owner 2026-11-07): in a DAW, v1's Microphone is the track's (or side-chain)
