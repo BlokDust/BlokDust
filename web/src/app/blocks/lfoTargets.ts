@@ -24,10 +24,10 @@ export function targetSetParams(): Command[] {
   const blocks = [...model.values()].map((b) => ({ id: b.uid, type: b.type, params: b.params })),
     ids = uidToId();
   const set = targetCommands(blocks, ids),
-    aimed = new Set(set.map((c) => c.id));
+    aimed = new Set(set.map((command) => command.id));
   for (const [id, b] of model) {
     // an LFO whose target is gone (or was never set) aims at nothing
-    const p = BLOCKS_BY_ID.get(b.type)!.params.findIndex((q) => q.key === 'targetBlock');
+    const p = BLOCKS_BY_ID.get(b.type)!.params.findIndex((param) => param.key === 'targetBlock');
     if (p >= 0 && !aimed.has(id)) set.push({ type: CommandType.SetParam, id, param: p, value: 0 });
   }
   return set;

@@ -46,8 +46,8 @@ export function drawCorners(ctx: CanvasRenderingContext2D): void {
   if (inside) return;
   const m = stage.metrics,
     u = m.unit,
-    h = scene.Header as unknown as { Height: number; Rows?: number },
-    y = h.Height * (h.Rows ?? 1) * u + 22 * u;
+    header = scene.Header as unknown as { Height: number; Rows?: number },
+    y = header.Height * (header.Rows ?? 1) * u + 22 * u;
   ctx.save();
   if (!App.Metrics?.TxtMid) {
     ctx.restore();

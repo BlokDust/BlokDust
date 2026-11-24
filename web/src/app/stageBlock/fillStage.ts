@@ -82,21 +82,21 @@ export function wrapInStage(
  * their layout and their connections. Its inner world starts again. Not undoable (as wrapping). */
 /** Labels `ids` leave this stage (for a Stage's inside), moved by (dx, dy). */
 export function takeLabels(ids: string[], dx: number, dy: number): Label[] {
-  const going = labels.filter((l) => ids.includes(l.id));
+  const going = labels.filter((label) => ids.includes(label.id));
   if (!going.length) return [];
-  for (const l of going) {
-    labels.splice(labels.indexOf(l), 1);
-    selectedLabels.delete(l.id);
+  for (const label of going) {
+    labels.splice(labels.indexOf(label), 1);
+    selectedLabels.delete(label.id);
   }
   labelsChanged();
-  return going.map((l) => ({ ...l, x: l.x + dx, y: l.y + dy }));
+  return going.map((label) => ({ ...label, x: label.x + dx, y: label.y + dy }));
 }
 
 /** Copies of labels, moved by (dx, dy); returns the copies' ids. */
 export function copyLabels(list: Label[], dx: number, dy: number): string[] {
-  const n = labels.length;
-  addLabels(list.map((l) => ({ ...l, x: l.x + dx, y: l.y + dy })));
-  const ids = labels.slice(n).map((l) => l.id);
+  const lengthValue = labels.length;
+  addLabels(list.map((label) => ({ ...label, x: label.x + dx, y: label.y + dy })));
+  const ids = labels.slice(lengthValue).map((label) => label.id);
   if (ids.length) labelsChanged();
   return ids;
 }
@@ -138,8 +138,8 @@ export function addToStage(stageId: number, ids: number[], labelIds: string[] = 
       Object.entries(structuredClone(b.params)).filter(([k]) => !SESSION_PARAMS.has(k)),
     );
     if (typeof params.target === 'string') {
-      const [u, k] = params.target.split(':');
-      if (rename.has(u)) params.target = `${rename.get(u)}:${k}`;
+      const [key, k] = params.target.split(':');
+      if (rename.has(key)) params.target = `${rename.get(key)}:${k}`;
     } // an LFO going in with its target
     return { id: rename.get(b.uid)!, type: b.type, x: b.x + ox, y: b.y + oy, params };
   });
@@ -176,8 +176,8 @@ export function addToStage(stageId: number, ids: number[], labelIds: string[] = 
 /** The Stage block under css (x, y) that the blocks `moving` would go into, or null. */
 export function dropStageAt(x: number, y: number, moving: Set<number>): number | null {
   if (!canGoInside(moving)) return null;
-  const t = stage.hitTest(x, y, (id) => moving.has(id));
-  return t && model.get(t.id)?.type === 'source.stage' ? t.id : null;
+  const stageBlock = stage.hitTest(x, y, (id) => moving.has(id));
+  return stageBlock && model.get(stageBlock.id)?.type === 'source.stage' ? stageBlock.id : null;
 }
 
 export function init(): void {

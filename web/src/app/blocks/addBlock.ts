@@ -62,8 +62,8 @@ export function addBlock(
   // CHG-0031: the Wavetable's panel draws its frames with the engine module (shows v1's loading square until then).
   if (type === 'source.wavetable')
     void engineModule().then(
-      (m) => {
-        setTableModule(m);
+      (module) => {
+        setTableModule(module);
         v1Blocks.get(id)?.RefreshOptionsPanel();
       },
       () => {},

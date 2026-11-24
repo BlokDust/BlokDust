@@ -17,7 +17,7 @@ export let supportClient!: SupportClient | null;
 export let feedbackPanel!: FeedbackPanel | null;
 
 export function init(): void {
-  juce?.addEventListener<Record<string, unknown>>('bd_supportSystem', (value) => {
+  juce?.addEventListener('bd_supportSystem', (value: Record<string, unknown>) => {
     Object.assign(hostSystem, value);
   });
   supportClient = !embedId
@@ -28,14 +28,22 @@ export function init(): void {
       })
     : null;
   feedbackPanel = supportClient
-    ? new FeedbackPanel(supportClient, () => stage.redraw(), {
-        target: () =>
-          credit?.published ? { id: credit.id, title: credit.title, by: credit.by } : null,
-        signedIn: () => !!accountPage()?.Account,
-        signIn: () => openAccountSettings(),
-        report: async (id, reason) => {
-          await gallery.report(id, reason);
+    ? new FeedbackPanel(
+        supportClient,
+        () => {
+          stage.redraw();
         },
-      })
+        {
+          target: () =>
+            credit?.published ? { id: credit.id, title: credit.title, by: credit.by } : null,
+          signedIn: () => !!accountPage()?.Account,
+          signIn: () => {
+            openAccountSettings();
+          },
+          report: async (id, reason) => {
+            await gallery.report(id, reason);
+          },
+        },
+      )
     : null;
 }

@@ -24,12 +24,26 @@ export function keepAwake(ctx: AudioContext): void {
         kicking = false;
       });
   };
-  document.addEventListener('visibilitychange', () => wake(false));
-  window.addEventListener('pageshow', () => wake(false));
-  window.addEventListener('focus', () => wake(false));
-  ctx.addEventListener('statechange', () => wake(false));
+  document.addEventListener('visibilitychange', () => {
+    wake(false);
+  });
+  window.addEventListener('pageshow', () => {
+    wake(false);
+  });
+  window.addEventListener('focus', () => {
+    wake(false);
+  });
+  ctx.addEventListener('statechange', () => {
+    wake(false);
+  });
   for (const t of ['pointerdown', 'pointerup', 'touchend', 'keydown'] as const)
-    window.addEventListener(t, () => wake(true), { capture: true });
+    window.addEventListener(
+      t,
+      () => {
+        wake(true);
+      },
+      { capture: true },
+    );
 }
 
 export function setLastSnapshot<Value extends typeof lastSnapshot>(value: Value): Value {

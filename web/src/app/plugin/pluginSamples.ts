@@ -20,32 +20,34 @@ export interface PluginSampleInfo {
   track?: string;
 }
 
-export function applyPluginSample(s: PluginSampleInfo): void {
-  if ((s.stage ?? 0) !== (inside?.stageId ?? 0)) return; // a sampler of a world not on show (CHG-0038)
-  const b = model.get(s.id),
-    v = v1Blocks.get(s.id);
-  if (!b || !v) return;
-  if (s.loading) {
-    scene.AnimationsLayer.AddToList(v);
-    v.WaveForm = [];
-    v._WaveForm = [];
+export function applyPluginSample(pluginSampleInfo: PluginSampleInfo): void {
+  // A sampler in a world not on show (CHG-0038).
+  if ((pluginSampleInfo.stage ?? 0) !== (inside?.stageId ?? 0)) return;
+  const b = model.get(pluginSampleInfo.id),
+    v1Block = v1Blocks.get(pluginSampleInfo.id);
+  if (!b || !v1Block) return;
+  if (pluginSampleInfo.loading) {
+    scene.AnimationsLayer.AddToList(v1Block);
+    v1Block.WaveForm = [];
+    v1Block._WaveForm = [];
   } // v1: the loading square until it arrives
-  else scene.AnimationsLayer.RemoveFromList(v);
-  if (s.ref && s.track) refs.set(s.track, s.ref);
-  if (s.params) {
-    Object.assign(b.params, s.params);
-    Object.assign(v.Params, s.params);
+  else scene.AnimationsLayer.RemoveFromList(v1Block);
+  if (pluginSampleInfo.ref && pluginSampleInfo.track)
+    refs.set(pluginSampleInfo.track, pluginSampleInfo.ref);
+  if (pluginSampleInfo.params) {
+    Object.assign(b.params, pluginSampleInfo.params);
+    Object.assign(v1Block.Params, pluginSampleInfo.params);
   }
-  if (s.missing) {
-    samples.delete(s.id);
-    markMissing(s.id);
+  if (pluginSampleInfo.missing) {
+    samples.delete(pluginSampleInfo.id);
+    markMissing(pluginSampleInfo.id);
     stage.redraw();
     return;
   }
-  if (s.preview && s.duration) {
+  if (pluginSampleInfo.preview && pluginSampleInfo.duration) {
     // A stand-in buffer: v1's Waveform reads getChannelData/numberOfChannels; panels read duration.
-    const data = Float32Array.from(s.preview),
-      dur = s.duration;
+    const data = Float32Array.from(pluginSampleInfo.preview),
+      dur = pluginSampleInfo.duration;
     const buf = {
       duration: dur,
       length: data.length,
@@ -53,13 +55,13 @@ export function applyPluginSample(s: PluginSampleInfo): void {
       sampleRate: data.length / dur,
       getChannelData: () => data,
     } as unknown as AudioBuffer;
-    samples.set(s.id, buf);
-    missing.delete(s.id);
+    samples.set(pluginSampleInfo.id, buf);
+    missing.delete(pluginSampleInfo.id);
     const wave = new Waveform().GetWaveformFromBuffer(buf, 200, 5, 95);
-    v.PrimaryBuffer = buf; // GetDuration (Granular's LOCATION slider spans the file)
-    if (b.type === 'source.granular' || b.type === 'fx.convolver') v._WaveForm = wave;
-    else v.WaveForm = b.params.reverse ? wave.reverse() : wave;
+    v1Block.PrimaryBuffer = buf; // GetDuration (Granular's LOCATION slider spans the file)
+    if (b.type === 'source.granular' || b.type === 'fx.convolver') v1Block._WaveForm = wave;
+    else v1Block.WaveForm = b.params.reverse ? wave.reverse() : wave;
   }
-  v.RefreshOptionsPanel(s.loading ? 'animate' : undefined);
+  v1Block.RefreshOptionsPanel(pluginSampleInfo.loading ? 'animate' : undefined);
   stage.redraw();
 }

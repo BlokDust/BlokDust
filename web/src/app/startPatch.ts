@@ -87,7 +87,7 @@ export async function initialPatch(
       /* fall through */
     }
   }
-  if (params.has('demo')) return { patch: demo as Patch, view: {}, id: null, source: 'demo' };
+  if (params.has('demo')) return { patch: demo, view: {}, id: null, source: 'demo' };
   const local = loadLocal();
   return {
     patch: local ?? { format: 'blokdust.patch', version: 2, blocks: [] },

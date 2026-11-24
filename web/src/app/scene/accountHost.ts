@@ -1,4 +1,5 @@
 // Accounts (CHG-0023), the public gallery (CHG-0024) and video export (CHG-0022) for v1's panels.
+import { forgetLink } from '../boot/linkApproval.ts';
 import * as account from '../../account/client.ts';
 import * as gallery from '../../gallery/client.ts';
 import { BLOCKS_BY_ID } from '../../generated/blocks.gen.ts';
@@ -7,7 +8,7 @@ import { App } from '../../v1ui/shim.ts';
 import { videoSeconds } from '../../video/length.ts';
 import { canShareFile, downloadFile, shareFile } from '../../video/share.ts';
 import { pluginAccountHost, refreshOwnership } from '../account/pluginAccount.ts';
-import { AFTER_SIGN_IN, VIDEO_EXPORT, embedId, forgetLink, juce } from '../boot/page.ts';
+import { AFTER_SIGN_IN, VIDEO_EXPORT, embedId, juce } from '../boot/page.ts';
 import { model, tempo } from '../model/patchModel.ts';
 import { openShared } from '../patchFiles/openPatch.ts';
 import { backToSave } from '../share/signInReturn.ts';
@@ -34,12 +35,17 @@ function webAccount(): WebAccount {
       await account.signInWithPasskey();
       await account.claimMine().catch(() => {});
       refreshOwnership();
-      if (accountPage()?.ApproveCode) return; // approving a plugin (SHARING-0011): the question stays
+      // Approving a plugin (SHARING-0011): the question stays.
+      if (accountPage()?.ApproveCode) return;
       scene.SettingsPanel.ClosePanel();
       backToSave();
     },
-    google: () => account.signInWith('google'),
-    apple: () => account.signInWith('apple'),
+    google: () => {
+      account.signInWith('google');
+    },
+    apple: () => {
+      account.signInWith('apple');
+    },
     addPasskey: () => account.addPasskey(),
     removeMethod: async (method) => {
       await account.removeMethod(method);
@@ -85,7 +91,9 @@ const galleryHost = (): NonNullable<AccountHost['gallery']> => ({
     }
   },
   open: (row, mode) => openShared(row.id, mode),
-  like: (row) => wantLike(row.id, row.liked, row.likes),
+  like: (row) => {
+    wantLike(row.id, row.liked, row.likes);
+  },
   unpublish: async (id) => {
     await gallery.unpublish(id, editToken(id));
     if (id === App.CompositionId) scene.PatchesPanel.galleryKnown(false);

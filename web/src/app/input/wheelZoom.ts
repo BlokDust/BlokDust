@@ -45,40 +45,45 @@ export function zoomAbout(x: number, y: number, zoomTo: number, w: { x: number; 
   scene.pinchView(zoom, drag);
   stage.setView(zoom, drag);
   clearTimeout(zoomSettle);
-  zoomSettle = setTimeout(() => scene.pinchEnd(), 250);
+  zoomSettle = setTimeout(() => {
+    scene.pinchEnd();
+  }, 250);
 }
 
 export let stageEl!: HTMLElement;
 
 export type GestureEv = Event & { scale: number; clientX: number; clientY: number };
 
-export const gestureAt = (e: GestureEv) => {
-  const r = app.canvas.getBoundingClientRect();
-  return { x: (e.clientX - r.left) * dpr(), y: (e.clientY - r.top) * dpr() };
+export const gestureAt = (gestureEv: GestureEv) => {
+  const boundingClientRect = app.canvas.getBoundingClientRect();
+  return {
+    x: (gestureEv.clientX - boundingClientRect.left) * dpr(),
+    y: (gestureEv.clientY - boundingClientRect.top) * dpr(),
+  };
 };
 
 export function init(): void {
   if (!embedId)
     app.canvas.addEventListener(
       'wheel',
-      (e) => {
-        e.preventDefault();
-        const x = e.offsetX * dpr(),
-          y = e.offsetY * dpr();
+      (event) => {
+        event.preventDefault();
+        const x = event.offsetX * dpr(),
+          y = event.offsetY * dpr();
         // Over a waveform in the options panel: zoom or slide it (waveZoom.ts), never the stage under it.
         const row = waveRowAt(scene.OptionsPanel, x, y);
         if (row >= 0) {
           if (!pointerIsDown && !waveGesture && !wavePinch) {
-            const k = e.deltaMode === 1 ? 16 : 1;
+            const k = event.deltaMode === 1 ? 16 : 1;
             wheelWave(
               scene.OptionsPanel,
               row,
               x,
               {
-                deltaX: e.deltaX * k,
-                deltaY: e.deltaY * k,
-                ctrlKey: e.ctrlKey,
-                shiftKey: e.shiftKey,
+                deltaX: event.deltaX * k,
+                deltaY: event.deltaY * k,
+                ctrlKey: event.ctrlKey,
+                shiftKey: event.shiftKey,
               },
               dpr(),
             );
@@ -86,25 +91,28 @@ export function init(): void {
           }
           return;
         }
-        if (e.ctrlKey && scene.optionsPanelAt(x, y)) return; // a trackpad pinch elsewhere on the panel does nothing
-        if (!e.ctrlKey && scene.uiAt(x, y)) {
-          scene.wheel(e);
+        if (event.ctrlKey && scene.optionsPanelAt(x, y)) return; // a trackpad pinch elsewhere on the panel does nothing
+        if (!event.ctrlKey && scene.uiAt(x, y)) {
+          scene.wheel(event);
           return;
         }
         if (gesture || pinch || pointerIsDown) return;
-        const dy = Math.max(-25, Math.min(25, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY));
+        const dy = Math.max(
+          -25,
+          Math.min(25, event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY),
+        );
         // A mouse wheel zooms at half a trackpad pinch's rate (owner, 2026-11-12: a notch is ×1.13, not ×1.28).
-        zoomAbout(x, y, stage.zoom * Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.005)), stageAt(x, y));
+        zoomAbout(x, y, stage.zoom * Math.exp(-dy * (event.ctrlKey ? 0.01 : 0.005)), stageAt(x, y));
       },
       { passive: false },
     );
   stageEl = document.getElementById('stage')!;
   if (!embedId) {
     // iOS sends these for a two-finger touch too: there the touch pinch has it (fingers are down), so they're ignored.
-    stageEl.addEventListener('gesturestart', (e) => {
+    stageEl.addEventListener('gesturestart', (event) => {
       if (touchAt.size || pointerIsDown || padNotes().length) return; // fingers on the Touchpad's pads play, never zoom
-      const g = e as GestureEv,
-        at = gestureAt(g),
+      const gestureEv = event as GestureEv,
+        at = gestureAt(gestureEv),
         row = waveRowAt(scene.OptionsPanel, at.x, at.y);
       if (row >= 0) {
         waveGesture = startWavePinch(scene.OptionsPanel, row, at.x, 1);
@@ -113,16 +121,16 @@ export function init(): void {
       if (scene.optionsPanelAt(at.x, at.y)) return;
       gesture = { z0: stage.zoom, w: stageAt(at.x, at.y) };
     });
-    stageEl.addEventListener('gesturechange', (e) => {
-      const g = e as GestureEv,
-        at = gestureAt(g);
+    stageEl.addEventListener('gesturechange', (event) => {
+      const gestureEv = event as GestureEv,
+        at = gestureAt(gestureEv);
       if (waveGesture) {
-        moveWavePinch(scene.OptionsPanel, waveGesture, at.x, g.scale);
+        moveWavePinch(scene.OptionsPanel, waveGesture, at.x, gestureEv.scale);
         stage.redraw();
         return;
       }
       if (!gesture) return;
-      zoomAbout(at.x, at.y, gesture.z0 * g.scale, gesture.w);
+      zoomAbout(at.x, at.y, gesture.z0 * gestureEv.scale, gesture.w);
     });
     stageEl.addEventListener('gestureend', () => {
       gesture = null;

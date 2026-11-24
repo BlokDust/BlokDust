@@ -22,7 +22,7 @@ export const videoLink = () => shareLink?.url ?? PUBLIC_SITE;
 export function videoCredits(): Credit[] {
   return Object.values(toPatch().refs ?? {})
     .filter((r): r is FreesoundRef => (r as SampleRef).provider === 'freesound')
-    .map((r) => ({ name: r.name, user: r.username, license: r.license }));
+    .map((ref) => ({ name: ref.name, user: ref.username, license: ref.license }));
 }
 
 /** FROM START: what the engine is built from now, and every sample it would be given (outer world and Stages). */
@@ -40,7 +40,7 @@ export function startSamples(): PatchSample[] {
 
 export async function makeVideoFile(
   choice: VideoChoice,
-  progress: (p: VideoProgressInfo) => void,
+  progress: (videoProgressInfo: VideoProgressInfo) => void,
   signal: AbortSignal,
 ): Promise<File> {
   if (!engine) throw new Error('Press start first.');
@@ -58,7 +58,7 @@ export async function makeVideoFile(
       to: Math.round(choice.seconds * sampleRate),
       shape: choice.shape,
       theme,
-      labels: labels.map((l) => ({ ...l })),
+      labels: labels.map((label) => ({ ...label })),
       card: { title: videoTitle(), link: videoLink(), credits: videoCredits() },
     },
     progress,

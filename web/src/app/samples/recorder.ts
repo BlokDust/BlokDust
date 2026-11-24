@@ -8,38 +8,39 @@ import { scene } from '../scene/scene.ts';
 
 // ---- v1 Recorder (RecorderPanel button): record the master output into the block ----
 export async function toggleRecording(id: number): Promise<void> {
-  const v = v1Blocks.get(id);
+  const v1Block = v1Blocks.get(id);
   // Plugin: the processor records its own output and loads the take into the block (as a file the project keeps).
   // v1 Recorder.StartRecording / StopRecording: a one-second line in the message bar each way.
-  const say = (on: boolean) =>
+  const say = (on: boolean) => {
     scene.message(on ? 'Started Recording' : 'Stopped Recording', { seconds: 1 });
-  if (v && juce) {
-    v.IsRecording = !v.IsRecording;
-    juce.emitEvent('bd_record', { id, on: v.IsRecording, ...atStage() });
-    say(v.IsRecording);
+  };
+  if (v1Block && juce) {
+    v1Block.IsRecording = !v1Block.IsRecording;
+    juce.emitEvent('bd_record', { id, on: v1Block.IsRecording, ...atStage() });
+    say(v1Block.IsRecording);
     stage.redraw();
     return;
   }
-  if (!v || !engine) return;
-  if (!v.IsRecording) {
-    v.IsRecording = true;
+  if (!v1Block || !engine) return;
+  if (!v1Block.IsRecording) {
+    v1Block.IsRecording = true;
     engine.startRecording();
     say(true);
     stage.redraw();
     return;
   }
-  v.IsRecording = false;
+  v1Block.IsRecording = false;
   say(false);
-  const r = await engine.stopRecording();
+  const recording = await engine.stopRecording();
   stage.redraw();
-  if (!r.left.length) return;
+  if (!recording.left.length) return;
   const buf = new AudioBuffer({
     numberOfChannels: 2,
-    length: r.left.length,
-    sampleRate: r.sampleRate,
+    length: recording.left.length,
+    sampleRate: recording.sampleRate,
   });
-  buf.copyToChannel(r.left as Float32Array<ArrayBuffer>, 0);
-  buf.copyToChannel(r.right as Float32Array<ArrayBuffer>, 1);
+  buf.copyToChannel(recording.left as Float32Array<ArrayBuffer>, 0);
+  buf.copyToChannel(recording.right as Float32Array<ArrayBuffer>, 1);
   setParams(id, { reverse: false });
   useBuffer(id, buf, 'half', 2); // v1 Recorder.UpdateWaveform: detail 2, loop from half way
 }
@@ -55,5 +56,7 @@ export function downloadRecording(id: number): void {
   a.href = URL.createObjectURL(new Blob([encodeWav(buf)], { type: 'audio/wav' }));
   a.download = 'BlokdustRecording.wav'; // v1 Recorder.Filename
   a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  setTimeout(() => {
+    URL.revokeObjectURL(a.href);
+  }, 10000);
 }

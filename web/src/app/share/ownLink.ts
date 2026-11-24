@@ -104,21 +104,21 @@ export async function quickSave(): Promise<void> {
       .thumbnail(THUMB.width, THUMB.height, { title })
       .toDataURL('image/png')
       .split(',')[1];
-    const r = await saveShared('save', App.CompositionId, { patch, title, thumb });
-    if (!r) throw new Error('no backend');
+    const saved = await saveShared('save', App.CompositionId, { patch, title, thumb });
+    if (!saved) throw new Error('no backend');
     // Not this device's to save over any more (its right was lost, or the patch deleted): saveShared made a new link.
-    setLastGallery(r.gallery ?? null);
-    App.CompositionId = r.id;
-    App.SessionId = sessionFor(r.id);
+    setLastGallery(saved.gallery ?? null);
+    App.CompositionId = saved.id;
+    App.SessionId = sessionFor(saved.id);
     const still = contentOf(toPatch()) !== at; // edited while it saved: those edits are still unsaved
-    setSession({ id: r.id, dirty: still });
+    setSession({ id: saved.id, dirty: still });
     saveSession(session);
     saveLocal(toPatch());
-    linkSaved(r.id, title, at);
-    if (r.gallery) scene.PatchesPanel.galleryKnown(r.gallery.published);
+    linkSaved(saved.id, title, at);
+    if (saved.gallery) scene.PatchesPanel.galleryKnown(saved.gallery.published);
     scene.message('Saved');
-  } catch (e) {
-    console.warn('BlokDust: quick save failed', e);
+  } catch (error) {
+    console.warn('BlokDust: quick save failed', error);
     track('save_failed', { kind: 'quick' });
     scene.message('Save failed, please try again.'); // v1 L10n Errors.SaveError
   } finally {

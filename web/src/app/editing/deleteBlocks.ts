@@ -1,8 +1,8 @@
 // Removing and deleting blocks.
+import { usage } from '../boot/sessionAnalytics.ts';
 import { CommandType } from '../../engine/wasmEngine.ts';
 import { releaseInputIfUnused } from '../audio/microphone.ts';
 import { syncTargets } from '../blocks/lfoTargets.ts';
-import { usage } from '../boot/page.ts';
 import { stage } from '../boot/pixi.ts';
 import { labelSnapsOf } from './undoRedo.ts';
 import { type XY, pushUndo } from './undoSteps.ts';
@@ -53,10 +53,10 @@ export function moveBlock(id: number, x: number, y: number): void {
   if (!b || !sb) return;
   b.x = x;
   b.y = y;
-  const v = v1Blocks.get(id);
-  if (v) {
-    v.Position.x = x;
-    v.Position.y = y;
+  const v1Block = v1Blocks.get(id);
+  if (v1Block) {
+    v1Block.Position.x = x;
+    v1Block.Position.y = y;
   }
   stage.upsertBlock({ ...sb, x, y });
   send([{ type: CommandType.MoveBlock, id, x, y }]);

@@ -25,13 +25,13 @@ export let overlay!: HTMLElement;
  * Params.logic), so a save, a share link or the autosave reopens with the Toggles as they were (owner, 2026-11-13). */
 export function logicFlipped(id: number, on: boolean): void {
   const b = model.get(id),
-    v = v1Blocks.get(id);
+    v1Block = v1Blocks.get(id);
   if (b?.type !== 'power.toggle' || !!b.params.logic === on) return;
   b.params.logic = on;
-  if (v) {
-    v.Params.logic = on;
-    if (scene.OptionsPanel.Scale > 0 && scene.OptionsPanel.SelectedBlock === v)
-      v.RefreshOptionsPanel();
+  if (v1Block) {
+    v1Block.Params.logic = on;
+    if (scene.OptionsPanel.Scale > 0 && scene.OptionsPanel.SelectedBlock === v1Block)
+      v1Block.RefreshOptionsPanel();
   }
   // Not an edit: the autosave (when it holds this patch) catches up within a second, without marking it unsaved or
   // putting off the save of a real edit (a running scene may flip Toggles faster than the edit debounce).
@@ -44,27 +44,28 @@ export function logicFlipped(id: number, on: boolean): void {
 
 export let logicSave: ReturnType<typeof setTimeout> | undefined;
 
-export const onSnapshot = (s: Snapshot) => {
+export const onSnapshot = (snapshot: Snapshot) => {
   probe.snapshots++;
   setLastSnapshot(performance.now());
-  probe.rms = s.rms;
-  probe.particles = s.particles.length / 3;
-  probe.beams = s.beams.length / 4;
+  probe.rms = snapshot.rms;
+  probe.particles = snapshot.particles.length / 3;
+  probe.beams = snapshot.beams.length / 4;
   // v1 Settings › dB Meter (Tone.Meter on the master output, smoothed 0.8): level in dB from the snapshot RMS.
-  scene.setLevelDb(20 * Math.log10(Math.max(s.rms, 1e-5)));
-  for (const e of s.events) {
-    if (e.type === 4) probe.gateOns++;
-    if (e.type === 1) probe.hits++;
-    if (e.type === 8 && e.value !== undefined) logicFlipped(e.block, e.value !== 0);
+  scene.setLevelDb(20 * Math.log10(Math.max(snapshot.rms, 1e-5)));
+  for (const engineEvent of snapshot.events) {
+    if (engineEvent.type === 4) probe.gateOns++;
+    if (engineEvent.type === 1) probe.hits++;
+    if (engineEvent.type === 8 && engineEvent.value !== undefined)
+      logicFlipped(engineEvent.block, engineEvent.value !== 0);
   }
-  if (s.connections) {
-    stage.setConnections(s.connections);
-    probe.connections = Array.from(s.connections);
+  if (snapshot.connections) {
+    stage.setConnections(snapshot.connections);
+    probe.connections = Array.from(snapshot.connections);
     const order: [string, string][] = [];
     let known = true; // a snapshot from before the blocks are shown (the plugin's first) says nothing about order
-    for (let i = 0; i + 1 < s.connections.length; i += 2) {
-      const a = model.get(s.connections[i])?.uid,
-        b = model.get(s.connections[i + 1])?.uid;
+    for (let i = 0; i + 1 < snapshot.connections.length; i += 2) {
+      const a = model.get(snapshot.connections[i])?.uid,
+        b = model.get(snapshot.connections[i + 1])?.uid;
       if (a && b) order.push([a, b]);
       else known = false;
     }
@@ -75,22 +76,22 @@ export const onSnapshot = (s: Snapshot) => {
       if (juce && JSON.stringify(order) !== was) juce.emitEvent('bd_connectionOrder', { order });
     }
   }
-  stage.setPowered(s.powered);
-  probe.powered = Array.from(s.powered);
+  stage.setPowered(snapshot.powered);
+  probe.powered = Array.from(snapshot.powered);
   if (countActivity)
     activity.frame(performance.now(), {
       blocks: model,
-      powered: new Set(s.powered),
+      powered: new Set(snapshot.powered),
       worldOn: scene.worldPower,
       tempo: tempo ?? 120,
       visible: document.visibilityState === 'visible',
-      emitted: s.emitted ?? 0,
+      emitted: snapshot.emitted ?? 0,
     });
-  stage.setBeams(s.beams);
-  stage.setParticles(s.particles);
-  scene.setPlayheads(s.playheads ?? new Float32Array(0));
-  setMonitors(s.monitors ?? new Float32Array(0));
-  stage.setOpenGates(openGateIds(s.monitors ?? new Float32Array(0)));
+  stage.setBeams(snapshot.beams);
+  stage.setParticles(snapshot.particles);
+  scene.setPlayheads(snapshot.playheads ?? new Float32Array(0));
+  setMonitors(snapshot.monitors ?? new Float32Array(0));
+  stage.setOpenGates(openGateIds(snapshot.monitors ?? new Float32Array(0)));
 };
 
 export function init(): void {

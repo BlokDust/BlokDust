@@ -53,15 +53,16 @@ import { scene } from '../scene/scene.ts';
 import { addToStage } from '../stageBlock/fillStage.ts';
 import { enterStage } from '../stageBlock/lookInside.ts';
 
-export const pointerEnd = (e: PointerEvent) => {
-  touchAt.delete(e.pointerId);
-  if (extras.has(e.pointerId)) {
-    extraUp(e.pointerId);
+export const pointerEnd = (event: PointerEvent) => {
+  touchAt.delete(event.pointerId);
+  if (extras.has(event.pointerId)) {
+    extraUp(event.pointerId);
     return true;
   }
-  if (primaryId !== null && e.pointerId !== primaryId) return true;
-  if (pinch && (pinch.a === e.pointerId || pinch.b === e.pointerId)) endPinch();
-  if (wavePinch && (wavePinch.a === e.pointerId || wavePinch.b === e.pointerId)) endWavePinch();
+  if (primaryId !== null && event.pointerId !== primaryId) return true;
+  if (pinch && (pinch.a === event.pointerId || pinch.b === event.pointerId)) endPinch();
+  if (wavePinch && (wavePinch.a === event.pointerId || wavePinch.b === event.pointerId))
+    endWavePinch();
   setPrimaryId(null);
   setWaveTouch(null);
   if (primaryRole === 'gone') {
@@ -77,12 +78,12 @@ export const pointerEnd = (e: PointerEvent) => {
 
 export function init(): void {
   if (!embedId)
-    app.canvas.addEventListener('pointercancel', (e) => {
-      if (padUp(scene.OptionsPanel, e.pointerId, padHost)) {
+    app.canvas.addEventListener('pointercancel', (event) => {
+      if (padUp(scene.OptionsPanel, event.pointerId, padHost)) {
         stage.redraw();
         return;
       }
-      if (labelDrag && e.pointerId === labelDrag.pointer && !labelDrag.fresh) {
+      if (labelDrag && event.pointerId === labelDrag.pointer && !labelDrag.fresh) {
         setLabelDrag(null);
         scene.IsDraggingABlock = false;
         stage.redraw();
@@ -92,7 +93,7 @@ export function init(): void {
         clearTimeout(longPress);
         setLongPress(null);
       }
-      if (pointerEnd(e)) return;
+      if (pointerEnd(event)) return;
       setPointerIsDown(false);
       setSwallowUp(false);
       setDownAt(null);
@@ -109,22 +110,26 @@ export function init(): void {
       stage.redraw();
     });
   if (!embedId)
-    app.canvas.addEventListener('pointerup', (e) => {
-      if (padUp(scene.OptionsPanel, e.pointerId, padHost)) {
+    app.canvas.addEventListener('pointerup', (event) => {
+      if (padUp(scene.OptionsPanel, event.pointerId, padHost)) {
         stage.redraw();
         return;
       }
-      if (labelDrag && (labelDrag.fresh || e.pointerId === labelDrag.pointer)) {
+      if (labelDrag && (labelDrag.fresh || event.pointerId === labelDrag.pointer)) {
         const d = labelDrag;
         setLabelDrag(null);
         // Dropped from the menu: type its words. A finger: now, inside the touch (iOS opens the keyboard only for a focus
         // made while handling it); a mouse: after v1's own mouse-up.
         if (d.fresh) {
-          if (e.pointerType === 'touch') editLabel(d.id);
-          else setTimeout(() => editLabel(d.id), 0);
+          if (event.pointerType === 'touch') editLabel(d.id);
+          else
+            setTimeout(() => {
+              editLabel(d.id);
+            }, 0);
         } else {
           const binned =
-            d.moved && scene.pointerUp(e.offsetX * dpr(), e.offsetY * dpr(), true) === 'delete';
+            d.moved &&
+            scene.pointerUp(event.offsetX * dpr(), event.offsetY * dpr(), true) === 'delete';
           scene.IsDraggingABlock = false;
           stage.held.clear();
           if (d.group) {
@@ -152,12 +157,13 @@ export function init(): void {
       }
       const role = primaryRole,
         wasGroup = grouped(),
-        still = !!downAt && Math.hypot(e.offsetX - downAt.x, e.offsetY - downAt.y) <= STILL_PX;
+        still =
+          !!downAt && Math.hypot(event.offsetX - downAt.x, event.offsetY - downAt.y) <= STILL_PX;
       if (longPress) {
         clearTimeout(longPress);
         setLongPress(null);
       }
-      if (pointerEnd(e)) return;
+      if (pointerEnd(event)) return;
       setPointerIsDown(false);
       setDownAt(null);
       if (swallowUp) {
@@ -175,7 +181,7 @@ export function init(): void {
         return;
       }
       const moved = drag?.moved ?? false;
-      const result = scene.pointerUp(e.offsetX * dpr(), e.offsetY * dpr(), moved);
+      const result = scene.pointerUp(event.offsetX * dpr(), event.offsetY * dpr(), moved);
       stage.held.clear();
       const into = drag && moved && result !== 'delete' ? stage.dropTarget : null;
       stage.dropTarget = null;
@@ -208,16 +214,18 @@ export function init(): void {
         if (moved && wasGroup && selectedLabels.size) labelsChanged();
       }
       // A double click on a Stage block looks inside it (the panel's OPEN STAGE does the same; CHG-0021).
-      if (drag && !moved && !e.shiftKey && model.get(drag.id)?.type === 'source.stage') {
+      if (drag && !moved && !event.shiftKey && model.get(drag.id)?.type === 'source.stage') {
         const now = performance.now(),
           id = drag.id;
         if (stageClick && stageClick.id === id && now - stageClick.t < 450) {
           setStageClick(null);
-          setTimeout(() => enterStage(id), 0);
+          setTimeout(() => {
+            enterStage(id);
+          }, 0);
         } else setStageClick({ id, t: now });
       }
       // A click on a selected block (no move) is v1's click: its options panel, and the group is let go.
-      if (drag && !moved && wasGroup && !e.shiftKey) setSelection([]);
+      if (drag && !moved && wasGroup && !event.shiftKey) setSelection([]);
       if (role === 'stage' && still) setSelection([]); // a tap on the stage clears the selection
       setDrag(null);
       stage.pressed = null;

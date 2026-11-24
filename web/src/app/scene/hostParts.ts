@@ -1,14 +1,19 @@
 // What v1's scene asks of the app (SceneHost), in parts by topic.
+import type { AccountPage } from '../../v1ui/accountPage.ts';
 import type { SceneHost } from '../../v1ui/scene.ts';
 import { scene } from './scene.ts';
 
 export type SceneHostPart<Key extends keyof SceneHost> = Pick<SceneHost, Key>;
 
-/** Settings › SIGN IN / ACCOUNT, which release1Settings adds to v1's Settings panel. */
-interface AccountSettingsPanel {
+/** What release1Settings (v1ui/scene.ts) adds to v1's Settings panel: the account tab. */
+interface AccountSettings {
   openAccount?: () => void;
+  accountPage?: AccountPage | null;
 }
 
+export const accountSettings = (): AccountSettings =>
+  scene.SettingsPanel as unknown as AccountSettings;
+
 export function openAccountSettings(): void {
-  (scene.SettingsPanel as unknown as AccountSettingsPanel).openAccount?.();
+  accountSettings().openAccount?.();
 }

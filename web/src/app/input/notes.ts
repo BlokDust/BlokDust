@@ -1,9 +1,10 @@
 // Notes: the computer keyboard and Web MIDI play Keyboard and MIDI Input blocks.
+import { usage } from '../boot/sessionAnalytics.ts';
 import { CommandType, type Command } from '../../engine/wasmEngine.ts';
 import { MpeParser } from '../../input/mpe.ts';
 import { type MidiDevice, attachNoteInputs } from '../../input/keys.ts';
 import { track } from '../../analytics/client.ts';
-import { juce, usage } from '../boot/page.ts';
+import { juce } from '../boot/page.ts';
 import { sendRaw, standalone } from '../model/engineLink.ts';
 import { model, typeIndex } from '../model/patchModel.ts';
 import { innerIds, inside, macros } from '../model/stageWorlds.ts';
@@ -50,7 +51,9 @@ export function init(): void {
     captureAll: () => standalone,
     // Plugin: the editor says when its window loses the keys (clicking into the DAW); the web view may not blur (Ableton).
     onReleaseAll: (release) => {
-      juce?.addEventListener('bd_keysLost', () => release());
+      juce?.addEventListener('bd_keysLost', () => {
+        release();
+      });
     },
     midi: (status, d1, d2, device) => {
       // Every MIDI Input: those on show, and those inside the outer world's Stage blocks (they play from outside too).
@@ -81,22 +84,22 @@ export function init(): void {
       for (const { key, id, params: q, stage: sid } of inputs) {
         const want = typeof q.device === 'string' ? q.device : '';
         if (want && want !== device.name) continue;
-        let p = parsers.get(key);
-        if (!p) {
-          p = new MpeParser(id, midiType);
-          parsers.set(key, p);
+        let parser = parsers.get(key);
+        if (!parser) {
+          parser = new MpeParser(id, midiType);
+          parsers.set(key, parser);
         }
         if (!usage.midi) {
           usage.midi = true;
           track('midi_connected', { mpe: q.mpe ? 'yes' : 'no' });
         }
-        p.setSettings({
+        parser.setSettings({
           mpe: !!q.mpe,
           memberBendRange: typeof q.bendRange === 'number' ? q.bendRange : 48,
         });
         const out: Command[] = [];
-        p.message(status, d1, d2, -1, out);
-        cmds.push(...(sid ? out.map((c) => ({ ...c, stage: sid })) : out));
+        parser.message(status, d1, d2, -1, out);
+        cmds.push(...(sid ? out.map((command) => ({ ...command, stage: sid })) : out));
       }
       const live = new Set(inputs.map((i) => i.key));
       for (const key of parsers.keys()) if (!live.has(key)) parsers.delete(key);

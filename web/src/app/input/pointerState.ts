@@ -70,9 +70,9 @@ export function init(): void {
   if (embedId) {
     // Player: pressing a block powers it while held (v1 Source.MouseDown); nothing moves or opens.
     let pressed: number | null = null;
-    app.canvas.addEventListener('pointerdown', (e) => {
-      app.canvas.setPointerCapture(e.pointerId);
-      const hit = stage.hitTest(e.offsetX, e.offsetY);
+    app.canvas.addEventListener('pointerdown', (event) => {
+      app.canvas.setPointerCapture(event.pointerId);
+      const hit = stage.hitTest(event.offsetX, event.offsetY);
       if (hit) {
         pressed = hit.id;
         send([{ type: CommandType.Press, id: hit.id, value: 1 }]);

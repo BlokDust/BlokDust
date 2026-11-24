@@ -1,6 +1,6 @@
 // Undo and redo, and the label moves they carry.
+import { usage } from '../boot/sessionAnalytics.ts';
 import { type Label } from '../../stage/labels.ts';
-import { usage } from '../boot/page.ts';
 import { stage } from '../boot/pixi.ts';
 import { moveBlock, removeBlock } from './deleteBlocks.ts';
 import {
@@ -25,9 +25,9 @@ export function recordMove(
 ): void {
   const moves = ids.flatMap((id) => {
     const b = model.get(id),
-      f = from.get(id);
-    return b && f && (b.x !== f.x || b.y !== f.y)
-      ? [{ uid: b.uid, from: f, to: { x: b.x, y: b.y } }]
+      point = from.get(id);
+    return b && point && (b.x !== point.x || b.y !== point.y)
+      ? [{ uid: b.uid, from: point, to: { x: b.x, y: b.y } }]
       : [];
   });
   const labelMoves = labelFrom ? labelMovesSince(labelFrom) : [];
@@ -52,8 +52,8 @@ export const moveUids = (moves: { uid: string; from: XY; to: XY }[], to: boolean
 
 export const labelSnapsOf = (ids: string[]) =>
   ids.flatMap((id) => {
-    const l = labels.find((x) => x.id === id);
-    return l ? [{ ...l }] : [];
+    const label = labels.find((x) => x.id === id);
+    return label ? [{ ...label }] : [];
   });
 
 /** Labels out (undo, redo): as deleting them, without a step. */
@@ -69,18 +69,18 @@ export function takeOutLabels(ids: string[]): void {
 /** Labels back (undo, redo), with the ids they had. */
 export function putBackLabels(list: Label[]): void {
   if (!list.length) return;
-  addLabels(list.map((l) => ({ ...l })));
+  addLabels(list.map((label) => ({ ...label })));
   labelsChanged();
 }
 
 export function moveLabelSteps(moves: LabelMove[], to: boolean): void {
   if (!moves.length) return;
-  for (const m of moves) {
-    const l = labels.find((x) => x.id === m.id);
-    if (l) {
-      const at = to ? m.to : m.from;
-      l.x = at.x;
-      l.y = at.y;
+  for (const move of moves) {
+    const label = labels.find((x) => x.id === move.id);
+    if (label) {
+      const at = to ? move.to : move.from;
+      label.x = at.x;
+      label.y = at.y;
     }
   }
   labelsChanged();
@@ -90,40 +90,42 @@ export function moveLabelSteps(moves: LabelMove[], to: boolean): void {
 export const labelPlaces = (ids: Iterable<string>) =>
   new Map(
     [...ids].flatMap((id) => {
-      const l = labels.find((x) => x.id === id);
-      return l ? [[id, { x: l.x, y: l.y }] as [string, XY]] : [];
+      const label = labels.find((x) => x.id === id);
+      return label ? [[id, { x: label.x, y: label.y }] as [string, XY]] : [];
     }),
   );
 
 /** Label moves since `from`, for a move step. */
 export const labelMovesSince = (from: Map<string, XY>): LabelMove[] =>
-  [...from].flatMap(([id, f]) => {
-    const l = labels.find((x) => x.id === id);
-    return l && (l.x !== f.x || l.y !== f.y) ? [{ id, from: f, to: { x: l.x, y: l.y } }] : [];
+  [...from].flatMap(([id, point]) => {
+    const label = labels.find((x) => x.id === id);
+    return label && (label.x !== point.x || label.y !== point.y)
+      ? [{ id, from: point, to: { x: label.x, y: label.y } }]
+      : [];
   });
 
 /** Undo the last step; false when there is none. */
 export function undo(): boolean {
-  const u = undoStack.pop();
-  if (u) usage.undos++;
-  if (!u) return false;
-  if (u.kind === 'add') {
-    const snaps = u.uids.flatMap((uid) => {
-      const s = snapOf(uid);
-      return s ? [s] : [];
+  const step = undoStack.pop();
+  if (step) usage.undos++;
+  if (!step) return false;
+  if (step.kind === 'add') {
+    const snaps = step.uids.flatMap((uid) => {
+      const snap = snapOf(uid);
+      return snap ? [snap] : [];
     });
-    const labelSnaps = labelSnapsOf(u.labels ?? []);
-    removeUids(u.uids);
-    takeOutLabels(u.labels ?? []);
-    redoStack.push({ kind: 'add', uids: u.uids, snaps, labels: u.labels, labelSnaps });
-  } else if (u.kind === 'remove') {
-    for (const s of u.snaps) restore(s);
-    putBackLabels(u.labels ?? []);
-    redoStack.push(u);
+    const labelSnaps = labelSnapsOf(step.labels ?? []);
+    removeUids(step.uids);
+    takeOutLabels(step.labels ?? []);
+    redoStack.push({ kind: 'add', uids: step.uids, snaps, labels: step.labels, labelSnaps });
+  } else if (step.kind === 'remove') {
+    for (const snap of step.snaps) restore(snap);
+    putBackLabels(step.labels ?? []);
+    redoStack.push(step);
   } else {
-    moveUids(u.moves, false);
-    moveLabelSteps(u.labelMoves ?? [], false);
-    redoStack.push(u);
+    moveUids(step.moves, false);
+    moveLabelSteps(step.labelMoves ?? [], false);
+    redoStack.push(step);
   }
   setSelection([]);
   stage.redraw();
@@ -132,26 +134,26 @@ export function undo(): boolean {
 
 /** Redo the last undone step; false when there is none. */
 export function redo(): boolean {
-  const u = redoStack.pop();
-  if (!u) return false;
-  if (u.kind === 'add') {
-    for (const s of u.snaps ?? []) restore(s);
-    putBackLabels(u.labelSnaps ?? []);
-    undoStack.push({ kind: 'add', uids: u.uids, labels: u.labels });
-  } else if (u.kind === 'remove') {
-    const snaps = u.snaps.flatMap((s) => {
-      const now = snapOf(s.b.uid);
+  const step = redoStack.pop();
+  if (!step) return false;
+  if (step.kind === 'add') {
+    for (const snap of step.snaps ?? []) restore(snap);
+    putBackLabels(step.labelSnaps ?? []);
+    undoStack.push({ kind: 'add', uids: step.uids, labels: step.labels });
+  } else if (step.kind === 'remove') {
+    const snaps = step.snaps.flatMap((snap) => {
+      const now = snapOf(snap.b.uid);
       return now ? [now] : [];
     });
-    const ids = (u.labels ?? []).map((l) => l.id),
+    const ids = (step.labels ?? []).map((label) => label.id),
       labelsNow = labelSnapsOf(ids);
-    removeUids(u.snaps.map((s) => s.b.uid));
+    removeUids(step.snaps.map((snap) => snap.b.uid));
     takeOutLabels(ids);
     undoStack.push({ kind: 'remove', snaps, labels: labelsNow });
   } else {
-    moveUids(u.moves, true);
-    moveLabelSteps(u.labelMoves ?? [], true);
-    undoStack.push(u);
+    moveUids(step.moves, true);
+    moveLabelSteps(step.labelMoves ?? [], true);
+    undoStack.push(step);
   }
   setSelection([]);
   stage.redraw();

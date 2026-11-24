@@ -82,7 +82,7 @@ export function settingsHost(): SceneHostPart<
 > {
   return {
     feedback: feedbackPanel ?? undefined,
-    // Settings › About (SPEC-SHARING-USAGE-ANALYTICS R7): this browser's choice, or the plugin install's.
+    // Settings › About (SPEC-SHARING-USAGE-ANALYTICS R7): this browser's choice, or the plugin's.
     usageStats: pluginStats ?? {
       get: () => analyticsAllowed(),
       set: (on) => {

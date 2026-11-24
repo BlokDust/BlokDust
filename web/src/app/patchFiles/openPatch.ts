@@ -81,12 +81,12 @@ export async function accountItems(): Promise<
 > {
   if (embedId) return [];
   try {
-    return (await account.accountPatches()).map((p) => ({
-      name: p.title || 'Untitled',
-      detail: savedOn(p.updated),
-      key: `acct:${p.id}`,
+    return (await account.accountPatches()).map((accountPatch) => ({
+      name: accountPatch.title || 'Untitled',
+      detail: savedOn(accountPatch.updated),
+      key: `acct:${accountPatch.id}`,
       removable: true,
-      link: p.id,
+      link: accountPatch.id,
     }));
   } catch {
     return [];
@@ -105,9 +105,9 @@ export async function openPatchItem(
     return !!patch;
   }
   if (key.startsWith('mine:')) {
-    const m = myPatches().find((x) => x.title === key.slice(5)),
-      patch = m && parsePatchFile(JSON.stringify(m.patch));
-    if (m && patch) usePatch(patch, m.title, mode);
+    const mine = myPatches().find((x) => x.title === key.slice(5)),
+      patch = mine && parsePatchFile(JSON.stringify(mine.patch));
+    if (mine && patch) usePatch(patch, mine.title, mode);
     return !!patch;
   }
   if (juce && key.startsWith('file:')) {
@@ -131,8 +131,8 @@ export function pickPatchFile(): void {
   input.type = 'file';
   input.accept = `.${PATCH_EXT},.json,application/json`;
   input.onchange = async () => {
-    const f = input.files?.[0];
-    if (f) showPicked(await f.text(), f.name);
+    const file = input.files?.[0];
+    if (file) showPicked(await file.text(), file.name);
   };
   input.click();
 }
@@ -160,14 +160,14 @@ export const viewCentre = () => {
 };
 
 export function usePatch(
-  p: Patch,
+  patch: Patch,
   title: string,
   mode: 'open' | 'insert',
   from?: Omit<PatchSource, 'blocks'>,
   source: 'file' | 'preset' | 'link' = from ? 'link' : 'file',
 ): void {
   if (mode === 'open' && source !== 'link') setGuarded(false); // a file or a preset: not someone else's (CHG-0041)
-  applyPatch(p, mode, from);
+  applyPatch(patch, mode, from);
   track('patch_opened', { source });
   if (mode === 'open') scene.PatchesPanel.setTitle(title);
 }

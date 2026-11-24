@@ -25,7 +25,7 @@ export function setSelection(ids: Iterable<number>, labelIds: Iterable<string> =
   selection.clear();
   selectedLabels.clear();
   for (const id of ids) if (model.has(id)) selection.add(id);
-  for (const id of labelIds) if (labels.some((l) => l.id === id)) selectedLabels.add(id);
+  for (const id of labelIds) if (labels.some((label) => label.id === id)) selectedLabels.add(id);
   stage.redraw();
 }
 
@@ -52,8 +52,8 @@ export function finishBox(): void {
     .filter(([, b]) => b.x >= ax && b.x <= bx && b.y >= ay && b.y <= by)
     .map(([id]) => id);
   const insideLabels = labels
-    .filter((l) => l.x >= ax && l.x <= bx && l.y >= ay && l.y <= by)
-    .map((l) => l.id); // by the dot
+    .filter((label) => label.x >= ax && label.x <= bx && label.y >= ay && label.y <= by)
+    .map((label) => label.id); // by the dot
   setSelection(
     box.add ? [...selection, ...inside] : inside,
     box.add ? [...selectedLabels, ...insideLabels] : insideLabels,

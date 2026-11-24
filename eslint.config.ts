@@ -41,6 +41,11 @@ export default tseslint.config(
       ],
       '@typescript-eslint/restrict-plus-operands': ['error', { allowNumberAndString: true }],
       '@typescript-eslint/no-empty-function': ['error', { allow: ['arrowFunctions'] }],
+      // An empty string falling back to a default ('' title → 'Untitled') is intended.
+      '@typescript-eslint/prefer-nullish-coalescing': [
+        'error',
+        { ignorePrimitives: { string: true } },
+      ],
       '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },

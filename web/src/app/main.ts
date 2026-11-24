@@ -7,7 +7,6 @@ import { init as initView } from './model/view.ts';
 import { init as initFeedback } from './support/feedback.ts';
 import { init as initAutosave } from './model/autosave.ts';
 import { init as initScene } from './scene/scene.ts';
-import { init as initPluginAccount } from './account/pluginAccount.ts';
 import { init as initOverlays } from './stage/overlays.ts';
 import { init as initLabels } from './labels/labels.ts';
 import { init as initFillStage } from './stageBlock/fillStage.ts';
@@ -44,7 +43,6 @@ async function main(): Promise<void> {
   initFeedback();
   initAutosave();
   initScene();
-  initPluginAccount();
   initOverlays();
   initLabels();
   initFillStage();

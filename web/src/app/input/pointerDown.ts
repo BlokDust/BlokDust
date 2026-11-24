@@ -42,30 +42,36 @@ import { exitStage, insideFrame } from '../stageBlock/lookInside.ts';
 
 export function init(): void {
   if (!embedId)
-    app.canvas.addEventListener('pointerdown', (e) => {
+    app.canvas.addEventListener('pointerdown', (event) => {
       // Only the main button works the stage (owner, 2026-11-19): a right-click's press began a pan that never ended
       // (the menu it opened took the release), so moving to the menu dragged the stage away. Right-clicks have their own
       // handler (contextmenu).
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
-      app.canvas.setPointerCapture(e.pointerId);
-      if (primaryId === null && cornerPress(e.offsetX * dpr(), e.offsetY * dpr())) {
-        setPrimaryId(e.pointerId);
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      app.canvas.setPointerCapture(event.pointerId);
+      if (primaryId === null && cornerPress(event.offsetX * dpr(), event.offsetY * dpr())) {
+        setPrimaryId(event.pointerId);
         setPrimaryRole('gone');
         return;
       }
       if (
         makeStageAt &&
         primaryId === null &&
-        inBox(makeStageAt, e.offsetX * dpr(), e.offsetY * dpr())
+        inBox(makeStageAt, event.offsetX * dpr(), event.offsetY * dpr())
       ) {
         makeStage();
-        setPrimaryId(e.pointerId);
+        setPrimaryId(event.pointerId);
         setPrimaryRole('gone');
         return;
       }
       if (
         !placing &&
-        padDown(scene.OptionsPanel, e.pointerId, e.offsetX * dpr(), e.offsetY * dpr(), padHost)
+        padDown(
+          scene.OptionsPanel,
+          event.pointerId,
+          event.offsetX * dpr(),
+          event.offsetY * dpr(),
+          padHost,
+        )
       ) {
         stage.redraw();
         return;
@@ -74,8 +80,8 @@ export function init(): void {
       // controls) goes back out.
       if (inside && !placing) {
         const f = insideFrame(),
-          x = e.offsetX * dpr(),
-          y = e.offsetY * dpr(),
+          x = event.offsetX * dpr(),
+          y = event.offsetY * dpr(),
           m = stage.metrics;
         if (
           onClose(f, x, y) ||
@@ -85,7 +91,7 @@ export function init(): void {
             y > f.y - 24 * m.unit)
         ) {
           exitStage();
-          setPrimaryId(e.pointerId);
+          setPrimaryId(event.pointerId);
           setPrimaryRole('gone');
           return; // this press does nothing more
         }
@@ -95,27 +101,33 @@ export function init(): void {
         !placing &&
         !labelDrag &&
         labels.length &&
-        !scene.uiAt(e.offsetX * dpr(), e.offsetY * dpr()) &&
-        !stage.hitTest(e.offsetX, e.offsetY)
+        !scene.uiAt(event.offsetX * dpr(), event.offsetY * dpr()) &&
+        !stage.hitTest(event.offsetX, event.offsetY)
       ) {
-        const l = labelAt(measure, stage.metrics, labels, e.offsetX * dpr(), e.offsetY * dpr());
-        if (l) {
-          const [gx, gy] = stage.cssToGrid(e.offsetX, e.offsetY);
+        const label = labelAt(
+          measure,
+          stage.metrics,
+          labels,
+          event.offsetX * dpr(),
+          event.offsetY * dpr(),
+        );
+        if (label) {
+          const [gx, gy] = stage.cssToGrid(event.offsetX, event.offsetY);
           scene.OptionsPanel.Close();
           // Shift: add the label to the selection (and drag it with the rest at once) or take it out (owner, 2026-11-14).
-          if (e.shiftKey && selectedLabels.has(l.id)) {
-            selectedLabels.delete(l.id);
-            setPrimaryId(e.pointerId);
+          if (event.shiftKey && selectedLabels.has(label.id)) {
+            selectedLabels.delete(label.id);
+            setPrimaryId(event.pointerId);
             setPrimaryRole('select');
             setPointerIsDown(true);
-            setDownAt({ x: e.offsetX, y: e.offsetY });
+            setDownAt({ x: event.offsetX, y: event.offsetY });
             stage.redraw();
             return;
           }
-          if (e.shiftKey) selectedLabels.add(l.id);
-          else if (!selectedLabels.has(l.id) && selectionSize()) setSelection([]); // another label: the selection is let go
+          if (event.shiftKey) selectedLabels.add(label.id);
+          else if (!selectedLabels.has(label.id) && selectionSize()) setSelection([]); // another label: the selection is let go
           const group =
-            selectedLabels.has(l.id) && selectionSize() > 1
+            selectedLabels.has(label.id) && selectionSize() > 1
               ? new Map(
                   [...selection].flatMap((id) => {
                     const b = model.get(id);
@@ -124,42 +136,43 @@ export function init(): void {
                 )
               : undefined;
           setLabelDrag({
-            id: l.id,
-            pointer: e.pointerId,
-            grabX: gx - l.x,
-            grabY: gy - l.y,
-            moved: !!e.shiftKey,
+            id: label.id,
+            pointer: event.pointerId,
+            grabX: gx - label.x,
+            grabY: gy - label.y,
+            moved: !!event.shiftKey,
             fresh: false,
-            downX: e.offsetX,
-            downY: e.offsetY,
+            downX: event.offsetX,
+            downY: event.offsetY,
             group,
-            labelFrom: labelPlaces(group ? selectedLabels : [l.id]),
+            labelFrom: labelPlaces(group ? selectedLabels : [label.id]),
           });
           if (group) for (const id of group.keys()) stage.held.add(id);
           stage.redraw();
           return;
         }
       }
-      if (e.pointerType === 'touch') touchAt.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
-      if (primaryId !== null && e.pointerId !== primaryId) {
-        if (e.pointerType === 'touch') extraDown(e);
+      if (event.pointerType === 'touch')
+        touchAt.set(event.pointerId, { x: event.offsetX, y: event.offsetY });
+      if (primaryId !== null && event.pointerId !== primaryId) {
+        if (event.pointerType === 'touch') extraDown(event);
         return;
       }
-      setPrimaryId(e.pointerId);
+      setPrimaryId(event.pointerId);
       setPrimaryRole(null);
-      setLastPointerType(e.pointerType);
-      setLastPointer((([x, y]) => ({ x, y }))(stage.cssToGrid(e.offsetX, e.offsetY)));
-      App.PointerInputManager.TouchAssumed = e.pointerType === 'touch'; // v1: which tour (keys or touch) to give
+      setLastPointerType(event.pointerType);
+      setLastPointer((([x, y]) => ({ x, y }))(stage.cssToGrid(event.offsetX, event.offsetY)));
+      App.PointerInputManager.TouchAssumed = event.pointerType === 'touch'; // v1: which tour (keys or touch) to give
       if (placing) {
         // Placing inserted blocks: a click puts them down; a finger drags them (from wherever it lands) and lifting it
         // puts them down. Nothing else takes this press.
-        if (!placing.touch && e.pointerType === 'mouse') {
+        if (!placing.touch && event.pointerType === 'mouse') {
           endPlacing(false);
           setSwallowUp(true);
           return;
         }
         placing.touch = true;
-        const [gx, gy] = stage.cssToGrid(e.offsetX, e.offsetY);
+        const [gx, gy] = stage.cssToGrid(event.offsetX, event.offsetY);
         placing.at = { x: Math.round(gx), y: Math.round(gy) };
         placing.grabbed = true;
         setPointerIsDown(true);
@@ -168,22 +181,28 @@ export function init(): void {
         return;
       }
       setPointerIsDown(true);
-      const pressedAt = setDownAt({ x: e.offsetX, y: e.offsetY });
-      if (e.shiftKey && !scene.uiAt(e.offsetX * dpr(), e.offsetY * dpr())) {
+      const pressedAt = setDownAt({ x: event.offsetX, y: event.offsetY });
+      if (event.shiftKey && !scene.uiAt(event.offsetX * dpr(), event.offsetY * dpr())) {
         // Shift: add or remove a block (a block just added can be dragged straight away, with the others), or draw a box.
-        const hit = stage.hitTest(e.offsetX, e.offsetY);
+        const hit = stage.hitTest(event.offsetX, event.offsetY);
         scene.OptionsPanel.Close();
         if (hit && selection.has(hit.id)) {
           selection.delete(hit.id);
           setPrimaryRole('select');
         } else if (hit) {
           selection.add(hit.id);
-          const [gx, gy] = stage.cssToGrid(e.offsetX, e.offsetY);
+          const [gx, gy] = stage.cssToGrid(event.offsetX, event.offsetY);
           startDrag(hit.id, gx - hit.x, gy - hit.y);
           for (const id of selection) if (id !== hit.id) stage.held.add(id);
           setPrimaryRole('block');
         } else {
-          setBox({ x0: e.offsetX, y0: e.offsetY, x1: e.offsetX, y1: e.offsetY, add: true });
+          setBox({
+            x0: event.offsetX,
+            y0: event.offsetY,
+            x1: event.offsetX,
+            y1: event.offsetY,
+            add: true,
+          });
           showBox();
           setPrimaryRole('box');
         }
@@ -191,19 +210,19 @@ export function init(): void {
         return;
       }
       setWaveTouch(null);
-      if (e.pointerType === 'touch') {
+      if (event.pointerType === 'touch') {
         // on a waveform: what to put back if a second finger makes this a pinch
-        const row = waveRowAt(scene.OptionsPanel, e.offsetX * dpr(), e.offsetY * dpr()),
+        const row = waveRowAt(scene.OptionsPanel, event.offsetX * dpr(), event.offsetY * dpr()),
           undo = row >= 0 ? snapshotWave(scene.OptionsPanel, row) : null;
         if (undo) setWaveTouch({ row, undo });
       }
-      const tookUi = scene.pointerDown(e.offsetX * dpr(), e.offsetY * dpr(), () =>
-        v1At(e.offsetX, e.offsetY),
+      const tookUi = scene.pointerDown(event.offsetX * dpr(), event.offsetY * dpr(), () =>
+        v1At(event.offsetX, event.offsetY),
       );
       if (!tookUi && !drag) {
-        const hit = stage.hitTest(e.offsetX, e.offsetY);
+        const hit = stage.hitTest(event.offsetX, event.offsetY);
         if (hit) {
-          const [gx, gy] = stage.cssToGrid(e.offsetX, e.offsetY);
+          const [gx, gy] = stage.cssToGrid(event.offsetX, event.offsetY);
           startDrag(hit.id, gx - hit.x, gy - hit.y);
         }
       }
@@ -211,8 +230,8 @@ export function init(): void {
       if (drag && !selection.has(drag.id) && selection.size) setSelection([]); // another block: back to v1's one
       if (grouped()) for (const id of selection) if (id !== drag!.id) stage.held.add(id);
       // A finger held still on the stage starts a box instead of moving the stage.
-      if (primaryRole === 'stage' && e.pointerType === 'touch') {
-        const id = e.pointerId,
+      if (primaryRole === 'stage' && event.pointerType === 'touch') {
+        const id = event.pointerId,
           at = pressedAt;
         setLongPress(
           setTimeout(() => {

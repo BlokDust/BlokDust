@@ -591,9 +591,6 @@
     "comment-block-lines": 1,
     "comment-line-length": 6
   },
-  "web/src/app/account/pluginAccount.ts": {
-    "comment-line-length": 6
-  },
   "web/src/app/audio/keepAwake.ts": {
     "comment-block-lines": 1,
     "comment-line-length": 4
@@ -608,29 +605,6 @@
   "web/src/app/blocks/lfoTargets.ts": {
     "comment-block-lines": 1,
     "comment-line-length": 1
-  },
-  "web/src/app/boot/embedChrome.ts": {
-    "comment-line-length": 1
-  },
-  "web/src/app/boot/page.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 14
-  },
-  "web/src/app/boot/pixi.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 5
-  },
-  "web/src/app/boot/startScreen.ts": {
-    "comment-block-lines": 2,
-    "comment-line-length": 12
-  },
-  "web/src/app/boot/startState.ts": {
-    "comment-block-lines": 2,
-    "comment-line-length": 10
-  },
-  "web/src/app/boot/theme.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 5
   },
   "web/src/app/darkTheme.ts": {
     "comment-line-length": 1
@@ -738,19 +712,8 @@
     "comment-block-lines": 1,
     "comment-line-length": 4
   },
-  "web/src/app/plugin/bridge.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 9
-  },
-  "web/src/app/plugin/dust.ts": {
-    "comment-line-length": 2
-  },
-  "web/src/app/plugin/pluginSamples.ts": {
-    "comment-line-length": 1
-  },
   "web/src/app/pluginValues.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 3
+    "comment-line-length": 1
   },
   "web/src/app/samples/recorder.ts": {
     "comment-line-length": 1
@@ -766,18 +729,6 @@
   "web/src/app/samples/userSamples.ts": {
     "comment-block-lines": 1,
     "comment-line-length": 14
-  },
-  "web/src/app/scene/accountHost.ts": {
-    "comment-line-length": 1
-  },
-  "web/src/app/scene/linkWays.ts": {
-    "comment-line-length": 1
-  },
-  "web/src/app/scene/patchesHost.ts": {
-    "comment-line-length": 3
-  },
-  "web/src/app/scene/settingsHost.ts": {
-    "comment-line-length": 1
   },
   "web/src/app/share/ownLink.ts": {
     "comment-block-lines": 1,

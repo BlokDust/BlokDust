@@ -1,5 +1,5 @@
 // The patch as the user sees it (autosaved; the share link encodes it).
-import { V1Block } from '../../v1ui/blocks.ts';
+import type { V1Block } from '../../v1ui/blocks.ts';
 import { type SampleRef } from '../../patch/samples.ts';
 import { type Label } from '../../stage/labels.ts';
 import { type PatchSource, type Patch } from '../../patch/loadPatch.ts';
@@ -42,7 +42,7 @@ export const labels: Label[] = [];
  * selected blocks (stage.selected holds the blocks). */
 export const selectedLabels = new Set<string>();
 
-export const selLabels = () => labels.filter((l) => selectedLabels.has(l.id));
+export const selLabels = () => labels.filter((label) => selectedLabels.has(label.id));
 
 export const uidToId = () => new Map([...model].map(([id, b]) => [b.uid, id]));
 
@@ -57,7 +57,7 @@ export const SOURCES_MAX = 32;
 // the newest; older ones are still reachable through the newer sources' own lists
 export const liveSources = (ids: Set<string>) =>
   sources
-    .map((s) => ({ ...s, blocks: s.blocks.filter((b) => ids.has(b)) }))
+    .map((source) => ({ ...source, blocks: source.blocks.filter((b) => ids.has(b)) }))
     .filter((s) => s.blocks.length)
     .slice(-SOURCES_MAX);
 
@@ -65,12 +65,12 @@ export const readSources = (v: unknown): PatchSource[] =>
   Array.isArray(v)
     ? v
         .filter((s): s is PatchSource => !!s && typeof s.id === 'string' && Array.isArray(s.blocks))
-        .map((s) => ({
-          id: s.id,
-          ...(typeof s.rev === 'number' ? { rev: s.rev } : {}),
-          ...(typeof s.title === 'string' ? { title: s.title } : {}),
-          ...(typeof s.by === 'string' ? { by: s.by } : {}),
-          blocks: s.blocks.filter((b) => typeof b === 'string'),
+        .map((source) => ({
+          id: source.id,
+          ...(typeof source.rev === 'number' ? { rev: source.rev } : {}),
+          ...(typeof source.title === 'string' ? { title: source.title } : {}),
+          ...(typeof source.by === 'string' ? { by: source.by } : {}),
+          blocks: source.blocks.filter((b) => typeof b === 'string'),
         }))
     : [];
 
@@ -81,10 +81,10 @@ export const toPatch = (): Patch => {
     : worldParts();
   const stages = new Set(w.blocks.filter((b) => b.type === 'source.stage').map((b) => b.id));
   const ms = [...macros.values()].filter(
-    (m) => stages.has(m.block) && (m.blocks.length || m.labels?.length),
+    (macro) => stages.has(macro.block) && (macro.blocks.length || macro.labels?.length),
   );
   const used = new Set(
-    [...w.blocks, ...ms.flatMap((m) => m.blocks)]
+    [...w.blocks, ...ms.flatMap((macro) => macro.blocks)]
       .map((b) => b.params?.track)
       .filter((t): t is string => typeof t === 'string'),
   );
@@ -98,7 +98,7 @@ export const toPatch = (): Patch => {
     blocks: w.blocks,
     ...(Object.keys(r).length ? { refs: r } : {}),
     ...(w.order.length ? { connectionOrder: w.order } : {}),
-    ...(w.labels.length ? { labels: w.labels.map((l) => ({ ...l })) } : {}),
+    ...(w.labels.length ? { labels: w.labels.map((label) => ({ ...label })) } : {}),
     ...(ms.length ? { macros: ms } : {}),
     ...(src.length ? { sources: src } : {}),
     view: inside ? inside.outer.view : currentView(),
@@ -119,7 +119,7 @@ export const typeIndex = (type: string) => BLOCKS.findIndex((b) => b.id === type
 export const SESSION_PARAMS = new Set(['targetBlock', 'targetParam']);
 
 export const DEF_BY_V1 = new Map<string, BlockDef>();
-for (const d of BLOCKS) DEF_BY_V1.set(d.menuId, d); // v1's type names, plus the post-2.0 blocks' menu ids
+for (const definition of BLOCKS) DEF_BY_V1.set(definition.menuId, definition); // v1's type names, plus the post-2.0 blocks' menu ids
 
 export function setTempo<Value extends typeof tempo>(value: Value): Value {
   tempo = value;

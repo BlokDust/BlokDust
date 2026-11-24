@@ -29,11 +29,11 @@ import { send } from '../model/engineLink.ts';
 import { model } from '../model/patchModel.ts';
 import { scene } from '../scene/scene.ts';
 
-export function extraDown(e: PointerEvent): void {
-  const x = e.offsetX,
-    y = e.offsetY;
+export function extraDown(event: PointerEvent): void {
+  const x = event.offsetX,
+    y = event.offsetY;
   if (pinch || wavePinch || placing || padNotes().length) {
-    extras.set(e.pointerId, { kind: 'idle' });
+    extras.set(event.pointerId, { kind: 'idle' });
     return;
   } // not while the pads are played
   const first = primaryId !== null ? touchAt.get(primaryId) : undefined;
@@ -42,10 +42,10 @@ export function extraDown(e: PointerEvent): void {
     setWaveTouch(null);
     undo();
     setPrimaryRole('gone');
-    extras.set(e.pointerId, { kind: 'wavepinch' });
+    extras.set(event.pointerId, { kind: 'wavepinch' });
     setWavePinch({
       a: primaryId!,
-      b: e.pointerId,
+      b: event.pointerId,
       ...startWavePinch(
         scene.OptionsPanel,
         row,
@@ -57,13 +57,13 @@ export function extraDown(e: PointerEvent): void {
     return;
   }
   if (primaryRole === 'stage' && primaryId !== null && touchAt.has(primaryId)) {
-    extras.set(e.pointerId, { kind: 'pinch' });
-    startPinch(primaryId, e.pointerId);
+    extras.set(event.pointerId, { kind: 'pinch' });
+    startPinch(primaryId, event.pointerId);
     return;
   }
   const slider = scene.sliderIndexAt(x * dpr(), y * dpr());
   if (slider >= 0) {
-    extras.set(e.pointerId, { kind: 'slider', index: slider });
+    extras.set(event.pointerId, { kind: 'slider', index: slider });
     scene.setSlider(slider, x * dpr());
     stage.redraw();
     return;
@@ -73,7 +73,7 @@ export function extraDown(e: PointerEvent): void {
     drag?.id === id || [...extras.values()].some((t) => t.kind === 'block' && t.id === id);
   if (hit && !taken(hit.id) && !scene.uiAt(x * dpr(), y * dpr())) {
     const [gx, gy] = stage.cssToGrid(x, y);
-    extras.set(e.pointerId, {
+    extras.set(event.pointerId, {
       kind: 'block',
       id: hit.id,
       grabX: gx - hit.x,
@@ -86,48 +86,48 @@ export function extraDown(e: PointerEvent): void {
     stage.redraw();
     return;
   }
-  extras.set(e.pointerId, { kind: 'idle' });
+  extras.set(event.pointerId, { kind: 'idle' });
 }
 
-export function extraMove(e: PointerEvent, t: Extra): void {
-  if (t.kind === 'pinch') {
+export function extraMove(event: PointerEvent, extra: Extra): void {
+  if (extra.kind === 'pinch') {
     movePinch();
     stage.redraw();
     return;
   }
-  if (t.kind === 'wavepinch') {
+  if (extra.kind === 'wavepinch') {
     moveWave();
     stage.redraw();
     return;
   }
-  if (t.kind === 'slider') {
-    scene.setSlider(t.index, e.offsetX * dpr());
+  if (extra.kind === 'slider') {
+    scene.setSlider(extra.index, event.offsetX * dpr());
     stage.redraw();
     return;
   }
-  if (t.kind === 'block') {
-    const [gx, gy] = stage.cssToGrid(e.offsetX, e.offsetY),
-      b = model.get(t.id);
-    const x = Math.round(gx - t.grabX),
-      y = Math.round(gy - t.grabY);
+  if (extra.kind === 'block') {
+    const [gx, gy] = stage.cssToGrid(event.offsetX, event.offsetY),
+      b = model.get(extra.id);
+    const x = Math.round(gx - extra.grabX),
+      y = Math.round(gy - extra.grabY);
     if (b && (x !== b.x || y !== b.y)) {
-      moveBlock(t.id, x, y);
+      moveBlock(extra.id, x, y);
       stage.redraw();
     }
   }
 }
 
 export function extraUp(id: number): void {
-  const t = extras.get(id);
+  const extra = extras.get(id);
   extras.delete(id);
-  if (!t) return;
-  if (t.kind === 'pinch') endPinch();
-  if (t.kind === 'wavepinch') endWavePinch();
-  if (t.kind === 'block') {
-    stage.held.delete(t.id);
-    if (model.has(t.id)) {
-      send([{ type: CommandType.Press, id: t.id, value: 0 }]);
-      recordMove([t.id], new Map([[t.id, t.from]]));
+  if (!extra) return;
+  if (extra.kind === 'pinch') endPinch();
+  if (extra.kind === 'wavepinch') endWavePinch();
+  if (extra.kind === 'block') {
+    stage.held.delete(extra.id);
+    if (model.has(extra.id)) {
+      send([{ type: CommandType.Press, id: extra.id, value: 0 }]);
+      recordMove([extra.id], new Map([[extra.id, extra.from]]));
     }
   }
   stage.redraw();

@@ -39,7 +39,7 @@ type PatchesHost = SceneHostPart<
   | 'share'
 >;
 
-/** Plugin: signed in (SHARING-0011) the account's patches come first, then its files and presets. */
+/** Plugin: signed in (SHARING-0011), the account's patches first, then files and presets. */
 async function pluginPatchList(): Promise<PatchItem[]> {
   return [
     ...(appKey() ? await accountItems() : []),
@@ -52,7 +52,7 @@ async function pluginPatchList(): Promise<PatchItem[]> {
   ];
 }
 
-/** Web (owner, 2026-11-18): the account's patches once each, then this browser's copies not among them. */
+/** Web: the account's patches once each, then this browser's copies not among them. */
 async function webPatchList(): Promise<PatchItem[]> {
   const accountPatches = await accountItems();
   const accountIds = new Set(accountPatches.map((item) => item.key.slice(5)));
@@ -157,11 +157,13 @@ const share: PatchesHost['share'] = async (mode, title, gallery) => {
 
 export function patchesHost(): PatchesHost {
   return {
-    // OPEN lists only the user's own patches on the web: the presets are @blokdust's gallery EXAMPLES.
+    // OPEN lists only the user's own patches on the web; presets are @blokdust's gallery EXAMPLES.
     listPatches: () => (juce ? pluginPatchList() : webPatchList()),
     savePatch: (title) => savePatchFile(title),
     openPatch: (item, mode) => openPatchItem(item.key, mode),
-    pickPatchFile: () => pickPatchFile(),
+    pickPatchFile: () => {
+      pickPatchFile();
+    },
     usePickedFile: (mode) => {
       if (!picked) return;
       const file = picked;

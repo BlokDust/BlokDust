@@ -75,9 +75,9 @@ export function init(): void {
     /** Labels on the stage (CHG-0020) and where each is, in css px (tests). */
     get labels() {
       const m = stage.metrics;
-      return labels.map((l) => {
-        const r = labelRect(measure, m, l);
-        return { ...l, cx: (r.x + r.w / 2) / m.dpr, cy: (r.y + r.h / 2) / m.dpr };
+      return labels.map((label) => {
+        const r = labelRect(measure, m, label);
+        return { ...label, cx: (r.x + r.w / 2) / m.dpr, cy: (r.y + r.h / 2) / m.dpr };
       });
     },
     /** Laser beams drawn now (a beam through a Prism is several, CHG-0015). */
@@ -144,14 +144,14 @@ export function init(): void {
     /** Offline render of the patch as loaded here (model + attached samples) with the WASM engine on the main thread:
      * same patch + same samples → same hash, in any browser session (CHG-0003 acceptance: share → identical render). */
     async renderHash(seconds = 4, sampleRate = 48000) {
-      const e = WasmEngine.fromModule(await engineModule(), sampleRate, seed);
+      const engine = WasmEngine.fromModule(await engineModule(), sampleRate, seed);
       try {
-        for (const c of engineCommands()) e.push(c);
+        for (const command of engineCommands()) engine.push(command);
         const frames = Math.round(seconds * sampleRate),
           l = new Float32Array(frames),
           r = new Float32Array(frames);
         for (let at = 0; at < frames; at += 128) {
-          const out = e.process(Math.min(128, frames - at));
+          const out = engine.process(Math.min(128, frames - at));
           l.set(out.left, at);
           r.set(out.right, at);
           // Blocks exist after the first quantum (commands apply at its first tick); samples attach then, as in the
@@ -159,7 +159,7 @@ export function init(): void {
           if (at === 0)
             for (const [id, buf] of samples)
               if (model.has(id))
-                e.attachSample(
+                engine.attachSample(
                   id,
                   buf.getChannelData(0),
                   buf.numberOfChannels > 1 ? buf.getChannelData(1) : undefined,
@@ -172,7 +172,7 @@ export function init(): void {
                 for (const [uid, buf] of innerSamples.get(b.uid) ?? []) {
                   const iid = innerIds.get(b.uid)?.ids[uid];
                   if (iid !== undefined)
-                    e.attachSample(
+                    engine.attachSample(
                       iid,
                       buf.getChannelData(0),
                       buf.numberOfChannels > 1 ? buf.getChannelData(1) : undefined,
@@ -185,7 +185,7 @@ export function init(): void {
         for (let i = 0; i < frames; i++) peak = Math.max(peak, Math.abs(l[i]), Math.abs(r[i]));
         return { hash: hex(hashStereo(hashAudio(l), hashAudio(r))), peak };
       } finally {
-        e.dispose();
+        engine.dispose();
       }
     },
     /** The stage's corners (tests): a patch's credit and who is signed in, with their centres in css px. */
@@ -226,7 +226,7 @@ export function init(): void {
     },
     get samples() {
       return [...model]
-        .filter(([, b]) => BLOCKS_BY_ID.get(b.type)?.params.some((q) => q.key === 'track'))
+        .filter(([, b]) => BLOCKS_BY_ID.get(b.type)?.params.some((param) => param.key === 'track'))
         .map(([id, b]) => ({
           id,
           uid: b.uid,

@@ -12,15 +12,15 @@ import { missing, samples, setParams } from './userSamples.ts';
 
 // ---- fx.convolver: the built-in impulse response's waveform (v1 showed its loaded response) ----
 export async function showBuiltInImpulse(id: number): Promise<void> {
-  const v = v1Blocks.get(id);
-  if (!v || samples.has(id)) return;
+  const v1Block = v1Blocks.get(id);
+  if (!v1Block || samples.has(id)) return;
   const { left, right } = defaultImpulse(await engineModule(), 48000);
   const buf = new AudioBuffer({ numberOfChannels: 2, length: left.length, sampleRate: 48000 });
   buf.copyToChannel(left as Float32Array<ArrayBuffer>, 0);
   buf.copyToChannel(right as Float32Array<ArrayBuffer>, 1);
   if (!samples.has(id)) {
-    v._WaveForm = new Waveform().GetWaveformFromBuffer(buf, 200, 5, 95);
-    v.RefreshOptionsPanel();
+    v1Block._WaveForm = new Waveform().GetWaveformFromBuffer(buf, 200, 5, 95);
+    v1Block.RefreshOptionsPanel();
   }
 }
 
@@ -37,7 +37,7 @@ export async function useSample(
 ): Promise<void> {
   const buffer = await new OfflineAudioContext(1, 1, 48000).decodeAudioData(bytes);
   const b = model.get(id),
-    v = v1Blocks.get(id);
+    v1Block = v1Blocks.get(id);
   if (!b) return;
   if (ref.provider === 'file') ref.durationSec = Math.round(buffer.duration * 1000) / 1000;
   if (fresh)
@@ -69,7 +69,7 @@ export async function useSample(
           permalink: b.params.permalink ?? shown.permalink,
         };
   Object.assign(b.params, meta);
-  if (v) Object.assign(v.Params, meta);
+  if (v1Block) Object.assign(v1Block.Params, meta);
   changed();
   if (b.type === 'source.granular' || b.type === 'fx.convolver') {
     // Granular: the LOCATION slider draws the file and the grains play it. Convolver: the impulse response (v1 SetBuffer).
@@ -77,10 +77,10 @@ export async function useSample(
     // the file (v1 GetDuration of its first buffer), so the spawn and spread lines and dragging work.
     if (b.type === 'source.granular' && (fresh || typeof b.params.region !== 'number'))
       setParams(id, { region: buffer.duration * 0.5 });
-    if (v) {
-      v.PrimaryBuffer = buffer;
-      v._WaveForm = new Waveform().GetWaveformFromBuffer(buffer, 200, 5, 95);
-      v.RefreshOptionsPanel();
+    if (v1Block) {
+      v1Block.PrimaryBuffer = buffer;
+      v1Block._WaveForm = new Waveform().GetWaveformFromBuffer(buffer, 200, 5, 95);
+      v1Block.RefreshOptionsPanel();
     }
     sendSample(id, buffer); // Granular plays it (CHG-0004 3.8); Convolver uses it as the impulse response
     stage.redraw();
@@ -100,11 +100,11 @@ export async function useSample(
     });
   else if (typeof b.params.endPosition !== 'number' || b.params.endPosition <= 0)
     setParams(id, { startPosition: 0, endPosition: dur, loopStart: dur * 0.5, loopEnd: dur });
-  if (v) {
-    v.PrimaryBuffer = buffer;
+  if (v1Block) {
+    v1Block.PrimaryBuffer = buffer;
     const wave = new Waveform().GetWaveformFromBuffer(buffer, 200, 5, 95); // v1 SamplerBase
-    v.WaveForm = b.params.reverse ? wave.reverse() : wave; // v1 shows the reversed buffer's waveform
-    v.RefreshOptionsPanel();
+    v1Block.WaveForm = b.params.reverse ? wave.reverse() : wave; // v1 shows the reversed buffer's waveform
+    v1Block.RefreshOptionsPanel();
   }
   sendSample(id, buffer);
   stage.redraw();

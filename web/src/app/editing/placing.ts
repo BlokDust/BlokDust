@@ -46,7 +46,7 @@ export function endPlacing(cancel: boolean): void {
     const uids = new Set(placing.ids.map((id) => model.get(id)?.uid));
     for (const id of placing.ids) removeBlock(id);
     const top = undoStack.at(-1);
-    if (top?.kind === 'add' && top.uids.every((u) => uids.has(u))) undoStack.pop();
+    if (top?.kind === 'add' && top.uids.every((uid) => uids.has(uid))) undoStack.pop();
   }
   placing = null;
   stage.placing = new Set();

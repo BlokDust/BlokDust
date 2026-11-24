@@ -9,13 +9,23 @@ import { samples, useBuffer } from '../samples/userSamples.ts';
  * Alt-drag copies), moving and deleting them, each one step however many blocks it took. Steps name blocks by
  * their patch id, which a block keeps when undo or redo brings it back; a removed block is kept whole (settings,
  * place, its sound). A new action clears what could be redone. Param changes are not steps. */
-export type XY = { x: number; y: number };
+export interface XY {
+  x: number;
+  y: number;
+}
 
-export type Snap = { b: ModelBlock; buf?: AudioBuffer };
+export interface Snap {
+  b: ModelBlock;
+  buf?: AudioBuffer;
+}
 
 // Labels (owner, 2026-11-14) are in the same steps, by label id: made (with the blocks made), removed (kept whole) and
 // moved. Their words are not steps (as params are not).
-export type LabelMove = { id: string; from: XY; to: XY };
+export interface LabelMove {
+  id: string;
+  from: XY;
+  to: XY;
+}
 
 export type UndoStep =
   | { kind: 'add'; uids: string[]; snaps?: Snap[]; labels?: string[]; labelSnaps?: Label[] }
@@ -25,9 +35,9 @@ export type UndoStep =
 export const undoStack: UndoStep[] = [],
   redoStack: UndoStep[] = [];
 
-export const pushUndo = (u: UndoStep) => {
-  if (u.kind === 'add' && countActivity) activity.blockAdded(u.uids.length);
-  undoStack.push(u);
+export const pushUndo = (step: UndoStep) => {
+  if (step.kind === 'add' && countActivity) activity.blockAdded(step.uids.length);
+  undoStack.push(step);
   if (undoStack.length > 100) undoStack.shift();
   redoStack.length = 0;
 };
@@ -49,13 +59,13 @@ export const snapOf = (uid: string): Snap | null => {
   return b ? { b: structuredClone(b), buf: samples.get(id!) } : null;
 };
 
-export function restore(s: Snap): void {
+export function restore(snap: Snap): void {
   const id = addBlock(
-    s.b.type,
-    s.b.x,
-    s.b.y,
-    structuredClone(s.b.params),
-    idOfUid(s.b.uid) === undefined ? s.b.uid : undefined,
+    snap.b.type,
+    snap.b.x,
+    snap.b.y,
+    structuredClone(snap.b.params),
+    idOfUid(snap.b.uid) === undefined ? snap.b.uid : undefined,
   );
-  if (s.buf && s.b.type !== 'source.sample-gen') useBuffer(id, s.buf, 'keep');
+  if (snap.buf && snap.b.type !== 'source.sample-gen') useBuffer(id, snap.buf, 'keep');
 }

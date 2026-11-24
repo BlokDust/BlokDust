@@ -1,17 +1,42 @@
 // The Pixi application and the stage it draws.
 import { Application } from 'pixi.js';
+import { loadV1Fonts } from '../../chrome/v1Chrome.ts';
 import { Stage } from '../../stage/Stage.ts';
 import { fitToWindow } from '../fitWindow.ts';
-import { loadV1Fonts } from '../../chrome/v1Chrome.ts';
 import { theme } from './theme.ts';
 
-export let app!: Application<import('pixi.js').Renderer>;
-
+export let app!: Application;
 export let stage!: Stage;
+
+function stageElement(): HTMLElement {
+  const element = document.getElementById('stage');
+  if (!element) throw new Error('BlokDust: the page has no #stage element');
+  return element;
+}
+
+/** Touches on the stage are BlokDust's: no long-press magnifier, double-tap or page zoom. */
+function keepTouchesForTheStage(element: HTMLElement): void {
+  // iOS starts those on touchstart, which cancelling pointerdown doesn't stop (Funputs #45).
+  element.addEventListener(
+    'touchstart',
+    (event) => {
+      if (event.cancelable) event.preventDefault();
+    },
+    { passive: false },
+  );
+  // Two fingers are the stage's pinch zoom (CHG-0005 task 8); older iOS zooms the page on gestures.
+  element.addEventListener(
+    'gesturestart',
+    (event) => {
+      event.preventDefault();
+    },
+    { passive: false },
+  );
+}
 
 export async function init(): Promise<void> {
   app = new Application();
-  // Transparent: the static stage is an on-page Canvas2D layer behind Pixi (Stage 'canvas' renderer, UI-0005).
+  // Transparent: the static stage is a Canvas2D layer behind Pixi (UI-0005).
   await app.init({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -21,23 +46,10 @@ export async function init(): Promise<void> {
     background: 0x000000,
     backgroundAlpha: 0,
   });
-  document.getElementById('stage')!.appendChild(app.canvas);
+  const element = stageElement();
+  element.appendChild(app.canvas);
   fitToWindow(app);
-  // iOS Safari's long-press magnifier and double-tap recognisers run on the touch stream, under Pointer Events:
-  // cancelling pointerdown does not stop them, cancelling touchstart does (Funputs #45). Only the stage: text
-  // fields and menus keep their defaults. The stage is driven by pointer events alone, so nothing is lost.
-  document.getElementById('stage')!.addEventListener(
-    'touchstart',
-    (e) => {
-      if (e.cancelable) e.preventDefault();
-    },
-    { passive: false },
-  );
-  // Two fingers on the stage are BlokDust's pinch zoom (CHG-0005 task 8), not Safari's page zoom (its gesture events
-  // bypass touch-action on older iOS).
-  document.getElementById('stage')!.addEventListener('gesturestart', (e) => e.preventDefault(), {
-    passive: false,
-  } as AddEventListenerOptions);
+  keepTouchesForTheStage(element);
   stage = new Stage(app, theme);
   stage.setTheme(theme);
   await loadV1Fonts();

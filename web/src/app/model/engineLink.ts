@@ -1,5 +1,5 @@
 // Commands to the engine (or the plugin's processor) for the world on show.
-import { EngineNode } from '../../audio/engineNode.ts';
+import type { EngineNode } from '../../audio/engineNode.ts';
 import { type Command } from '../../engine/wasmEngine.ts';
 import { juce } from '../boot/page.ts';
 import { inside } from './stageWorlds.ts';
@@ -20,7 +20,7 @@ export let sendRaw = (cmds: Command[]) => engine?.send(cmds);
 
 /** Commands for the world on screen: inside a Stage, they go to its inner world. */
 export const send = (cmds: Command[]) =>
-  sendRaw(inside ? cmds.map((c) => ({ ...c, stage: inside!.stageId })) : cmds);
+  sendRaw(inside ? cmds.map((command) => ({ ...command, stage: inside!.stageId })) : cmds);
 
 /** Which world the snapshots come from: Stage block `id`'s inner world, or 0 for the outer one (the plugin: its
  * processor, CHG-0038). */

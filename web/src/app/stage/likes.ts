@@ -53,8 +53,8 @@ export function wantLike(id: string, liked: boolean, likes: number): void {
     likeWish.delete(id);
     if (r) showLike(id, r.liked, r.likes);
     else {
-      const p = await loadShared(id).catch(() => null);
-      if (p) showLike(id, !!p.liked, p.likes ?? 0);
+      const loadedPatch = await loadShared(id).catch(() => null);
+      if (loadedPatch) showLike(id, !!loadedPatch.liked, loadedPatch.likes ?? 0);
     }
   })();
 }

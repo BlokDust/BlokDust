@@ -1,7 +1,6 @@
-// Embed player chrome (SHARING-0002).
 import { track, flushAnalytics } from '../../analytics/client.ts';
 
-/** Embed player chrome (SHARING-0002): a play overlay and a link to the full app. Plain DOM over the stage. */
+// Embed player chrome (SHARING-0002): a play overlay and a link to the full app, over the stage.
 export function setupEmbedChrome(id: string, title: string): void {
   const base =
     document.querySelector<HTMLMetaElement>('meta[name="blokdust-base"]')?.content ??

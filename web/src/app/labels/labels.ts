@@ -56,20 +56,20 @@ export const readLabels = (list: unknown): Label[] =>
 
 /** Add labels, giving each an id no other label has. */
 export function addLabels(list: Label[]): void {
-  for (const l of list) {
-    let id = l.id;
+  for (const label of list) {
+    let id = label.id;
     for (let k = 1; labels.some((x) => x.id === id); k++) id = `l${labels.length + k}`;
-    labels.push({ ...l, id });
+    labels.push({ ...label, id });
   }
 }
 
 /** A new label from the menu: it follows the pointer until that lifts, then opens for typing. */
 export function newLabel(gx: number, gy: number): void {
   addLabels([{ id: `l${labels.length + 1}`, text: 'LABEL', x: gx, y: gy }]);
-  const l = labels[labels.length - 1];
-  pushUndo({ kind: 'add', uids: [], labels: [l.id] });
+  const label = labels[labels.length - 1];
+  pushUndo({ kind: 'add', uids: [], labels: [label.id] });
   labelDrag = {
-    id: l.id,
+    id: label.id,
     pointer: primaryId ?? -1,
     grabX: 0,
     grabY: 0,
@@ -81,23 +81,23 @@ export function newLabel(gx: number, gy: number): void {
   labelsChanged();
 }
 
-export function moveLabel(e: PointerEvent): void {
-  const l = labels.find((x) => x.id === labelDrag!.id);
-  if (!l) return;
+export function moveLabel(event: PointerEvent): void {
+  const label = labels.find((x) => x.id === labelDrag!.id);
+  if (!label) return;
   if (
     !labelDrag!.moved &&
-    Math.hypot(e.offsetX - labelDrag!.downX, e.offsetY - labelDrag!.downY) > STILL_PX
+    Math.hypot(event.offsetX - labelDrag!.downX, event.offsetY - labelDrag!.downY) > STILL_PX
   )
     labelDrag!.moved = true;
   if (!labelDrag!.moved) return;
-  const [gx, gy] = stage.cssToGrid(e.offsetX, e.offsetY);
+  const [gx, gy] = stage.cssToGrid(event.offsetX, event.offsetY);
   if (labelDrag!.group) {
-    const dx = Math.round(gx - labelDrag!.grabX - l.x),
-      dy = Math.round(gy - labelDrag!.grabY - l.y);
+    const dx = Math.round(gx - labelDrag!.grabX - label.x),
+      dy = Math.round(gy - labelDrag!.grabY - label.y);
     if (dx || dy) {
-      for (const o of selLabels()) {
-        o.x += dx;
-        o.y += dy;
+      for (const label of selLabels()) {
+        label.x += dx;
+        label.y += dy;
       }
       for (const id of labelDrag!.group.keys()) {
         const b = model.get(id);
@@ -107,8 +107,8 @@ export function moveLabel(e: PointerEvent): void {
     stage.redraw();
     return;
   }
-  l.x = Math.round((gx - labelDrag!.grabX) * 2) / 2;
-  l.y = Math.round((gy - labelDrag!.grabY) * 2) / 2; // half cells: tidy, but free enough
+  label.x = Math.round((gx - labelDrag!.grabX) * 2) / 2;
+  label.y = Math.round((gy - labelDrag!.grabY) * 2) / 2; // half cells: tidy, but free enough
   stage.redraw();
 }
 
@@ -116,14 +116,14 @@ export function moveLabel(e: PointerEvent): void {
  * leaves it as it was. */
 export function editLabel(id: string): void {
   endLabelEdit(true);
-  const l = labels.find((x) => x.id === id);
-  if (!l) return;
+  const label = labels.find((x) => x.id === id);
+  if (!label) return;
   const m = stage.metrics,
-    r = labelRect(measure, m, l),
+    r = labelRect(measure, m, label),
     input = document.createElement('input');
   input.id = 'labelEdit';
   input.type = 'text';
-  input.value = l.text;
+  input.value = label.text;
   input.maxLength = 200;
   input.spellcheck = false;
   // iOS zooms the page into any text field under 16 px: the field is 16 px, scaled down to the label's size.
@@ -135,12 +135,14 @@ export function editLabel(id: string): void {
   input.style.cssText =
     `position:fixed;left:${r.textX / m.dpr}px;top:${r.y / m.dpr}px;height:${h / k}px;width:${w / k}px;transform:scale(${k});transform-origin:0 0;` +
     `font:${font.replace(/[\d.]+px/, `${px / k}px`)};color:${theme.colors[theme.roles.txt]};background:transparent;border:none;outline:none;padding:0;margin:0;text-transform:uppercase;z-index:5;`;
-  input.addEventListener('keydown', (e) => {
-    e.stopPropagation();
-    if (e.key === 'Enter') endLabelEdit(true);
-    else if (e.key === 'Escape') endLabelEdit(false);
+  input.addEventListener('keydown', (event) => {
+    event.stopPropagation();
+    if (event.key === 'Enter') endLabelEdit(true);
+    else if (event.key === 'Escape') endLabelEdit(false);
   });
-  input.addEventListener('blur', () => endLabelEdit(true));
+  input.addEventListener('blur', () => {
+    endLabelEdit(true);
+  });
   document.body.appendChild(input);
   labelEdit = { id, input };
   input.focus();
@@ -153,12 +155,12 @@ export function endLabelEdit(keep: boolean): void {
   const e = labelEdit;
   if (!e) return;
   labelEdit = null;
-  const l = labels.find((x) => x.id === e.id),
+  const label = labels.find((x) => x.id === e.id),
     text = e.input.value.trim();
   e.input.remove();
   if (window.scrollX || window.scrollY) window.scrollTo(0, 0); // iOS scrolls the page to show the field above its keyboard
-  if (l && keep) {
-    if (text) l.text = text;
+  if (label && keep) {
+    if (text) label.text = text;
     else {
       // no words: the label goes. Just made: its add step goes too; else this is a removal to undo.
       const top = undoStack[undoStack.length - 1];
@@ -166,12 +168,12 @@ export function endLabelEdit(keep: boolean): void {
         top?.kind === 'add' &&
         !top.uids.length &&
         top.labels?.length === 1 &&
-        top.labels[0] === l.id
+        top.labels[0] === label.id
       )
         undoStack.pop();
-      else pushUndo({ kind: 'remove', snaps: [], labels: [{ ...l }] });
-      labels.splice(labels.indexOf(l), 1);
-      selectedLabels.delete(l.id);
+      else pushUndo({ kind: 'remove', snaps: [], labels: [{ ...label }] });
+      labels.splice(labels.indexOf(label), 1);
+      selectedLabels.delete(label.id);
     }
     labelsChanged();
   }

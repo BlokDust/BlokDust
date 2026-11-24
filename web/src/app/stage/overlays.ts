@@ -42,8 +42,8 @@ export function init(): void {
       ctx.globalAlpha = 0.5;
       ctx.setLineDash([4 * m.unit, 3 * m.unit]);
       ctx.beginPath();
-      for (const l of selLabels()) {
-        const r = labelRect(measure, m, l);
+      for (const label of selLabels()) {
+        const r = labelRect(measure, m, label);
         ctx.rect(r.x, r.y, r.w, r.h);
       }
       ctx.stroke();
@@ -62,7 +62,7 @@ export function init(): void {
           blockY: inside.blockY,
           grid: inside.grid,
           layers: BLOCKS_BY_ID.get('source.stage')!.geometry.layers.filter(
-            (l) => l.units !== 'unit',
+            (layer) => layer.units !== 'unit',
           ),
         },
         theme.colors,
@@ -79,13 +79,13 @@ export function init(): void {
     setMakeStageAt(null);
     if (offerMakeStage()) {
       const m = stage.metrics,
-        h = scene.Header as unknown as { Height: number; Rows?: number };
+        header = scene.Header as unknown as { Height: number; Rows?: number };
       // Its top-right place is under the SIGNED IN AS line (that line's baseline is 22 units under the header).
-      const headerBottom = h.Height * (h.Rows ?? 1) * m.unit,
+      const headerBottom = header.Height * (header.Rows ?? 1) * m.unit,
         top = headerBottom + 32 * m.unit;
       let sel: Rect | null = stage.selectedBounds();
-      for (const l of selLabels()) {
-        const r = labelRect(measure, m, l);
+      for (const label of selLabels()) {
+        const r = labelRect(measure, m, label);
         sel = sel
           ? {
               x0: Math.min(sel.x0, r.x),

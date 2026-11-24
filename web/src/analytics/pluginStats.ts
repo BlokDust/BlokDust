@@ -1,10 +1,11 @@
 // Settings › About's usage stats switch in the plugins (SPEC-SHARING-USAGE-ANALYTICS R7): the install's choice, kept by
 // the processor in a file every BlokDust on the machine shares (on iPad: the app and its extensions). The page reads it
 // as a plugin value (usageStats, asked again on each focus return) and sets it with bd_analytics.
-import type { Bridge, PluginValuesClient } from '../app/pluginValues.ts';
+import type { JuceBackend } from '../app/plugin/juceBackend.ts';
+import type { PluginValuesClient } from '../app/pluginValues.ts';
 
 export function pluginUsageStats(
-  juce: Bridge,
+  juce: JuceBackend,
   values: PluginValuesClient,
   changed: () => void,
 ): { get(): boolean; set(on: boolean): void } {

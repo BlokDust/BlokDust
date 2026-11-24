@@ -16,13 +16,19 @@ export const withoutLogic = (blocks: Patch['blocks']) =>
       : b,
   );
 
-export const contentOf = (p: Patch) =>
+export const contentOf = (patch: Patch) =>
   JSON.stringify([
-    withoutLogic(p.blocks),
-    p.tempo ?? null,
-    ...(p.labels?.length || p.macros?.length ? [p.labels ?? []] : []),
-    ...(p.macros?.length
-      ? [p.macros.map((m) => ({ ...m, blocks: withoutLogic(m.blocks), view: undefined }))]
+    withoutLogic(patch.blocks),
+    patch.tempo ?? null,
+    ...(patch.labels?.length || patch.macros?.length ? [patch.labels ?? []] : []),
+    ...(patch.macros?.length
+      ? [
+          patch.macros.map((macro) => ({
+            ...macro,
+            blocks: withoutLogic(macro.blocks),
+            view: undefined,
+          })),
+        ]
       : []),
   ]);
 

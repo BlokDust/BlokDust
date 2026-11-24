@@ -45,8 +45,8 @@ export const INSIDE_HIDDEN = new Set(['Stage']),
 
 export const insideFrame = () => {
   const m = stage.metrics,
-    h = scene.Header as unknown as { Height: number; Rows?: number };
-  return frameFor(m.width, m.height, m.unit, h.Height * (h.Rows ?? 1) * m.unit, {
+    header = scene.Header as unknown as { Height: number; Rows?: number };
+  return frameFor(m.width, m.height, m.unit, header.Height * (header.Rows ?? 1) * m.unit, {
     x: inside!.blockX,
     y: inside!.blockY,
   });
@@ -172,8 +172,8 @@ export function leaveStage(keep: boolean): void {
       starPos: b.type === 'power.void' ? starPos(id) : undefined,
     });
   }
-  for (const [id, v] of o.v1Blocks) v1Blocks.set(id, v);
-  for (const [id, s] of o.samples) samples.set(id, s);
+  for (const [id, v1Block] of o.v1Blocks) v1Blocks.set(id, v1Block);
+  for (const [id, buffer] of o.samples) samples.set(id, buffer);
   for (const id of o.missing) missing.add(id);
   labels.push(...o.labels);
   setConnectionOrder(o.connectionOrder);

@@ -13,12 +13,12 @@ export let patchReq = 0;
 export const nativeReply = <T>(send: (req: number) => void, wait = 10000): Promise<T | null> =>
   new Promise((res) => {
     const req = ++patchReq,
-      t = setTimeout(() => {
+      timeout = setTimeout(() => {
         pendingReplies.delete(req);
         res(null);
       }, wait);
     pendingReplies.set(req, (v) => {
-      clearTimeout(t);
+      clearTimeout(timeout);
       res(v as T);
     });
     send(req);
@@ -31,7 +31,9 @@ export const savedOn = (ms: number) =>
 
 export async function nativePatches() {
   const r = await nativeReply<{ items: { name: string; path: string; modified: number }[] }>(
-    (req) => juce!.emitEvent('bd_patchList', { req }),
+    (req) => {
+      juce!.emitEvent('bd_patchList', { req });
+    },
   );
   return (r?.items ?? []).map((i) => ({
     name: i.name,

@@ -16,7 +16,7 @@ export type LinkWay = NonNullable<PatchesHost['links']>;
 /** Made once each, so a page holding one keeps it. */
 export const linkWays: { plugin?: LinkWay; web?: LinkWay } = {};
 
-/** iPad: the share menu sends the link itself, the patch inside it (owner, 2026-11-16, CHG-0025). */
+/** iPad: the share menu sends the link itself, the patch inside it (CHG-0025). */
 function shareFromIpad(link: string, title: string): void {
   const at = scene.PatchesPanel.centreOf('share'); // the menu points at the button
   juce?.emitEvent('bd_share', {

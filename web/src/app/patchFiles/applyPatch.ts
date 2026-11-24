@@ -99,10 +99,11 @@ export function applyPatch(
       sendRaw([{ type: CommandType.Tempo, id: 0, value: tempo, x: -1 }]);
     }
   }
-  for (const [k, r] of Object.entries(part.refs))
-    if (r && typeof r === 'object' && 'provider' in r && !refs.has(k)) refs.set(k, r as SampleRef);
-  for (const m of readMacros(mode === 'open' ? p.macros : 'macros' in part ? part.macros : []))
-    macros.set(m.block, m); // before their Stage blocks are added
+  for (const [k, value] of Object.entries(part.refs))
+    if (value && typeof value === 'object' && 'provider' in value && !refs.has(k))
+      refs.set(k, value as SampleRef);
+  for (const macro of readMacros(mode === 'open' ? p.macros : 'macros' in part ? part.macros : []))
+    macros.set(macro.block, macro); // before their Stage blocks are added
   const ids = part.blocks.map((b) => addBlock(b.type, b.x ?? 0, b.y ?? 0, b.params ?? {}, b.id));
   // Lineage (SPEC-PATCH-FORMAT-V2 R11): opening keeps the patch's sources; inserting adds the inserted patch (when it is a saved one) and
   // carries its own sources, under the blocks' new ids.
@@ -111,9 +112,9 @@ export function applyPatch(
     const kept = p.blocks.filter((b) => BLOCKS_BY_ID.has(b.type)),
       now = new Map(kept.map((b, i) => [b.id, part.blocks[i]?.id]));
     const moved = (bs: string[]) => bs.map((b) => now.get(b)).filter((b): b is string => !!b);
-    for (const s of readSources(p.sources)) {
-      const bs = moved(s.blocks);
-      if (bs.length) sources.push({ ...s, blocks: bs });
+    for (const source of readSources(p.sources)) {
+      const bs = moved(source.blocks);
+      if (bs.length) sources.push({ ...source, blocks: bs });
     }
     if (from)
       sources.push({
@@ -136,19 +137,20 @@ export function applyPatch(
 /** INSERT with a Stage open (owner, 2026-11-20; it replaced the Stage panel's LOAD PATCH): the patch's blocks go inside
  * it, placed like any insert; its Stage blocks stay out (one level). Added as blocks put down inside are, so the
  * plugins' processor hears of them the same way. */
-export function insertInStage(p: Patch): void {
+export function insertInStage(patch: Patch): void {
   const touch = lastPointerType !== 'mouse',
     at = !touch && lastPointer ? lastPointer : viewCentre();
   const fits = (t: string) =>
     BLOCKS_BY_ID.has(t) && !INSIDE_HIDDEN.has(BLOCKS_BY_ID.get(t)!.menuId);
   const part = insertBlocks(
-    { ...p, blocks: p.blocks.filter((b) => fits(b.type)), macros: [] },
+    { ...patch, blocks: patch.blocks.filter((b) => fits(b.type)), macros: [] },
     new Set([...model.values()].map((b) => b.uid)),
     at,
   );
   endPlacing(false);
-  for (const [k, r] of Object.entries(part.refs))
-    if (r && typeof r === 'object' && 'provider' in r && !refs.has(k)) refs.set(k, r as SampleRef);
+  for (const [k, value] of Object.entries(part.refs))
+    if (value && typeof value === 'object' && 'provider' in value && !refs.has(k))
+      refs.set(k, value as SampleRef);
   const ids = part.blocks.map((b) => addBlock(b.type, b.x ?? 0, b.y ?? 0, b.params ?? {}, b.id));
   addLabels(readLabels(part.labels));
   startPlacing(ids, touch, at);

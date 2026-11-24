@@ -12,7 +12,12 @@ export const MINE_KEY = 'blokdust.myPatches',
   MINE_MAX = 100;
 
 /** `id`: its link, when it was saved to one (so the account's copy of it is listed once). */
-export type Mine = { title: string; saved: number; patch: Patch; id?: string };
+export interface Mine {
+  title: string;
+  saved: number;
+  patch: Patch;
+  id?: string;
+}
 
 export function myPatches(): Mine[] {
   try {
@@ -32,7 +37,7 @@ export function keepMine(title: string, id?: string): void {
       patch: { ...toPatch(), meta: { title } } as Patch,
       ...(id ? { id } : {}),
     },
-    ...myPatches().filter((m) => m.title !== title),
+    ...myPatches().filter((mine) => mine.title !== title),
   ].slice(0, MINE_MAX);
   // Full: drop the oldest until it fits (the browser's limit, not ours).
   for (;;) {

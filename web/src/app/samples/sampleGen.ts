@@ -14,14 +14,14 @@ import { samples, useBuffer } from './userSamples.ts';
 export const soundMade = new Map<number, number>();
 
 export function generateSample(id: number, fromSeed: boolean): void {
-  const v = v1Blocks.get(id);
-  if (!v) return;
-  v.WaveForm = [];
-  v.RefreshOptionsPanel();
-  const sound = Number(v.Params.sound) || 0;
+  const v1Block = v1Blocks.get(id);
+  if (!v1Block) return;
+  v1Block.WaveForm = [];
+  v1Block.RefreshOptionsPanel();
+  const sound = Number(v1Block.Params.sound) || 0;
   if (sound) soundMade.set(id, sound);
   const ctx = Object.assign(Object.create(SAMPLE_GEN), {
-    Params: v.Params,
+    Params: v1Block.Params,
     _LoadFromShare: fromSeed && !sound,
     _SeedLoad: true,
     _WaveVoices: [] as unknown[],
@@ -32,7 +32,7 @@ export function generateSample(id: number, fromSeed: boolean): void {
       buf.copyToChannel(data, 0);
       const b = model.get(id);
       if (b) {
-        b.params.seed = v.Params.seed;
+        b.params.seed = v1Block.Params.seed;
         changed();
       }
       useBuffer(id, buf, fromSeed ? 'keep' : 'reset');
@@ -44,7 +44,10 @@ export function generateSample(id: number, fromSeed: boolean): void {
 /** v1 SampleGen for a block that is not on show (inside a Stage): its saved recipe, or a new one kept in `params`. */
 export function generateBuffer(params: Record<string, unknown>): Promise<AudioBuffer> {
   const def = BLOCKS_BY_ID.get('source.sample-gen')!;
-  const Params = { ...Object.fromEntries(def.params.map((q) => [q.key, q.default])), ...params };
+  const Params = {
+    ...Object.fromEntries(def.params.map((param) => [param.key, param.default])),
+    ...params,
+  };
   return new Promise((res) => {
     const sound = Number(Params.sound) || 0;
     const ctx = Object.assign(Object.create(SAMPLE_GEN), {
@@ -71,17 +74,17 @@ export function generateBuffer(params: Record<string, unknown>): Promise<AudioBu
 /** A block's audio as it was (looking into a Stage): shown in its panel, not sent (the engine has it). */
 export function showBuffer(id: number, buffer: AudioBuffer): void {
   const b = model.get(id),
-    v = v1Blocks.get(id);
+    v1Block = v1Blocks.get(id);
   if (!b) return;
   samples.set(id, buffer);
-  if (!v) return;
+  if (!v1Block) return;
   const wave = new Waveform().GetWaveformFromBuffer(
     buffer,
     200,
     b.type === 'source.recorder' ? 2 : 5,
     95,
   );
-  v.PrimaryBuffer = buffer;
-  if (b.type === 'source.granular' || b.type === 'fx.convolver') v._WaveForm = wave;
-  else v.WaveForm = b.params.reverse ? wave.reverse() : wave;
+  v1Block.PrimaryBuffer = buffer;
+  if (b.type === 'source.granular' || b.type === 'fx.convolver') v1Block._WaveForm = wave;
+  else v1Block.WaveForm = b.params.reverse ? wave.reverse() : wave;
 }

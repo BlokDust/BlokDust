@@ -37,18 +37,18 @@ export async function savePatchFile(title: string): Promise<boolean> {
           { description: 'BlokDust patch', accept: { 'application/json': [`.${PATCH_EXT}`] } },
         ],
       });
-    } catch (e) {
-      if ((e as DOMException)?.name === 'AbortError') return false; // cancelled
-      console.warn('BlokDust: no save dialog; downloading instead', e);
+    } catch (error) {
+      if ((error as DOMException)?.name === 'AbortError') return false; // cancelled
+      console.warn('BlokDust: no save dialog; downloading instead', error);
       return download(name, text, title);
     }
     try {
       const out = await handle.createWritable();
       await out.write(text);
       await out.close();
-    } catch (e) {
+    } catch (error) {
       track('save_failed', { kind: 'file' });
-      throw e;
+      throw error;
     }
     setBaseline();
     keepMine(title);
@@ -65,7 +65,9 @@ export function download(name: string, text: string, title: string): boolean {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  setTimeout(() => {
+    URL.revokeObjectURL(a.href);
+  }, 1000);
   setBaseline();
   keepMine(title);
   track('patch_saved', { kind: 'file' }, { blocks: model.size });

@@ -1,6 +1,6 @@
 // What is inside each Stage block (CHG-0021): macros, ids and audio per inner world.
 import { type Macro, type PatchBlock, loadPatch } from '../../patch/loadPatch.ts';
-import { V1Block } from '../../v1ui/blocks.ts';
+import type { V1Block } from '../../v1ui/blocks.ts';
 import { type Label } from '../../stage/labels.ts';
 import { type Command, CommandType } from '../../engine/wasmEngine.ts';
 import { BLOCKS_BY_ID } from '../../generated/blocks.gen.ts';
@@ -101,27 +101,29 @@ export const innerMacro = (): Macro => {
     block: inside!.stageUid,
     blocks: w.blocks,
     ...(w.order.length ? { connectionOrder: w.order } : {}),
-    ...(w.labels.length ? { labels: w.labels.map((l) => ({ ...l })) } : {}),
+    ...(w.labels.length ? { labels: w.labels.map((label) => ({ ...label })) } : {}),
     view: currentView(),
   };
 };
 
 /** Engine commands that build what is inside Stage block `id` (patch id `uid`), remembering its inner blocks' ids. */
 export function stageCommands(id: number, uid: string): Command[] {
-  const m = macros.get(uid),
-    blocks = (m?.blocks ?? []).filter((b) => BLOCKS_BY_ID.has(b.type));
+  const macro = macros.get(uid),
+    blocks = (macro?.blocks ?? []).filter((b) => BLOCKS_BY_ID.has(b.type));
   if (!blocks.length) return [];
   try {
-    const loaded = loadPatch({ blocks, connectionOrder: m!.connectionOrder });
+    const loaded = loadPatch({ blocks, connectionOrder: macro!.connectionOrder });
     innerIds.set(uid, { ids: Object.fromEntries(loaded.ids), nextId: loaded.nextId });
-    const keyOf = new Map([...loaded.ids].map(([k, v]) => [v, k])); // the plugin keeps the inner blocks' patch ids
-    return loaded.commands.map((c) => ({
-      ...c,
+    const keyOf = new Map([...loaded.ids].map(([k, value]) => [value, k])); // the plugin keeps the inner blocks' patch ids
+    return loaded.commands.map((command) => ({
+      ...command,
       stage: id,
-      ...(c.type === CommandType.AddBlock && keyOf.has(c.id) ? { key: keyOf.get(c.id) } : {}),
+      ...(command.type === CommandType.AddBlock && keyOf.has(command.id)
+        ? { key: keyOf.get(command.id) }
+        : {}),
     }));
-  } catch (e) {
-    console.warn('BlokDust: a Stage block could not be filled', e);
+  } catch (error) {
+    console.warn('BlokDust: a Stage block could not be filled', error);
     return [];
   }
 }
@@ -136,22 +138,22 @@ export function buildStage(id: number, uid: string): void {
 /** Audio for the samplers inside Stage block `id`: what was loaded already, else from their references (a sound, a
  * remembered file, a SampleGen's recipe). Runs from outside; looking in shows the same audio (enterStage). */
 export async function fillStageSamples(id: number, uid: string): Promise<void> {
-  const m = macros.get(uid),
+  const macro = macros.get(uid),
     ids = innerIds.get(uid)?.ids;
-  if (juce || !engine || !m || !ids) return;
+  if (juce || !engine || !macro || !ids) return;
   const build = (stageBuilds.get(uid) ?? 0) + 1;
   stageBuilds.set(uid, build);
   const audio = innerSamples.get(uid) ?? new Map<string, AudioBuffer>();
   innerSamples.set(uid, audio);
-  if (m.blocks.some((b) => needsInput(b.type))) listen();
+  if (macro.blocks.some((b) => needsInput(b.type))) listen();
   await Promise.all(
-    m.blocks.map(async (blk) => {
+    macro.blocks.map(async (blk) => {
       const iid = blk.id === undefined ? undefined : ids[blk.id];
       if (iid === undefined || blk.id === undefined) return;
       const buf =
         audio.get(blk.id) ??
-        (await innerBuffer(blk).catch((e) => {
-          console.warn('BlokDust: a sampler inside a Stage has no audio', e);
+        (await innerBuffer(blk).catch((error) => {
+          console.warn('BlokDust: a sampler inside a Stage has no audio', error);
           return null;
         }));
       if (!buf || stageBuilds.get(uid) !== build) return; // the Stage was built again meanwhile
@@ -166,7 +168,8 @@ export async function innerBuffer(blk: PatchBlock): Promise<AudioBuffer | null> 
   const p = (blk.params ??= {});
   if (blk.type === 'source.sample-gen') return generateBuffer(p);
   if (!SAMPLERS.has(blk.type)) return null;
-  const t = p.track ?? BLOCKS_BY_ID.get(blk.type)?.params.find((q) => q.key === 'track')?.default;
+  const t =
+    p.track ?? BLOCKS_BY_ID.get(blk.type)?.params.find((param) => param.key === 'track')?.default;
   let bytes: ArrayBuffer | null = null;
   if (isDeadDefault(t)) {
     const d = DEFAULT_SOUNDS[blk.type];

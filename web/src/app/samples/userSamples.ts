@@ -26,18 +26,18 @@ export const missing = new Set<number>();
 
 /** v1 App.AnimationsLayer.AddToList / RemoveFromList: the spinning loading bubble beside a block while its audio loads. */
 export async function whileLoading<T>(id: number, work: () => Promise<T>): Promise<T> {
-  const v = v1Blocks.get(id);
-  if (v) {
-    scene.AnimationsLayer.AddToList(v);
-    v.RefreshOptionsPanel('animate');
+  const v1Block = v1Blocks.get(id);
+  if (v1Block) {
+    scene.AnimationsLayer.AddToList(v1Block);
+    v1Block.RefreshOptionsPanel('animate');
     stage.redraw();
   }
   try {
     return await work();
   } finally {
-    if (v) {
-      scene.AnimationsLayer.RemoveFromList(v);
-      if (scene.OptionsPanel.SelectedBlock === v) v.RefreshOptionsPanel();
+    if (v1Block) {
+      scene.AnimationsLayer.RemoveFromList(v1Block);
+      if (scene.OptionsPanel.SelectedBlock === v1Block) v1Block.RefreshOptionsPanel();
       stage.redraw();
     }
   }
@@ -52,11 +52,10 @@ export const SAMPLERS = new Set(['source.sample', 'source.granular', 'fx.convolv
  */
 export function reverseSample(id: number, on: boolean): void {
   const b = model.get(id),
-    v = v1Blocks.get(id),
-    dur = samples.get(id)?.duration ?? v?.PrimaryBuffer?.duration;
+    v1Block = v1Blocks.get(id),
+    dur = samples.get(id)?.duration ?? v1Block?.PrimaryBuffer?.duration;
   if (!b || !!b.params.reverse === on) return;
-  const num = (k: string, d: number) =>
-    typeof b.params[k] === 'number' ? (b.params[k] as number) : d;
+  const num = (k: string, d: number) => (typeof b.params[k] === 'number' ? b.params[k] : d);
   const mirrored = dur
     ? {
         startPosition: dur - num('endPosition', dur),
@@ -66,9 +65,9 @@ export function reverseSample(id: number, on: boolean): void {
       }
     : {};
   setParams(id, { ...mirrored, reverse: on });
-  if (v) {
-    v.WaveForm = [...v.WaveForm].reverse();
-    v.RefreshOptionsPanel();
+  if (v1Block) {
+    v1Block.WaveForm = [...v1Block.WaveForm].reverse();
+    v1Block.RefreshOptionsPanel();
   }
   stage.redraw();
 }
@@ -83,9 +82,9 @@ export async function pickSample(id: number): Promise<void> {
     ref = typeof t === 'string' ? refs.get(t) : undefined;
   // A missing remembered file: this click is the user gesture the browser needs to allow reading it again.
   if (missing.has(id) && ref?.provider === 'file' && ref.hash) {
-    const f = await openRemembered(ref.hash, true);
-    if (f) {
-      await useFile(id, f, null, false);
+    const file = await openRemembered(ref.hash, true);
+    if (file) {
+      await useFile(id, file, null, false);
       return;
     }
   }
@@ -115,17 +114,17 @@ export async function useFile(
  * so, and the reference stays in the patch until the user picks another sample. */
 export function markMissing(id: number): void {
   const b = model.get(id),
-    v = v1Blocks.get(id),
+    v1Block = v1Blocks.get(id),
     t = b?.params.track;
-  if (!b || !v || typeof t !== 'string') return;
+  if (!b || !v1Block || typeof t !== 'string') return;
   missing.add(id);
   const ref = refs.get(t);
   const name = ref?.provider === 'freesound' ? ref.name : (ref?.name ?? t.replace(/^file:/, ''));
-  Object.assign(v.Params, {
+  Object.assign(v1Block.Params, {
     trackName: `MISSING · ${name.toUpperCase().slice(0, 24)}`,
     user: ref?.provider === 'freesound' ? 'Freesound' : 'Local file',
   });
-  v.RefreshOptionsPanel();
+  v1Block.RefreshOptionsPanel();
 }
 
 /** The Convolver only uses its impulse response's first kMaxImpulseSeconds (engine config.hpp): download just that. */
@@ -141,7 +140,8 @@ export async function resolveSample(id: number, isNew = false): Promise<void> {
   const b = model.get(id);
   if (!b || !SAMPLERS.has(b.type) || samples.has(id)) return;
   const t =
-    b.params.track ?? BLOCKS_BY_ID.get(b.type)?.params.find((q) => q.key === 'track')?.default;
+    b.params.track ??
+    BLOCKS_BY_ID.get(b.type)?.params.find((param) => param.key === 'track')?.default;
   if (isDeadDefault(t)) {
     // v2's default sound (DEFAULT_SOUNDS) for a new block, or one still on v1's default (v1 import, Phase 1 patch).
     const d = DEFAULT_SOUNDS[b.type];
@@ -152,8 +152,8 @@ export async function resolveSample(id: number, isNew = false): Promise<void> {
       // Something else was chosen meanwhile (a file, a search result): it wins.
       if (samples.has(id) || !model.has(id) || !isDeadDefault(model.get(id)!.params.track)) return;
       await useSample(id, ref, bytes, isNew);
-    } catch (e) {
-      console.warn('BlokDust: default sound unavailable', e);
+    } catch (error) {
+      console.warn('BlokDust: default sound unavailable', error);
     }
     return;
   }
@@ -168,14 +168,15 @@ export async function resolveSample(id: number, isNew = false): Promise<void> {
       await whileLoading(id, async () =>
         useSample(id, ref, await fetchFreesound(ref, maxSecondsFor(id)), false),
       );
-    } catch (e) {
-      console.warn('BlokDust: Freesound sound unavailable', e);
+    } catch (error) {
+      console.warn('BlokDust: Freesound sound unavailable', error);
       markMissing(id);
     }
   } else if (t.startsWith('file:')) {
-    const f = ref?.provider === 'file' && ref.hash ? await openRemembered(ref.hash, false) : null;
-    if (f && ref?.provider === 'file')
-      await whileLoading(id, async () => useSample(id, ref, await f.arrayBuffer(), false));
+    const file =
+      ref?.provider === 'file' && ref.hash ? await openRemembered(ref.hash, false) : null;
+    if (file && ref?.provider === 'file')
+      await whileLoading(id, async () => useSample(id, ref, await file.arrayBuffer(), false));
     else markMissing(id);
   }
 }
@@ -183,14 +184,14 @@ export async function resolveSample(id: number, isNew = false): Promise<void> {
 /** Update params in the model, the v1 block and the engine (numbers and switches only reach the engine). */
 export function setParams(id: number, values: Record<string, unknown>): void {
   const b = model.get(id),
-    v = v1Blocks.get(id),
+    v1Block = v1Blocks.get(id),
     def = b && BLOCKS_BY_ID.get(b.type);
   if (!b || !def) return;
   Object.assign(b.params, values);
-  if (v) Object.assign(v.Params, values);
+  if (v1Block) Object.assign(v1Block.Params, values);
   send(
     Object.entries(values).flatMap(([k, val]) => {
-      const i = def.params.findIndex((q) => q.key === k);
+      const i = def.params.findIndex((param) => param.key === k);
       return i >= 0 && (typeof val === 'number' || typeof val === 'boolean')
         ? [{ type: CommandType.SetParam, id, param: i, value: Number(val) }]
         : [];
@@ -217,7 +218,7 @@ export function useBuffer(
     return;
   }
   samples.set(id, buffer);
-  const v = v1Blocks.get(id),
+  const v1Block = v1Blocks.get(id),
     dur = buffer.duration;
   if (region === 'reset')
     setParams(id, {
@@ -229,10 +230,10 @@ export function useBuffer(
     });
   if (region === 'half')
     setParams(id, { startPosition: 0, endPosition: dur, loopStart: dur * 0.5, loopEnd: dur });
-  if (v) {
-    v.PrimaryBuffer = buffer;
-    v.WaveForm = new Waveform().GetWaveformFromBuffer(buffer, 200, waveDetail, 95);
-    v.RefreshOptionsPanel();
+  if (v1Block) {
+    v1Block.PrimaryBuffer = buffer;
+    v1Block.WaveForm = new Waveform().GetWaveformFromBuffer(buffer, 200, waveDetail, 95);
+    v1Block.RefreshOptionsPanel();
   }
   sendSample(id, buffer);
   stage.redraw();
