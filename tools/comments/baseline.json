@@ -1,0 +1,829 @@
+{
+  "CMakeLists.txt": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "cmake/BlokdustWarnings.cmake": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "engine/CMakeLists.txt": {
+    "comment-line-length": 1
+  },
+  "engine/include/blokdust/config.hpp": {
+    "comment-block-lines": 2
+  },
+  "engine/include/blokdust/connections.hpp": {
+    "comment-block-lines": 1
+  },
+  "engine/include/blokdust/convolver.hpp": {
+    "comment-block-lines": 3
+  },
+  "engine/include/blokdust/dmath.hpp": {
+    "comment-block-lines": 1
+  },
+  "engine/include/blokdust/dsp.hpp": {
+    "comment-block-lines": 5
+  },
+  "engine/include/blokdust/effects.hpp": {
+    "comment-block-lines": 15,
+    "comment-line-length": 6
+  },
+  "engine/include/blokdust/engine.hpp": {
+    "comment-block-lines": 18
+  },
+  "engine/include/blokdust/geometry.hpp": {
+    "comment-block-lines": 1
+  },
+  "engine/include/blokdust/hash.hpp": {
+    "comment-block-lines": 1
+  },
+  "engine/include/blokdust/mpe.hpp": {
+    "comment-block-lines": 3
+  },
+  "engine/include/blokdust/realtime.hpp": {
+    "comment-block-lines": 1
+  },
+  "engine/include/blokdust/tablebank.hpp": {
+    "comment-block-lines": 2
+  },
+  "engine/include/blokdust/test_signal.hpp": {
+    "comment-block-lines": 1
+  },
+  "engine/include/blokdust/wavetable.hpp": {
+    "comment-block-lines": 2
+  },
+  "engine/include/blokdust/world.hpp": {
+    "comment-block-lines": 3
+  },
+  "engine/patch/include/blokdust/patch_loader.hpp": {
+    "comment-block-lines": 2
+  },
+  "engine/patch/src/patch_loader.cpp": {
+    "comment-block-lines": 3
+  },
+  "engine/src/connections.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/src/engine.cpp": {
+    "comment-block-lines": 2
+  },
+  "engine/src/engine_arrange.cpp": {
+    "comment-block-lines": 4,
+    "comment-line-length": 2
+  },
+  "engine/src/engine_commands.cpp": {
+    "comment-block-lines": 6,
+    "comment-line-length": 2
+  },
+  "engine/src/engine_granular.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/src/engine_hits.cpp": {
+    "comment-block-lines": 8,
+    "comment-line-length": 2
+  },
+  "engine/src/engine_notes.cpp": {
+    "comment-block-lines": 8
+  },
+  "engine/src/engine_render.cpp": {
+    "comment-block-lines": 8,
+    "comment-line-length": 2
+  },
+  "engine/src/engine_tick.cpp": {
+    "comment-block-lines": 6
+  },
+  "engine/src/engine_voices.cpp": {
+    "comment-block-lines": 2
+  },
+  "engine/src/tablebank.cpp": {
+    "comment-block-lines": 3
+  },
+  "engine/src/wavetable.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/tests/test_audio_graph.cpp": {
+    "comment-block-lines": 2
+  },
+  "engine/tests/test_controllers.cpp": {
+    "comment-block-lines": 4
+  },
+  "engine/tests/test_emitter_hit.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/tests/test_ftz.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/tests/test_mpe.cpp": {
+    "comment-block-lines": 3
+  },
+  "engine/tests/test_mpe_parser.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/tests/test_review_fixes.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/tests/test_sound_laser.cpp": {
+    "comment-block-lines": 2
+  },
+  "engine/tests/test_stage.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/tests/test_tempo.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/tests/test_world_power.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/tools/render/main.cpp": {
+    "comment-block-lines": 2
+  },
+  "engine/wasm/bindings.cpp": {
+    "comment-block-lines": 3
+  },
+  "plugin/CMakeLists.txt": {
+    "comment-block-lines": 4,
+    "comment-line-length": 35
+  },
+  "plugin/src/AccountStore.h": {
+    "comment-block-lines": 1
+  },
+  "plugin/src/EditorSend.cpp": {
+    "comment-block-lines": 3
+  },
+  "plugin/src/PatchFiles.cpp": {
+    "comment-block-lines": 1
+  },
+  "plugin/src/PatchFiles.h": {
+    "comment-block-lines": 3
+  },
+  "plugin/src/PluginEditor.cpp": {
+    "comment-block-lines": 5,
+    "comment-line-length": 1
+  },
+  "plugin/src/PluginEditor.h": {
+    "comment-block-lines": 2
+  },
+  "plugin/src/PluginProcessor.cpp": {
+    "comment-block-lines": 8
+  },
+  "plugin/src/PluginProcessor.h": {
+    "comment-block-lines": 13
+  },
+  "plugin/src/Samples.cpp": {
+    "comment-block-lines": 1
+  },
+  "plugin/src/Samples.h": {
+    "comment-block-lines": 3
+  },
+  "plugin/src/StageWorlds.h": {
+    "comment-block-lines": 3
+  },
+  "plugin/src/Telemetry.cpp": {
+    "comment-block-lines": 3
+  },
+  "plugin/src/Telemetry.h": {
+    "comment-block-lines": 2
+  },
+  "plugin/src/WebViewDrops.cpp": {
+    "comment-block-lines": 1
+  },
+  "plugin/src/WebViewDrops.h": {
+    "comment-block-lines": 4
+  },
+  "plugin/src/WebViewDrops.mm": {
+    "comment-block-lines": 1
+  },
+  "plugin/src/ios/ContainerApp.mm": {
+    "comment-block-lines": 2
+  },
+  "plugin/src/ios/NativeSignIn.h": {
+    "comment-block-lines": 1
+  },
+  "plugin/tests/host_render.cpp": {
+    "comment-block-lines": 3
+  },
+  "plugin/tests/ios-host/main.mm": {
+    "comment-block-lines": 3
+  },
+  "server/src/activity.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 2
+  },
+  "server/src/admin.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "server/src/analytics.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 8
+  },
+  "server/src/analyticsQueries.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "server/src/auth/account.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 10
+  },
+  "server/src/auth/appKeys.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 10
+  },
+  "server/src/auth/apple.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "server/src/auth/google.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "server/src/auth/native.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 8
+  },
+  "server/src/auth/newAccounts.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "server/src/auth/oauth.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 7
+  },
+  "server/src/auth/passkey.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 9
+  },
+  "server/src/auth/session.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 8
+  },
+  "server/src/env.ts": {
+    "comment-line-length": 12
+  },
+  "server/src/events.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "server/src/freesound.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "server/src/gallery.ts": {
+    "comment-block-lines": 3,
+    "comment-line-length": 16
+  },
+  "server/src/http.ts": {
+    "comment-line-length": 2
+  },
+  "server/src/index.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 17
+  },
+  "server/src/moderation.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "server/src/pages.ts": {
+    "comment-line-length": 7
+  },
+  "server/src/patches.ts": {
+    "comment-line-length": 18
+  },
+  "server/src/stats.ts": {
+    "comment-line-length": 5
+  },
+  "server/src/support.ts": {
+    "comment-line-length": 2
+  },
+  "server/src/turnstile.ts": {
+    "comment-line-length": 1
+  },
+  "shared/support.ts": {
+    "comment-line-length": 5
+  },
+  "tests/e2e/accounts.ts": {
+    "comment-block-lines": 8,
+    "comment-line-length": 58
+  },
+  "tests/e2e/analytics.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 6
+  },
+  "tests/e2e/build-and-hear.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 6
+  },
+  "tests/e2e/gallery.ts": {
+    "comment-line-length": 22
+  },
+  "tests/e2e/library-smoke.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 2
+  },
+  "tests/e2e/mock-services.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 11
+  },
+  "tests/e2e/new-blocks.ts": {
+    "comment-block-lines": 3,
+    "comment-line-length": 22
+  },
+  "tests/e2e/new-blocks/harness.ts": {
+    "comment-line-length": 2
+  },
+  "tests/e2e/new-blocks/labels.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "tests/e2e/new-blocks/stage-play.ts": {
+    "comment-line-length": 9
+  },
+  "tests/e2e/new-blocks/stage.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 9
+  },
+  "tests/e2e/sharing.ts": {
+    "comment-block-lines": 5,
+    "comment-line-length": 38
+  },
+  "tests/e2e/stage-e2e.ts": {
+    "comment-line-length": 4
+  },
+  "tests/e2e/support-plugin.ts": {
+    "comment-line-length": 3
+  },
+  "tests/e2e/support.ts": {
+    "comment-line-length": 5
+  },
+  "tests/e2e/ui-regressions.ts": {
+    "comment-block-lines": 54,
+    "comment-line-length": 290
+  },
+  "tests/e2e/ui-regressions/display.ts": {
+    "comment-line-length": 6
+  },
+  "tests/e2e/ui-regressions/tour.ts": {
+    "comment-line-length": 2
+  },
+  "tests/e2e/ui-regressions/wav.ts": {
+    "comment-line-length": 1
+  },
+  "tests/e2e/ui-regressions/waveform.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 15
+  },
+  "tests/e2e/video.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 15
+  },
+  "tests/e2e/worklet-golden.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 2
+  },
+  "tests/mpe/make-golden.ts": {
+    "comment-line-length": 2
+  },
+  "tests/mpe/run.ts": {
+    "comment-line-length": 1
+  },
+  "tools/analytics/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 3
+  },
+  "tools/audio/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 8
+  },
+  "tools/block-designer/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 3
+  },
+  "tools/ci/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 6
+  },
+  "tools/codegen/index.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 5
+  },
+  "tools/comments/collect.ts": {
+    "comment-line-length": 1
+  },
+  "tools/comments/index.ts": {
+    "comment-block-lines": 1
+  },
+  "tools/comments/rules.ts": {
+    "comment-line-length": 1
+  },
+  "tools/comments/scan.ts": {
+    "comment-line-length": 1
+  },
+  "tools/gallery/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 13
+  },
+  "tools/lib/audio-descriptors.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 9
+  },
+  "tools/lib/local-config.ts": {
+    "comment-line-length": 2
+  },
+  "tools/lib/pre-commit-hook.ts": {
+    "comment-line-length": 1
+  },
+  "tools/lib/wav.ts": {
+    "comment-line-length": 1
+  },
+  "tools/lint/baseline.ts": {
+    "comment-line-length": 1
+  },
+  "tools/lint/clang-tidy.ts": {
+    "comment-line-length": 1
+  },
+  "tools/lint/cxx.ts": {
+    "comment-line-length": 1
+  },
+  "tools/lint/index.ts": {
+    "comment-block-lines": 1
+  },
+  "tools/new/index.ts": {
+    "comment-line-length": 1
+  },
+  "tools/patches/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 3
+  },
+  "tools/patches/migrate.ts": {
+    "comment-line-length": 9
+  },
+  "tools/perf/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "tools/plugin/index.ts": {
+    "comment-block-lines": 4,
+    "comment-line-length": 59
+  },
+  "tools/plugin/ios-device.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 11
+  },
+  "tools/plugin/ios-release.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 11
+  },
+  "tools/plugin/ios.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 32
+  },
+  "tools/plugin/web.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "tools/privacy/privacy.test.ts": {
+    "comment-line-length": 1
+  },
+  "tools/release/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 12
+  },
+  "tools/release/tag.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "tools/render/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 2
+  },
+  "tools/server/config.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 8
+  },
+  "tools/server/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 16
+  },
+  "tools/server/lib.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 6
+  },
+  "tools/size/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 6
+  },
+  "tools/ui/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 14
+  },
+  "tools/v1/audio.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 13
+  },
+  "tools/v1/capture.ts": {
+    "comment-line-length": 2
+  },
+  "tools/v1/extract.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 6
+  },
+  "tools/v1/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "tools/v1/lib.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 10
+  },
+  "tools/v1/port-ui.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 26
+  },
+  "tools/v1/verify.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "tools/visual/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "tools/wasm/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 3
+  },
+  "tools/win-vm/vm.sh": {
+    "comment-block-lines": 2,
+    "comment-line-length": 2
+  },
+  "tools/win/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 8
+  },
+  "web/index.html": {
+    "comment-line-length": 1
+  },
+  "web/src/account/activity.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "web/src/account/appKey.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 3
+  },
+  "web/src/account/client.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 11
+  },
+  "web/src/account/device.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 3
+  },
+  "web/src/analytics/client.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 9
+  },
+  "web/src/analytics/pluginStats.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 2
+  },
+  "web/src/analytics/sentry.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 6
+  },
+  "web/src/app/darkTheme.ts": {
+    "comment-line-length": 1
+  },
+  "web/src/app/fitWindow.ts": {
+    "comment-line-length": 1
+  },
+  "web/src/app/focus.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 3
+  },
+  "web/src/app/main.ts": {
+    "comment-block-lines": 43,
+    "comment-line-length": 325
+  },
+  "web/src/app/pluginValues.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 3
+  },
+  "web/src/app/startPatch.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 7
+  },
+  "web/src/audio/engineNode.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 8
+  },
+  "web/src/audio/processor.ts": {
+    "comment-line-length": 3
+  },
+  "web/src/audio/protocol.ts": {
+    "comment-line-length": 4
+  },
+  "web/src/audio/session.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "web/src/chrome/v1Chrome.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 7
+  },
+  "web/src/engine/wasmEngine.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 11
+  },
+  "web/src/gallery/client.ts": {
+    "comment-line-length": 1
+  },
+  "web/src/golden.ts": {
+    "comment-line-length": 1
+  },
+  "web/src/input/keys.ts": {
+    "comment-line-length": 9
+  },
+  "web/src/input/mpe.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 6
+  },
+  "web/src/main.ts": {
+    "comment-line-length": 1
+  },
+  "web/src/patch/files.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 5
+  },
+  "web/src/patch/importV1.ts": {
+    "comment-line-length": 1
+  },
+  "web/src/patch/loadPatch.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 15
+  },
+  "web/src/patch/samples.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 11
+  },
+  "web/src/patch/server.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 14
+  },
+  "web/src/patch/share.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 6
+  },
+  "web/src/patch/site.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "web/src/patch/webInputs.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 2
+  },
+  "web/src/render/bakeBlock.ts": {
+    "comment-line-length": 6
+  },
+  "web/src/render/flatLayers.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 13
+  },
+  "web/src/stage/Stage.ts": {
+    "comment-block-lines": 4,
+    "comment-line-length": 33
+  },
+  "web/src/stage/connectionRoute.ts": {
+    "comment-line-length": 1
+  },
+  "web/src/stage/drawWorld.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 8
+  },
+  "web/src/stage/frameBlocks.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "web/src/stage/insideView.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 12
+  },
+  "web/src/stage/labels.ts": {
+    "comment-line-length": 4
+  },
+  "web/src/stage/makeStageButton.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 10
+  },
+  "web/src/stage/metrics.ts": {
+    "comment-line-length": 4
+  },
+  "web/src/stage/ring.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 3
+  },
+  "web/src/stage/starPos.ts": {
+    "comment-line-length": 1
+  },
+  "web/src/support/client.ts": {
+    "comment-line-length": 1
+  },
+  "web/src/support/diagnostics.ts": {
+    "comment-line-length": 1
+  },
+  "web/src/support/panel.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 14
+  },
+  "web/src/support/support.css": {
+    "comment-line-length": 1
+  },
+  "web/src/v1ui/accountPage.ts": {
+    "comment-block-lines": 4,
+    "comment-line-length": 58
+  },
+  "web/src/v1ui/adsrPanel.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 11
+  },
+  "web/src/v1ui/blocks.ts": {
+    "comment-block-lines": 4,
+    "comment-line-length": 40
+  },
+  "web/src/v1ui/filterPanel.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 10
+  },
+  "web/src/v1ui/newBlockRows.ts": {
+    "comment-block-lines": 3,
+    "comment-line-length": 20
+  },
+  "web/src/v1ui/newBlocks.ts": {
+    "comment-block-lines": 3,
+    "comment-line-length": 35
+  },
+  "web/src/v1ui/noteBars.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 8
+  },
+  "web/src/v1ui/patches.ts": {
+    "comment-block-lines": 15,
+    "comment-line-length": 143
+  },
+  "web/src/v1ui/scene.ts": {
+    "comment-block-lines": 17,
+    "comment-line-length": 132
+  },
+  "web/src/v1ui/selectorOption.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "web/src/v1ui/shim.ts": {
+    "comment-block-lines": 4,
+    "comment-line-length": 21
+  },
+  "web/src/v1ui/touchpadPanel.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 15
+  },
+  "web/src/v1ui/tutorial.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 9
+  },
+  "web/src/v1ui/waveZoom.ts": {
+    "comment-block-lines": 3,
+    "comment-line-length": 29
+  },
+  "web/src/version.ts": {
+    "comment-line-length": 1
+  },
+  "web/src/video/frame.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 8
+  },
+  "web/src/video/length.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "web/src/video/makeVideo.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 6
+  },
+  "web/src/video/replay.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 9
+  },
+  "web/src/video/share.ts": {
+    "comment-line-length": 2
+  },
+  "web/src/video/sources.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 2
+  },
+  "web/src/visual.ts": {
+    "comment-line-length": 6
+  },
+  "web/vite.config.ts": {
+    "comment-line-length": 4
+  }
+}

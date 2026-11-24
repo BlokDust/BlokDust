@@ -1,13 +1,15 @@
 // bd lint (CHG-0045): type checks, ESLint, formatting, comments and C++ checks in one command.
 //   pnpm bd lint [--staged] [--only eslint,typecheck] [--fix]
-//   pnpm bd lint baseline     record today's findings (eslint-suppressions.json, clang-tidy-baseline.json)
+//   pnpm bd lint baseline     record today's ESLint, comment and clang-tidy findings as baselines
 //   pnpm bd lint prune        lower the baselines to what is found now (never raises them)
 //   pnpm bd lint setup        install the pinned clang-format and clang-tidy into .cache (uv)
 //   pnpm bd lint install      install the pre-commit hook (bd size + bd lint --staged)
 import { installPreCommitHook } from '../lib/pre-commit-hook.ts';
 import { runCommand, type CheckOutcome, type LintCheck } from './check.ts';
+import { COMMENTS_BASELINE, collectCommentFindings } from '../comments/collect.ts';
 import { pruneBaseline, recordBaseline } from './baseline.ts';
 import { CLANG_TIDY_BASELINE, clangTidy, collectClangTidyFindings } from './clang-tidy.ts';
+import { comments } from './comments.ts';
 import { clangFormat, setUpLlvmTools } from './cxx.ts';
 import { eslint, prettier, typecheck } from './typescript.ts';
 import { selectFiles } from './files.ts';
@@ -20,7 +22,7 @@ const valueAfter = (flag: string) => {
   return index === -1 ? undefined : args[index + 1];
 };
 
-const ALL_CHECKS: LintCheck[] = [typecheck, prettier, eslint, clangFormat, clangTidy];
+const ALL_CHECKS: LintCheck[] = [typecheck, prettier, eslint, comments, clangFormat, clangTidy];
 const ESLINT = 'node_modules/.bin/eslint';
 const ESLINT_TS_CONFIG_FLAG = ['--flag', 'unstable_native_nodejs_ts_config'];
 
@@ -51,8 +53,14 @@ async function updateBaselines(mode: 'record' | 'prune'): Promise<boolean> {
   const eslintOk = runCommand(ESLINT, [...ESLINT_TS_CONFIG_FLAG, eslintFlag, '.']);
   const everything = selectFiles(false);
   const tidyFindings = await collectClangTidyFindings(everything);
-  if (mode === 'record') recordBaseline(CLANG_TIDY_BASELINE, tidyFindings);
-  else pruneBaseline(CLANG_TIDY_BASELINE, tidyFindings, everything.files);
+  const commentFindings = collectCommentFindings(everything.files);
+  if (mode === 'record') {
+    recordBaseline(CLANG_TIDY_BASELINE, tidyFindings);
+    recordBaseline(COMMENTS_BASELINE, commentFindings);
+  } else {
+    pruneBaseline(CLANG_TIDY_BASELINE, tidyFindings, everything.files);
+    pruneBaseline(COMMENTS_BASELINE, commentFindings, everything.files);
+  }
   return eslintOk;
 }
 
