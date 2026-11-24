@@ -36,10 +36,8 @@ const FIXTURES = ['tests/golden/emitter-tone.json', 'tests/golden/toggle-pulse.j
 const SAMPLE_FIXTURE = 'tests/golden/samples/sample-file.json';
 const SMALL_VIEW = [480, 320]; // an AUM-sized plugin window (task 8): screenshot only, for review
 const APP_GROUP = 'group.com.funputs.blokdust'; // plugin/CMakeLists.txt BLOKDUST_APP_GROUP
-const SHARED = /storage: app group, 1 patches/;
 // Usage stats (SPEC-SHARING-USAGE-ANALYTICS R8): one switch and one install id per iPad, in the App Group. The test turns
 // the switch off there; the app and the extension must both read it.
-const STATS_OFF = /usage stats: app group, off/;
 const STATS_FILE = 'usage-stats.settings';
 // …and a page coming back into focus asks once for a change made elsewhere (owner, iPad: switched off in GarageBand,
 // the app, still running, said on).
@@ -48,7 +46,7 @@ const STATS_ASKED = /values: usageStats=1/;
 const extensionLines = (log: string) => {
   const pids = new Set(
     [...log.matchAll(/BlokDust\[(\d+):[^\]]*\].*instrument: processor created \(AUv3/g)].map(
-      (m) => m[1],
+      (match) => match[1],
     ),
   );
   return log
@@ -135,9 +133,9 @@ function simulator(): { udid: string; name: string } {
   return d;
 }
 
-const logTime = (d: Date) => {
+const logTime = (date: Date) => {
   const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  return `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())} ${p(date.getHours())}:${p(date.getMinutes())}:${p(date.getSeconds())}`;
 };
 
 const appLog = (udid: string, since: Date, subsystem = 'com.funputs.blokdust') =>
@@ -170,7 +168,7 @@ function waitForLog(
   let log = '';
   for (let i = 0; i < seconds; ++i) {
     log = appLog(udid, since, subsystem);
-    if (patterns.every((p) => p.test(log))) break;
+    if (patterns.every((pattern) => pattern.test(log))) break;
     sleep(1000);
   }
   return log;
@@ -236,9 +234,13 @@ function appCheck(udid: string, group: string) {
         ),
     );
   const privacyManifest = [APP, APPEX, FX_APPEX].every((b) => {
-    const r = run('plutil', ['-convert', 'json', '-o', '-', `${b}/PrivacyInfo.xcprivacy`], true);
+    const result = run(
+      'plutil',
+      ['-convert', 'json', '-o', '-', `${b}/PrivacyInfo.xcprivacy`],
+      true,
+    );
     try {
-      return r.status === 0 && JSON.parse(r.stdout).NSPrivacyTracking === false;
+      return result.status === 0 && JSON.parse(result.stdout).NSPrivacyTracking === false;
     } catch {
       return false;
     }
@@ -260,7 +262,9 @@ function appCheck(udid: string, group: string) {
   // To the background (another app in front): the app saves its patch. Then a fresh launch must restore it.
   const t2 = new Date(Date.now() - 1000);
   run('xcrun', ['simctl', 'launch', udid, 'com.apple.Preferences'], true);
-  const saved = /container: patch saved/.test(waitForLog(udid, t2, [/container: patch saved/], 20));
+  const saved = waitForLog(udid, t2, [/container: patch saved/], 20).includes(
+    'container: patch saved',
+  );
   // Meanwhile another BlokDust switches usage stats on; the same app process, back in front, asks exactly once.
   writeFileSync(resolve(group, STATS_FILE), statsFile(true));
   const t4 = new Date();
@@ -270,19 +274,19 @@ function appCheck(udid: string, group: string) {
   sleep(2000);
   const again = appLog(udid, t4);
   const usageStatsFollows =
-    again.split('values: usageStats=1').length === 2 && !/processor created/.test(back);
+    again.split('values: usageStats=1').length === 2 && !back.includes('processor created');
   writeFileSync(resolve(group, STATS_FILE), statsFile(false));
   run('xcrun', ['simctl', 'terminate', udid, 'com.apple.Preferences'], true);
   run('xcrun', ['simctl', 'terminate', udid, APP_ID], true);
   const t3 = new Date(Date.now() - 1000);
   must(run('xcrun', ['simctl', 'launch', udid, APP_ID], true), 'relaunch BlokDust.app');
   const log3 = waitForLog(udid, t3, [/container: patch restored/, /page: ready, \d+ blocks/], 60);
-  const restored = /container: patch restored/.test(log3);
+  const restored = log3.includes('container: patch restored');
   const readyAgain = Number(/page: ready, (-?\d+) blocks/.exec(log3)?.[1] ?? -1);
   run('xcrun', ['simctl', 'terminate', udid, APP_ID], true);
 
-  const sharedFolder = SHARED.test(log1);
-  const usageStatsShared = STATS_OFF.test(log1);
+  const sharedFolder = log1.includes('storage: app group, 1 patches');
+  const usageStatsShared = log1.includes('usage stats: app group, off');
   const ok =
     sharedFolder &&
     usageStatsShared &&
@@ -374,8 +378,8 @@ export function iosTest(noBuild: boolean): void {
   run('xcrun', ['simctl', 'io', sim.udid, 'screenshot', shot], true);
   const small = resolve(OUT, 'editor-small.png');
   if (
-    /view small/.test(
-      waitForLog(sim.udid, started, [/view small/], 10, 'com.funputs.blokdust.ioshost'),
+    waitForLog(sim.udid, started, [/view small/], 10, 'com.funputs.blokdust.ioshost').includes(
+      'view small',
     )
   ) {
     sleep(4000); // the page relayouts
@@ -401,9 +405,9 @@ export function iosTest(noBuild: boolean): void {
     ],
     true,
   ).stdout;
-  const ready = [...log.matchAll(/page: ready, (-?\d+) blocks/g)].map((m) => Number(m[1]));
+  const ready = [...log.matchAll(/page: ready, (-?\d+) blocks/g)].map((match) => Number(match[1]));
   const wrapper = /processor created \((AUv3)/.exec(log)?.[1] ?? null;
-  const extensionSharedFolder = SHARED.test(log);
+  const extensionSharedFolder = log.includes('storage: app group, 1 patches');
 
   const all = result.renders as {
     fixture: string;
@@ -446,13 +450,13 @@ export function iosTest(noBuild: boolean): void {
     audioHash: s?.audioHash ?? null,
     expected: sampleCase.expected,
     identical: s?.audioHash === sampleCase.expected,
-    relinked: /sample: relinked from Samples/.test(log),
+    relinked: log.includes('sample: relinked from Samples'),
     error: s?.error,
   };
   const lastBlocks = JSON.parse(readFileSync(SAMPLE_FIXTURE, 'utf8')).patch.blocks.length; // the editor shows the last state set
   const editor = {
     sharedFolder: extensionSharedFolder,
-    usageStatsShared: STATS_OFF.test(extensionLines(log)),
+    usageStatsShared: extensionLines(log).includes('usage stats: app group, off'),
     view: !!result.view,
     ready: ready.at(-1) ?? null,
     expectedBlocks: lastBlocks,
@@ -464,11 +468,11 @@ export function iosTest(noBuild: boolean): void {
     !result.error &&
     wrapper === 'AUv3' &&
     renders.length === FIXTURES.length &&
-    renders.every((r) => r.identical && r.stateRoundTrips) &&
+    renders.every((render) => render.identical && render.stateRoundTrips) &&
     sample.identical &&
     result.fxName === 'BlokDust FX' &&
     fxRenders.length === FX_FIXTURES.length &&
-    fxRenders.every((r) => r.identical && r.stateRoundTrips) &&
+    fxRenders.every((fxRender) => fxRender.identical && fxRender.stateRoundTrips) &&
     sample.relinked &&
     editor.sharedFolder &&
     editor.usageStatsShared &&

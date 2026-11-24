@@ -9,16 +9,25 @@ export const THUMB = { width: 1200, height: 630 } as const;
 /** Default embed size (v1's stage is landscape; 16:10 like the review viewport). */
 const EMBED = { width: 640, height: 400 } as const;
 
-const displayTitle = (p: Loaded | null) => (p?.title ? `${p.title} · BlokDust` : 'BlokDust');
+const displayTitle = (loaded: Loaded | null) =>
+  loaded?.title ? `${loaded.title} · BlokDust` : 'BlokDust';
 /** Link previews show og:site_name ("BlokDust") already, so the card title is just the patch's (R9). */
-const cardTitle = (p: Loaded | null) => p?.title || 'BlokDust';
+const cardTitle = (loaded: Loaded | null) => loaded?.title || 'BlokDust';
 const DESCRIPTION =
   'Connect blocks to make sounds, instruments and self-playing music. Free on the web and as a VST/AU plugin.';
 
-function tags(env: Env, req: Request, id: string | null, p: Loaded | null, embed: boolean): string {
+function tags(
+  env: Env,
+  req: Request,
+  id: string | null,
+  loaded: Loaded | null,
+  embed: boolean,
+): string {
   const base = publicBase(env, req);
-  const title = cardTitle(p);
-  const pageUrl = id ? `${base}/?c=${id}${p?.title ? `&t=${encodeURI(p.title)}` : ''}` : `${base}/`;
+  const title = cardTitle(loaded);
+  const pageUrl = id
+    ? `${base}/?c=${id}${loaded?.title ? `&t=${encodeURI(loaded.title)}` : ''}`
+    : `${base}/`;
   const out: string[] = [
     `<meta property="og:site_name" content="BlokDust">`,
     `<meta property="og:type" content="website">`,
@@ -27,10 +36,10 @@ function tags(env: Env, req: Request, id: string | null, p: Loaded | null, embed
     `<meta property="og:url" content="${escapeHtml(pageUrl)}">`,
     `<meta name="description" content="${escapeHtml(DESCRIPTION)}">`,
   ];
-  if (id && p) {
+  if (id && loaded) {
     const embedUrl = `${base}/embed/${id}`;
-    if (p.hasThumb) {
-      const img = `${base}/api/patches/${id}/thumb.png?rev=${p.rev}`;
+    if (loaded.hasThumb) {
+      const img = `${base}/api/patches/${id}/thumb.png?rev=${loaded.rev}`;
       out.push(
         `<meta property="og:image" content="${escapeHtml(img)}">`,
         `<meta property="og:image:type" content="image/png">`,
@@ -76,8 +85,8 @@ export async function page(
 ): Promise<Response> {
   const c = embedId ?? url.searchParams.get('c');
   const id = c && ID_RE.test(c) ? c : null;
-  const p = id ? await loadPatch(env, id) : null;
-  if (embedId && !p)
+  const loaded = id ? await loadPatch(env, id) : null;
+  if (embedId && !loaded)
     return new Response('No such BlokDust patch.', {
       status: 404,
       headers: { 'content-type': 'text/plain' },
@@ -85,10 +94,10 @@ export async function page(
   const assetUrl = new URL(`${url.origin}${assetBase(env)}/`);
   const asset = await env.ASSETS.fetch(new Request(assetUrl.toString(), { headers: req.headers }));
   if (!asset.ok) return asset;
-  const head = tags(env, req, id, p, !!embedId);
+  const head = tags(env, req, id, loaded, !!embedId);
   // Embed pages live one level down (/embed/<id>); the build uses relative asset URLs, so pin the base.
   const baseTag = embedId ? `<base href="${escapeHtml(basePath(env))}/">\n    ` : '';
-  const title = escapeHtml(embedId || p ? displayTitle(p) : 'BlokDust');
+  const title = escapeHtml(embedId || loaded ? displayTitle(loaded) : 'BlokDust');
   const rewritten = new HTMLRewriter()
     .on('head', {
       element(e) {
@@ -127,10 +136,10 @@ export async function oembed(env: Env, req: Request, url: URL): Promise<Response
   const rel = t.pathname.startsWith(base.pathname)
     ? t.pathname.slice(base.pathname.length - 1)
     : t.pathname;
-  const id = rel.match(/^\/embed\/([^/]+)\/?$/)?.[1] ?? t.searchParams.get('c');
+  const id = /^\/embed\/([^/]+)\/?$/.exec(rel)?.[1] ?? t.searchParams.get('c');
   if (!id || !ID_RE.test(id)) throw new HttpError(404, 'not a BlokDust patch URL');
-  const p = await loadPatch(env, id);
-  if (!p) throw new HttpError(404, 'no such patch');
+  const loaded = await loadPatch(env, id);
+  if (!loaded) throw new HttpError(404, 'no such patch');
   const maxW = Number(url.searchParams.get('maxwidth')) || Infinity,
     maxH = Number(url.searchParams.get('maxheight')) || Infinity;
   const scale = Math.min(1, maxW / EMBED.width, maxH / EMBED.height);
@@ -143,15 +152,15 @@ export async function oembed(env: Env, req: Request, url: URL): Promise<Response
     type: 'rich',
     provider_name: 'BlokDust',
     provider_url: `${root}/`,
-    title: displayTitle(p),
+    title: displayTitle(loaded),
     width,
     height,
     cache_age: 3600,
-    html: `<iframe src="${escapeHtml(src)}" width="${width}" height="${height}" style="border:0" allow="autoplay; fullscreen; midi" allowfullscreen loading="lazy" title="${escapeHtml(displayTitle(p))}"></iframe>`,
+    html: `<iframe src="${escapeHtml(src)}" width="${width}" height="${height}" style="border:0" allow="autoplay; fullscreen; midi" allowfullscreen loading="lazy" title="${escapeHtml(displayTitle(loaded))}"></iframe>`,
   };
-  if (p.hasThumb)
+  if (loaded.hasThumb)
     Object.assign(body, {
-      thumbnail_url: `${root}/api/patches/${id}/thumb.png?rev=${p.rev}`,
+      thumbnail_url: `${root}/api/patches/${id}/thumb.png?rev=${loaded.rev}`,
       thumbnail_width: THUMB.width,
       thumbnail_height: THUMB.height,
     });

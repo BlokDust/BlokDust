@@ -24,9 +24,9 @@ const result = await new Promise<string>((resolve, reject) => {
   // Host diagnostics may contain local paths; keep them out of committed results and terminal summaries.
   child.stderr.resume();
   child.on('error', reject);
-  child.on('close', (code) =>
-    code === 0 ? resolve(out) : reject(new Error('native support smoke host failed')),
-  );
+  child.on('close', (code) => {
+    code === 0 ? resolve(out) : reject(new Error('native support smoke host failed'));
+  });
 });
 const data = JSON.parse(result.trim().split('\n').at(-1)!);
 assert.equal(

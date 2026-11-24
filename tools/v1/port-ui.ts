@@ -261,7 +261,7 @@ export function portUi() {
       .join('\n');
     // v1 imports interfaces as values (TS namespaces era): give each a runtime placeholder for the bundler.
     const ifaces = [...src.matchAll(/^export interface (\w+)/gm)]
-      .map((m) => `export const ${m[1]}: any = null;`)
+      .map((match) => `export const ${match[1]}: any = null;`)
       .join('\n');
     const out = join(OUT, rel);
     const shim = relative(dirname(out), 'web/src/v1ui/shim.ts').replace(/^(?!\.)/, './');
@@ -317,7 +317,7 @@ export function portUi() {
       if (gen[end] === '{') depth++;
       else if (gen[end] === '}' && --depth === 0) break;
     }
-    return gen.slice(at, end + 1).replace(/^    /, '  ') + ',';
+    return gen.slice(at, end + 1).replace(/^ {4}/, '  ') + ',';
   });
   writeFileSync(
     ensureDir(join(OUT, 'SampleGenData.ts')),
@@ -331,10 +331,10 @@ export function portUi() {
   const creator = readFileSync(join(SRC, 'BlockCreator.ts'), 'utf8');
   const menuSrc = creator.slice(creator.indexOf('public MenuJson'));
   const categories: any[] = [];
-  for (const m of menuSrc.matchAll(
+  for (const match of menuSrc.matchAll(
     /"name":\s*App\.L10n\.Blocks\.(\w+)\.(?:Label|Blocks\.(\w+)\.name),\s*(?:"id":\s*(\w+),\s*"description":\s*App\.L10n\.Blocks\.\w+\.Blocks\.\w+\.description)?/g,
   )) {
-    const [, cat, item, id] = m;
+    const [, cat, item, id] = match;
     if (!item) categories.push({ name: l10n.Blocks[cat].Label, items: [] });
     else
       categories.at(-1).items.push({
@@ -342,7 +342,7 @@ export function portUi() {
         id,
         description: l10n.Blocks[cat].Blocks[item].description ?? '',
       });
-    if (menuSrc.indexOf(m[0]) > menuSrc.indexOf('};')) break;
+    if (menuSrc.indexOf(match[0]) > menuSrc.indexOf('};')) break;
   }
   writeFileSync(
     ensureDir(join(OUT, 'data/menu.json')),
@@ -360,7 +360,7 @@ export function portUi() {
     JSON.stringify({
       out: OUT,
       files: written.length + 3,
-      categories: categories.map((c) => `${c.name}:${c.items.length}`),
+      categories: categories.map((category) => `${category.name}:${category.items.length}`),
     }),
   );
 }

@@ -44,7 +44,7 @@ const blocks = defineCollection({
           href: z
             .string()
             .refine(
-              (href) => /^\/(?!\/)/.test(href) || /^https:\/\//.test(href),
+              (href) => /^\/(?!\/)/.test(href) || href.startsWith('https://'),
               'Use a site path or an HTTPS URL',
             ),
         }),

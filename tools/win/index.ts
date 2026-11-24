@@ -28,35 +28,35 @@ function ensureUp() {
 }
 
 function sync() {
-  const r = vm('sync');
-  if (!r.stdout.includes('synced')) throw new Error(`sync failed: ${r.stderr}`);
+  const result = vm('sync');
+  if (!result.stdout.includes('synced')) throw new Error(`sync failed: ${result.stderr}`);
 }
 
 function engine() {
   ensureUp();
   sync();
-  const r = ps('engine-check.ps1');
-  const log = `${r.stdout}${r.stderr}`;
+  const result = ps('engine-check.ps1');
+  const log = `${result.stdout}${result.stderr}`;
   mkdirSync('.cache', { recursive: true });
   writeFileSync('.cache/win-engine.log', log);
   const ctest = Number(/CTEST_EXIT (\d+)/.exec(log)?.[1] ?? -1);
   const testsLine =
     /(\d+)% tests passed, (\d+) tests failed out of (\d+)/.exec(log) ??
     /100% tests passed out of (\d+)/.exec(log);
-  const renders = [...log.matchAll(/^RENDER (\S+) (.*)$/gm)].map((m) => {
-    const exp = JSON.parse(readFileSync(join('tests/golden/expected', `${m[1]}.json`), 'utf8'));
+  const renders = [...log.matchAll(/^RENDER (\S+) (.*)$/gm)].map((match) => {
+    const exp = JSON.parse(readFileSync(join('tests/golden/expected', `${match[1]}.json`), 'utf8'));
     let got: any = {};
     try {
-      got = JSON.parse(m[2]);
+      got = JSON.parse(match[2]);
     } catch {}
     return {
-      fixture: m[1],
+      fixture: match[1],
       ok: got.audioHash === exp.audioHash && got.eventHash === exp.eventHash,
       audioHash: got.audioHash,
       expected: exp.audioHash,
     };
   });
-  const ok = ctest === 0 && renders.length > 0 && renders.every((r) => r.ok);
+  const ok = ctest === 0 && renders.length > 0 && renders.every((render) => render.ok);
   console.log(
     JSON.stringify({
       platform: 'windows-x64-msvc',
@@ -92,14 +92,14 @@ function packageWin() {
   ensureUp();
   syncWithWeb(true);
   const version = (JSON.parse(readFileSync('package.json', 'utf8')) as { version: string }).version;
-  const r = ps('package.ps1', `-Version ${version}`);
-  const log = `${r.stdout}${r.stderr}`;
+  const result = ps('package.ps1', `-Version ${version}`);
+  const log = `${result.stdout}${result.stderr}`;
   mkdirSync('.cache', { recursive: true });
   writeFileSync('.cache/win-package.log', log);
   const remote = /^PACKAGE (.*)$/m.exec(log)?.[1]?.trim();
-  const fileVersions = [...log.matchAll(/^FILEVERSION (\S+) (.*)$/gm)].map((m) => ({
-    file: m[2].trim(),
-    version: m[1],
+  const fileVersions = [...log.matchAll(/^FILEVERSION (\S+) (.*)$/gm)].map((match) => ({
+    file: match[2].trim(),
+    version: match[1],
   }));
   if (!remote) {
     console.error('see .cache/win-package.log');
@@ -128,7 +128,8 @@ function packageWin() {
   const sha = spawnSync('shasum', ['-a', '256', zip], { encoding: 'utf8' }).stdout.split(/\s+/)[0];
   writeFileSync(`${zip}.sha256`, `${sha}  ${zipName}\n`);
   const versionsOk =
-    fileVersions.length === 1 && fileVersions.every((f) => f.version.startsWith(version));
+    fileVersions.length === 1 &&
+    fileVersions.every((fileVersion) => fileVersion.version.startsWith(version));
   // Installs where DAWs look, and uninstalls cleanly (silent, in the VM).
   const ic = ps('install-check.ps1', `-Installer "${remote}"`);
   let install: any = null;
@@ -150,30 +151,30 @@ function packageWin() {
 function plugin() {
   ensureUp();
   syncWithWeb();
-  const r = ps('plugin-check.ps1');
-  const log = `${r.stdout}${r.stderr}`;
+  const result = ps('plugin-check.ps1');
+  const log = `${result.stdout}${result.stderr}`;
   writeFileSync('.cache/win-plugin.log', log);
   const reaper = /REAPER_RESULT (.*)$/m.exec(log)?.[1];
   let reaperJson: any = null;
   try {
     reaperJson = reaper ? JSON.parse(reaper) : null;
   } catch {}
-  const hosts = [...log.matchAll(/^HOST (\S+) (\S+) (.*)$/gm)].map((m) => {
-    const exp = JSON.parse(readFileSync(join('tests/golden/expected', `${m[2]}.json`), 'utf8'));
+  const hosts = [...log.matchAll(/^HOST (\S+) (\S+) (.*)$/gm)].map((match) => {
+    const exp = JSON.parse(readFileSync(join('tests/golden/expected', `${match[2]}.json`), 'utf8'));
     let got: any = {};
     try {
-      got = JSON.parse(m[3]);
+      got = JSON.parse(match[3]);
     } catch {}
     return {
-      case: m[1],
+      case: match[1],
       ok: got.audioHash === exp.audioHash,
-      audioHash: got.audioHash ?? m[3].slice(0, 120),
+      audioHash: got.audioHash ?? match[3].slice(0, 120),
     };
   });
   const editorLine = [...log.matchAll(/^EDITOR (\{.*\})$/gm)]
-    .map((m) => {
+    .map((match) => {
       try {
-        return JSON.parse(m[1]);
+        return JSON.parse(match[1]);
       } catch {
         return null;
       }
@@ -181,9 +182,9 @@ function plugin() {
     .find(Boolean);
   const editorBlocks = editorLine?.editor?.blocks ?? null;
   const pluginval = Object.fromEntries(
-    [...log.matchAll(/^PLUGINVAL (\S+) (\d+)$/gm)].map((m) => [
-      m[1],
-      m[2] === '0' ? 'pass' : `fail (exit ${m[2]})`,
+    [...log.matchAll(/^PLUGINVAL (\S+) (\d+)$/gm)].map((match) => [
+      match[1],
+      match[2] === '0' ? 'pass' : `fail (exit ${match[2]})`,
     ]),
   );
   let standalone: any = null;
@@ -216,7 +217,7 @@ function plugin() {
     reaperJson?.peak > 0.001 &&
     Object.values(reaperModes).every(Boolean) &&
     hosts.length === 5 &&
-    hosts.every((h) => h.ok) &&
+    hosts.every((host) => host.ok) &&
     editorBlocks === 2 &&
     standalone?.alive === true;
   console.log(

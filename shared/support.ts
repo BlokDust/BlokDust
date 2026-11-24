@@ -73,7 +73,7 @@ export function supportPatch(value: unknown): SupportPatch {
   if (!Array.isArray(p.blocks) || p.blocks.length > 1024) throw new Error('Invalid support patch');
   const blocks = p.blocks.map((value, i) => {
     const b = record(value),
-      def = BLOCKS.find((d) => d.id === b.type);
+      def = BLOCKS.find((definition) => definition.id === b.type);
     if (!def) throw new Error('Unknown block type');
     const params: Record<string, number | boolean | string> = {};
     const source = record(b.params);

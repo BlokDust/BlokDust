@@ -49,7 +49,9 @@ async function main() {
   };
 
   const select = document.getElementById('theme') as HTMLSelectElement;
-  THEMES.forEach((t) => select.add(new Option(t.name, String(t.index))));
+  THEMES.forEach((theme) => {
+    select.add(new Option(theme.name, String(theme.index)));
+  });
   select.value = String(themeIndex);
   select.onchange = () => {
     themeIndex = Number(select.value);

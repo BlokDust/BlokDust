@@ -79,7 +79,11 @@ export const categoryTitle = (category: Category) => {
   return entry.data.title;
 };
 
-type Artwork = { src: string; width: number; height: number };
+interface Artwork {
+  src: string;
+  width: number;
+  height: number;
+}
 const originalArt: Record<string, { banner: Artwork; tile?: Artwork }> = art;
 export function guideArt(legacySource?: string) {
   const name = legacySource?.split('/').pop();

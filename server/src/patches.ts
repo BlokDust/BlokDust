@@ -13,10 +13,10 @@ const ID_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
 export const ID_RE = /^[0-9A-Za-oq-z][0-9A-Za-z]{9}$/;
 
 function newId(): string {
-  const r = crypto.getRandomValues(new Uint8Array(10));
+  const bytes = crypto.getRandomValues(new Uint8Array(10));
   let s = '';
   for (let i = 0; i < 10; i++) {
-    let c = ID_CHARS[r[i] % 62];
+    let c = ID_CHARS[bytes[i] % 62];
     if (i === 0 && c === 'p') c = 'P';
     s += c;
   }
@@ -125,16 +125,16 @@ export async function mayEdit(env: Env, req: Request, id: string): Promise<boole
 
 /** The patch's edit token (the browser that made it), or the account that owns it, signed in on this site
  * (SPEC-SHARING-ACCOUNTS R9: an account's patches can be saved from any device). */
-async function authorise(env: Env, req: Request, r: Row): Promise<void> {
+async function authorise(env: Env, req: Request, row: Row): Promise<void> {
   const auth = req.headers.get('authorization') ?? '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
-  if (token && sameDigest(await sha256Hex(token), r.edit_hash)) return;
+  if (token && sameDigest(await sha256Hex(token), row.edit_hash)) return;
   // A signed-in plugin's key (SHARING-0011): the owning account, from the plugin (no cookie, so no Origin check).
-  if (r.owner_id && appKeyOf(req)) {
-    if ((await currentUser(env, req, { app: true }))?.id === r.owner_id) return;
-  } else if (r.owner_id) {
-    const u = await currentUser(env, req);
-    if (u?.id === r.owner_id) {
+  if (row.owner_id && appKeyOf(req)) {
+    if ((await currentUser(env, req, { app: true }))?.id === row.owner_id) return;
+  } else if (row.owner_id) {
+    const user = await currentUser(env, req);
+    if (user?.id === row.owner_id) {
       sameOrigin(env, req);
       return;
     }
@@ -187,8 +187,8 @@ export async function createPatch(env: Env, req: Request): Promise<Response> {
         { id, rev: 1, editToken, parent, url: shareUrl(env, req, id, title), gallery, activity },
         201,
       );
-    } catch (e) {
-      if (!String(e).includes('UNIQUE')) throw e; // id collision: try another
+    } catch (error) {
+      if (!String(error).includes('UNIQUE')) throw error; // id collision: try another
     }
   }
   throw new HttpError(500, 'could not allocate an id');
@@ -292,8 +292,8 @@ export async function getPatch(
   id: string,
   ctx?: ExecutionContext,
 ): Promise<Response> {
-  const p = await loadPatch(env, id);
-  if (!p)
+  const loaded = await loadPatch(env, id);
+  if (!loaded)
     throw (await wasDeleted(env, id))
       ? new HttpError(410, 'this patch has been deleted')
       : new HttpError(404, 'no such patch');
@@ -337,7 +337,7 @@ export async function getPatch(
     !!(await env.DB.prepare('SELECT 1 FROM likes WHERE patch_id = ? AND user_id = ?')
       .bind(id, me.id)
       .first());
-  return json({ ...p, mine, views, published, likes, liked }, 200, {
+  return json({ ...loaded, mine, views, published, likes, liked }, 200, {
     'cache-control': 'no-cache',
     'access-control-allow-origin': '*',
     vary: 'cookie',

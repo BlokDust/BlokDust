@@ -9,12 +9,14 @@ export const WRANGLER = join(SERVER_DIR, 'node_modules/.bin/wrangler');
 
 export async function freePort(): Promise<number> {
   return new Promise((res, rej) => {
-    const s = createServer();
-    s.listen(0, '127.0.0.1', () => {
-      const p = (s.address() as { port: number }).port;
-      s.close(() => res(p));
+    const server = createServer();
+    server.listen(0, '127.0.0.1', () => {
+      const p = (server.address() as { port: number }).port;
+      server.close(() => {
+        res(p);
+      });
     });
-    s.on('error', rej);
+    server.on('error', rej);
   });
 }
 
@@ -36,7 +38,9 @@ export function run(
       out += d;
       if (!opts.quiet) process.stderr.write(d);
     });
-    p.on('close', (code) => res({ code: code ?? 1, out }));
+    p.on('close', (code) => {
+      res({ code: code ?? 1, out });
+    });
   });
 }
 
@@ -79,7 +83,7 @@ export async function startLocal(opts: {
   writeFileSync(
     envFile,
     Object.entries({ ADMIN_LOCAL: '1', ...opts.vars })
-      .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+      .map(([k, value]) => `${k}=${JSON.stringify(value)}`)
       .join('\n') + '\n',
   );
   chmodSync(envFile, 0o600);
@@ -143,8 +147,8 @@ export async function startLocal(opts: {
   const deadline = Date.now() + 60000;
   for (;;) {
     try {
-      const r = await fetch(`${url}/api/config`);
-      if (r.ok) break;
+      const response = await fetch(`${url}/api/config`);
+      if (response.ok) break;
     } catch {
       /* starting */
     }
@@ -152,7 +156,7 @@ export async function startLocal(opts: {
       child.kill();
       throw new Error(`wrangler dev did not start:\n${log}`);
     }
-    await new Promise((r) => setTimeout(r, 250));
+    await new Promise((resolve) => setTimeout(resolve, 250));
   }
   return {
     url,
@@ -177,9 +181,14 @@ export async function startLocal(opts: {
       return r.out;
     },
     stop: () =>
-      new Promise((r) => {
-        if (child.exitCode !== null) return r();
-        child.once('exit', () => r());
+      new Promise((resolve) => {
+        if (child.exitCode !== null) {
+          resolve();
+          return;
+        }
+        child.once('exit', () => {
+          resolve();
+        });
         child.kill('SIGTERM');
         setTimeout(() => child.kill('SIGKILL'), 5000);
       }),

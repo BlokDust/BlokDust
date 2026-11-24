@@ -19,7 +19,7 @@ const tpl = (f: string, vars: Record<string, string>) =>
     (_, k) => vars[k] ?? `{{${k}}}`,
   );
 const nextNum = (files: string[], re: RegExp) =>
-  String(Math.max(0, ...files.map((f) => Number(re.exec(f)?.[1] ?? 0))) + 1).padStart(4, '0');
+  String(Math.max(0, ...files.map((file) => Number(re.exec(file)?.[1] ?? 0))) + 1).padStart(4, '0');
 const usage = () => {
   console.error(
     'usage: bd new adr <domain> "Title" | bd new spec <domain> "Title" | bd new change "Title"',
@@ -27,7 +27,7 @@ const usage = () => {
   process.exit(2);
 };
 
-let created: string[] = [];
+const created: string[] = [];
 if (kind === 'adr') {
   const [domain, title] = rest;
   if (!domain || !title) usage();

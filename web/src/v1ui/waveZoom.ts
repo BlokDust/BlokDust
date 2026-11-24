@@ -10,7 +10,12 @@
 // is clipped to the waveform; handles outside the window are not drawn and can't be grabbed. Unzoomed, nothing changes.
 import { App } from './shim.ts';
 
-type View = { f0: number; f1: number; rev: boolean; src: unknown };
+interface View {
+  f0: number;
+  f1: number;
+  rev: boolean;
+  src: unknown;
+}
 const views = new Map<number, View>(); // block id → its window (this session; not saved in the patch)
 const WAVE = /^wave(region|slider|image)$/;
 const POINTS = 200; // v1 GetWaveformFromBuffer(buffer, 200, …)
@@ -23,15 +28,15 @@ const reversed = (b: any) => !!b.Params?.reverse && 'startPosition' in (b.Params
 
 /** The block's window, or null when it shows the whole sound (a new sound shows all of it again). */
 export function viewOf(b: any): View | null {
-  const v = b ? views.get(b.Id) : undefined;
-  if (!v) return null;
-  if (v.src !== sourceOf(b)) {
+  const view = b ? views.get(b.Id) : undefined;
+  if (!view) return null;
+  if (view.src !== sourceOf(b)) {
     views.delete(b.Id);
     return null;
   }
   const rev = reversed(b);
-  if (v.rev !== rev) Object.assign(v, { f0: 1 - v.f1, f1: 1 - v.f0, rev });
-  return v;
+  if (view.rev !== rev) Object.assign(view, { f0: 1 - view.f1, f1: 1 - view.f0, rev });
+  return view;
 }
 /** The open panel's window (playheads use it). */
 export function panelView(panel: any): { f0: number; f1: number } | null {
@@ -96,28 +101,28 @@ function windowWave(src: any, f0: number, f1: number, rev: boolean): number[] {
 }
 
 /** The form with each wave row narrowed to the window (a copy: the block's form stays whole). */
-function windowedForm(json: any, b: any, v: View): any {
+function windowedForm(json: any, b: any, view: View): any {
   const src = sourceOf(b);
   return {
     ...json,
-    parameters: json.parameters.map((p: any) => {
-      if (!WAVE.test(p.type) || !p.props?.wavearray?.length) return p;
+    parameters: json.parameters.map((parameter: any) => {
+      if (!WAVE.test(parameter.type) || !parameter.props?.wavearray?.length) return parameter;
       const props = {
-        ...p.props,
-        wavearray: windowWave(src, v.f0, v.f1, p.type === 'waveregion' && v.rev),
+        ...parameter.props,
+        wavearray: windowWave(src, view.f0, view.f1, parameter.type === 'waveregion' && view.rev),
       };
-      if (typeof p.props.min === 'number' && typeof p.props.max === 'number') {
-        const span = p.props.max - p.props.min;
-        props.min = p.props.min + v.f0 * span;
-        props.max = p.props.min + v.f1 * span;
+      if (typeof parameter.props.min === 'number' && typeof parameter.props.max === 'number') {
+        const span = parameter.props.max - parameter.props.min;
+        props.min = parameter.props.min + view.f0 * span;
+        props.max = parameter.props.min + view.f1 * span;
       }
-      return { ...p, props };
+      return { ...parameter, props };
     }),
   };
 }
 
 /** Draw a wave row inside its waveform only, with its name (outside that clip) and where the window sits. */
-function clipDraw(o: any, v: View): void {
+function clipDraw(o: any, view: View): void {
   const draw = o.Draw;
   o.Draw = function (ctx: CanvasRenderingContext2D, units: number, i: number, panel: any) {
     const y = this.Position.y,
@@ -170,9 +175,9 @@ function clipDraw(o: any, v: View): void {
     ctx.fillRect(panel.Margin, by, panel.Range, 2 * units);
     ctx.globalAlpha = 1;
     ctx.fillRect(
-      panel.Margin + v.f0 * panel.Range,
+      panel.Margin + view.f0 * panel.Range,
       by,
-      Math.max(2 * units, (v.f1 - v.f0) * panel.Range),
+      Math.max(2 * units, (view.f1 - view.f0) * panel.Range),
       2 * units,
     );
     ctx.restore();
@@ -192,11 +197,11 @@ function rowRect(panel: any, i: number) {
 /** The wave row of the open panel under (x, y) device px (its waveform, with v1's 10-unit grab margin), or -1. */
 export function waveRowAt(panel: any, x: number, y: number): number {
   if (panel.Scale !== 1 || !panel.SelectedBlock) return -1;
-  const u = App.Unit;
+  const unit = App.Unit;
   return (panel.Options ?? []).findIndex((o: any, i: number) => {
     if (!WAVE.test(o.Type) || !o.Waveform?.length) return false;
     const r = rowRect(panel, i);
-    return x >= r.x - 10 * u && x <= r.x + r.w + 10 * u && y >= r.y && y <= r.y + r.h;
+    return x >= r.x - 10 * unit && x <= r.x + r.w + 10 * unit && y >= r.y && y <= r.y + r.h;
   });
 }
 
@@ -252,21 +257,26 @@ export function wheelWave(
 }
 
 /** A two-finger (or Safari trackpad) pinch on row `i`: the sound under the fingers' midpoint follows it. */
-export type WavePinch = { row: number; at: number; span0: number; d0: number };
+export interface WavePinch {
+  row: number;
+  at: number;
+  span0: number;
+  d0: number;
+}
 export function startWavePinch(panel: any, i: number, midX: number, dist: number): WavePinch {
   const v = current(panel);
   return { row: i, at: fracAt(panel, i, midX).at, span0: v.f1 - v.f0, d0: Math.max(dist, 1e-3) };
 }
 /** `dist`: the fingers' distance now (the start's was d0), or Safari's gesture scale (started with dist 1). */
-export function moveWavePinch(panel: any, p: WavePinch, midX: number, dist: number): void {
-  if (panel.Scale !== 1 || !panel.Options?.[p.row]) return;
-  const r = rowRect(panel, p.row),
+export function moveWavePinch(panel: any, wavePinch: WavePinch, midX: number, dist: number): void {
+  if (panel.Scale !== 1 || !panel.Options?.[wavePinch.row]) return;
+  const r = rowRect(panel, wavePinch.row),
     t = (midX - r.x) / r.w;
   const span = Math.min(
     1,
-    Math.max(minSpan(panel.SelectedBlock), (p.span0 * p.d0) / Math.max(dist, 1e-3)),
+    Math.max(minSpan(panel.SelectedBlock), (wavePinch.span0 * wavePinch.d0) / Math.max(dist, 1e-3)),
   );
-  setView(panel, p.at - t * span, span);
+  setView(panel, wavePinch.at - t * span, span);
 }
 
 /** The values of wave row `i` (its handles, or the slider), to put back if a press there turns out to be a pinch. */
@@ -276,7 +286,7 @@ export function snapshotWave(panel: any, i: number): (() => void) | null {
   if (!o || !b) return null;
   const vals: [string, number][] =
     o.Type === 'waveregion'
-      ? o.Handles.map((h: any) => [h.XSetting, h.XValue])
+      ? o.Handles.map((Handle: any) => [Handle.XSetting, Handle.XValue])
       : o.Type === 'waveslider'
         ? [[o.Setting, o.Value]]
         : [];
@@ -296,11 +306,11 @@ export function installWaveZoom(panel: any): void {
   const populate = panel.Populate.bind(panel);
   panel.Populate = (json: any, open: boolean) => {
     const b = panel.SelectedBlock,
-      v = viewOf(b);
-    populate(v ? windowedForm(json, b, v) : json, open);
-    if (v)
+      view = viewOf(b);
+    populate(view ? windowedForm(json, b, view) : json, open);
+    if (view)
       for (const o of panel.Options ?? [])
-        if (WAVE.test(o.Type) && o.Waveform?.length) clipDraw(o, v);
+        if (WAVE.test(o.Type) && o.Waveform?.length) clipDraw(o, view);
   };
   // Handles outside the window can't be grabbed (v1's 10-unit hit box would reach into the row's name).
   const rollover = panel.RolloverCheck.bind(panel);
@@ -309,8 +319,9 @@ export function installWaveZoom(panel: any): void {
     if (!viewOf(panel.SelectedBlock)) return;
     for (const o of panel.Options ?? [])
       if (o.Type === 'waveregion')
-        o.Handles.forEach((h: any, j: number) => {
-          if (h.Position.x < -0.5 || h.Position.x > panel.Range + 0.5) o.HandleRoll[j] = false;
+        o.Handles.forEach((Handle: any, j: number) => {
+          if (Handle.Position.x < -0.5 || Handle.Position.x > panel.Range + 0.5)
+            o.HandleRoll[j] = false;
         });
   };
   // Zoomed in, a drag on the waveform that grabs no handle slides it (Sample, Recorder, Convolver; Granular's press
@@ -325,7 +336,7 @@ export function installWaveZoom(panel: any): void {
     const i = waveRowAt(panel, mx, my),
       o = panel.Options?.[i];
     if (i < 0 || !viewOf(panel.SelectedBlock) || o.Type === 'waveslider') return;
-    if (o.Type === 'waveregion' && o.Handles.some((h: any) => h.Selected)) return;
+    if (o.Type === 'waveregion' && o.Handles.some((Handle: any) => Handle.Selected)) return;
     drag = { row: i, x: mx };
   };
   panel.MouseMove = (mx: number, my: number) => {

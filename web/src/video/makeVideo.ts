@@ -43,7 +43,7 @@ export class VideoError extends Error {
 }
 
 /** Let the page draw and take input between slices of work (R11). */
-const breathe = () => new Promise<void>((r) => setTimeout(r, 0));
+const breathe = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 /** The H.264 + AAC encoders this browser has (AAC falls back to the WASM encoder). Throws VideoError if it can't. */
 export async function prepareEncoders(
@@ -79,17 +79,17 @@ class AudioOut {
     this.right = new Float32Array(sampleRate);
   }
   /** Keep one quantum; resolves once any full chunk has gone to the encoder. */
-  async push(l: Float32Array, r: Float32Array): Promise<void> {
-    const n = Math.min(this.left.length - this.filled, l.length);
-    this.left.set(l.subarray(0, n), this.filled);
+  async push(samples: Float32Array, r: Float32Array): Promise<void> {
+    const n = Math.min(this.left.length - this.filled, samples.length);
+    this.left.set(samples.subarray(0, n), this.filled);
     this.right.set(r.subarray(0, n), this.filled);
     this.filled += n;
     if (this.filled < this.left.length) return;
     await this.flush();
-    if (n < l.length) {
-      this.left.set(l.subarray(n), 0);
+    if (n < samples.length) {
+      this.left.set(samples.subarray(n), 0);
       this.right.set(r.subarray(n), 0);
-      this.filled = l.length - n;
+      this.filled = samples.length - n;
     }
   }
   async flush(): Promise<void> {
@@ -115,7 +115,7 @@ class AudioOut {
 export async function makeVideo(
   module: WebAssembly.Module,
   job: VideoJob,
-  progress: (p: VideoProgress) => void,
+  progress: (videoProgress: VideoProgress) => void,
   signal?: AbortSignal,
 ): Promise<Blob> {
   const { width, height } = SHAPES[job.shape],
@@ -143,7 +143,7 @@ async function encode(
   mb: Mediabunny,
   replay: Replay,
   job: VideoJob,
-  progress: (p: VideoProgress) => void,
+  progress: (videoProgress: VideoProgress) => void,
   check: () => void,
 ): Promise<Blob> {
   const { width, height } = SHAPES[job.shape],
@@ -173,8 +173,8 @@ async function encode(
     const runTo = async (to: number) => {
       while (replay.frame < to) {
         let kept: [Float32Array, Float32Array] | null = null;
-        replay.run(replay.frame + QUANTUM, (l, r) => {
-          kept = [l.slice(), r.slice()];
+        replay.run(replay.frame + QUANTUM, (samples, r) => {
+          kept = [samples.slice(), r.slice()];
         });
         if (kept) await audio.push(...(kept as [Float32Array, Float32Array]));
       }
@@ -206,8 +206,8 @@ async function encode(
     await output.finalize();
     progress({ phase: 'rendering', done: 1 });
     return new Blob([output.target.buffer!], { type: 'video/mp4' });
-  } catch (e) {
+  } catch (error) {
     await output.cancel().catch(() => {});
-    throw e;
+    throw error;
   }
 }

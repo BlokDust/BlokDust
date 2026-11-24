@@ -44,9 +44,12 @@ export class V1Block {
     this.BlockName = def.v1Type
       ? (L10N_BLOCKS[catOf(def)]?.Blocks[nameKey(def)]?.name ?? def.name)
       : def.name;
-    this.Params = { ...Object.fromEntries(def.params.map((p) => [p.key, p.default])), ...params };
+    this.Params = {
+      ...Object.fromEntries(def.params.map((param) => [param.key, param.default])),
+      ...params,
+    };
     // v1's default impulse response (Teufelsberg on files.blokdust.io) is gone; the engine's built-in one plays instead.
-    const irDefault = def.params.find((p) => p.key === 'track')?.default;
+    const irDefault = def.params.find((param) => param.key === 'track')?.default;
     if (def.id === 'fx.convolver' && this.Params.track === irDefault)
       Object.assign(this.Params, { trackName: 'BUILT-IN HALL', user: 'BlokDust' });
   }
@@ -60,7 +63,7 @@ export class V1Block {
     if (this.def.id === 'source.sample-gen' && this.OptionsForm) soundForm(this);
     if (this.def.id === 'input.midi-controller' && this.OptionsForm) extendMidiForm(this);
     // Silent Keys (CHG-0017): a switch beside Mono/Poly, off by default.
-    if (this.OptionsForm && this.def.params.some((p) => p.key === 'keysSetPitch'))
+    if (this.OptionsForm && this.def.params.some((param) => param.key === 'keysSetPitch'))
       (this.OptionsForm.parameters as any[])
         .find((p) => p.type === 'switches')
         ?.switches.push({
@@ -109,11 +112,14 @@ export class V1Block {
     App.MainScene.OptionsPanel.Animating = false;
     // v1 SoundCloudTrack (ported) shortens and capitalises titles/users as v1 showed them.
     // Owner (2026-11-14): the results also show each sound's length ("By User · 0:07"; the panel draws "By " + User).
-    this.SearchResults = results.map((s) => {
-      const t = Object.assign(new SoundCloudTrack(s.name, s.username, `freesound:${s.id}`, s.url), {
-        Sound: s,
-      });
-      t.User = `${t.User} · ${formatLength(s.duration)}`;
+    this.SearchResults = results.map((result) => {
+      const t = Object.assign(
+        new SoundCloudTrack(result.name, result.username, `freesound:${result.id}`, result.url),
+        {
+          Sound: result,
+        },
+      );
+      t.User = `${t.User} · ${formatLength(result.duration)}`;
       return t;
     });
   }
@@ -138,7 +144,7 @@ export class V1Block {
   /** v1 Block.Connections (the tour asks what a block is connected to, CHG-0035): the engine's proximity connections. */
   get Connections(): { Count: number; ToArray(): V1Block[] } {
     const ids = new Set<number>(App.MainScene?.host?.connectedIds(this.Id) ?? []);
-    const list = (App.Blocks as V1Block[]).filter((b) => ids.has(b.Id));
+    const list = App.Blocks.filter((b) => ids.has(b.Id));
     return { Count: list.length, ToArray: () => list };
   }
   /** v1 Recorder: recording now (RecorderPanel draws the button lit). */
@@ -175,7 +181,7 @@ export class V1Block {
       return;
     } // a Counter's Reset (R2c)
     // Samplers: reverse flips the waveform and mirrors the region at once (the app updates Params and the engine).
-    if (key === 'reverse' && this.def.params.some((q) => q.key === 'startPosition')) {
+    if (key === 'reverse' && this.def.params.some((param) => param.key === 'startPosition')) {
       App.MainScene.host.reverseSample(this.Id, !!value);
       return;
     }
@@ -254,7 +260,7 @@ export class V1Block {
     }
     // MPE switches (PLUGIN-0004): the panel shows the mapping rows only while MPE is on.
     if (key === 'mpe') {
-      const p = this.def.params.find((q) => q.key === 'mpe');
+      const p = this.def.params.find((param) => param.key === 'mpe');
       if (p) {
         this.Params.mpe = !!value;
         App.MainScene.setParam(this, 'mpe', value ? 1 : 0);
@@ -266,9 +272,11 @@ export class V1Block {
     if (key === 'polyphonic') {
       this.Params.isPolyphonic = !!value;
       App.MainScene.setParam(this, 'isPolyphonic', value ? 1 : 0);
-      queueMicrotask(() => this.RefreshOptionsPanel());
+      queueMicrotask(() => {
+        this.RefreshOptionsPanel();
+      });
     }
-    const p = this.def.params.find((q) => q.key === key);
+    const p = this.def.params.find((param) => param.key === key);
     if (!p) return;
     let v = typeof value === 'boolean' ? (value ? 1 : 0) : Number(value);
     const t = p.ui; // the manifest's v1 slider mapping (same as the plugin's Dust automation, codegen automation())
@@ -294,13 +302,13 @@ export class V1Block {
   /** v1 Block.RefreshOptionsPanel(cmd): re-populate if this block's panel is open; "animate" keeps the panel redrawing
    * every frame (its loading square spins) until the next plain refresh. */
   RefreshOptionsPanel(cmd?: string): void {
-    const o = App.MainScene?.OptionsPanel;
-    if (!o) return;
-    if (o.Scale > 0 && o.SelectedBlock === this) {
+    const optionsPanel = App.MainScene?.OptionsPanel;
+    if (!optionsPanel) return;
+    if (optionsPanel.Scale > 0 && optionsPanel.SelectedBlock === this) {
       this.UpdateOptionsForm();
-      o.Populate(this.OptionsForm, false);
+      optionsPanel.Populate(this.OptionsForm, false);
     } // v1: in place, at once
-    o.Animating = cmd === 'animate';
+    optionsPanel.Animating = cmd === 'animate';
   }
 }
 
@@ -372,7 +380,7 @@ export function withSound<T>(n: number, run: () => T): T {
  */
 function soundForm(b: V1Block): void {
   const params = b.OptionsForm.parameters as any[],
-    i = params.findIndex((p) => p.setting === 'generate');
+    i = params.findIndex((param) => param.setting === 'generate');
   if (i < 0) return;
   params[i] = {
     type: 'slider',
@@ -396,7 +404,7 @@ function soundForm(b: V1Block): void {
  */
 function extendMidiForm(b: V1Block): void {
   const params = b.OptionsForm.parameters as any[];
-  const sw = params.find((p) => p.type === 'switches');
+  const sw = params.find((param) => param.type === 'switches');
   sw?.switches.push({
     name: 'MPE',
     setting: 'mpe',
@@ -524,8 +532,8 @@ const SIGNED_TURNS = [
 ];
 const nearest = (steps: { beats: number }[], beats: number) => {
   let best = 0;
-  steps.forEach((s, i) => {
-    if (Math.abs(s.beats - beats) < Math.abs(steps[best].beats - beats)) best = i;
+  steps.forEach((step, i) => {
+    if (Math.abs(step.beats - beats) < Math.abs(steps[best].beats - beats)) best = i;
   });
   return best;
 };
@@ -673,7 +681,7 @@ function extendSyncForm(b: V1Block): void {
         }[kind]
       : [],
   );
-  const kept = params.filter((p) => !free.has(p.setting));
+  const kept = params.filter((param) => !free.has(param.setting));
   if (kind === 'emitter') {
     // Offset (CHG-0014): a nudge, as a share of the interval: after Swing when synced, after Fire Rate when not.
     const offset = {

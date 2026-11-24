@@ -116,7 +116,7 @@ export const labelsTests: Tests = {
     const patch = (await state(p)).patch;
     r.staged = {
       outerLabels: (patch.labels ?? []).map((l: any) => l.text),
-      inner: patch.macros?.[0]?.labels?.map((l: any) => l.text),
+      inner: patch.macros?.[0]?.labels?.map((label: any) => label.text),
       blocks: patch.blocks.map((b: any) => b.type),
     };
     await p.close();

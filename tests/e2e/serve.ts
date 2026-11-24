@@ -31,6 +31,6 @@ export async function serveDist(dir = 'web/dist'): Promise<{ url: string; server
       .writeHead(200, { 'content-type': MIME[extname(f)] ?? 'application/octet-stream' })
       .end(readFileSync(f));
   });
-  await new Promise<void>((r) => server.listen(0, r));
+  await new Promise<void>((resolve) => server.listen(0, resolve));
   return { url: `http://localhost:${(server.address() as { port: number }).port}`, server };
 }

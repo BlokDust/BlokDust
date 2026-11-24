@@ -4,7 +4,7 @@
 // the panels talk to the app through SceneHost.
 import type { Theme } from '../generated/palettes.gen.ts';
 import { App, Dimensions, Point, Size, TWEEN } from './shim.ts';
-import { V1Block } from './blocks.ts';
+import type { V1Block } from './blocks.ts';
 import { installFilterPanel } from './filterPanel.ts';
 import { installSelectors } from './selectorOption.ts';
 import {
@@ -202,15 +202,23 @@ export class V1Scene {
     App.ThemeManager.OptionsOrder = theme.roles.options;
     App.ThemeManager.CurrentThemeNo = theme.index;
     App.ThemeManager.CurrentTheme = { Name: theme.name };
-    App.ThemeManager.Themes = this.host.themes().map((t) => ({ Name: t.name }));
-    App.ThemeManager.LoadTheme = (n: number) => this.host.setTheme(n);
+    App.ThemeManager.Themes = this.host.themes().map((theme) => ({ Name: theme.name }));
+    App.ThemeManager.LoadTheme = (n: number) => {
+      this.host.setTheme(n);
+    };
     App.ZoomLevel = zoom;
     this.lastZoom = zoom;
     App.DragOffset.x = drag.x;
     App.DragOffset.y = drag.y;
     App.Blocks = blocks;
-    App.CommandManager = { ExecuteCommand: (c: unknown) => this.command(c) };
-    App.Audio.Master.volume.onMaster = (db: number) => this.host.setMasterDb(db);
+    App.CommandManager = {
+      ExecuteCommand: (c: unknown) => {
+        this.command(c);
+      },
+    };
+    App.Audio.Master.volume.onMaster = (db: number) => {
+      this.host.setMasterDb(db);
+    };
     // v1 ThemeManager: the share text fields take the theme's text colour.
     for (const id of [
       'shareUrl',
@@ -223,8 +231,9 @@ export class V1Scene {
     ])
       document.getElementById(id)!.style.color = theme.colors[theme.roles.txt];
     App.BlockSprites = {
-      DrawSprite: (dc: any, pos: Point, scaled: boolean, name: string) =>
-        this.drawSprite(dc.Ctx ?? dc, pos, scaled, name),
+      DrawSprite: (dc: any, pos: Point, scaled: boolean, name: string) => {
+        this.drawSprite(dc.Ctx ?? dc, pos, scaled, name);
+      },
     };
     App.AnimationsLayer = this.AnimationsLayer;
     if (!this.initialised) {
@@ -259,7 +268,9 @@ export class V1Scene {
       (this.MessagePanel as any)._Alpha = 0;
       relabelShareButton(this.Header);
       // The header's Share slot opens Patches (CREATE SHARE LINK is in its SAVE tab, owner 2026-11-10).
-      (this.SharePanel as any).OpenPanel = () => this.PatchesPanel.OpenPanel();
+      (this.SharePanel as any).OpenPanel = () => {
+        this.PatchesPanel.OpenPanel();
+      };
       release1Settings(this.SettingsPanel, this.host);
       installFilterPanel(this.OptionsPanel);
       cancellableOpen(this.OptionsPanel);
@@ -341,20 +352,20 @@ export class V1Scene {
       this.lastZoom = App.ZoomLevel;
       this.host.setZoom(App.ZoomLevel);
     }
-    const d = App.DragOffset,
+    const point = App.DragOffset,
       easing =
-        Math.round(d.x) !== Math.round(this.MainSceneDragger.Destination.x) ||
-        Math.round(d.y) !== Math.round(this.MainSceneDragger.Destination.y);
-    if (d.x !== this.lastDrag.x || d.y !== this.lastDrag.y) {
-      this.lastDrag = { x: d.x, y: d.y };
-      this.host.setDrag({ x: d.x, y: d.y });
+        Math.round(point.x) !== Math.round(this.MainSceneDragger.Destination.x) ||
+        Math.round(point.y) !== Math.round(this.MainSceneDragger.Destination.y);
+    if (point.x !== this.lastDrag.x || point.y !== this.lastDrag.y) {
+      this.lastDrag = { x: point.x, y: point.y };
+      this.host.setDrag({ x: point.x, y: point.y });
     }
     // Spinners (AnimationsLayer: loading blocks, Share "saving…", sample search) animate every frame while shown.
     const spinning =
       this.AnimationsLayer.ActiveBlocks.length > 0 ||
       (this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).Animating) ||
       !!(this.SharePanel as any)._Saving ||
-      (this.SoundcloudPanel.Open && !!(this.OptionsPanel.SelectedBlock as any)?.Searching) ||
+      (this.SoundcloudPanel.Open && !!this.OptionsPanel.SelectedBlock?.Searching) ||
       (this.PatchesPanel.Open && this.PatchesPanel.animating) ||
       (this.SettingsPanel.Open && !!(this.SettingsPanel as any).accountPage?.animating);
     // Playback lines move every frame while shown (and once more to clear them when playback stops).
@@ -456,7 +467,7 @@ export class V1Scene {
     });
     const before = new Set(TWEEN.getAll());
     s.StartButtonPressed();
-    this.splashTweens = TWEEN.getAll().filter((t) => !before.has(t));
+    this.splashTweens = TWEEN.getAll().filter((tween) => !before.has(tween));
     if (this.skipRequested) this.skipSplash();
   }
   private splashDone: (() => void) | null = null;
@@ -472,7 +483,7 @@ export class V1Scene {
       this.skipRequested = true;
       return;
     }
-    for (const t of this.splashTweens) t.stop();
+    for (const tween of this.splashTweens) tween.stop();
     this.splashTweens = [];
     s.IsAnimationFinished = true;
     s.IsTransitionFinished = true;
@@ -507,59 +518,59 @@ export class V1Scene {
   // ---- input, in v1 MainScene order (device px) ----
   /** Returns true when the UI took the press (the stage must not start a block/stage drag). */
   pointerDown(x: number, y: number, blockAt: () => V1Block | null): boolean {
-    const p = new Point(x, y);
-    this.pointer = p;
+    const point = new Point(x, y);
+    this.pointer = point;
     if (this.ToolTip.Open) this.toolTipClose();
     if (this.MessagePanel.Open && this.MessagePanel.Hover) {
-      this.MessagePanel.MouseDown(p);
+      this.MessagePanel.MouseDown(point);
       return true;
     } // v1 MainScene
     if (this.SharePanel.Open) {
-      this.SharePanel.MouseDown(p);
+      this.SharePanel.MouseDown(point);
       return true;
     }
     if (this.SettingsPanel.Open) {
-      this.SettingsPanel.MouseDown(p);
+      this.SettingsPanel.MouseDown(point);
       return true;
     }
     if (this.PatchesPanel.Open) {
-      this.PatchesPanel.MouseDown(p);
+      this.PatchesPanel.MouseDown(point);
       return true;
     }
     if (this.SoundcloudPanel.Open) {
-      if (this.fileButtonHit(p)) {
+      if (this.fileButtonHit(point)) {
         const b = this.OptionsPanel.SelectedBlock;
         this.SoundcloudPanel.ClosePanel();
         if (b) this.host.loadSample(b.Id);
         return true;
       }
-      this.SoundcloudPanel.MouseDown(p);
+      this.SoundcloudPanel.MouseDown(point);
       return true;
     }
     const tour = this.Tutorial;
     if (tour.SplashOpen) {
-      tour.SplashMouseDown(p);
+      tour.SplashMouseDown(point);
       if (tour.Hover) return true;
     } // v1 order: the welcome first
-    this.CreateNew.MouseDown(p);
+    this.CreateNew.MouseDown(point);
     if (this.CreateNew.Hover) return true;
-    this.Header.MouseDown(p);
+    this.Header.MouseDown(point);
     if (this.Header.MenuOver) return true;
-    this.ZoomButtons.MouseDown(p);
+    this.ZoomButtons.MouseDown(point);
     if (this.ZoomButtons.InRoll || this.ZoomButtons.OutRoll) return true;
-    if (this.powerHit(p)) {
-      this.pressPower(p.x);
+    if (this.powerHit(point)) {
+      this.pressPower(point.x);
       return true;
     }
     if (this.OptionsPanel.Scale === 1) {
-      this.OptionsPanel.MouseDown(p.x, p.y);
+      this.OptionsPanel.MouseDown(point.x, point.y);
       if (this.OptionsPanel.Hover) return true;
     }
     if (tour.Open) {
-      tour.MouseDown(p);
+      tour.MouseDown(point);
       if (tour.Hover) return true;
     } // SKIP TOUR / OKAY DONE
-    this.RecorderPanel.MouseDown(p);
+    this.RecorderPanel.MouseDown(point);
     if (this.RecorderPanel.Hover) return true;
     const hit = blockAt();
     if (hit) {
@@ -573,26 +584,26 @@ export class V1Scene {
       return false;
     }
     this.OptionsPanel.Close();
-    this.MainSceneDragger.MouseDown(p); // v1: no block hit → drag the stage
+    this.MainSceneDragger.MouseDown(point); // v1: no block hit → drag the stage
     return false;
   }
 
   /** Returns 'delete' when a dragged block was dropped on the trash can. */
   pointerUp(x: number, y: number, moved: boolean): 'delete' | null {
-    const p = new Point(x, y);
+    const point = new Point(x, y);
     let result: 'delete' | null = null;
     // Where the pointer is now, not where it last moved: a finger lifts and lands elsewhere with no move between, so
     // after one drop on the trash the next tap "ended over the trash" too (owner, 2026-11-08, mobile).
-    this.TrashCan.MouseMove(p);
+    this.TrashCan.MouseMove(point);
     if (this.IsDraggingABlock && this.TrashCan.MouseUp?.()) result = 'delete';
     this.IsDraggingABlock = false;
     if (!result && this.SelectedBlock) {
       this.SelectedBlock.IsPressed = false;
       if (this.optionTimeout && !moved) this.OptionsPanel.Open(this.SelectedBlock);
     }
-    if (this.SharePanel.Open) this.SharePanel.MouseUp(p);
-    else if (this.SettingsPanel.Open) this.SettingsPanel.MouseUp(p);
-    else if (this.SoundcloudPanel.Open) this.SoundcloudPanel.MouseUp(p);
+    if (this.SharePanel.Open) this.SharePanel.MouseUp(point);
+    else if (this.SettingsPanel.Open) this.SettingsPanel.MouseUp(point);
+    else if (this.SoundcloudPanel.Open) this.SoundcloudPanel.MouseUp(point);
     else if (this.PatchesPanel.Open) this.PatchesPanel.MouseUp();
     else {
       this.Header.MouseUp();
@@ -609,25 +620,25 @@ export class V1Scene {
     hover: () => V1Block | null,
     blockMoved: boolean,
   ): void {
-    const p = new Point(x, y);
-    this.pointer = p;
-    this.checkHover(p, pointerDown, hover);
+    const point = new Point(x, y);
+    this.pointer = point;
+    this.checkHover(point, pointerDown, hover);
     if (blockMoved && this.IsDraggingABlock && this.OptionsPanel.Scale === 1)
       this.OptionsPanel.Close();
-    if (this.OptionsPanel.Scale === 1) this.OptionsPanel.MouseMove(p.x, p.y);
-    if (this.SharePanel.Open) this.SharePanel.MouseMove(p);
-    if (this.SettingsPanel.Open) this.SettingsPanel.MouseMove(p);
-    if (this.SoundcloudPanel.Open) this.SoundcloudPanel.MouseMove(p);
-    if (this.PatchesPanel.Open) this.PatchesPanel.MouseMove(p);
-    if (this.MessagePanel.Open) this.MessagePanel.MouseMove(p);
-    this.Header.MouseMove(p);
-    this.CreateNew.MouseMove(p);
-    if (this.Tutorial.Open || this.Tutorial.SplashOpen) this.Tutorial.MouseMove(p);
-    this.ZoomButtons.MouseMove(p);
-    this.TrashCan.MouseMove(p);
-    this.RecorderPanel.MouseMove(p);
-    this.MainSceneDragger.MouseMove(p);
-    this.powerHover = this.powerHit(p);
+    if (this.OptionsPanel.Scale === 1) this.OptionsPanel.MouseMove(point.x, point.y);
+    if (this.SharePanel.Open) this.SharePanel.MouseMove(point);
+    if (this.SettingsPanel.Open) this.SettingsPanel.MouseMove(point);
+    if (this.SoundcloudPanel.Open) this.SoundcloudPanel.MouseMove(point);
+    if (this.PatchesPanel.Open) this.PatchesPanel.MouseMove(point);
+    if (this.MessagePanel.Open) this.MessagePanel.MouseMove(point);
+    this.Header.MouseMove(point);
+    this.CreateNew.MouseMove(point);
+    if (this.Tutorial.Open || this.Tutorial.SplashOpen) this.Tutorial.MouseMove(point);
+    this.ZoomButtons.MouseMove(point);
+    this.TrashCan.MouseMove(point);
+    this.RecorderPanel.MouseMove(point);
+    this.MainSceneDragger.MouseMove(point);
+    this.powerHover = this.powerHit(point);
   }
 
   // ---- the power switch (owner, 2026-11-11; not in v1) ----
@@ -677,10 +688,10 @@ export class V1Scene {
    * v1 ZoomButtons and TrashCan); the label goes above it, where v1's zoom shows its percentage (50u up), as below
    * would meet the edge. */
   private powerRect() {
-    const u = App.Unit,
-      w = (this.hostPower ? 90 : 60) * u,
-      h = 60 * u;
-    return { x: App.Width * 0.5 - w * 0.5, y: App.Height - 30 * u - h * 0.35, w, h };
+    const unit = App.Unit,
+      w = (this.hostPower ? 90 : 60) * unit,
+      h = 60 * unit;
+    return { x: App.Width * 0.5 - w * 0.5, y: App.Height - 30 * unit - h * 0.35, w, h };
   }
   private powerHit(p: { x: number; y: number }): boolean {
     if (
@@ -690,9 +701,9 @@ export class V1Scene {
       this.PatchesPanel.Open
     )
       return false;
-    const u = App.Unit,
+    const unit = App.Unit,
       r = this.powerRect();
-    return Dimensions.hitRect(r.x, App.Height - 66 * u, r.w, 66 * u, p.x, p.y);
+    return Dimensions.hitRect(r.x, App.Height - 66 * unit, r.w, 66 * unit, p.x, p.y);
   }
   /** Hosts: the HOST hint is showing (the stage keeps redrawing until it goes). */
   private get hostHinting(): boolean {
@@ -706,7 +717,7 @@ export class V1Scene {
    */
   private drawPower(): void {
     const ctx = this.Ctx,
-      u = App.Unit,
+      unit = App.Unit,
       { x, y, w, h } = this.powerRect(),
       menu = App.ThemeManager.MenuOrder;
     const txt = App.Palette[App.ThemeManager.Txt],
@@ -725,25 +736,26 @@ export class V1Scene {
     const red = 13,
       stopped = mode === 0 || (mode === 2 && !this.hostPlaying);
     App.FillColor(ctx, App.Palette[stopped ? red : menu[2]]);
-    ctx.fillRect(x + cw * mode, y + h * 0.55, cw, h * 0.05 + (this.powerHover ? u : 0));
+    ctx.fillRect(x + cw * mode, y + h * 0.55, cw, h * 0.05 + (this.powerHover ? unit : 0));
     const lx = x + cw * 0.5,
       rx = x + cw * 1.5,
       hx = x + cw * 2.5;
     ctx.lineWidth = 2;
     App.StrokeColor(ctx, txt);
     ctx.beginPath();
-    ctx.moveTo(lx - 5 * u, cy);
-    ctx.lineTo(lx + 5 * u, cy);
-    ctx.moveTo(rx + 5 * u, cy);
-    ctx.lineTo(rx, cy - 5 * u);
-    ctx.lineTo(rx - 5 * u, cy);
-    ctx.lineTo(rx, cy + 5 * u);
-    ctx.lineTo(rx + 5 * u, cy);
-    if (this.hostPower && this.hostPlaying) ctx.rect(hx - 4.5 * u, cy - 4.5 * u, 9 * u, 9 * u);
+    ctx.moveTo(lx - 5 * unit, cy);
+    ctx.lineTo(lx + 5 * unit, cy);
+    ctx.moveTo(rx + 5 * unit, cy);
+    ctx.lineTo(rx, cy - 5 * unit);
+    ctx.lineTo(rx - 5 * unit, cy);
+    ctx.lineTo(rx, cy + 5 * unit);
+    ctx.lineTo(rx + 5 * unit, cy);
+    if (this.hostPower && this.hostPlaying)
+      ctx.rect(hx - 4.5 * unit, cy - 4.5 * unit, 9 * unit, 9 * unit);
     else if (this.hostPower) {
-      ctx.moveTo(hx - 4 * u, cy - 5 * u);
-      ctx.lineTo(hx + 5 * u, cy);
-      ctx.lineTo(hx - 4 * u, cy + 5 * u);
+      ctx.moveTo(hx - 4 * unit, cy - 5 * unit);
+      ctx.lineTo(hx + 5 * unit, cy);
+      ctx.lineTo(hx - 4 * unit, cy + 5 * unit);
       ctx.closePath();
     }
     ctx.stroke();
@@ -761,27 +773,35 @@ export class V1Scene {
     const fill = this.hostHinting ? menu[1] : stopped ? red : null;
     ctx.font = App.Metrics.TxtMid;
     ctx.textAlign = 'center';
-    let base = App.Height - 50 * u;
+    let base = App.Height - 50 * unit;
     if (fill !== null) {
-      const m = ctx.measureText(label),
-        boxY = base - 11 * u,
-        boxH = 15 * u;
+      const textMetrics = ctx.measureText(label),
+        boxY = base - 11 * unit,
+        boxH = 15 * unit;
       App.FillColor(ctx, App.Palette[fill]);
-      ctx.fillRect(x + w * 0.5 - m.width * 0.5 - 6 * u, boxY, m.width + 12 * u, boxH);
+      ctx.fillRect(
+        x + w * 0.5 - textMetrics.width * 0.5 - 6 * unit,
+        boxY,
+        textMetrics.width + 12 * unit,
+        boxH,
+      );
       // The letters sit in the middle of the fill (owner, 2026-11-13: they sat a pixel or two high).
-      base = boxY + boxH * 0.5 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) * 0.5;
+      base =
+        boxY +
+        boxH * 0.5 +
+        (textMetrics.actualBoundingBoxAscent - textMetrics.actualBoundingBoxDescent) * 0.5;
     }
     App.FillColor(ctx, txt);
     ctx.fillText(label, x + w * 0.5, base);
   }
 
   /** A mouse wheel over the UI: the gallery's list scrolls (owner review 2); elsewhere v1's zoom buttons take it. */
-  wheel(e: WheelEvent): void {
+  wheel(event: WheelEvent): void {
     if (this.PatchesPanel.Open) {
-      this.PatchesPanel.Wheel(e);
+      this.PatchesPanel.Wheel(event);
       return;
     }
-    this.ZoomButtons.MouseWheel(e);
+    this.ZoomButtons.MouseWheel(event);
   }
 
   // ---- multi-touch (CHG-0005 task 8; not in v1, which took one pointer) ----
@@ -795,9 +815,9 @@ export class V1Scene {
       this.SoundcloudPanel.Open
     )
       return true;
-    const h = this.Header as any,
-      u = App.Unit;
-    if (y < (h.Height * (h.Rows ?? 1) + (h.DropDown ?? 0)) * u) return true;
+    const header = this.Header as any,
+      unit = App.Unit;
+    if (y < (header.Height * (header.Rows ?? 1) + (header.DropDown ?? 0)) * unit) return true;
     return (
       this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).OutlineTest(new Point(x, y))
     );
@@ -814,16 +834,16 @@ export class V1Scene {
   }
   /** The open options panel's slider row under (x, y) device px (v1 OptionsPanel.RolloverCheck's rect), or -1. */
   sliderIndexAt(x: number, y: number): number {
-    const o = this.OptionsPanel as any,
-      u = App.Unit;
-    if (o.Scale !== 1 || !o.SelectedBlock) return -1;
-    return (o.Options ?? []).findIndex(
+    const optionsPanel = this.OptionsPanel as any,
+      unit = App.Unit;
+    if (optionsPanel.Scale !== 1 || !optionsPanel.SelectedBlock) return -1;
+    return (optionsPanel.Options ?? []).findIndex(
       (opt: any) =>
         (opt.Type === 'slider' || opt.Type === 'waveslider') &&
         Dimensions.hitRect(
-          o.Position.x + o.Margin - 10 * u,
-          o.Position.y + opt.Position.y,
-          o.Range + 20 * u,
+          optionsPanel.Position.x + optionsPanel.Margin - 10 * unit,
+          optionsPanel.Position.y + opt.Position.y,
+          optionsPanel.Range + 20 * unit,
           opt.Size.height,
           x,
           y,
@@ -833,8 +853,8 @@ export class V1Scene {
   /** Another finger drags slider `i` (v1 OptionsPanel.SliderSet). It is not marked Selected: v1 moves every selected
    * slider to the first finger. */
   setSlider(i: number, x: number): void {
-    const o = this.OptionsPanel as any;
-    if (o.Scale === 1 && o.Options?.[i]) o.SliderSet(i, x);
+    const optionsPanel = this.OptionsPanel as any;
+    if (optionsPanel.Scale === 1 && optionsPanel.Options?.[i]) optionsPanel.SliderSet(i, x);
   }
   /** Pinch zoom: the view follows the fingers; the zoom readout shows as with v1's zoom buttons. */
   pinchView(zoom: number, drag: { x: number; y: number }): void {
@@ -851,8 +871,10 @@ export class V1Scene {
     const z = this.ZoomButtons as any,
       slots: number[] = z._ZoomSlots ?? [0.15, 0.25, 0.5, 1, 2, 4];
     let best = 0;
-    slots.forEach((s, i) => {
-      if (Math.abs(Math.log(s / App.ZoomLevel)) < Math.abs(Math.log(slots[best] / App.ZoomLevel)))
+    slots.forEach((slot, i) => {
+      if (
+        Math.abs(Math.log(slot / App.ZoomLevel)) < Math.abs(Math.log(slots[best] / App.ZoomLevel))
+      )
         best = i;
     });
     z.CurrentSlot = best;
@@ -861,30 +883,37 @@ export class V1Scene {
 
   /** The slider row of the open options panel under (x, y) device px, using v1 OptionsPanel.HitTests' row rect. */
   sliderAt(x: number, y: number): { block: V1Block; setting: string; name: string } | null {
-    const o = this.OptionsPanel,
-      u = App.Unit;
-    if (o.Scale !== 1 || !o.SelectedBlock) return null;
-    for (const opt of o.Options ?? []) {
+    const optionsPanel = this.OptionsPanel,
+      unit = App.Unit;
+    if (optionsPanel.Scale !== 1 || !optionsPanel.SelectedBlock) return null;
+    for (const opt of optionsPanel.Options ?? []) {
       if (opt.Type !== 'slider') continue;
-      const rx = o.Position.x + o.Margin - 10 * u,
-        ry = o.Position.y + opt.Position.y;
-      if (x > rx && x < rx + o.Range + 20 * u && y > ry && y < ry + opt.Size.height)
-        return { block: o.SelectedBlock, setting: opt.Setting, name: opt.Name };
+      const rx = optionsPanel.Position.x + optionsPanel.Margin - 10 * unit,
+        ry = optionsPanel.Position.y + opt.Position.y;
+      if (x > rx && x < rx + optionsPanel.Range + 20 * unit && y > ry && y < ry + opt.Size.height)
+        return { block: optionsPanel.SelectedBlock, setting: opt.Setting, name: opt.Name };
     }
     // The Filter's graph (CHG-0010) stands in for its Frequency and Gain sliders: the handle is Gain, the width bar
     // Width, anywhere else on the graph Frequency (the menu's title names which).
-    const g =
-      (o.SelectedBlock as any).def?.id === 'fx.filter'
-        ? o.Options?.find((q: any) => q.Type === 'parametric')
+    const option =
+      optionsPanel.SelectedBlock.def?.id === 'fx.filter'
+        ? optionsPanel.Options?.find((Option: any) => Option.Type === 'parametric')
         : null;
-    if (g) {
-      const rx = o.Position.x + o.Margin - 10 * u,
-        ry = o.Position.y + g.Position.y;
-      if (x > rx && x < rx + o.Range + 20 * u && y > ry && y < ry + g.Size.height) {
-        o.RolloverCheck(x, y);
-        if (g.HandleRoll[1]) return { block: o.SelectedBlock, setting: 'gain', name: 'Gain' };
-        if (g.SubHandleRoll[1]) return { block: o.SelectedBlock, setting: 'Q', name: 'Width' };
-        return { block: o.SelectedBlock, setting: 'frequency', name: 'Frequency' };
+    if (option) {
+      const rx = optionsPanel.Position.x + optionsPanel.Margin - 10 * unit,
+        ry = optionsPanel.Position.y + option.Position.y;
+      if (
+        x > rx &&
+        x < rx + optionsPanel.Range + 20 * unit &&
+        y > ry &&
+        y < ry + option.Size.height
+      ) {
+        optionsPanel.RolloverCheck(x, y);
+        if (option.HandleRoll[1])
+          return { block: optionsPanel.SelectedBlock, setting: 'gain', name: 'Gain' };
+        if (option.SubHandleRoll[1])
+          return { block: optionsPanel.SelectedBlock, setting: 'Q', name: 'Width' };
+        return { block: optionsPanel.SelectedBlock, setting: 'frequency', name: 'Frequency' };
       }
     }
     return null;
@@ -907,35 +936,48 @@ export class V1Scene {
   }
   /** The open panel's playheads as fractions of its waveform's width, and the waveform's rect (panel coordinates). */
   playheadLines(): { xs: number[]; x: number; y: number; width: number; height: number } | null {
-    const o = this.OptionsPanel as any,
-      v = o.SelectedBlock as V1Block | null;
-    if (!v || o.Scale !== 1) return null;
-    const secs = this.playheads.get(v.Id);
-    const w = (o.Options ?? []).find(
+    const optionsPanel = this.OptionsPanel as any,
+      v1Block = optionsPanel.SelectedBlock as V1Block | null;
+    if (!v1Block || optionsPanel.Scale !== 1) return null;
+    const secs = this.playheads.get(v1Block.Id);
+    const w = (optionsPanel.Options ?? []).find(
       (q: any) => q.Type === 'waveregion' || q.Type === 'waveslider' || q.Type === 'waveimage',
     );
-    const dur = v.GetDuration();
+    const dur = v1Block.GetDuration();
     if (!secs?.length || !w || !(dur > 0) || !(w.Waveform?.length > 0)) return null;
     // A zoomed waveform (waveZoom.ts) shows only the playheads inside its window.
-    const view = panelView(o) ?? { f0: 0, f1: 1 };
+    const view = panelView(optionsPanel) ?? { f0: 0, f1: 1 };
     const xs = secs
-      .map((t) => Math.max(0, Math.min(1, t / dur)))
+      .map((sec) => Math.max(0, Math.min(1, sec / dur)))
       .map((f) => (f - view.f0) / (view.f1 - view.f0))
       .filter((f) => f >= 0 && f <= 1);
-    return { xs, x: o.Margin, y: w.Position.y, width: o.Range, height: w.Size.height };
+    return {
+      xs,
+      x: optionsPanel.Margin,
+      y: w.Position.y,
+      width: optionsPanel.Range,
+      height: w.Size.height,
+    };
   }
   private drawPlayheads(): void {
     const l = this.playheadLines();
     this.playheadsShown = !!l;
     if (!l) return;
-    const o = this.OptionsPanel as any,
+    const optionsPanel = this.OptionsPanel as any,
       ctx = this.Ctx,
-      u = App.Unit;
+      unit = App.Unit;
     ctx.save();
-    ctx.setTransform(o.Scale, 0, 0, o.Scale, o.Position.x, o.Position.y);
+    ctx.setTransform(
+      optionsPanel.Scale,
+      0,
+      0,
+      optionsPanel.Scale,
+      optionsPanel.Position.x,
+      optionsPanel.Position.y,
+    );
     App.StrokeColor(ctx, App.Palette[App.ThemeManager.Txt]);
     ctx.globalAlpha = 0.85;
-    ctx.lineWidth = Math.max(1, u);
+    ctx.lineWidth = Math.max(1, unit);
     ctx.beginPath();
     for (const f of l.xs) {
       const x = Math.round(l.x + f * l.width) + 0.5;
@@ -954,7 +996,7 @@ export class V1Scene {
 
   get uiBusy(): boolean {
     const z = this.ZoomButtons,
-      o = this.OptionsPanel;
+      optionsPanel = this.OptionsPanel;
     return (
       this.powerHover ||
       z.InRoll ||
@@ -967,7 +1009,7 @@ export class V1Scene {
       this.SoundcloudPanel.Open ||
       this.PatchesPanel.Open ||
       this.CreateNew.Hover ||
-      (o.Scale === 1 && o.Hover)
+      (optionsPanel.Scale === 1 && optionsPanel.Hover)
     );
   }
 
@@ -978,14 +1020,16 @@ export class V1Scene {
     if (name === 'save' || name === 'saveas') {
       void this.host
         .share(name === 'save' ? 'save' : 'saveAs', this.SharePanel.SessionTitle ?? '')
-        .then((id) => this.SharePanel.ReturnLink(id));
+        .then((id) => {
+          this.SharePanel.ReturnLink(id);
+        });
     }
   }
 
   // ---- v1 MainScene API the ported panels call ----
   CreateBlockFromType(v1Type: string): void {
-    const g = this.Metrics.CursorToGrid(this.pointer);
-    const id = this.host.createBlock(v1Type, g.x, g.y);
+    const point = this.Metrics.CursorToGrid(this.pointer);
+    const id = this.host.createBlock(v1Type, point.x, point.y);
     if (id === null) return;
     this.IsDraggingABlock = true;
     this.pendingSelect = id;
@@ -1036,65 +1080,65 @@ export class V1Scene {
     if (b) b.IsSelected = true;
   }
 
-  private checkHover(p: Point, pointerDown: boolean, hover: () => V1Block | null): void {
-    const t = this.ToolTip,
-      o = this.OptionsPanel;
+  private checkHover(point: Point, pointerDown: boolean, hover: () => V1Block | null): void {
+    const toolTip = this.ToolTip,
+      optionsPanel = this.OptionsPanel;
     let panelCheck = false,
       over: V1Block | null = null;
-    if (o.Scale === 1)
+    if (optionsPanel.Scale === 1)
       panelCheck =
-        p.x > o.Position.x &&
-        p.x < o.Position.x + o.Size.width &&
-        p.y > o.Position.y - o.Size.height * 0.5 &&
-        p.y < o.Position.y + o.Size.height * 0.5;
+        point.x > optionsPanel.Position.x &&
+        point.x < optionsPanel.Position.x + optionsPanel.Size.width &&
+        point.y > optionsPanel.Position.y - optionsPanel.Size.height * 0.5 &&
+        point.y < optionsPanel.Position.y + optionsPanel.Size.height * 0.5;
     if (!panelCheck && !pointerDown) over = hover();
     if (over) {
-      t.Name = over.BlockName;
+      toolTip.Name = over.BlockName;
       const pos = this.Metrics.PointOnGrid(over.Position);
-      t.Position.x = pos.x;
-      t.Position.y = pos.y;
+      toolTip.Position.x = pos.x;
+      toolTip.Position.y = pos.y;
     }
-    if (over && !t.Open && !o.Opening) {
-      t.Open = true;
-      if (t.Alpha > 0) t.AlphaTo(t, 100, 600);
+    if (over && !toolTip.Open && !optionsPanel.Opening) {
+      toolTip.Open = true;
+      if (toolTip.Alpha > 0) toolTip.AlphaTo(toolTip, 100, 600);
       else
         this.toolTipTimer = setTimeout(() => {
-          if (t.Alpha === 0) t.AlphaTo(t, 100, 600);
+          if (toolTip.Alpha === 0) toolTip.AlphaTo(toolTip, 100, 600);
         }, 550);
     }
-    if (!over && t.Open) this.toolTipClose();
+    if (!over && toolTip.Open) this.toolTipClose();
   }
   private toolTipTimer: any;
   ToolTipClose(): void {
     this.toolTipClose();
   }
   private toolTipClose(): void {
-    const t = this.ToolTip;
+    const toolTip = this.ToolTip;
     clearTimeout(this.toolTipTimer);
-    t.StopTween?.();
-    t.AlphaTo(t, 0, 200);
-    t.Open = false;
+    toolTip.StopTween?.();
+    toolTip.AlphaTo(toolTip, 0, 200);
+    toolTip.Open = false;
   }
 
   /** v2 addition to the sample panel (DATA-0005: the user's own audio comes first): an UPLOAD FILE button centred under
    * the results, styled like v1's Randomise button beside it, with the upload mark (owner, 2026-11-10). */
   private fileButtonRect(): { x: number; y: number; w: number; h: number; label: string } {
-    const u = App.Unit,
+    const unit = App.Unit,
       label = 'UPLOAD FILE';
     this.Ctx.font = App.Metrics.TxtMid;
     const w = this.Ctx.measureText(label).width;
     const cy = this.SoundcloudPanel.OffsetY + App.Height * 0.5;
     return {
-      x: App.Width * 0.5 - w * 0.5 - 5 * u,
-      y: cy + 136 * u,
-      w: w + 10 * u,
-      h: 46 * u,
+      x: App.Width * 0.5 - w * 0.5 - 5 * unit,
+      y: cy + 136 * unit,
+      w: w + 10 * unit,
+      h: 46 * unit,
       label,
     };
   }
-  private fileButtonHit(p: Point): boolean {
+  private fileButtonHit(point: Point): boolean {
     const r = this.fileButtonRect();
-    return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
+    return point.x >= r.x && point.x <= r.x + r.w && point.y >= r.y && point.y <= r.y + r.h;
   }
   private drawFileButton(): void {
     const r = this.fileButtonRect(),
@@ -1159,10 +1203,12 @@ function ensureShareDom(): void {
   wrap.appendChild(video);
   for (const el of [...wrap.children]) document.body.appendChild(el);
   // Enter in these fields is handled by the panels (v1 EnterCheck); never submit (reload) the page.
-  for (const f of document.querySelectorAll(
+  for (const element of document.querySelectorAll(
     '#shareUrl form, #shareTitle form, #soundCloudSearch form, #patchTitle form, #patchUrl form, #accountHandle form, #gallerySearch form',
   ))
-    f.addEventListener('submit', (e) => e.preventDefault());
+    element.addEventListener('submit', (event) => {
+      event.preventDefault();
+    });
   // v1 used a scrolling <textarea>; v2 shows the link on one line like the title field, with no scrollbars, and a
   // click selects the whole link (owner review 2026-11-06).
   for (const id of ['shareUrlText', 'patchUrlText']) {
@@ -1203,8 +1249,12 @@ function relabelShareButton(header: any): void {
   };
   const draw = header.Draw.bind(header),
     hit = header.HitTests.bind(header);
-  header.Draw = () => wrap(draw);
-  header.HitTests = (point: unknown) => wrap(() => hit(point));
+  header.Draw = () => {
+    wrap(draw);
+  };
+  header.HitTests = (point: unknown) => {
+    wrap(() => hit(point));
+  };
 }
 
 /** Settings › About (owner, 2026-11-10, reworded 2026-11-11): v1's text named the Web Audio API and Tone.js, which v2
@@ -1224,7 +1274,7 @@ export const SOURCE_LINK = {
   url: 'https://github.com/BlokDust/BlokDust',
 };
 /** The published plugin installers (`pnpm bd release publish` writes it; null until the first release). */
-type Release = { file: string; url: string; sha256: string; bytes: number } | null;
+type Release = { file: string; url: string; sha256: string; bytes: number; store?: boolean } | null;
 let RELEASE = RELEASES as { version: string | null; macos: Release; windows: Release };
 /** Settings › DOWNLOAD (web, CHG-0005 task 12; owner 2026-11-11: a tab of its own rather than About). The intro is two
  * paragraphs, each starting on its own line (owner, 2026-11-12, CHG-0010). The unsigned-Windows note moved into the
@@ -1349,22 +1399,22 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
    * across About's text column (owner, 2026-11-17, CHG-0035). The iPad one opens the App Store page as it is; the
    * installers carry ?source=download-page. */
   const downloads = () => {
-    const u = App.Unit,
-      W = App.Width,
-      y = p.OffsetY + 120 * u + (p.MenuItems[3]?.YOffset ?? -p.DrawTo.Height) + 70 * u;
+    const unit = App.Unit,
+      width = App.Width,
+      y = p.OffsetY + 120 * unit + (p.MenuItems[3]?.YOffset ?? -p.DrawTo.Height) + 70 * unit;
     const pw = pageWidth(),
-      bw = (pw - 30 * u) / 3,
-      left = W * 0.5 - pw * 0.5;
+      bw = (pw - 30 * unit) / 3,
+      left = width * 0.5 - pw * 0.5;
     // A phone (owner, 2026-11-18): one a row, the page's width, its line under it.
     const at = (i: number) =>
       App.SettingsPhone
-        ? { x: left, y: y + i * 110 * u, w: pw, h: 40 * u, cx: left + pw * 0.5 }
+        ? { x: left, y: y + i * 110 * unit, w: pw, h: 40 * unit, cx: left + pw * 0.5 }
         : {
-            x: left + i * (bw + 15 * u),
+            x: left + i * (bw + 15 * unit),
             y,
             w: bw,
-            h: 40 * u,
-            cx: left + i * (bw + 15 * u) + bw * 0.5,
+            h: 40 * unit,
+            cx: left + i * (bw + 15 * unit) + bw * 0.5,
           };
     const ipad = IPAD_APP_STORE_URL
       ? { file: '', url: IPAD_APP_STORE_URL, sha256: '', bytes: 0, store: true }
@@ -1373,21 +1423,21 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
       {
         key: 'macos' as const,
         label: 'macOS',
-        release: RELEASE.macos as (Release & { store?: boolean }) | null,
+        release: RELEASE.macos,
         ...at(0),
         line: DOWNLOAD.macos,
       },
       {
         key: 'windows' as const,
         label: 'Windows',
-        release: RELEASE.windows as (Release & { store?: boolean }) | null,
+        release: RELEASE.windows,
         ...at(1),
         line: DOWNLOAD.windows,
       },
       {
         key: 'ipad' as const,
         label: 'iPad',
-        release: ipad as (Release & { store?: boolean }) | null,
+        release: ipad as Release,
         ...at(2),
         line: DOWNLOAD.ipad,
       },
@@ -1436,22 +1486,22 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     const item = p.MenuItems[3];
     if (!item || item.YOffset <= -p.DrawTo.Height) return;
     const ctx = p.Ctx as CanvasRenderingContext2D,
-      u = App.Unit,
-      W = App.Width,
+      unit = App.Unit,
+      width = App.Width,
       txt = App.Palette[App.ThemeManager.Txt],
       menu = App.ThemeManager.MenuOrder;
-    const top = p.OffsetY + 120 * u + item.YOffset;
+    const top = p.OffsetY + 120 * unit + item.YOffset;
     // INTRO (v1 About's body type) //
     App.FillColor(ctx, txt);
     ctx.textAlign = 'left';
     ctx.font = App.Metrics.TxtMid;
-    let iy = top + 10 * u;
+    let iy = top + 10 * unit;
     const pw = pageWidth();
     // A phone (owner, 2026-11-18): three lines, broken after "DAW," (the desktop's break left "plugin." alone).
     const intro = App.SettingsPhone
       ? [...DOWNLOAD.intro[0].split(/(?<=DAW,) /), ...DOWNLOAD.intro.slice(1)]
       : DOWNLOAD.intro;
-    for (const para of intro) iy = wrap(ctx, para, W * 0.5 - pw * 0.5, iy, 16 * u, pw);
+    for (const para of intro) iy = wrap(ctx, para, width * 0.5 - pw * 0.5, iy, 16 * unit, pw);
     // MACOS · WINDOWS · IPAD (v1 SharePanel's SAVE / SAVE AS colours and a third, Connect's GUIDE button type) //
     let below = 0;
     for (const [i, b] of downloads().entries()) {
@@ -1460,29 +1510,29 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
       ctx.fillRect(b.x, b.y, b.w, b.h);
       if (on && downloadHover === i) {
         ctx.beginPath();
-        ctx.moveTo(b.cx, b.y + b.h + 9 * u);
-        ctx.lineTo(b.cx - 10 * u, b.y + b.h - u);
-        ctx.lineTo(b.cx + 10 * u, b.y + b.h - u);
+        ctx.moveTo(b.cx, b.y + b.h + 9 * unit);
+        ctx.lineTo(b.cx - 10 * unit, b.y + b.h - unit);
+        ctx.lineTo(b.cx + 10 * unit, b.y + b.h - unit);
         ctx.closePath();
         ctx.fill();
       }
       App.FillColor(ctx, txt);
       ctx.textAlign = 'center';
       ctx.font = App.Metrics.TxtUrl2;
-      ctx.fillText(b.label.toUpperCase(), b.cx, b.y + 29 * u);
+      ctx.fillText(b.label.toUpperCase(), b.cx, b.y + 29 * unit);
       ctx.textAlign = 'left';
       ctx.font = App.Metrics.TxtItalic2;
       below = Math.max(
         below,
-        wrap(ctx, on ? b.line : DOWNLOAD.soon, b.x, b.y + b.h + 24 * u, 14 * u, b.w),
+        wrap(ctx, on ? b.line : DOWNLOAD.soon, b.x, b.y + b.h + 24 * unit, 14 * unit, b.w),
       );
     }
     // VERSION: under the longest line (the columns are narrow) //
-    const y = Math.max(downloads()[0].y + 40 * u + 80 * u, below + 16 * u);
+    const y = Math.max(downloads()[0].y + 40 * unit + 80 * unit, below + 16 * unit);
     ctx.font = App.Metrics.TxtItalic2;
     ctx.textAlign = 'left';
     if (RELEASE.version && !App.SettingsPhone)
-      ctx.fillText(`Version ${RELEASE.version}`, W * 0.5 - pw * 0.5, y); // a phone: About has the build (owner, 2026-11-18)
+      ctx.fillText(`Version ${RELEASE.version}`, width * 0.5 - pw * 0.5, y); // a phone: About has the build (owner, 2026-11-18)
   };
   // Tempo (web) / nothing (plugin) in place of Tour, v1's last row (drawn at +156 units).
   const tempoRow = () => (p.Options as any[]).findIndex((o) => o.Type === 'tempo');
@@ -1494,7 +1544,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   p.PopulateOptions = () => {
     populateOptions();
     const opts = p.Options as any[],
-      i = opts.findIndex((o) => o.Setting === 'tutorial');
+      i = opts.findIndex((opt) => opt.Setting === 'tutorial');
     if (i < 0) return;
     if (App.IsPlugin) {
       opts[i] = {
@@ -1508,7 +1558,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
       };
       return;
     }
-    const t = new Slider(
+    const slider = new Slider(
       new Point(0, 0),
       new Size(1, App.SettingsRow * App.Unit),
       p.Margin,
@@ -1520,10 +1570,10 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
       'tempo',
       false,
     ) as any;
-    t.Type = 'tempo';
-    t.DisplayConversion = (v: number) => `${Math.round(v)} BPM`;
-    placeTempo(t);
-    opts[i] = t;
+    slider.Type = 'tempo';
+    slider.DisplayConversion = (v: number) => `${Math.round(v)} BPM`;
+    placeTempo(slider);
+    opts[i] = slider;
     opts.push(
       new OptionActionButton(
         new Point(0, 0),
@@ -1555,12 +1605,12 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   const FOOT_LINE = 14;
   const statsBox = () => {
     if (!host.usageStats || p._OpenTab !== 2) return null;
-    const u = App.Unit,
+    const unit = App.Unit,
       ctx = p.Ctx as CanvasRenderingContext2D;
     ctx.font = App.Metrics.TxtItalic2;
     const w = ctx.measureText(USAGE_STATS(host.usageStats.get())).width,
-      y = p.OffsetY + p.DrawTo.Height - 20 * u;
-    return { x: p.DrawTo.Width - 20 * u - w, y, w, u };
+      y = p.OffsetY + p.DrawTo.Height - 20 * unit;
+    return { x: p.DrawTo.Width - 20 * unit - w, y, w, u: unit };
   };
   /** Tests: the switch's centre in CSS px, and its words (null: not shown). */
   p.usageStatsSwitch = () => {
@@ -1576,27 +1626,27 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   };
   /** The footer links in one centred row, in v1's footer type (where it had "Chrome Recommended"), 30u apart. */
   const footer = () => {
-    const u = App.Unit,
+    const unit = App.Unit,
       ctx = p.Ctx as CanvasRenderingContext2D;
     ctx.font = App.Metrics.TxtLarge;
     const ws = footerLinks().map((l) => ctx.measureText(l.label).width),
-      gap = 30 * u,
-      y = p.OffsetY + p.DrawTo.Height - 20 * u;
+      gap = 30 * unit,
+      y = p.OffsetY + p.DrawTo.Height - 20 * unit;
     let x = App.Width * 0.5 - (ws.reduce((a, b) => a + b, 0) + gap * (ws.length - 1)) * 0.5;
     const links = ws.map((w) => {
       const l = { x, w };
       x += w + gap;
       return l;
     });
-    return { links, y, u };
+    return { links, y, u: unit };
   };
   /** Tests: each footer link's centre in CSS px. */
   p.footerLinks = () => {
     const f = footer(),
       pr = App.Metrics.PixelRatio;
-    return f.links.map((l, i) => ({
+    return f.links.map((link, i) => ({
       label: footerLinks()[i].label,
-      x: (l.x + l.w / 2) / pr,
+      x: (link.x + link.w / 2) / pr,
       y: (f.y - 5 * f.u) / pr,
     }));
   };
@@ -1696,23 +1746,23 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   ];
   const peoplePhone = () => {
     const ctx = p.Ctx as CanvasRenderingContext2D,
-      u = App.Unit,
+      unit = App.Unit,
       pw = pageWidth(),
       L = App.Width * 0.5 - pw * 0.5,
       g = App.GridSize * 1.35;
-    const top = p.OffsetY + 120 * u + (p.MenuItems[2]?.YOffset ?? -p.DrawTo.Height);
+    const top = p.OffsetY + 120 * unit + (p.MenuItems[2]?.YOffset ?? -p.DrawTo.Height);
     ctx.font = App.Metrics.TxtLarge;
     let y = top,
       line = '';
     for (const word of String(p._Attribution.about).split(' ')) {
       const t = line ? `${line} ${word}` : word;
       if (ctx.measureText(t).width > pw && line) {
-        y += 16 * u;
+        y += 16 * unit;
         line = word;
       } else line = t;
     }
-    y += 16 * u + 40 * u;
-    const tx = L + 3 * g + 20 * u,
+    y += 16 * unit + 40 * unit;
+    const tx = L + 3 * g + 20 * unit,
       tw = pw - (tx - L);
     ctx.font = App.Metrics.TxtItalic2;
     return PEOPLE.map((k, i) => {
@@ -1728,8 +1778,8 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
       }
       if (line) lines.push(line);
       const rowTop = y,
-        urlY = rowTop + 10 * u + lines.length * 14 * u;
-      y = Math.max(rowTop + 3 * g, urlY) + 30 * u;
+        urlY = rowTop + 10 * unit + lines.length * 14 * unit;
+      y = Math.max(rowTop + 3 * g, urlY) + 30 * unit;
       return {
         i,
         icon: ICONS[i],
@@ -1749,7 +1799,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     if (!App.SettingsPhone || (p.MenuItems[2]?.YOffset ?? -p.DrawTo.Height) <= -p.DrawTo.Height)
       return;
     const ctx = p.Ctx as CanvasRenderingContext2D,
-      u = App.Unit,
+      unit = App.Unit,
       txt = App.Palette[App.ThemeManager.Txt];
     for (const r of peoplePhone()) {
       for (const [pal, pts] of r.icon) {
@@ -1768,14 +1818,16 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
       App.StrokeColor(ctx, txt);
       ctx.font = App.Metrics.TxtItalic2;
       ctx.textAlign = 'left';
-      r.lines.forEach((l, j) => ctx.fillText(l, r.tx, r.rowTop + 10 * u + j * 14 * u));
+      r.lines.forEach((line, j) => {
+        ctx.fillText(line, r.tx, r.rowTop + 10 * unit + j * 14 * unit);
+      });
       if (r.url && !App.NoLinks) {
-        ctx.fillText(r.url, r.tx, r.urlY + 4 * u);
+        ctx.fillText(r.url, r.tx, r.urlY + 4 * unit);
         if (p._RollOvers[r.i + 1]) {
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.moveTo(r.tx, r.urlY + 6 * u);
-          ctx.lineTo(r.tx + r.urlW, r.urlY + 6 * u);
+          ctx.moveTo(r.tx, r.urlY + 6 * unit);
+          ctx.lineTo(r.tx + r.urlW, r.urlY + 6 * unit);
           ctx.stroke();
         }
       }
@@ -1820,8 +1872,15 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     linkHover =
       p._OpenTab !== 2
         ? -1
-        : f.links.findIndex((l) =>
-            Dimensions.hitRect(l.x - 5 * f.u, f.y - 20 * f.u, l.w + 10 * f.u, 30 * f.u, pt.x, pt.y),
+        : f.links.findIndex((link) =>
+            Dimensions.hitRect(
+              link.x - 5 * f.u,
+              f.y - 20 * f.u,
+              link.w + 10 * f.u,
+              30 * f.u,
+              pt.x,
+              pt.y,
+            ),
           );
     const sb = statsBox();
     statsHover =
@@ -1872,12 +1931,12 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   /** Tests: the TOUR button's centre in CSS px (null: no row). */
   p.tourButton = () => {
     const pr = App.Metrics.PixelRatio,
-      u = App.Unit;
+      unit = App.Unit;
     return tourRow() < 0
       ? null
       : {
           x: (p.Margin + p.Range * 0.5) / pr,
-          y: (p.OffsetY + 120 * u + p.MenuItems[0].YOffset + tourY() * u + 24 * u) / pr,
+          y: (p.OffsetY + 120 * unit + p.MenuItems[0].YOffset + tourY() * unit + 24 * unit) / pr,
         };
   };
   const setTempo = (x: number) => {
@@ -1949,8 +2008,8 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
       if (p.MenuItems[1]) p.MenuItems[1].YOffset = connectY;
       p._Attribution.build = build;
       PEOPLE.forEach((k, i) => Object.assign(p._Attribution[k], kept[i]));
-      rolls.forEach((r, i) => {
-        p._RollOvers[i] = r;
+      rolls.forEach((roll, i) => {
+        p._RollOvers[i] = roll;
       });
     }
     account?.placeField(
@@ -1994,13 +2053,13 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     App.StrokeColor(ctx, txt);
     ctx.font = App.Metrics.TxtLarge;
     ctx.textAlign = 'left';
-    f.links.forEach((l, i) => {
-      ctx.fillText(footerLinks()[i].label, l.x, f.y);
+    f.links.forEach((link, i) => {
+      ctx.fillText(footerLinks()[i].label, link.x, f.y);
       if (i === linkHover) {
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(l.x, f.y + 2 * f.u);
-        ctx.lineTo(l.x + l.w, f.y + 2 * f.u);
+        ctx.moveTo(link.x, f.y + 2 * f.u);
+        ctx.lineTo(link.x + link.w, f.y + 2 * f.u);
         ctx.stroke();
       }
     });
@@ -2053,7 +2112,7 @@ function locateMissingFiles(scene: V1Scene): void {
   const search = scene.SoundcloudPanel as any,
     open = search.OpenPanel.bind(search);
   search.OpenPanel = () => {
-    const b = scene.OptionsPanel.SelectedBlock as any;
+    const b = scene.OptionsPanel.SelectedBlock;
     if (b && String(b.Params?.trackName ?? '').startsWith(MISSING)) scene.host.loadSample(b.Id);
     else open();
   };

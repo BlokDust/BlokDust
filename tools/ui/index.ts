@@ -18,7 +18,7 @@ import { bootV1, loadComposition, randomPort, serve, V1_SHA } from '../v1/lib.ts
 const FIX = 'tests/visual/fixtures/ui',
   REF = 'tests/visual/reference/v1/ui',
   OUT = 'tests/visual/output/ui';
-type Action = {
+interface Action {
   click?: [number, number];
   move?: [number, number];
   down?: [number, number];
@@ -28,8 +28,11 @@ type Action = {
   keyUp?: string;
   type?: string;
   press?: string;
-};
-type SearchResult = { title: string; user: string };
+}
+interface SearchResult {
+  title: string;
+  user: string;
+}
 interface Fixture {
   name: string;
   description?: string;
@@ -116,10 +119,10 @@ async function play(page: Page, actions: Action[], wait: (ms: number) => Promise
 
 /** v1 side: a stand-in for SoundCloud's SDK (connect.soundcloud.com, gone) whose SC.get returns the fixture's tracks. */
 async function mockSoundCloud(page: Page, results: SearchResult[]): Promise<void> {
-  const tracks = results.map((r, i) => ({
+  const tracks = results.map((result, i) => ({
     id: i + 1,
-    title: r.title,
-    user: { username: r.user },
+    title: result.title,
+    user: { username: result.user },
     uri: `https://api.soundcloud.com/tracks/${i + 1}`,
     permalink_url: `https://soundcloud.com/x/${i + 1}`,
     streamable: true,
@@ -132,10 +135,10 @@ async function mockSoundCloud(page: Page, results: SearchResult[]): Promise<void
 }
 /** v2 side: the Worker's Freesound API answering with the same titles (and audio for any default/preview fetch). */
 async function mockFreesound(page: Page, results: SearchResult[]): Promise<void> {
-  const sounds = results.map((r, i) => ({
+  const sounds = results.map((result, i) => ({
     id: i + 1,
-    name: r.title,
-    username: r.user,
+    name: result.title,
+    username: result.user,
     license: 'CC0',
     licenseUrl: 'http://creativecommons.org/publicdomain/zero/1.0/',
     duration: 1,
@@ -191,9 +194,10 @@ async function capture() {
   const prev = existsSync(join(REF, 'manifest.json'))
     ? (JSON.parse(readFileSync(join(REF, 'manifest.json'), 'utf8')).results as any[])
     : [];
-  const merged = [...prev.filter((p) => !results.some((r) => r.name === p.name)), ...results].sort(
-    (a, b) => a.name.localeCompare(b.name),
-  );
+  const merged = [
+    ...prev.filter((p) => !results.some((result) => result.name === p.name)),
+    ...results,
+  ].sort((a, b) => a.name.localeCompare(b.name));
   writeFileSync(
     join(REF, 'manifest.json'),
     JSON.stringify({ v1Sha: V1_SHA, results: merged }, null, 2) + '\n',
@@ -201,7 +205,7 @@ async function capture() {
   console.log(
     JSON.stringify({
       captured: results.length,
-      withErrors: results.filter((r) => r.errors.length).length,
+      withErrors: results.filter((result) => result.errors.length).length,
     }),
   );
 }
@@ -255,8 +259,8 @@ async function diff() {
             const i = (y * width + x) * 4;
             for (let k = 0; k < 4; k++) shot.data[i + k] = want.data[i + k];
           }
-      const d = new PNG({ width, height });
-      const n = pixelmatch(want.data, shot.data, d.data, width, height, {
+      const pNG = new PNG({ width, height });
+      const n = pixelmatch(want.data, shot.data, pNG.data, width, height, {
         threshold: thresholds.pixelThreshold,
       });
       const ratio = n / (width * height),
@@ -264,7 +268,7 @@ async function diff() {
       const pass = ratio <= limit && errors.length === 0;
       if (!pass || args.includes('--save-all')) {
         writeFileSync(join(OUT, `${fx.name}.v2.png`), PNG.sync.write(shot));
-        writeFileSync(join(OUT, `${fx.name}.diff.png`), PNG.sync.write(d));
+        writeFileSync(join(OUT, `${fx.name}.diff.png`), PNG.sync.write(pNG));
       }
       rows.push({ name: fx.name, pass, ratio: +ratio.toFixed(5), limit, errors });
       console.error(
@@ -279,13 +283,13 @@ async function diff() {
   console.log(
     JSON.stringify({
       checked: rows.length,
-      passed: rows.filter((r) => r.pass).length,
-      failed: rows.filter((r) => !r.pass).map((r) => r.name),
+      passed: rows.filter((row) => row.pass).length,
+      failed: rows.filter((row) => !row.pass).map((r) => r.name),
       retired,
       rows,
     }),
   );
-  if (rows.some((r) => !r.pass)) process.exitCode = 1;
+  if (rows.some((row) => !row.pass)) process.exitCode = 1;
 }
 
 if (args[0] === 'capture') await capture();

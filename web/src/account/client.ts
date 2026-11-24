@@ -54,7 +54,7 @@ export interface AccountPatch {
 }
 
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const r = await fetch(api(path), {
+  const response = await fetch(api(path), {
     method,
     credentials: 'same-origin',
     headers: {
@@ -63,8 +63,11 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  const j = (await r.json().catch(() => ({}))) as { error?: string };
-  if (!r.ok) throw Object.assign(new Error(j.error ?? `HTTP ${r.status}`), { status: r.status });
+  const j = (await response.json().catch(() => ({}))) as { error?: string };
+  if (!response.ok)
+    throw Object.assign(new Error(j.error ?? `HTTP ${response.status}`), {
+      status: response.status,
+    });
   return j as T;
 }
 
@@ -132,7 +135,9 @@ export function signInWith(provider: 'google' | 'apple'): void {
     location.pathname + location.search.replace(/([?&])account=[^&]*&?/, '$1').replace(/[?&]$/, '');
   location.assign(`${api(`auth/${provider}/start`)}?return=${encodeURIComponent(back)}`);
 }
-export const signInWithGoogle = () => signInWith('google');
+export const signInWithGoogle = () => {
+  signInWith('google');
+};
 
 export const signOut = (everywhere = false) => call('POST', 'auth/logout', { everywhere });
 /** A plugin signed in to this account (SHARING-0011), for SIGN-IN METHODS' list. */
@@ -153,11 +158,14 @@ export const approveDevice = (code: string, approve: boolean) =>
     approve,
   });
 /** R7c: one way in goes (never the last: the server refuses with 409). */
-export const removeMethod = (m: SignInMethod) =>
-  call('DELETE', 'me/methods', { kind: m.kind, ...(m.id ? { id: m.id } : {}) });
+export const removeMethod = (signInMethod: SignInMethod) =>
+  call('DELETE', 'me/methods', {
+    kind: signInMethod.kind,
+    ...(signInMethod.id ? { id: signInMethod.id } : {}),
+  });
 /** Back from Google or Apple (R7a, R7b): what `?account=` says, as a line for SIGN-IN METHODS. */
 export function linkMessage(account: string): string | null {
-  const m = account.match(/^(linked|taken)-(google|apple)$/);
+  const m = /^(linked|taken)-(google|apple)$/.exec(account);
   if (!m) return null;
   const name = m[2] === 'google' ? 'Google' : 'Apple';
   return m[1] === 'linked'
@@ -184,15 +192,15 @@ export async function claimMine(): Promise<string[]> {
 /** R8: the account's patches, newest first. */
 export async function accountPatches(): Promise<AccountPatch[]> {
   const { patches } = await call<{ patches: AccountPatch[] }>('GET', 'me/patches');
-  for (const p of patches) accountOwned.add(p.id);
+  for (const accountPatch of patches) accountOwned.add(accountPatch.id);
   return patches;
 }
 
 /** R16: whether the server takes the page-close request (ACTIVITY_BEACON); known before the page closes. */
 let beacon = false;
 export function watchActivityBeacon(): void {
-  void serverConfig().then((c) => {
-    beacon = !!c?.activityBeacon;
+  void serverConfig().then((serverConfig) => {
+    beacon = !!serverConfig?.activityBeacon;
   });
 }
 

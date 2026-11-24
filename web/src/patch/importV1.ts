@@ -55,9 +55,12 @@ export function importV1(comp: V1Composition): {
     const def = byV1Type.get(V1_ALIASES[b.Type] ?? b.Type);
     if (!def) throw new Error(`unknown v1 block type ${b.Type}`);
     const params: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(b.Params ?? {}))
-      if (def.params.some((p) => p.key === k) && (typeof v === 'number' || typeof v === 'boolean'))
-        params[k] = v;
+    for (const [k, value] of Object.entries(b.Params ?? {}))
+      if (
+        def.params.some((param) => param.key === k) &&
+        (typeof value === 'number' || typeof value === 'boolean')
+      )
+        params[k] = value;
     const id = `v1-${b.Id}`;
     v1Ids.set(id, b.Id);
     blocks.push({ id, type: def.id, x: b.Position.x, y: b.Position.y, params });

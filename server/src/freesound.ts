@@ -19,9 +19,9 @@ export interface FreesoundSound {
 const FIELDS = 'id,name,username,license,duration,previews,url';
 
 function licenseOf(url: string): FreesoundSound['license'] | null {
-  if (/publicdomain\/zero/.test(url)) return 'CC0';
-  if (/licenses\/by-nc\//.test(url)) return 'CC-BY-NC';
-  if (/licenses\/by\//.test(url)) return 'CC-BY';
+  if (url.includes('publicdomain/zero')) return 'CC0';
+  if (url.includes('licenses/by-nc/')) return 'CC-BY-NC';
+  if (url.includes('licenses/by/')) return 'CC-BY';
   return null; // Sampling+ and anything else: not accepted (DATA-0005)
 }
 
@@ -51,19 +51,19 @@ async function upstream(
   if (!env.FREESOUND_TOKEN) throw new HttpError(503, 'Freesound is not configured');
   const base = (env.FREESOUND_API || 'https://freesound.org/apiv2').replace(/\/+$/, '');
   const url = new URL(`${base}${path}`);
-  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+  for (const [k, value] of Object.entries(params)) url.searchParams.set(k, value);
   // Cache by the upstream URL (no key in it: the key travels in a header).
   const cacheKey = new Request(url.toString());
   const cache = (caches as unknown as { default: Cache }).default;
   const hit = await cache.match(cacheKey);
   if (hit) return hit.json();
-  const r = await fetch(url.toString(), {
+  const response = await fetch(url.toString(), {
     headers: { authorization: `Token ${env.FREESOUND_TOKEN}` },
   });
-  if (r.status === 404) throw new HttpError(404, 'no such sound');
-  if (r.status === 429) throw new HttpError(503, 'Freesound is busy; try again in a minute');
-  if (!r.ok) throw new HttpError(502, `Freesound error ${r.status}`);
-  const body = await r.text();
+  if (response.status === 404) throw new HttpError(404, 'no such sound');
+  if (response.status === 429) throw new HttpError(503, 'Freesound is busy; try again in a minute');
+  if (!response.ok) throw new HttpError(502, `Freesound error ${response.status}`);
+  const body = await response.text();
   ctx.waitUntil(
     cache.put(
       cacheKey,
@@ -98,7 +98,7 @@ export async function search(env: Env, url: URL, ctx: ExecutionContext): Promise
   );
   const results = ((d.results as Record<string, unknown>[]) ?? [])
     .map(normalise)
-    .filter((s): s is FreesoundSound => !!s);
+    .filter((freesoundSound): freesoundSound is FreesoundSound => !!freesoundSound);
   // Any origin may read it: the plugin's WebView page is not served by this Worker (CHG-0004 3.6).
   return json({ query: q, count: results.length, results }, 200, {
     'cache-control': 'public, max-age=3600',
@@ -109,9 +109,10 @@ export async function search(env: Env, url: URL, ctx: ExecutionContext): Promise
 /** GET /api/freesound/sounds/:id: one sound (a shared patch's recipient resolves its preview URL here). */
 export async function sound(env: Env, id: string, ctx: ExecutionContext): Promise<Response> {
   if (!/^\d{1,10}$/.test(id)) throw new HttpError(400, 'bad id');
-  const s = normalise(await upstream(env, `/sounds/${id}/`, { fields: FIELDS }, ctx));
-  if (!s) throw new HttpError(404, 'sound unavailable or not under an accepted licence');
-  return json(s, 200, {
+  const freesoundSound = normalise(await upstream(env, `/sounds/${id}/`, { fields: FIELDS }, ctx));
+  if (!freesoundSound)
+    throw new HttpError(404, 'sound unavailable or not under an accepted licence');
+  return json(freesoundSound, 200, {
     'cache-control': 'public, max-age=86400',
     'access-control-allow-origin': '*',
   });

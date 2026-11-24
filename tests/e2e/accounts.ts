@@ -61,7 +61,9 @@ async function device(): Promise<Device> {
     }),
   );
   const page = await ctx.newPage();
-  page.on('pageerror', (e) => console.error(`  page error: ${e.message}`));
+  page.on('pageerror', (e) => {
+    console.error(`  page error: ${e.message}`);
+  });
   const cdp = await ctx.newCDPSession(page);
   await cdp.send('WebAuthn.enable');
   const { authenticatorId } = await cdp.send('WebAuthn.addVirtualAuthenticator', {
@@ -76,16 +78,16 @@ async function device(): Promise<Device> {
   });
   return { ctx, page, cdp, authenticator: authenticatorId };
 }
-async function openApp(d: Device, query = ''): Promise<void> {
-  await d.page.goto(`${base}/${query}`);
-  await d.page.waitForFunction(() => (window as any).__bd_probe);
-  if (await d.page.$('#start')) {
-    await d.page.click('#start');
-    await d.page.waitForFunction(() => (window as any).__bd_probe.state.started, null, {
+async function openApp(device: Device, query = ''): Promise<void> {
+  await device.page.goto(`${base}/${query}`);
+  await device.page.waitForFunction(() => (window as any).__bd_probe);
+  if (await device.page.$('#start')) {
+    await device.page.click('#start');
+    await device.page.waitForFunction(() => (window as any).__bd_probe.state.started, null, {
       timeout: 20000,
     });
   }
-  await d.page.waitForTimeout(1500);
+  await device.page.waitForTimeout(1500);
 }
 /** Patches open, and Settings › ACCOUNT's state (accountPage.ts). */
 const pp = (p: Page) =>
@@ -137,9 +139,9 @@ const ACCOUNT_CONTROLS = new Set([
 ]);
 async function press(p: Page, name: string, wait = 400): Promise<void> {
   const at = await p.evaluate(
-    ([n, inSettings]) => {
+    ([key, inSettings]) => {
       const s = (window as any).__bd_probe.scene;
-      return inSettings ? s.SettingsPanel.accountCentre(n) : s.PatchesPanel.centreOf(n);
+      return inSettings ? s.SettingsPanel.accountCentre(key) : s.PatchesPanel.centreOf(key);
     },
     [name, ACCOUNT_CONTROLS.has(name)] as const,
   );
@@ -157,8 +159,8 @@ async function openAccount(p: Page): Promise<void> {
   await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.openAccount());
   await p.waitForFunction(
     () => {
-      const s = (window as any).__bd_probe.scene.SettingsPanel;
-      return s.OffsetY === 0 && s.accountPage.Account !== undefined;
+      const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+      return settingsPanel.OffsetY === 0 && settingsPanel.accountPage.Account !== undefined;
     },
     null,
     { timeout: 10000 },
@@ -172,50 +174,50 @@ const settled = (p: Page) =>
 const corners = (p: Page) => p.evaluate(() => (window as any).__bd_probe.corners);
 /** A new Google account named `handle` on device `d` (the mock's next user `user`). Sign-in starts share a per-minute
  * limit (SAVE_LIMIT 'auth'), which the tests before may have used up: refused (429), wait it out and try again. */
-async function googleAccount(d: Device, user: string, handle: string): Promise<void> {
+async function googleAccount(device: Device, user: string, handle: string): Promise<void> {
   for (let attempt = 0; attempt < 2; attempt++) {
     await fetch(`${mocks.url}/google/next?user=${user}`);
-    await openApp(d);
-    await openAccount(d.page);
+    await openApp(device);
+    await openAccount(device.page);
     await Promise.all([
-      d.page.waitForURL(/account=|auth\/google/, { timeout: 20000 }).catch(() => {}),
-      press(d.page, 'google', 0),
+      device.page.waitForURL(/account=|auth\/google/, { timeout: 20000 }).catch(() => {}),
+      press(device.page, 'google', 0),
     ]);
-    await d.page.waitForLoadState('load').catch(() => {});
-    if (/too many requests/.test(await d.page.content())) {
-      await new Promise((r) => setTimeout(r, 61_000));
+    await device.page.waitForLoadState('load').catch(() => {});
+    if ((await device.page.content()).includes('too many requests')) {
+      await new Promise((resolve) => setTimeout(resolve, 61_000));
       continue;
     }
-    await d.page
+    await device.page
       .waitForFunction(
         () => (window as any).__bd_probe?.scene.SettingsPanel.accountPage.View === 'name',
         null,
         { timeout: 20000 },
       )
       .catch(() => {});
-    await d.page.waitForTimeout(800);
-    await d.page.fill('#accountHandleInput', handle);
-    await press(d.page, 'submit');
-    await settled(d.page);
+    await device.page.waitForTimeout(800);
+    await device.page.fill('#accountHandleInput', handle);
+    await press(device.page, 'submit');
+    await settled(device.page);
     return;
   }
   throw new Error('Google sign-in refused twice (rate limit)');
 }
 const api = (
-  d: Device,
+  device: Device,
   method: string,
   path: string,
   body?: unknown,
   headers: Record<string, string> = {},
 ) =>
-  d.page.evaluate(
+  device.page.evaluate(
     async ([m, url, b, h]) => {
-      const r = await fetch(url as string, {
-        method: m as string,
+      const response = await fetch(url, {
+        method: m,
         headers: { 'content-type': 'application/json', ...(h as object) },
         body: b === undefined ? undefined : JSON.stringify(b),
       });
-      return { status: r.status, json: await r.json().catch(() => null) };
+      return { status: response.status, json: await response.json().catch(() => null) };
     },
     [method, `${base}/api/${path}`, body, headers] as const,
   );
@@ -240,9 +242,9 @@ async function saveLink(p: Page): Promise<string> {
     { timeout: 60000 },
   );
   await p.waitForTimeout(500);
-  return (
-    await p.evaluate(() => (window as any).__bd_probe.scene.host.links.current().url as string)
-  ).match(/[?&]c=([^&]+)/)![1];
+  return /[?&]c=([^&]+)/.exec(
+    await p.evaluate(() => (window as any).__bd_probe.scene.host.links.current().url as string),
+  )![1];
 }
 async function addBlock(p: Page): Promise<void> {
   await p.evaluate(() => (window as any).__bd_probe.scene.host.createBlock('ToneSource', 4, 4));
@@ -342,7 +344,8 @@ const tests: Record<string, () => Promise<void>> = {
     const mine = await api(a, 'GET', 'me/patches');
     check(
       "R9: the patch saved before signing up is the account's now",
-      mine.status === 200 && mine.json.patches.some((p: { id: string }) => p.id === before),
+      mine.status === 200 &&
+        mine.json.patches.some((patche: { id: string }) => patche.id === before),
       mine.json,
     );
     const taken = await api(a, 'POST', 'auth/passkey/register/options', {
@@ -490,7 +493,7 @@ const tests: Record<string, () => Promise<void>> = {
           key: string;
         }[],
     );
-    const row = rows.findIndex((r) => r.key === `acct:${shared.firstPatch}`);
+    const row = rows.findIndex((row) => row.key === `acct:${shared.firstPatch}`);
     check(
       'R8: OPEN lists the account\'s patches first, with when they were saved (no "Your account": owner, 2026-11-18)',
       row === 0 && rows[0].detail.startsWith('Saved'),
@@ -536,8 +539,12 @@ const tests: Record<string, () => Promise<void>> = {
     await c.page
       .waitForFunction(
         () => {
-          const s = (window as any).__bd_probe.scene.SettingsPanel;
-          return s.Open && s.OffsetY === 0 && s.accountPage.View === 'name';
+          const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+          return (
+            settingsPanel.Open &&
+            settingsPanel.OffsetY === 0 &&
+            settingsPanel.accountPage.View === 'name'
+          );
         },
         null,
         { timeout: 20000 },
@@ -607,11 +614,15 @@ const tests: Record<string, () => Promise<void>> = {
         !(await pp(d.page)).open,
       { c: await corners(d.page), p: await pp(d.page) },
     );
-    const r = await fetch(`${base}/api/auth/google/callback?code=x&state=wrong`, {
+    const response = await fetch(`${base}/api/auth/google/callback?code=x&state=wrong`, {
       redirect: 'manual',
       headers: { cookie: 'bd_oauth=right.verifier.%2F' },
     });
-    check('R2a: a callback whose state does not match is refused', r.status === 400, r.status);
+    check(
+      'R2a: a callback whose state does not match is refused',
+      response.status === 400,
+      response.status,
+    );
     // Security review (PR 13): the return path must stay on this site. The URL parser drops tabs and newlines, so
     // "/<TAB>/evil.example" used to pass the "starts with / but not //" check and then resolve to evil.example.
     // One real start (sign-in starts are rate limited); then the callback, which does the redirect, is replayed with
@@ -686,8 +697,12 @@ const tests: Record<string, () => Promise<void>> = {
     await e.page
       .waitForFunction(
         () => {
-          const s = (window as any).__bd_probe.scene.SettingsPanel;
-          return s.Open && s.OffsetY === 0 && s.accountPage.View === 'name';
+          const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+          return (
+            settingsPanel.Open &&
+            settingsPanel.OffsetY === 0 &&
+            settingsPanel.accountPage.View === 'name'
+          );
         },
         null,
         { timeout: 20000 },
@@ -718,14 +733,14 @@ const tests: Record<string, () => Promise<void>> = {
         (await pp(e.page)).account?.providers.includes('apple'),
       await pp(e.page),
     );
-    const r = await fetch(`${base}/api/auth/apple/callback?code=x&state=s`, {
+    const response = await fetch(`${base}/api/auth/apple/callback?code=x&state=s`, {
       redirect: 'manual',
       headers: { cookie: 'bd_oauth=s.verifier.%2F' },
     });
     check(
       "R2b: a Google sign-in's cookie is no good for Apple's callback",
-      r.status === 400,
-      r.status,
+      response.status === 400,
+      response.status,
     );
     await e.ctx.close();
   },
@@ -760,10 +775,12 @@ const tests: Record<string, () => Promise<void>> = {
     await l.page
       .waitForFunction(
         () => {
-          const s = (window as any).__bd_probe?.scene.SettingsPanel,
-            x = s?.accountPage;
+          const settingsPanel = (window as any).__bd_probe?.scene.SettingsPanel,
+            x = settingsPanel?.accountPage;
           return (
-            s?.OffsetY === 0 && x?.View === 'methods' && x.Account?.providers?.includes('apple')
+            settingsPanel?.OffsetY === 0 &&
+            x?.View === 'methods' &&
+            x.Account?.providers?.includes('apple')
           );
         },
         null,
@@ -790,8 +807,12 @@ const tests: Record<string, () => Promise<void>> = {
     await l.page
       .waitForFunction(
         () => {
-          const s = (window as any).__bd_probe?.scene.SettingsPanel;
-          return s?.OffsetY === 0 && s.accountPage.View === 'methods' && s.accountPage.Account;
+          const settingsPanel = (window as any).__bd_probe?.scene.SettingsPanel;
+          return (
+            settingsPanel?.OffsetY === 0 &&
+            settingsPanel.accountPage.View === 'methods' &&
+            settingsPanel.accountPage.Account
+          );
         },
         null,
         { timeout: 20000 },
@@ -823,7 +844,7 @@ const tests: Record<string, () => Promise<void>> = {
     check(
       'R7c: a passkey added and removed',
       withKey.rows.length === 2 &&
-        /^Passkey/.test(withKey.rows[1]) &&
+        withKey.rows[1].startsWith('Passkey') &&
         back.rows.join(',') === 'Apple',
       { withKey, back },
     );
@@ -858,7 +879,7 @@ const tests: Record<string, () => Promise<void>> = {
   async 'plugin-device-code'() {
     const J = 'juce://juce.backend';
     const plug = async (method: string, path: string, body?: unknown, key?: string) => {
-      const r = await fetch(`${base}/api/${path}`, {
+      const response = await fetch(`${base}/api/${path}`, {
         method,
         headers: {
           origin: J,
@@ -868,9 +889,9 @@ const tests: Record<string, () => Promise<void>> = {
         body: body === undefined ? undefined : JSON.stringify(body),
       });
       return {
-        status: r.status,
-        json: (await r.json().catch(() => null)) as any,
-        acao: r.headers.get('access-control-allow-origin'),
+        status: response.status,
+        json: (await response.json().catch(() => null)) as any,
+        acao: response.headers.get('access-control-allow-origin'),
       };
     };
     // Nora: a website account (Google).
@@ -915,7 +936,7 @@ const tests: Record<string, () => Promise<void>> = {
       cross.status === 403 && ok.status === 200 && ok.json.approved === true,
       { cross: cross.status, ok },
     );
-    await new Promise((r) => setTimeout(r, 4200));
+    await new Promise((resolve) => setTimeout(resolve, 4200));
     const got = await plug('POST', 'device/poll', { deviceCode: start.json.deviceCode });
     const again = await plug('POST', 'device/poll', { deviceCode: start.json.deviceCode });
     const key: string = got.json?.key ?? '';
@@ -1058,16 +1079,14 @@ const tests: Record<string, () => Promise<void>> = {
               sent.push({ id, v });
               // The patch files' folder: empty (the real plugin answers with its files).
               if (id === 'bd_patchList')
-                setTimeout(
-                  () =>
-                    listeners.bd_patchList?.forEach((f) =>
-                      f({ req: (v as { req: number }).req, items: [] }),
-                    ),
-                  10,
-                );
+                setTimeout(() => {
+                  listeners.bd_patchList?.forEach((f) => {
+                    f({ req: (v as { req: number }).req, items: [] });
+                  });
+                }, 10);
               if (id === 'bd_hello')
                 setTimeout(() => {
-                  listeners.bd_patch?.forEach((f) =>
+                  listeners.bd_patch?.forEach((f) => {
                     f({
                       patch: JSON.stringify({
                         format: 'blokdust.patch',
@@ -1076,11 +1095,11 @@ const tests: Record<string, () => Promise<void>> = {
                         blocks: [{ id: 't', type: 'source.tone', x: 0, y: 0, params: {} }],
                       }),
                       ids: { t: 1 },
-                    }),
-                  );
-                  listeners.bd_account?.forEach((f) =>
-                    f({ name: 'BlokDust on Mac (Logic Pro)', browser: true }),
-                  );
+                    });
+                  });
+                  listeners.bd_account?.forEach((f) => {
+                    f({ name: 'BlokDust on Mac (Logic Pro)', browser: true });
+                  });
                 }, 50);
             },
           },
@@ -1089,7 +1108,9 @@ const tests: Record<string, () => Promise<void>> = {
       [`${base}/`] as const,
     );
     const pg = await pctx.newPage();
-    pg.on('pageerror', (e) => console.error(`  plugin page error: ${e.message}`));
+    pg.on('pageerror', (e) => {
+      console.error(`  plugin page error: ${e.message}`);
+    });
     await pg.goto(`${base}/index.html`);
     await pg.waitForFunction(() => (window as any).__bd_probe?.state.started, null, {
       timeout: 20000,
@@ -1142,9 +1163,11 @@ const tests: Record<string, () => Promise<void>> = {
     await w.page
       .waitForFunction(
         () => {
-          const s = (window as any).__bd_probe?.scene.SettingsPanel;
+          const settingsPanel = (window as any).__bd_probe?.scene.SettingsPanel;
           return (
-            s?.OffsetY === 0 && s.accountPage.View === 'approve' && !!s.accountPage.ApproveName
+            settingsPanel?.OffsetY === 0 &&
+            settingsPanel.accountPage.View === 'approve' &&
+            !!settingsPanel.accountPage.ApproveName
           );
         },
         null,
@@ -1185,13 +1208,13 @@ const tests: Record<string, () => Promise<void>> = {
     );
     await pg.waitForTimeout(900);
     const inPlugin = await pg.evaluate(() => {
-      const s = (window as any).__bd_probe.scene.SettingsPanel,
-        x = s.accountPage;
+      const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel,
+        x = settingsPanel.accountPage;
       return {
         handle: x.Account?.handle,
         view: x.View,
         message: x.Message,
-        settings: s.Open,
+        settings: settingsPanel.Open,
         me: (window as any).__bd_probe.corners?.me,
       };
     });
@@ -1206,7 +1229,7 @@ const tests: Record<string, () => Promise<void>> = {
         !inPlugin.settings &&
         inPlugin.message === '' &&
         inPlugin.me === 'pia_g' &&
-        /^bdk_/.test(kept?.key ?? '') &&
+        (kept?.key ?? '').startsWith('bdk_') &&
         kept?.handle === 'pia_g',
       { said, inPlugin, kept: kept && { ...kept, key: String(kept.key).slice(0, 6) } },
     );
@@ -1264,7 +1287,7 @@ const tests: Record<string, () => Promise<void>> = {
     );
     const after = (await fetch(`${base}/api/me`, {
       headers: { authorization: `Bearer ${kept?.key}` },
-    }).then((r) => r.json())) as any;
+    }).then((response) => response.json())) as any;
     check(
       '… SIGN OUT in the plugin forgets its key here and on the server',
       cleared &&
@@ -1284,7 +1307,7 @@ const tests: Record<string, () => Promise<void>> = {
   async 'ipad-native'() {
     const J = 'juce://juce.backend';
     const app = async (path: string, body?: unknown, key?: string, method = 'POST') => {
-      const r = await fetch(`${base}/api/${path}`, {
+      const response = await fetch(`${base}/api/${path}`, {
         method,
         headers: {
           origin: J,
@@ -1293,17 +1316,19 @@ const tests: Record<string, () => Promise<void>> = {
         },
         body: body === undefined ? undefined : JSON.stringify(body),
       });
-      return { status: r.status, json: (await r.json().catch(() => null)) as any };
+      return { status: response.status, json: (await response.json().catch(() => null)) as any };
     };
-    const aasa = await fetch(`${base}/.well-known/apple-app-site-association`).then(async (r) => ({
-      status: r.status,
-      type: r.headers.get('content-type'),
-      json: await r.json().catch(() => null),
-    }));
+    const aasa = await fetch(`${base}/.well-known/apple-app-site-association`).then(
+      async (response) => ({
+        status: response.status,
+        type: response.headers.get('content-type'),
+        json: await response.json().catch(() => null),
+      }),
+    );
     check(
       'SHARING-0011: the site publishes apple-app-site-association for the app (webcredentials)',
       aasa.status === 200 &&
-        /json/.test(aasa.type ?? '') &&
+        (aasa.type ?? '').includes('json') &&
         aasa.json?.webcredentials?.apps?.[0] === 'test-team.test.app.id',
       aasa,
     );
@@ -1330,7 +1355,7 @@ const tests: Record<string, () => Promise<void>> = {
     check(
       'SHARING-0011: Sign in with Apple in the app makes the account and a key; it names itself there; a nonce works once and must match',
       a1.status === 200 &&
-        /^bdk_/.test(a1.json?.key ?? '') &&
+        (a1.json?.key ?? '').startsWith('bdk_') &&
         a1.json.fresh === true &&
         named.status === 200 &&
         again.status === 400 &&
@@ -1386,7 +1411,7 @@ const tests: Record<string, () => Promise<void>> = {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(body),
-        }).then(async (r) => ({ status: r.status, json: await r.json() }));
+        }).then(async (response) => ({ status: response.status, json: await response.json() }));
       const o = await post('app/passkey/options', {});
       const dec = (s: string) =>
         Uint8Array.from(
@@ -1459,7 +1484,11 @@ const tests: Record<string, () => Promise<void>> = {
         (window as any).__sent = sent;
         (window as any).__bd_pluginSite = site;
         const fire = (id: string, v: unknown) =>
-          setTimeout(() => listeners[id]?.forEach((f) => f(v)), 20);
+          setTimeout(() => {
+            listeners[id]?.forEach((f) => {
+              f(v);
+            });
+          }, 20);
         (window as any).__JUCE__ = {
           backend: {
             addEventListener: (id: string, fn: (x: unknown) => void) => {
@@ -1491,7 +1520,9 @@ const tests: Record<string, () => Promise<void>> = {
       [`${base}/`] as const,
     );
     const pg = await pctx.newPage();
-    pg.on('pageerror', (e) => console.error(`  ipad page error: ${e.message}`));
+    pg.on('pageerror', (e) => {
+      console.error(`  ipad page error: ${e.message}`);
+    });
     await pg.goto(`${base}/index.html`);
     await pg.waitForFunction(() => (window as any).__bd_probe?.state.started, null, {
       timeout: 20000,
@@ -1527,7 +1558,7 @@ const tests: Record<string, () => Promise<void>> = {
         )
       )
         break;
-      await new Promise((r) => setTimeout(r, 61_000));
+      await new Promise((resolve) => setTimeout(resolve, 61_000));
     }
     const kept = await pg.evaluate(() =>
       ((window as any).__sent as { id: string; v: any }[])
@@ -1545,7 +1576,7 @@ const tests: Record<string, () => Promise<void>> = {
     check(
       'SHARING-0011: the iPad app offers SIGN IN WITH APPLE, SIGN IN WITH PASSKEY and the code; Apple gives it a key and a new account names itself there',
       JSON.stringify(ways) === '[true,true,true,false]' &&
-        /^bdk_/.test(kept?.key ?? '') &&
+        (kept?.key ?? '').startsWith('bdk_') &&
         after === 'zed_a',
       { ways, kept: kept && String(kept.key).slice(0, 4), after },
     );
@@ -1615,8 +1646,12 @@ const tests: Record<string, () => Promise<void>> = {
     await f.page
       .waitForFunction(
         () => {
-          const s = (window as any).__bd_probe?.scene?.SettingsPanel;
-          return s?.Open && s.OffsetY === 0 && s.accountPage.Account !== undefined;
+          const settingsPanel = (window as any).__bd_probe?.scene?.SettingsPanel;
+          return (
+            settingsPanel?.Open &&
+            settingsPanel.OffsetY === 0 &&
+            settingsPanel.accountPage.Account !== undefined
+          );
         },
         null,
         { timeout: 20000 },
@@ -1669,8 +1704,8 @@ const tests: Record<string, () => Promise<void>> = {
       version: 2,
       blocks: types.map((type, i) => ({ id: `b${i}`, type, x: i * 4, y: 0 })),
     });
-    const save = (d: Device, body: Record<string, unknown>) =>
-      api(d, 'POST', 'patches', { turnstile: 'ok', ...body }, { origin: base });
+    const save = (device: Device, body: Record<string, unknown>) =>
+      api(device, 'POST', 'patches', { turnstile: 'ok', ...body }, { origin: base });
     // Someone else (signed out) remixes the account's first patch, twice; the account remixes theirs once.
     const anon = await device();
     await anon.page.goto(`${base}/api/config`);
@@ -1708,7 +1743,7 @@ const tests: Record<string, () => Promise<void>> = {
     const st = (await pp(a.page)).account?.stats;
     check(
       'R15: opening ACCOUNT asks once, for who is signed in and the stats together',
-      requests.filter((r) => r.startsWith('/api/')).length === 1 &&
+      requests.filter((request) => request.startsWith('/api/')).length === 1 &&
         requests[0] === '/api/me?stats=1',
       requests,
     );
@@ -1722,7 +1757,8 @@ const tests: Record<string, () => Promise<void>> = {
       st,
     );
     const favs = st?.favourites.map(
-      (f: { type: string; patches: number; count: number }) => `${f.type}:${f.patches}:${f.count}`,
+      (favourite: { type: string; patches: number; count: number }) =>
+        `${favourite.type}:${favourite.patches}:${favourite.count}`,
     );
     // The demo patch (the first save, with a Tone added on device B) has Tones and an Emitter: Tone is in 3 patches only
     // if the older one was counted.
@@ -1799,7 +1835,9 @@ const tests: Record<string, () => Promise<void>> = {
           },
       );
     await openApp(a);
-    await a.page.evaluate(() => localStorage.removeItem('bd_activity'));
+    await a.page.evaluate(() => {
+      localStorage.removeItem('bd_activity');
+    });
     const before = await stats();
     // A self-powered Emitter (a new one starts synced: 2 a second at 120 BPM), added from the menu.
     await a.page.evaluate(() => {
@@ -1920,8 +1958,8 @@ const tests: Record<string, () => Promise<void>> = {
       };
       check(
         'R16: ACTIVITY_BEACON=off: the page is told not to send, and the request writes nothing',
-        cfg.activityBeacon === false &&
-          onCfg.activityBeacon === true &&
+        !cfg.activityBeacon &&
+          onCfg.activityBeacon &&
           post.status === 200 &&
           (await post.json()).added === false,
         { cfg, onCfg },
@@ -1964,16 +2002,18 @@ const tests: Record<string, () => Promise<void>> = {
         }[],
     );
     const acctIds = new Set(
-      rows.filter((r) => r.key.startsWith('acct:')).map((r) => r.key.slice(5)),
+      rows.filter((row) => row.key.startsWith('acct:')).map((r) => r.key.slice(5)),
     );
-    const twice = rows.filter((r) => r.key.startsWith('mine:') && r.link && acctIds.has(r.link));
-    const n = rows.findIndex((r) => r.key === `acct:${id}`);
+    const twice = rows.filter(
+      (row) => row.key.startsWith('mine:') && row.link && acctIds.has(row.link),
+    );
+    const n = rows.findIndex((row) => row.key === `acct:${id}`);
     check(
       'R8: signed in, OPEN lists each account patch once, each with a bin (no second copy from this browser)',
       n >= 0 &&
         !twice.length &&
-        rows.filter((r) => r.key.startsWith('acct:')).every((r) => r.removable),
-      { rows: rows.map((r) => r.key), twice },
+        rows.filter((row) => row.key.startsWith('acct:')).every((r) => r.removable),
+      { rows: rows.map((row) => row.key), twice },
     );
     await a.page.evaluate((i) => {
       const pp = (window as any).__bd_probe.scene.PatchesPanel;
@@ -2073,12 +2113,12 @@ const tests: Record<string, () => Promise<void>> = {
 const shared: { a?: Device; b?: Device; firstPatch?: string } = {};
 
 try {
-  for (const [name, t] of Object.entries(tests)) {
+  for (const [name, value] of Object.entries(tests)) {
     if (only && !only.includes(name)) continue;
     try {
-      await t();
-    } catch (e) {
-      check(name, false, String((e as Error).stack ?? e).slice(0, 600));
+      await value();
+    } catch (error) {
+      check(name, false, String((error as Error).stack ?? error).slice(0, 600));
     }
   }
 } finally {
@@ -2087,12 +2127,12 @@ try {
   mocks.close();
 }
 writeFileSync(`${OUT}/summary.json`, JSON.stringify(results, null, 2));
-const ok = results.length > 0 && results.every((r) => r.ok);
+const ok = results.length > 0 && results.every((result) => result.ok);
 console.log(
   JSON.stringify({
     ok,
-    passed: results.filter((r) => r.ok).length,
-    failed: results.filter((r) => !r.ok).map((r) => r.name),
+    passed: results.filter((result) => result.ok).length,
+    failed: results.filter((result) => !result.ok).map((r) => r.name),
   }),
 );
 process.exit(ok ? 0 : 1);

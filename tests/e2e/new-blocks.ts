@@ -225,17 +225,17 @@ const tests: Tests = {
     await openPanel(p, 'g');
     const info = () =>
       p.evaluate(() => {
-        const o = (window as any).__bd_probe.scene.OptionsPanel,
-          pads = (o.Options as any[]).find((x) => x.Type === 'pads');
+        const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
+          pads = (optionsPanel.Options as any[]).find((x) => x.Type === 'pads');
         return {
-          x: o.Position.x,
-          y: o.Position.y,
-          top: o.Position.y - o.Size.height / 2,
-          bottom: o.Position.y + o.Size.height / 2,
+          x: optionsPanel.Position.x,
+          y: optionsPanel.Position.y,
+          top: optionsPanel.Position.y - optionsPanel.Size.height / 2,
+          bottom: optionsPanel.Position.y + optionsPanel.Size.height / 2,
           shown: pads.Shown,
           pads: (pads.Pads as any[]).map((q) => ({
-            cx: o.Position.x + q.x + q.w / 2,
-            cy: o.Position.y + q.y + q.h / 2,
+            cx: optionsPanel.Position.x + q.x + q.w / 2,
+            cy: optionsPanel.Position.y + q.y + q.h / 2,
             note: q.note,
             h: q.h,
           })),
@@ -350,16 +350,16 @@ const tests: Tests = {
     await p.waitForTimeout(1200);
     await openPanel(p, 'g');
     const a = await p.evaluate(() => {
-      const o = (window as any).__bd_probe.scene.OptionsPanel,
-        pads = (o.Options as any[]).find((x) => x.Type === 'pads'),
+      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
+        pads = (optionsPanel.Options as any[]).find((x) => x.Type === 'pads'),
         d = devicePixelRatio;
       return {
-        top: (o.Position.y - o.Size.height / 2) / d,
-        bottom: (o.Position.y + o.Size.height / 2) / d,
+        top: (optionsPanel.Position.y - optionsPanel.Size.height / 2) / d,
+        bottom: (optionsPanel.Position.y + optionsPanel.Size.height / 2) / d,
         shown: pads.Shown,
         pads: (pads.Pads as any[]).map((q) => ({
-          cx: (o.Position.x + q.x + q.w / 2) / d,
-          cy: (o.Position.y + q.y + q.h / 2) / d,
+          cx: (optionsPanel.Position.x + q.x + q.w / 2) / d,
+          cy: (optionsPanel.Position.y + q.y + q.h / 2) / d,
           note: q.note,
           w: q.w / d,
           h: q.h / d,
@@ -522,7 +522,7 @@ const tests: Tests = {
     const sw = await p.evaluate(() =>
       ((window as any).__bd_probe.scene.OptionsPanel.Options as any[])
         .find((o) => o.Type === 'switches')
-        .Switches.map((s: any) => ({ name: s.Name, on: !!s.Selected })),
+        .Switches.map((Switche: any) => ({ name: Switche.Name, on: !!Switche.Selected })),
     );
     await p.evaluate(() =>
       (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('keysSetPitch', true),
@@ -627,14 +627,14 @@ const tests: Tests = {
       );
     const barAt = (n: number, f: number) =>
       p.evaluate(
-        ([n, f]) => {
+        ([key, value]) => {
           const P = (window as any).__bd_probe,
-            o = P.scene.OptionsPanel,
+            optionsPanel = P.scene.OptionsPanel,
             pr = P.v1App.Metrics.PixelRatio,
-            s = (o.Options as any[]).find((x) => x.Setting === 'noteBars').Shown;
+            shown = (optionsPanel.Options as any[]).find((x) => x.Setting === 'noteBars').Shown;
           return [
-            (o.Position.x + s.cells[n]) / pr,
-            (o.Position.y + s.bottom - (s.bottom - s.top) * f) / pr,
+            (optionsPanel.Position.x + shown.cells[key]) / pr,
+            (optionsPanel.Position.y + shown.bottom - (shown.bottom - shown.top) * value) / pr,
           ] as [number, number];
         },
         [n, f],
@@ -653,7 +653,7 @@ const tests: Tests = {
         () => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.__bdLit?.note,
       ); // a hit played G
     // drag A (bar 9) to about half
-    let [x, y] = await barAt(9, 0.5);
+    const [x, y] = await barAt(9, 0.5);
     await p.mouse.move(x, y);
     await p.mouse.down();
     await p.mouse.move(x + 30, y - 2, { steps: 4 }); // sideways stays on A
@@ -679,9 +679,11 @@ const tests: Tests = {
     const r0 = await range();
     const py = await p.evaluate(() => {
       const P = (window as any).__bd_probe,
-        o = P.scene.OptionsPanel,
-        r = (o.Options as any[]).find((x) => x.Setting === 'noteRange');
-      return (o.Position.y + r.Position.y + r.Size.height / 2) / P.v1App.Metrics.PixelRatio;
+        optionsPanel = P.scene.OptionsPanel,
+        r = (optionsPanel.Options as any[]).find((x) => x.Setting === 'noteRange');
+      return (
+        (optionsPanel.Position.y + r.Position.y + r.Size.height / 2) / P.v1App.Metrics.PixelRatio
+      );
     });
     const pr = await p.evaluate(() => (window as any).__bd_probe.v1App.Metrics.PixelRatio),
       ox = await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.Position.x);
@@ -706,12 +708,12 @@ const tests: Tests = {
     const c0 = (await cb()).values;
     const [cx, cy] = await c.evaluate(() => {
       const P = (window as any).__bd_probe,
-        o = P.scene.OptionsPanel,
+        optionsPanel = P.scene.OptionsPanel,
         pr = P.v1App.Metrics.PixelRatio,
-        s = (o.Options as any[]).find((x) => x.Setting === 'noteBars').Shown;
+        shown = (optionsPanel.Options as any[]).find((x) => x.Setting === 'noteBars').Shown;
       return [
-        (o.Position.x + s.cells[2]) / pr,
-        (o.Position.y + s.bottom - (s.bottom - s.top) * (2 / 7) - 2) / pr,
+        (optionsPanel.Position.x + shown.cells[2]) / pr,
+        (optionsPanel.Position.y + shown.bottom - (shown.bottom - shown.top) * (2 / 7) - 2) / pr,
       ];
     });
     await c.mouse.move(cx, cy);
@@ -837,10 +839,13 @@ const tests: Tests = {
     const s = await state(p);
     // A click on a step toggles it (owner, 2026-11-14); moving Steps, Hits or Rotate gives the pattern back.
     const step2 = (await p.evaluate((x) => {
-      const o = (window as any).__bd_probe.scene.OptionsPanel,
+      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
         pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio,
-        r = (o.Options as any[]).find((q) => q.Setting === 'counterPattern');
-      return [(o.Position.x + x) / pr, (o.Position.y + r.Position.y + r.Size.height / 2) / pr];
+        r = (optionsPanel.Options as any[]).find((q) => q.Setting === 'counterPattern');
+      return [
+        (optionsPanel.Position.x + x) / pr,
+        (optionsPanel.Position.y + r.Position.y + r.Size.height / 2) / pr,
+      ];
     }, five!.cells[1])) as [number, number];
     await p.mouse.click(...step2);
     await p.waitForTimeout(300);
@@ -1074,8 +1079,8 @@ try {
       detail: unknown;
     try {
       [pass, detail] = await run(errors);
-    } catch (e) {
-      detail = String(e);
+    } catch (error) {
+      detail = String(error);
     }
     if (errors.length) {
       pass = false;

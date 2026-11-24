@@ -32,11 +32,11 @@ export function videoSeconds(
     if (b.type === 'fx.lfo')
       periods.push(on(b, 'sync') ? num(b, 'division') * beat : 1 / Math.max(0.02, num(b, 'rate')));
   }
-  const tick = Math.min(beat, ...ticks.filter((t) => t > 0));
+  const tick = Math.min(beat, ...ticks.filter((tick) => tick > 0));
   for (const b of blocks)
     if (b.type === 'power.counter') periods.push(Math.max(1, num(b, 'steps')) * tick);
   periods.push(...ticks);
-  const longest = Math.max(0, ...periods.filter((p) => Number.isFinite(p) && p > 0));
+  const longest = Math.max(0, ...periods.filter((period) => Number.isFinite(period) && period > 0));
   if (!longest) return DEFAULT_SECONDS;
   const s = Math.min(MAX_SECONDS, Math.ceil(MIN_SECONDS / longest - 1e-9) * longest);
   return Math.round(s * 30) / 30; // a whole number of 30 fps frames

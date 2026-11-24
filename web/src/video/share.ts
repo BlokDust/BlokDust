@@ -14,9 +14,9 @@ export async function shareFile(file: File, title: string, text: string): Promis
   try {
     await navigator.share({ files: [file], title, text });
     return true;
-  } catch (e) {
-    if ((e as Error).name === 'AbortError') return false;
-    throw e;
+  } catch (error) {
+    if ((error as Error).name === 'AbortError') return false;
+    throw error;
   }
 }
 
@@ -26,7 +26,9 @@ export function downloadFile(file: File): void {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 60_000);
 }
 
 /** A file name from the patch title: letters, digits and dashes. */

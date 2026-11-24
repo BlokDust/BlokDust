@@ -61,19 +61,19 @@ function padAt(panel: any, x: number, y: number): Pad | null {
     ly = y - panel.Position.y,
     pads = padsOf(panel);
   if (!pads.length) return null;
-  const left = Math.min(...pads.map((p) => p.x)),
-    right = Math.max(...pads.map((p) => p.x + p.w));
-  const top = Math.min(...pads.map((p) => p.y)),
-    bottom = Math.max(...pads.map((p) => p.y + p.h));
+  const left = Math.min(...pads.map((pad) => pad.x)),
+    right = Math.max(...pads.map((pad) => pad.x + pad.w));
+  const top = Math.min(...pads.map((pad) => pad.y)),
+    bottom = Math.max(...pads.map((pad) => pad.y + pad.h));
   if (lx < left || lx > right || ly < top || ly > bottom) return null;
   let best: Pad | null = null,
     bestD = Infinity;
-  for (const p of pads) {
-    const dx = Math.max(p.x - lx, 0, lx - (p.x + p.w)),
-      dy = Math.max(p.y - ly, 0, ly - (p.y + p.h)),
+  for (const pad of pads) {
+    const dx = Math.max(pad.x - lx, 0, lx - (pad.x + pad.w)),
+      dy = Math.max(pad.y - ly, 0, ly - (pad.y + pad.h)),
       d = dx * dx + dy * dy;
     if (d < bestD) {
-      best = p;
+      best = pad;
       bestD = d;
     }
   }
@@ -92,27 +92,27 @@ export function padDown(panel: any, pointer: number, x: number, y: number, host:
 }
 /** A pad finger moved: onto another pad, its note slides there. True if `pointer` is a pad finger. */
 export function padMove(panel: any, pointer: number, x: number, y: number, host: PadHost): boolean {
-  const f = fingers.get(pointer);
-  if (!f) return false;
+  const finger = fingers.get(pointer);
+  if (!finger) return false;
   const pad = padAt(panel, x, y);
-  if (pad && pad.note !== f.now && panel.SelectedBlock?.Id === f.block) {
-    f.now = pad.note;
-    host.bend(f.block, f.base, f.now - f.base);
+  if (pad && pad.note !== finger.now && panel.SelectedBlock?.Id === finger.block) {
+    finger.now = pad.note;
+    host.bend(finger.block, finger.base, finger.now - finger.base);
     panel._DrawReady = true;
   }
   return true;
 }
 /** A pad finger lifted (or was cancelled). True if `pointer` was one. */
 export function padUp(panel: any, pointer: number, host: PadHost): boolean {
-  const f = fingers.get(pointer);
-  if (!f) return false;
+  const finger = fingers.get(pointer);
+  if (!finger) return false;
   fingers.delete(pointer);
-  host.note(f.block, f.base, false);
+  host.note(finger.block, finger.base, false);
   panel._DrawReady = true;
   return true;
 }
 /** Tests: the notes sounding from pads now. */
-export const padNotes = (): number[] => [...fingers.values()].map((f) => f.now);
+export const padNotes = (): number[] => [...fingers.values()].map((finger) => finger.now);
 
 /** The Touchpad's options form: Key, Scale, the switches, Octave, the pads. */
 export function touchpadForm(
@@ -120,7 +120,7 @@ export function touchpadForm(
   scales: string[],
   choice: (name: string, setting: string, value: number, labels: string[]) => unknown,
 ): void {
-  const p = b.Params;
+  const params = b.Params;
   b.OptionsForm = {
     name: b.BlockName,
     parameters: [
@@ -128,17 +128,28 @@ export function touchpadForm(
         type: 'slider',
         name: 'Key',
         setting: 'touchpadKey',
-        props: { value: Number(p.key ?? 0), min: 0, max: 11, quantised: true, centered: false },
+        props: {
+          value: Number(params.key ?? 0),
+          min: 0,
+          max: 11,
+          quantised: true,
+          centered: false,
+        },
       },
-      choice('Scale', 'scale', Number(p.scale ?? 0), scales),
+      choice('Scale', 'scale', Number(params.scale ?? 0), scales),
       {
         type: 'switches',
         name: '',
         setting: '',
         props: { value: 0, min: 0, max: 1, quantised: true },
         switches: [
-          { name: 'Mono/Poly', setting: 'polyphonic', value: !!p.isPolyphonic, mode: 'fewMany' },
-          { name: 'In Key', setting: 'inKey', value: !p.chromatic, lit: true, mode: 'offOn' },
+          {
+            name: 'Mono/Poly',
+            setting: 'polyphonic',
+            value: !!params.isPolyphonic,
+            mode: 'fewMany',
+          },
+          { name: 'In Key', setting: 'inKey', value: !params.chromatic, lit: true, mode: 'offOn' },
         ],
       },
       {
@@ -146,7 +157,7 @@ export function touchpadForm(
         name: 'Octave',
         setting: 'transpose',
         props: {
-          value: Number(p.transpose ?? 0),
+          value: Number(params.transpose ?? 0),
           min: -3,
           max: 3,
           quantised: true,
@@ -167,40 +178,40 @@ export function touchpadForm(
 const ROWS = [40, 40, 56, 40];
 /** Room for the panel, in device px either side of its centre line. */
 function room(centreY: number): number {
-  const u = App.Unit,
-    h = App.MainScene.Header as any;
-  const top = h.Height * (h.Rows ?? 1) * u + 30 * u,
-    bottom = App.Height - 72 * u; // under the header (and the name tab); over zoom, power, bin
-  return Math.max(60 * u, Math.min(centreY - top, bottom - centreY));
+  const unit = App.Unit,
+    header = App.MainScene.Header as any;
+  const top = header.Height * (header.Rows ?? 1) * unit + 30 * unit,
+    bottom = App.Height - 72 * unit; // under the header (and the name tab); over zoom, power, bin
+  return Math.max(60 * unit, Math.min(centreY - top, bottom - centreY));
 }
 /** Where the Touchpad's panel centres: the middle of the free band on desktop and tablet (v1's point leaves too little
  * below); on a phone, as low as the bottom controls allow. As a fraction of the screen height. */
 function touchpadCentre(): number {
-  const u = App.Unit,
-    h = App.MainScene.Header as any;
-  const top = h.Height * (h.Rows ?? 1) * u + 30 * u,
-    bottom = App.Height - 72 * u;
+  const unit = App.Unit,
+    header = App.MainScene.Header as any;
+  const top = header.Height * (header.Rows ?? 1) * unit + 30 * unit,
+    bottom = App.Height - 72 * unit;
   // A phone: all the band but 70 units at the top, where the Touchpad block shows.
   return mobile()
-    ? (bottom - (bottom - top - 70 * u) / 2) / App.Height
+    ? (bottom - (bottom - top - 70 * unit) / 2) / App.Height
     : (top + bottom) / 2 / App.Height;
 }
 
 /** Give the open Touchpad panel its own row heights (v1's Populate squeezed everything into 240 units). */
 function relayout(panel: any): void {
-  const u = App.Unit,
+  const unit = App.Unit,
     opts = panel.Options as any[];
-  const total = Math.min((2 * room(panel.Position.y)) / u - 40, mobile() ? 640 : 440);
+  const total = Math.min((2 * room(panel.Position.y)) / unit - 40, mobile() ? 640 : 440);
   const fixed = ROWS.reduce((a, b) => a + b, 0),
     heights = [...ROWS, Math.max(100, total - fixed)];
-  panel.Size.height = (heights.reduce((a, b) => a + b, 0) + 40) * u;
-  let y = -panel.Size.height * 0.5 + 20 * u;
-  opts.forEach((o, i) => {
-    const h = Math.round(heights[i] * u),
+  panel.Size.height = (heights.reduce((a, b) => a + b, 0) + 40) * unit;
+  let y = -panel.Size.height * 0.5 + 20 * unit;
+  opts.forEach((opt, i) => {
+    const h = Math.round(heights[i] * unit),
       oy = Math.round(y);
-    o.Position.y = oy;
-    o.Size.height = h;
-    for (const s of (o.Switches ?? []) as any[]) {
+    opt.Position.y = oy;
+    opt.Size.height = h;
+    for (const s of (opt.Switches ?? []) as any[]) {
       s.Position.y = oy;
       s.Size.height = h * 0.43;
     }
@@ -208,23 +219,23 @@ function relayout(panel: any): void {
   });
   // v1 Populate's outline (hit test), at the new height.
   const top = -panel.Size.height * 0.5,
-    m = panel.Margin,
+    margin = panel.Margin,
     w = panel.Size.width,
     nameW = panel._NameWidth;
   panel.Outline = [
     new Point(0, 0),
-    new Point(44 * u, 0),
-    new Point(44 * u, top),
-    new Point(m - 25 * u, top),
-    new Point(m - 5 * u, top - 20 * u),
-    new Point(m + 5 * u + nameW, top - 20 * u),
-    new Point(m + 25 * u + nameW, top),
-    new Point(w - 40 * u, top),
-    new Point(w - 20 * u, top - 20 * u),
+    new Point(44 * unit, 0),
+    new Point(44 * unit, top),
+    new Point(margin - 25 * unit, top),
+    new Point(margin - 5 * unit, top - 20 * unit),
+    new Point(margin + 5 * unit + nameW, top - 20 * unit),
+    new Point(margin + 25 * unit + nameW, top),
+    new Point(w - 40 * unit, top),
+    new Point(w - 20 * unit, top - 20 * unit),
     new Point(w, top),
     new Point(w, panel.Size.height * 0.5),
-    new Point(44 * u, panel.Size.height * 0.5),
-    new Point(44 * u, 44 * u),
+    new Point(44 * unit, panel.Size.height * 0.5),
+    new Point(44 * unit, 44 * unit),
   ];
 }
 
@@ -237,18 +248,18 @@ function drawKeys(
   panel: any,
 ): void {
   const x = panel.Margin,
-    w = panel.Range,
+    range = panel.Range,
     y = this.Position.y,
     h = this.Size.height,
     mid = y + h * 0.5,
-    cell = w / 12;
+    cell = range / 12;
   const key = Math.round(Number(panel.SelectedBlock?.Params.key ?? 0)),
     dataType = Math.round(units * 10);
   ctx.globalAlpha = 1;
   App.StrokeColor(ctx, App.Palette[1]);
   ctx.beginPath();
   ctx.moveTo(panel.Margin - units, y + h);
-  ctx.lineTo(w + panel.Margin + units, y + h);
+  ctx.lineTo(range + panel.Margin + units, y + h);
   ctx.stroke();
   for (let k = 0; k < 12; k++) {
     const cx = x + cell * (k + 0.5);
@@ -298,7 +309,9 @@ function drawPads(
     scale = Number(p.scale ?? 0),
     chromatic = !!p.chromatic;
   const held = new Set(
-    [...fingers.values()].filter((f) => f.block === panel.SelectedBlock?.Id).map((f) => f.now),
+    [...fingers.values()]
+      .filter((finger) => finger.block === panel.SelectedBlock?.Id)
+      .map((finger) => finger.now),
   );
   const txt = App.Palette[App.ThemeManager.Txt],
     pads: Pad[] = [];
@@ -358,12 +371,12 @@ export function installTouchpad(panel: any): void {
   // The Touchpad opens centred in the free band (or low, on a phone), with its block just clear of it.
   const open = panel.Open.bind(panel);
   panel.Open = (block: any) => {
-    const m = App.Metrics,
-      was = m.OptionsPoint,
+    const metrics = App.Metrics,
+      was = metrics.OptionsPoint,
       pad = block?.def?.id === 'input.touchpad';
     panel.Position.y = Math.round(App.Height * (pad ? touchpadCentre() : mobile() ? 0.65 : was.y));
     if (pad)
-      m.OptionsPoint = new Point(
+      metrics.OptionsPoint = new Point(
         was.x,
         mobile()
           ? Math.max(0.16, (panel.Position.y - room(panel.Position.y) - 40 * App.Unit) / App.Height)
@@ -372,7 +385,7 @@ export function installTouchpad(panel: any): void {
     try {
       open(block);
     } finally {
-      m.OptionsPoint = was;
+      metrics.OptionsPoint = was;
     }
   };
   // The Key row: a press picks the key under it.

@@ -244,24 +244,24 @@ const results: {
   seconds?: number;
   reason?: string;
 }[] = [];
-for (const s of steps) {
-  if (only && !only.includes(s.job)) continue;
-  if (s.when && !s.when()) {
+for (const step of steps) {
+  if (only && !only.includes(step.job)) continue;
+  if (step.when && !step.when()) {
     results.push({
-      job: s.job,
-      name: s.name,
+      job: step.job,
+      name: step.name,
       status: 'skip',
-      reason: s.skipReason ?? 'not applicable',
+      reason: step.skipReason ?? 'not applicable',
     });
     continue;
   }
-  console.error(`\n▶ [${s.job}] ${s.name}`);
+  console.error(`\n▶ [${step.job}] ${step.name}`);
   const t0 = Date.now();
-  const r = spawnSync('sh', ['-c', s.cmd], { stdio: ['ignore', 'inherit', 'inherit'] });
+  const result = spawnSync('sh', ['-c', step.cmd], { stdio: ['ignore', 'inherit', 'inherit'] });
   results.push({
-    job: s.job,
-    name: s.name,
-    status: r.status === 0 ? 'pass' : 'fail',
+    job: step.job,
+    name: step.name,
+    status: result.status === 0 ? 'pass' : 'fail',
     seconds: Math.round((Date.now() - t0) / 100) / 10,
   });
 }
@@ -269,16 +269,16 @@ console.error(
   '\n' +
     results
       .map(
-        (r) =>
-          `${r.status === 'pass' ? '✓' : r.status === 'skip' ? '–' : '✗'} [${r.job}] ${r.name}${r.seconds != null ? ` (${r.seconds}s)` : ''}${r.reason ? ` — ${r.reason}` : ''}`,
+        (result) =>
+          `${result.status === 'pass' ? '✓' : result.status === 'skip' ? '–' : '✗'} [${result.job}] ${result.name}${result.seconds != null ? ` (${result.seconds}s)` : ''}${result.reason ? ` — ${result.reason}` : ''}`,
       )
       .join('\n'),
 );
 console.log(
   JSON.stringify({
-    passed: results.filter((r) => r.status === 'pass').length,
-    failed: results.filter((r) => r.status === 'fail').length,
-    skipped: results.filter((r) => r.status === 'skip').length,
+    passed: results.filter((result) => result.status === 'pass').length,
+    failed: results.filter((result) => result.status === 'fail').length,
+    skipped: results.filter((result) => result.status === 'skip').length,
   }),
 );
-if (results.some((r) => r.status === 'fail')) process.exit(1);
+if (results.some((result) => result.status === 'fail')) process.exit(1);

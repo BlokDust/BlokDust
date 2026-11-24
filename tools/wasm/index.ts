@@ -24,11 +24,11 @@ const python = () =>
     .map((p) => spawnSync('sh', ['-c', `command -v ${p}`], { encoding: 'utf8' }).stdout.trim())
     .find(Boolean);
 const sh = (cmd: string, env: Record<string, string> = {}) => {
-  const r = spawnSync('bash', ['-c', cmd], {
+  const result = spawnSync('bash', ['-c', cmd], {
     stdio: ['ignore', 'inherit', 'inherit'],
     env: { ...process.env, ...env },
   });
-  if (r.status !== 0) throw new Error(`failed: ${cmd}`);
+  if (result.status !== 0) throw new Error(`failed: ${cmd}`);
 };
 
 function setup() {
@@ -58,7 +58,8 @@ export function renderWasm(module: WebAssembly.Module, fixture: any, block = 128
   const sr = fixture.render?.sampleRate ?? 48000;
   const frames = Math.round((fixture.render?.seconds ?? 5) * sr);
   const engine = WasmEngine.fromModule(module, sr, loaded.seed);
-  for (const c of loaded.commands) if (!engine.push(c)) throw new Error('command queue full');
+  for (const command of loaded.commands)
+    if (!engine.push(command)) throw new Error('command queue full');
   let audio = FNV_OFFSET,
     audioR = FNV_OFFSET,
     events = FNV_OFFSET,
@@ -91,10 +92,10 @@ function test() {
       const exp = JSON.parse(readFileSync(join('tests/golden/expected', f), 'utf8'));
       const runs = [128, 4096].map((b) => renderWasm(module, fixture, b)); // worklet quantum and a large block
       const ok = runs.every(
-        (r) =>
-          r.audioHash === exp.audioHash &&
-          r.eventHash === exp.eventHash &&
-          r.eventCount === exp.eventCount,
+        (run) =>
+          run.audioHash === exp.audioHash &&
+          run.eventHash === exp.eventHash &&
+          run.eventCount === exp.eventCount,
       );
       return {
         name,
@@ -110,11 +111,11 @@ function test() {
   console.log(
     JSON.stringify({
       fixtures: results.length,
-      identical: results.filter((r) => r.ok).length,
+      identical: results.filter((result) => result.ok).length,
       wasmBytes: readFileSync(WASM).length,
     }),
   );
-  if (results.some((r) => !r.ok)) process.exit(1);
+  if (results.some((result) => !result.ok)) process.exit(1);
 }
 
 const cmd = process.argv[2];

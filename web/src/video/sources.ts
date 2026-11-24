@@ -29,14 +29,17 @@ export function startSource(
     seed,
     entries,
     sample: (i) => {
-      const s = samples[i];
+      const patchSample = samples[i];
       return (
-        s && {
-          id: s.id,
-          stage: s.stage,
-          left: s.buffer.getChannelData(0),
-          right: s.buffer.numberOfChannels > 1 ? s.buffer.getChannelData(1) : undefined,
-          sampleRate: s.buffer.sampleRate,
+        patchSample && {
+          id: patchSample.id,
+          stage: patchSample.stage,
+          left: patchSample.buffer.getChannelData(0),
+          right:
+            patchSample.buffer.numberOfChannels > 1
+              ? patchSample.buffer.getChannelData(1)
+              : undefined,
+          sampleRate: patchSample.buffer.sampleRate,
         }
       );
     },

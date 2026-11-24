@@ -100,16 +100,17 @@ export class ActivityTally {
   }
 
   /** A snapshot arrived (`now`: performance.now()). */
-  frame(now: number, f: TallyFrame): void {
+  frame(now: number, tallyFrame: TallyFrame): void {
     const dt = this.last ? Math.min(MAX_STEP_MS, Math.max(0, now - this.last)) : 0;
     this.last = now;
-    this.fresh.particles += f.emitted;
+    this.fresh.particles += tallyFrame.emitted;
     if (!dt) return;
-    if (f.visible) this.fresh.playMs += dt;
-    if (!f.worldOn) return;
-    for (const [id, b] of f.blocks) {
+    if (tallyFrame.visible) this.fresh.playMs += dt;
+    if (!tallyFrame.worldOn) return;
+    for (const [id, b] of tallyFrame.blocks) {
       if (b.type !== 'power.laser') continue;
-      this.fresh.laserTurns += (rates(b, f.powered.has(id), f.tempo).turns * dt) / 1000;
+      this.fresh.laserTurns +=
+        (rates(b, tallyFrame.powered.has(id), tallyFrame.tempo).turns * dt) / 1000;
     }
   }
   /** The user added a block (from the menu, a paste or a duplicate; not opening a patch). */
@@ -119,8 +120,8 @@ export class ActivityTally {
 
   private stored(): Activity {
     try {
-      const v = JSON.parse(this.storage?.getItem(KEY) ?? 'null') as Activity | null;
-      return v ? { ...NO_ACTIVITY, ...v } : { ...NO_ACTIVITY };
+      const activity = JSON.parse(this.storage?.getItem(KEY) ?? 'null') as Activity | null;
+      return activity ? { ...NO_ACTIVITY, ...activity } : { ...NO_ACTIVITY };
     } catch {
       return { ...NO_ACTIVITY };
     }

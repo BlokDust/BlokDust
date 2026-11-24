@@ -57,8 +57,8 @@ export function b64urlBytes(n: number): string {
 }
 
 export async function sha256Hex(s: string): Promise<string> {
-  const d = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)));
-  return [...d].map((x) => x.toString(16).padStart(2, '0')).join('');
+  const bytes = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)));
+  return [...bytes].map((x) => x.toString(16).padStart(2, '0')).join('');
 }
 
 /** Constant-time string compare (equal-length hex digests). */

@@ -23,27 +23,27 @@ const midi: number[][] = [
   [124800, 0x82, 67, 0],
   [144000, 0x83, 64, 0],
 ];
-const p = new MpeParser(0, 0);
-p.setSettings({ mpe: true });
+const mpeParser = new MpeParser(0, 0);
+mpeParser.setSettings({ mpe: true });
 const DIM = ['bend', 'pressure', 'slide'];
 const script = midi
-  .flatMap((m) => p.message(m[1], m[2], m[3], m[0]))
-  .map((c) =>
-    c.type === 8
+  .flatMap((m) => mpeParser.message(m[1], m[2], m[3], m[0]))
+  .map((command) =>
+    command.type === 8
       ? {
-          atSample: c.atSample,
+          atSample: command.atSample,
           op: 'expression',
-          note: c.param,
-          channel: c.x,
-          dim: DIM[c.y!],
-          value: c.value,
+          note: command.param,
+          channel: command.x,
+          dim: DIM[command.y!],
+          value: command.value,
         }
       : {
-          atSample: c.atSample,
-          op: c.type === 4 ? 'noteOn' : 'noteOff',
-          note: c.param,
-          channel: c.x,
-          ...(c.type === 4 ? { velocity: c.value } : {}),
+          atSample: command.atSample,
+          op: command.type === 4 ? 'noteOn' : 'noteOff',
+          note: command.param,
+          channel: command.x,
+          ...(command.type === 4 ? { velocity: command.value } : {}),
         },
   );
 writeFileSync(

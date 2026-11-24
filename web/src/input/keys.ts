@@ -64,53 +64,53 @@ export function attachNoteInputs(on: {
 }) {
   let octave = 0;
   const held = new Map<string, number>();
-  const down = (e: KeyboardEvent) => {
+  const down = (event: KeyboardEvent) => {
     // Typing in a text field (Share title, sample search) is text, not notes: v1's TypingManager intent.
-    const tag = (e.target as HTMLElement)?.tagName;
+    const tag = (event.target as HTMLElement)?.tagName;
     if (
-      e.metaKey ||
-      e.ctrlKey ||
+      event.metaKey ||
+      event.ctrlKey ||
       tag === 'SELECT' ||
       tag === 'INPUT' ||
       tag === 'TEXTAREA' ||
-      (e.target as HTMLElement)?.isContentEditable
+      (event.target as HTMLElement)?.isContentEditable
     )
       return;
-    const n = V1_KEY_NOTES[e.code];
+    const n = V1_KEY_NOTES[event.code];
     // A held key repeats: the repeats are cancelled like the first press, or each one is passed on (an alert sound each).
-    if (on.captureAll?.() || (n !== undefined && on.captureKeys?.())) e.preventDefault();
-    if (e.repeat) return;
-    if (OCTAVE_UP.has(e.code)) {
+    if (on.captureAll?.() || (n !== undefined && on.captureKeys?.())) event.preventDefault();
+    if (event.repeat) return;
+    if (OCTAVE_UP.has(event.code)) {
       octave = Math.min(3, octave + 1);
       return;
     }
-    if (OCTAVE_DOWN.has(e.code)) {
+    if (OCTAVE_DOWN.has(event.code)) {
       octave = Math.max(-3, octave - 1);
       return;
     }
     if (n === undefined) return;
     const note = n + 12 * octave;
-    held.set(e.code, note);
+    held.set(event.code, note);
     on.key(note, true);
   };
-  const up = (e: KeyboardEvent) => {
+  const up = (event: KeyboardEvent) => {
     if (
-      !e.metaKey &&
-      !e.ctrlKey &&
-      (on.captureAll?.() || (V1_KEY_NOTES[e.code] !== undefined && on.captureKeys?.()))
+      !event.metaKey &&
+      !event.ctrlKey &&
+      (on.captureAll?.() || (V1_KEY_NOTES[event.code] !== undefined && on.captureKeys?.()))
     ) {
-      const tag = (e.target as HTMLElement)?.tagName;
+      const tag = (event.target as HTMLElement)?.tagName;
       if (
         tag !== 'SELECT' &&
         tag !== 'INPUT' &&
         tag !== 'TEXTAREA' &&
-        !(e.target as HTMLElement)?.isContentEditable
+        !(event.target as HTMLElement)?.isContentEditable
       )
-        e.preventDefault();
+        event.preventDefault();
     }
-    const note = held.get(e.code);
+    const note = held.get(event.code);
     if (note === undefined) return;
-    held.delete(e.code);
+    held.delete(event.code);
     on.key(note, false);
   };
   // Switching tab or app while holding a key: the page never sees its key-up, so every held note ends here (owner).
@@ -127,10 +127,13 @@ export function attachNoteInputs(on: {
   window.addEventListener('blur', releaseAll);
   document.addEventListener('visibilitychange', hidden);
   let midiAccess: MIDIAccess | null = null;
-  const handler = (input: MIDIInput) => (e: MIDIMessageEvent) => {
-    const d = e.data;
-    if (!d || d.length < 2 || d[0] < 0x80 || d[0] >= 0xf0) return; // channel messages only
-    on.midi(d[0], d[1], d.length > 2 ? d[2] : 0, { id: input.id, name: input.name ?? input.id });
+  const handler = (input: MIDIInput) => (mIDIMessageEvent: MIDIMessageEvent) => {
+    const bytes = mIDIMessageEvent.data;
+    if (!bytes || bytes.length < 2 || bytes[0] < 0x80 || bytes[0] >= 0xf0) return; // channel messages only
+    on.midi(bytes[0], bytes[1], bytes.length > 2 ? bytes[2] : 0, {
+      id: input.id,
+      name: input.name ?? input.id,
+    });
   };
   navigator
     .requestMIDIAccess?.()

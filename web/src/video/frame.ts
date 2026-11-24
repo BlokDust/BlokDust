@@ -40,11 +40,11 @@ export function cameraFor(
   labels: Label[] = [],
 ): Metrics {
   const r = b ? { ...b } : { x0: -3, y0: -3, x1: 3, y1: 3 };
-  for (const l of labels) {
-    r.x0 = Math.min(r.x0, l.x);
-    r.y0 = Math.min(r.y0, l.y);
-    r.x1 = Math.max(r.x1, l.x + Math.max(2, l.text.length * 0.6));
-    r.y1 = Math.max(r.y1, l.y);
+  for (const label of labels) {
+    r.x0 = Math.min(r.x0, label.x);
+    r.y0 = Math.min(r.y0, label.y);
+    r.x1 = Math.max(r.x1, label.x + Math.max(2, label.text.length * 0.6));
+    r.y1 = Math.max(r.y1, label.y);
   }
   const margin = 2,
     w = r.x1 - r.x0 + margin * 2,
@@ -79,22 +79,29 @@ export function drawnBlocks(blocks: Map<number, StageBlock>): Map<number, DrawnB
 /** R6: the stage as the live canvas renderer draws it (Stage.drawLines + drawBlocksAndOverlays), without the UI. */
 export function drawWorldFrame(
   ctx: Ctx,
-  m: Metrics,
+  metrics: Metrics,
   theme: Theme,
   blocks: Map<number, DrawnBlock>,
-  s: WorldSnapshot,
+  worldSnapshot: WorldSnapshot,
   labels: Label[],
   jitter: number,
 ): void {
   const c = as2d(ctx);
   c.fillStyle = theme.colors[0];
-  c.fillRect(0, 0, m.width, m.height);
-  drawConnections(c, m, theme, blocks, s.connections, new Set(s.powered));
-  drawBlocks(c, m, theme, blocks.values());
-  drawBeams(c, m, theme, s.beams, jitter);
-  drawOverlays(c, m, theme, blocks.values());
-  drawParticles(c, m, theme, s.particles);
-  if (labels.length) drawLabels(c, m, labels, theme.colors[theme.roles.txt], null);
+  c.fillRect(0, 0, metrics.width, metrics.height);
+  drawConnections(
+    c,
+    metrics,
+    theme,
+    blocks,
+    worldSnapshot.connections,
+    new Set(worldSnapshot.powered),
+  );
+  drawBlocks(c, metrics, theme, blocks.values());
+  drawBeams(c, metrics, theme, worldSnapshot.beams, jitter);
+  drawOverlays(c, metrics, theme, blocks.values());
+  drawParticles(c, metrics, theme, worldSnapshot.particles);
+  if (labels.length) drawLabels(c, metrics, labels, theme.colors[theme.roles.txt], null);
 }
 
 export interface Credit {
@@ -110,22 +117,22 @@ export interface EndCard {
 
 /** Fill `text` at (x, y), narrowed to `max` px wide if it is longer (as the Patches panel's heading does). */
 function fitText(
-  c: CanvasRenderingContext2D,
+  ctx: CanvasRenderingContext2D,
   text: string,
   x: number,
   y: number,
   max: number,
 ): void {
-  const w = c.measureText(text).width;
+  const w = ctx.measureText(text).width;
   if (w <= max) {
-    c.fillText(text, x, y);
+    ctx.fillText(text, x, y);
     return;
   }
-  c.save();
-  c.translate(x, y);
-  c.scale(max / w, 1);
-  c.fillText(text, 0, 0);
-  c.restore();
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(max / w, 1);
+  ctx.fillText(text, 0, 0);
+  ctx.restore();
 }
 
 /**

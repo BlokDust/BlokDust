@@ -26,8 +26,8 @@ const area = (p: Pt[]) => {
   return a / 2;
 };
 const ccw = (p: Pt[]): Pt[] => (area(p) < 0 ? p.slice().reverse() : p);
-const cross = (o: Pt, a: Pt, b: Pt) =>
-  (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+const cross = (pt: Pt, a: Pt, b: Pt) =>
+  (a[0] - pt[0]) * (b[1] - pt[1]) - (a[1] - pt[1]) * (b[0] - pt[0]);
 
 function inside(pt: Pt, poly: Pt[]): boolean {
   let c = false;
@@ -50,21 +50,21 @@ function convexParts(poly: Pt[]): Pt[][] {
     for (let i = 0; i < v.length; i++) {
       const a = v[(i + v.length - 1) % v.length],
         b = v[i],
-        c = v[(i + 1) % v.length];
-      if (cross(a, b, c) <= EPS) continue;
+        pt = v[(i + 1) % v.length];
+      if (cross(a, b, pt) <= EPS) continue;
       if (
         v.some(
           (q) =>
             q !== a &&
             q !== b &&
-            q !== c &&
+            q !== pt &&
             cross(a, b, q) > EPS &&
-            cross(b, c, q) > EPS &&
-            cross(c, a, q) > EPS,
+            cross(b, pt, q) > EPS &&
+            cross(pt, a, q) > EPS,
         )
       )
         continue;
-      out.push([a, b, c]);
+      out.push([a, b, pt]);
       v.splice(i, 1);
       break;
     }
@@ -76,16 +76,16 @@ function convexParts(poly: Pt[]): Pt[][] {
 /** Sutherland–Hodgman: `subject` on the left of the directed line a→b (keep = 1) or on its right (keep = -1). */
 function clipHalf(subject: Pt[], a: Pt, b: Pt, keep: 1 | -1): Pt[] {
   const out: Pt[] = [],
-    side = (q: Pt) => keep * cross(a, b, q);
+    side = (pt: Pt) => keep * cross(a, b, pt);
   for (let i = 0; i < subject.length; i++) {
-    const p = subject[i],
+    const pt = subject[i],
       q = subject[(i + 1) % subject.length],
-      sp = side(p),
+      sp = side(pt),
       sq = side(q);
-    if (sp >= -EPS) out.push(p);
+    if (sp >= -EPS) out.push(pt);
     if ((sp > EPS && sq < -EPS) || (sp < -EPS && sq > EPS)) {
       const t = sp / (sp - sq);
-      out.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]);
+      out.push([pt[0] + (q[0] - pt[0]) * t, pt[1] + (q[1] - pt[1]) * t]);
     }
   }
   return out;
@@ -110,7 +110,7 @@ function minusConvex(subject: Pt[], clip: Pt[]): Pt[][] {
 
 /** The grid layers flattened (see above); pixel layers (`units: 'unit'`, the stars) are left as drawn. */
 function flatten(layers: readonly GeometryLayer[]): (FlatLayer | null)[] {
-  const grid = layers.map((l) => (l.units === 'unit' ? null : (l.points as Pt[])));
+  const grid = layers.map((layer) => (layer.units === 'unit' ? null : (layer.points as Pt[])));
   return grid.map((L, i) => {
     if (!L) return null;
     // A see-through layer hides nothing.
@@ -140,9 +140,9 @@ function flatten(layers: readonly GeometryLayer[]): (FlatLayer | null)[] {
         // The runs of the edge with this layer on its other side (overlapped or only touching; never the outside), each one strip.
         for (let s = 0; s < pieces;) {
           const inner = (k: number) => {
-            const p = at(k),
+            const pt = at(k),
               q = at(k + 1);
-            return inside([(p[0] + q[0]) / 2 + nx * 0.01, (p[1] + q[1]) / 2 + ny * 0.01], L);
+            return inside([(pt[0] + q[0]) / 2 + nx * 0.01, (pt[1] + q[1]) / 2 + ny * 0.01], L);
           };
           if (!inner(s)) {
             s++;
@@ -182,6 +182,7 @@ export function flatLayers(
   let flat = cache.get(layers);
   if (!flat) cache.set(layers, (flat = flatten(layers)));
   return layers.map(
-    (l, i) => flat![i] ?? { palette: l.palette, paths: [layerPoints(l, unitsPerGrid, starPos)] },
+    (layer, i) =>
+      flat[i] ?? { palette: layer.palette, paths: [layerPoints(layer, unitsPerGrid, starPos)] },
   );
 }

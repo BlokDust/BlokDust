@@ -5,16 +5,16 @@ import { inspect, type Finding } from './rules.ts';
 import { requiredSetting } from '../lib/local-config.ts';
 
 const git = (...args: string[]) => {
-  const r = spawnSync('git', args, { encoding: 'utf8', maxBuffer: 256 << 20 });
-  if (r.status) throw new Error('Git privacy inspection failed');
-  return r.stdout;
+  const result = spawnSync('git', args, { encoding: 'utf8', maxBuffer: 256 << 20 });
+  if (result.status) throw new Error('Git privacy inspection failed');
+  return result.stdout;
 };
 const cmd = process.argv[2] ?? 'check';
 if (cmd === 'selftest') {
-  const r = spawnSync(process.execPath, ['--test', 'tools/privacy/privacy.test.ts'], {
+  const result = spawnSync(process.execPath, ['--test', 'tools/privacy/privacy.test.ts'], {
     stdio: 'inherit',
   });
-  process.exit(r.status ?? 1);
+  process.exit(result.status ?? 1);
 }
 if (cmd !== 'check' && cmd !== 'history')
   throw new Error('usage: pnpm bd privacy check | history | selftest');

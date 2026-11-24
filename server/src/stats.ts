@@ -14,7 +14,7 @@ export function blockTally(patch: unknown): string {
   return (
     [...n]
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([t, c]) => `${t}:${c}`)
+      .map(([key, value]) => `${key}:${value}`)
       .join(' ') || '-'
   );
 }
@@ -51,14 +51,14 @@ async function backfill(env: Env, userId: string): Promise<void> {
     .all<{ id: string; json: string }>();
   if (!old.results.length) return;
   await env.DB.batch(
-    old.results.map((r) => {
+    old.results.map((result) => {
       let tally = '-';
       try {
-        tally = blockTally(JSON.parse(r.json));
+        tally = blockTally(JSON.parse(result.json));
       } catch {
         /* unreadable: nothing to count */
       }
-      return env.DB.prepare('UPDATE patches SET blocks = ? WHERE id = ?').bind(tally, r.id);
+      return env.DB.prepare('UPDATE patches SET blocks = ? WHERE id = ?').bind(tally, result.id);
     }),
   );
 }
@@ -99,10 +99,10 @@ export async function accountStats(env: Env, userId: string, since: number): Pro
   const fav = new Map<string, { patches: number; count: number }>();
   for (const { blocks } of tallies.results as { blocks: string }[])
     for (const pair of blocks.split(' ')) {
-      const [type, c] = pair.split(':'),
+      const [type, value] = pair.split(':'),
         f = fav.get(type) ?? { patches: 0, count: 0 };
       f.patches++;
-      f.count += Number(c) || 0;
+      f.count += Number(value) || 0;
       fav.set(type, f);
     }
   const top = first<{ id: string; title: string; n: number }>(most);
@@ -119,7 +119,7 @@ export async function accountStats(env: Env, userId: string, since: number): Pro
     particles: t?.particles ?? 0,
     laserTurns: t?.laser_turns ?? 0,
     favourites: [...fav]
-      .map(([type, f]) => ({ type, ...f }))
+      .map(([type, value]) => ({ type, ...value }))
       .sort((a, b) => b.patches - a.patches || b.count - a.count || a.type.localeCompare(b.type))
       .slice(0, 6), // a phone shows six (two rows of three)
   };

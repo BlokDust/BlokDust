@@ -92,7 +92,7 @@ export function insertBlocks(
   const labels = (incoming.labels ?? []).map((l) => ({ ...l, x: l.x + dx, y: l.y + dy }));
   // What is inside Stage blocks comes along too (CHG-0021), under their new ids.
   const macros = (incoming.macros ?? [])
-    .filter((m) => renamed.has(m.block))
-    .map((m) => ({ ...structuredClone(m), block: renamed.get(m.block)! }));
+    .filter((macro) => renamed.has(macro.block))
+    .map((macro) => ({ ...structuredClone(macro), block: renamed.get(macro.block)! }));
   return { blocks, refs: { ...(incoming.refs ?? {}) }, labels, macros };
 }

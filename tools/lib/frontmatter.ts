@@ -11,14 +11,14 @@ export interface Doc {
 }
 
 export function parseFrontmatter(src: string): { meta: Meta; body: string } | null {
-  const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(src);
-  if (!m) return null;
+  const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(src);
+  if (!match) return null;
   const meta: Meta = {};
-  for (const raw of m[1].split(/\r?\n/)) {
+  for (const raw of match[1].split(/\r?\n/)) {
     const line = raw.replace(/\s+#.*$/, '');
     const kv = /^([A-Za-z_][\w-]*):\s*(.*)$/.exec(line);
     if (!kv) continue;
-    let v = kv[2].trim();
+    const v = kv[2].trim();
     if (v.startsWith('[') && v.endsWith(']')) {
       meta[kv[1]] = v
         .slice(1, -1)
@@ -29,7 +29,7 @@ export function parseFrontmatter(src: string): { meta: Meta; body: string } | nu
       meta[kv[1]] = unquote(v);
     }
   }
-  return { meta, body: m[2] };
+  return { meta, body: match[2] };
 }
 
 const unquote = (s: string) => s.replace(/^["'](.*)["']$/, '$1');

@@ -147,8 +147,14 @@ function menuItem(type: string): { name: string } | null {
     for (const item of cat.items) if (item.id === id) return item;
   return null;
 }
-type Box = { x: number; y: number; w: number; h: number; cx: number };
-type Bordered = {
+interface Box {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  cx: number;
+}
+interface Bordered {
   label: string;
   x: number;
   y: number;
@@ -156,7 +162,7 @@ type Bordered = {
   h: number;
   textX: number;
   textY: number;
-};
+}
 
 export class AccountPage {
   Account: AccountInfo | null | undefined = undefined;
@@ -191,8 +197,8 @@ export class AccountPage {
         .slice(0, 20);
       if (this.Message !== COPY.noPasskey) this.Message = '';
     });
-    this.input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+    this.input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
         this.input.blur();
         void this.submit();
       }
@@ -215,19 +221,21 @@ export class AccountPage {
     this.View = 'approve';
     if (!code) {
       this.input.value = '';
-      setTimeout(() => this.input.focus(), 0);
+      setTimeout(() => {
+        this.input.focus();
+      }, 0);
     }
     void this.lookUpCode();
     this.mark();
   }
   private async lookUpCode(): Promise<void> {
-    const c = this.ApproveCode,
+    const approveCode = this.ApproveCode,
       apps = this.host.apps;
-    if (!c || !apps || !this.Account) return;
+    if (!approveCode || !apps || !this.Account) return;
     try {
-      this.ApproveName = (await apps.info(c)).name;
-    } catch (e) {
-      this.Message = (e as Error).message;
+      this.ApproveName = (await apps.info(approveCode)).name;
+    } catch (error) {
+      this.Message = (error as Error).message;
       this.ApproveCode = null;
     }
     this.mark();
@@ -306,16 +314,16 @@ export class AccountPage {
     return c.measureText(t.toUpperCase()).width;
   }
   private bordered(label: string, right: number, top: number): Bordered {
-    const u = App.Unit,
+    const unit = App.Unit,
       w = this.textW(label);
     return {
       label,
-      x: right - 10 * u - w,
+      x: right - 10 * unit - w,
       y: top,
-      w: w + 10 * u,
-      h: 20 * u,
-      textX: right - 5 * u - w,
-      textY: top + 14 * u,
+      w: w + 10 * unit,
+      h: 20 * unit,
+      textX: right - 5 * unit - w,
+      textY: top + 14 * unit,
     };
   }
   /** The page's width: About's text column (v1 SettingsPanel menuWidth: 4/7 of the panel, 5/7 on a phone; owner,
@@ -324,107 +332,107 @@ export class AccountPage {
     return pageWidth();
   }
   private layout(top: number) {
-    const u = App.Unit,
-      W = App.Width,
+    const unit = App.Unit,
+      width = App.Width,
       pw = this.pageW(),
-      L = W * 0.5 - pw * 0.5,
-      R = W * 0.5 + pw * 0.5,
-      hw = (pw - 15 * u) * 0.5;
+      L = width * 0.5 - pw * 0.5,
+      R = width * 0.5 + pw * 0.5,
+      hw = (pw - 15 * unit) * 0.5;
     const half = (right: boolean, y: number): Box => {
-      const x = right ? W * 0.5 + 7.5 * u : L;
-      return { x, y, w: hw, h: 40 * u, cx: x + hw * 0.5 };
+      const x = right ? width * 0.5 + 7.5 * unit : L;
+      return { x, y, w: hw, h: 40 * unit, cx: x + hw * 0.5 };
     };
-    const full = (y: number): Box => ({ x: L, y, w: pw, h: 40 * u, cx: W * 0.5 });
+    const full = (y: number): Box => ({ x: L, y, w: pw, h: 40 * unit, cx: width * 0.5 });
     // Signed out: one row per way to sign in, 15 units apart.
     const ways = this.ways(),
       out: Record<string, Box> = {};
     ways.forEach((k, i) => {
-      out[k] = full(top + (35 + i * 55) * u);
+      out[k] = full(top + (35 + i * 55) * unit);
     });
-    const below = top + (35 + ways.length * 55) * u;
+    const below = top + (35 + ways.length * 55) * unit;
     const naming = {
-      field: top + 24 * u,
-      rule: top + 66 * u,
-      submit: full(top + 85 * u),
-      back: this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * u, top + 145 * u),
+      field: top + 24 * unit,
+      rule: top + 66 * unit,
+      submit: full(top + 85 * unit),
+      back: this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * unit, top + 145 * unit),
     };
     // The account's buttons under its stats (R15); 35 units under the SIGNED IN line until they arrive. DELETE ACCOUNT
     // sits top right, on the SIGNED IN line (CHG-0027: the stats need its row).
-    const below2 = top + this.statsHeight() * u;
+    const below2 = top + this.statsHeight() * unit;
     // DELETE ACCOUNT at the bottom right of the screen, out of the way (owner, 2026-11-18); it slides with the page.
-    const screenBottom = top - ACCOUNT_TOP * u + App.Height;
+    const screenBottom = top - ACCOUNT_TOP * unit + App.Height;
     const signedIn = {
       add: half(false, below2),
       out: half(true, below2),
       outFull: full(below2),
-      del: this.bordered(COPY.deleteAccount, W - 20 * u, screenBottom - 40 * u),
+      del: this.bordered(COPY.deleteAccount, width - 20 * unit, screenBottom - 40 * unit),
     };
-    const del = { cancel: half(false, top + 75 * u), ok: half(true, top + 75 * u) };
+    const del = { cancel: half(false, top + 75 * unit), ok: half(true, top + 75 * unit) };
     // Signed in: the ways in on the line under the buttons, then any message.
-    const methods = below2 + 62 * u;
+    const methods = below2 + 62 * unit;
     // SIGN-IN METHODS: the heading and its line, a row per way in (40 units), then the ADD buttons 55 apart, then BACK.
     const rows = this.methodRows(),
-      rowTop = top + 52 * u,
-      rowH = 40 * u;
+      rowTop = top + 52 * unit,
+      rowH = 40 * unit;
     const removable = rows.length > 1;
-    const list = rows.map((m, i) => ({
-      ...m,
+    const list = rows.map((row, i) => ({
+      ...row,
       y: rowTop + i * rowH,
-      remove: removable ? this.bordered(COPY.remove, R, rowTop + i * rowH + 10 * u) : null,
+      remove: removable ? this.bordered(COPY.remove, R, rowTop + i * rowH + 10 * unit) : null,
     }));
     // APPS SIGNED IN (SHARING-0011): its heading 20 units under the ways in, then a row per plugin.
-    const appsTop = rowTop + rows.length * rowH + 20 * u,
+    const appsTop = rowTop + rows.length * rowH + 20 * unit,
       appRows = this.Apps.length
         ? this.Apps.map((a, i) => ({
             app: a,
-            y: appsTop + 22 * u + i * rowH,
-            remove: this.bordered(COPY.remove, R, appsTop + 22 * u + i * rowH + 10 * u),
+            y: appsTop + 22 * unit + i * rowH,
+            remove: this.bordered(COPY.remove, R, appsTop + 22 * unit + i * rowH + 10 * unit),
           }))
         : [];
     const addsTop = appRows.length
-      ? appsTop + (22 + 20) * u + appRows.length * rowH
-      : rowTop + rows.length * rowH + 20 * u;
+      ? appsTop + (22 + 20) * unit + appRows.length * rowH
+      : rowTop + rows.length * rowH + 20 * unit;
     const adds: Record<string, Box> = {};
     this.addable().forEach((k, i) => {
-      adds[k] = full(addsTop + i * 55 * u);
+      adds[k] = full(addsTop + i * 55 * unit);
     });
-    const addsEnd = addsTop + this.addable().length * 55 * u;
+    const addsEnd = addsTop + this.addable().length * 55 * unit;
     // BACK at the top right, on the heading's line (owner, 2026-11-19: a button, not an arrow; the heading stays at the left).
-    const methodsBack = this.bordered(COPY.back, R, top - 4 * u);
+    const methodsBack = this.bordered(COPY.back, R, top - 4 * unit);
     // A plugin's code (SHARING-0011): the code large under the line, the QR code at the right, BACK (and OPEN BROWSER
     // AGAIN) under them.
-    const qrSize = 130 * u,
+    const qrSize = 130 * unit,
       code = {
-        text: top + 118 * u,
-        qr: { x: R - qrSize, y: top + 70 * u, s: qrSize },
-        waiting: top + 160 * u,
-        back: this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * u, top + 220 * u),
+        text: top + 118 * unit,
+        qr: { x: R - qrSize, y: top + 70 * unit, s: qrSize },
+        waiting: top + 160 * unit,
+        back: this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * unit, top + 220 * unit),
         again: this.bordered(
           COPY.openAgain,
-          L + this.textW(COPY.back) + 30 * u + this.textW(COPY.openAgain) + 10 * u,
-          top + 220 * u,
+          L + this.textW(COPY.back) + 30 * unit + this.textW(COPY.openAgain) + 10 * unit,
+          top + 220 * unit,
         ),
       };
     // The website approving a code: the code large, then CANCEL · APPROVE; typing one: the name field, CONTINUE, BACK.
     const approve = {
-      code: top + 118 * u,
-      cancel: half(false, top + 150 * u),
-      ok: half(true, top + 150 * u),
-      submit: full(top + 85 * u),
-      back: this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * u, top + 145 * u),
+      code: top + 118 * unit,
+      cancel: half(false, top + 150 * unit),
+      ok: half(true, top + 150 * unit),
+      submit: full(top + 85 * unit),
+      back: this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * unit, top + 145 * unit),
     };
     const message =
       this.View === 'methods'
-        ? addsEnd + 20 * u
+        ? addsEnd + 20 * unit
         : this.View === 'code'
-          ? top + 270 * u
+          ? top + 270 * unit
           : this.View === 'approve'
-            ? top + 210 * u
+            ? top + 210 * unit
             : this.View === 'main' && !this.Account
-              ? below + 10 * u
+              ? below + 10 * unit
               : this.View === 'main'
-                ? methods + 24 * u
-                : top + 190 * u;
+                ? methods + 24 * unit
+                : top + 190 * unit;
     return {
       L,
       R,
@@ -459,7 +467,7 @@ export class AccountPage {
         method: m,
       }));
     return [
-      ...a.providers.map((p) => ({ label: name(p), detail: '', method: null })),
+      ...a.providers.map((provider) => ({ label: name(provider), detail: '', method: null })),
       ...Array.from({ length: a.passkeys }, () => ({
         label: COPY.passkey1,
         detail: '',
@@ -491,14 +499,14 @@ export class AccountPage {
   // ---- drawing (v1's own pieces) ----
   private filled(b: Box, colour: string, label: string, hover: boolean, small = false): void {
     const c = this.ctx(),
-      u = App.Unit;
+      unit = App.Unit;
     App.FillColor(c, colour);
     c.fillRect(b.x, b.y, b.w, b.h);
     if (hover) {
       c.beginPath();
-      c.moveTo(b.cx, b.y + b.h + 9 * u);
-      c.lineTo(b.cx - 10 * u, b.y + b.h - u);
-      c.lineTo(b.cx + 10 * u, b.y + b.h - u);
+      c.moveTo(b.cx, b.y + b.h + 9 * unit);
+      c.lineTo(b.cx - 10 * unit, b.y + b.h - unit);
+      c.lineTo(b.cx + 10 * unit, b.y + b.h - unit);
       c.closePath();
       c.fill();
     }
@@ -507,8 +515,8 @@ export class AccountPage {
     c.font = small ? App.Metrics.TxtMid : App.Metrics.TxtUrl2;
     const t = label.toUpperCase(),
       w = c.measureText(t).width,
-      max = b.w - 12 * u,
-      y = b.y + (small ? 25 : 29) * u;
+      max = b.w - 12 * unit,
+      y = b.y + (small ? 25 : 29) * unit;
     if (w > max) {
       c.save();
       c.translate(b.cx, 0);
@@ -549,15 +557,15 @@ export class AccountPage {
   /** A sub-heading: the tab type (v1's mid type), no rule under it (owner review 2), and its italic line if any. */
   private heading(title: string, line: string, top: number, L: number): void {
     const c = this.ctx(),
-      u = App.Unit,
+      unit = App.Unit,
       txt = App.Palette[App.ThemeManager.Txt];
     App.FillColor(c, txt);
     c.textAlign = 'left';
     c.font = App.Metrics.TxtMid;
-    c.fillText(title.toUpperCase(), L, top + 10 * u);
+    c.fillText(title.toUpperCase(), L, top + 10 * unit);
     if (line) {
       c.font = App.Metrics.TxtItalic2;
-      this.wrap(line, L, top + 32 * u, 14 * u, this.pageW());
+      this.wrap(line, L, top + 32 * unit, 14 * unit, this.pageW());
     }
   }
 
@@ -566,13 +574,14 @@ export class AccountPage {
   private qrCache: { url: string; n: number; dark: boolean[] } | null = null;
   private drawQr(url: string, b: { x: number; y: number; s: number }): void {
     if (this.qrCache?.url !== url) {
-      const q = qrcode(0, 'M');
-      q.addData(url);
-      q.make();
-      const n = q.getModuleCount(),
+      const qRCode = qrcode(0, 'M');
+      qRCode.addData(url);
+      qRCode.make();
+      const moduleCount = qRCode.getModuleCount(),
         dark: boolean[] = [];
-      for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) dark.push(q.isDark(y, x));
-      this.qrCache = { url, n, dark };
+      for (let y = 0; y < moduleCount; y++)
+        for (let x = 0; x < moduleCount; x++) dark.push(qRCode.isDark(y, x));
+      this.qrCache = { url, n: moduleCount, dark };
     }
     const { n, dark } = this.qrCache,
       c = this.ctx(),
@@ -598,25 +607,25 @@ export class AccountPage {
   /** One row of numbers, four columns across the page: the number large and light, its label under it. */
   private numberRow(cells: [string, string][], y: number, L: number): void {
     const c = this.ctx(),
-      u = App.Unit,
+      unit = App.Unit,
       w = this.pageW() / cells.length;
     App.FillColor(c, App.Palette[App.ThemeManager.Txt]);
     c.textAlign = 'center';
-    cells.forEach(([n, label], i) => {
+    cells.forEach(([key, label], i) => {
       const x = L + w * (i + 0.5);
       c.font = App.Metrics.TxtSlider;
-      c.fillText(n, x, y + 32 * u);
+      c.fillText(key, x, y + 32 * unit);
       c.font = App.Metrics.TxtMid;
-      c.fillText(label.toUpperCase(), x, y + 52 * u);
+      c.fillText(label.toUpperCase(), x, y + 52 * unit);
     });
   }
   private drawStats(top: number, L: number, R: number): void {
     const st = this.Account?.stats,
       c = this.ctx(),
-      u = App.Unit,
+      unit = App.Unit,
       txt = App.Palette[App.ThemeManager.Txt];
     if (!st) {
-      App.AnimationsLayer.DrawSprite(c, 'loading', App.Width * 0.5, top + 25 * u, 16, true);
+      App.AnimationsLayer.DrawSprite(c, 'loading', App.Width * 0.5, top + 25 * unit, 16, true);
       return;
     }
     // R16: the running totals, with what this browser counted and hasn't sent yet (so they move without a request).
@@ -639,14 +648,14 @@ export class AccountPage {
       [shortNumber(Math.floor(st.laserTurns + p.laserTurns)), COPY.laserTurns],
     ];
     const phone = App.SettingsPhone;
-    this.numberRow(cells.slice(0, 4), top + (phone ? PHONE.row1 : STATS_Y.row1) * u, L);
-    this.numberRow(cells.slice(4), top + (phone ? PHONE.row2 : STATS_Y.row2) * u, L);
-    let y = top + (phone ? PHONE.favourites : STATS_Y.favourites) * u;
+    this.numberRow(cells.slice(0, 4), top + (phone ? PHONE.row1 : STATS_Y.row1) * unit, L);
+    this.numberRow(cells.slice(4), top + (phone ? PHONE.row2 : STATS_Y.row2) * unit, L);
+    let y = top + (phone ? PHONE.favourites : STATS_Y.favourites) * unit;
     // Favourite blocks: v1's menu icons (BlockSprites, as the blocks menu draws them) at half size over their names.
     App.FillColor(c, txt);
     c.font = App.Metrics.TxtMid;
     c.textAlign = 'left';
-    c.fillText(COPY.favourites.toUpperCase(), L, y + 10 * u);
+    c.fillText(COPY.favourites.toUpperCase(), L, y + 10 * unit);
     // The most remixed patch on the same line, at the right (a phone: on its own line under it).
     if (st.mostRemixed) {
       const n = st.mostRemixed.n,
@@ -656,49 +665,54 @@ export class AccountPage {
       c.fillText(
         `${COPY.mostRemixed}: ${t.length > 24 ? `${t.slice(0, 23)}…` : t}, ${n} ${n === 1 ? 'time' : 'times'}`,
         phone ? L : R,
-        y + (phone ? 10 + PHONE.remixed : 10) * u,
+        y + (phone ? 10 + PHONE.remixed : 10) * unit,
       );
       c.textAlign = 'left';
     }
-    if (phone) y += PHONE.remixed * u;
+    if (phone) y += PHONE.remixed * unit;
     // Six in a row; a phone: two rows of three.
     const favs = st.favourites
-      .map((f) => ({ ...f, item: menuItem(f.type) }))
+      .map((favourite) => ({ ...favourite, item: menuItem(favourite.type) }))
       .filter((f) => f.item)
       .slice(0, 6);
     if (!favs.length) {
       c.font = App.Metrics.TxtItalic2;
-      c.fillText(COPY.noFavourites, L, y + FAV.icon * u);
+      c.fillText(COPY.noFavourites, L, y + FAV.icon * unit);
     }
     const w = this.pageW() / (phone ? 3 : 6);
-    favs.forEach((f, k) => {
+    favs.forEach((fav, k) => {
       const i = phone ? k % 3 : k,
-        rowY = y + (phone ? Math.floor(k / 3) * PHONE.favRow * u : 0);
+        rowY = y + (phone ? Math.floor(k / 3) * PHONE.favRow * unit : 0);
       const x = L + w * (i + 0.5);
-      const iy = rowY + FAV.icon * u;
+      const iy = rowY + FAV.icon * unit;
       c.save();
       c.translate(x, iy);
       c.scale(FAV.scale, FAV.scale);
       c.translate(-x, -iy);
-      App.BlockSprites.DrawSprite({ Ctx: c }, new Point(x, iy), false, f.item!.name.toLowerCase());
+      App.BlockSprites.DrawSprite(
+        { Ctx: c },
+        new Point(x, iy),
+        false,
+        fav.item!.name.toLowerCase(),
+      );
       c.restore();
       // Its name, on two lines when it is wider than its column (PARTICLE EMITTER beside COMPUTER KEYBOARD).
       App.FillColor(c, txt);
       c.font = App.Metrics.TxtMid;
       c.textAlign = 'center';
-      const name = f.item!.name.toUpperCase(),
+      const name = fav.item!.name.toUpperCase(),
         words = name.split(' ');
-      if (words.length > 1 && c.measureText(name).width > w - 6 * u) {
+      if (words.length > 1 && c.measureText(name).width > w - 6 * unit) {
         const cut = Math.ceil(words.length / 2);
-        c.fillText(words.slice(0, cut).join(' '), x, rowY + FAV.name * u);
-        c.fillText(words.slice(cut).join(' '), x, rowY + (FAV.name + 14) * u);
-      } else c.fillText(name, x, rowY + FAV.name * u);
+        c.fillText(words.slice(0, cut).join(' '), x, rowY + FAV.name * unit);
+        c.fillText(words.slice(cut).join(' '), x, rowY + (FAV.name + 14) * unit);
+      } else c.fillText(name, x, rowY + FAV.name * unit);
     });
   }
 
   draw(top: number): void {
     const c = this.ctx(),
-      u = App.Unit,
+      unit = App.Unit,
       W = App.Width,
       txt = App.Palette[App.ThemeManager.Txt],
       menu = App.ThemeManager.MenuOrder;
@@ -712,7 +726,7 @@ export class AccountPage {
       c.font = App.Metrics.TxtMid;
       c.textAlign = 'right';
       if (App.Metrics.Device !== Device.mobile)
-        c.fillText(COPY.name.toUpperCase(), Lo.L - 15 * u, Lo.naming.field + 28 * u);
+        c.fillText(COPY.name.toUpperCase(), Lo.L - 15 * unit, Lo.naming.field + 28 * unit);
       App.StrokeColor(c, txt);
       c.lineWidth = 2;
       c.beginPath();
@@ -728,24 +742,31 @@ export class AccountPage {
       if (create) this.drawBordered(Lo.naming.back, App.Palette[1]);
     } else if (this.View === 'code' && this.Device) {
       // A plugin's code (SHARING-0011).
-      const d = this.Device,
+      const device = this.Device,
         plug = this.host.plugin!;
       this.heading(
         COPY.codeTitle,
-        plug.canOpenBrowser ? COPY.codeOpened : COPY.codeGo(d.verifyAt),
+        plug.canOpenBrowser ? COPY.codeOpened : COPY.codeGo(device.verifyAt),
         top,
         Lo.L,
       );
       App.FillColor(c, txt);
       c.textAlign = 'left';
       c.font = App.Metrics.TxtSlider;
-      c.fillText(d.userCode, Lo.L, Lo.code.text);
-      if (!plug.canOpenBrowser) this.drawQr(d.verifyUrl, Lo.code.qr); // only where the browser can't be opened (owner, 2026-11-19)
-      App.AnimationsLayer.DrawSprite(c, 'loading', Lo.L + 8 * u, Lo.code.waiting - 5 * u, 16, true);
+      c.fillText(device.userCode, Lo.L, Lo.code.text);
+      if (!plug.canOpenBrowser) this.drawQr(device.verifyUrl, Lo.code.qr); // only where the browser can't be opened (owner, 2026-11-19)
+      App.AnimationsLayer.DrawSprite(
+        c,
+        'loading',
+        Lo.L + 8 * unit,
+        Lo.code.waiting - 5 * unit,
+        16,
+        true,
+      );
       App.FillColor(c, txt);
       c.font = App.Metrics.TxtItalic2;
       c.textAlign = 'left';
-      c.fillText(COPY.waiting, Lo.L + 24 * u, Lo.code.waiting);
+      c.fillText(COPY.waiting, Lo.L + 24 * unit, Lo.code.waiting);
       this.drawBordered(Lo.code.back, App.Palette[1]);
       if (plug.canOpenBrowser)
         this.drawBordered(Lo.code.again, App.Palette[r.openAgain ? menu[3] : 1]);
@@ -771,7 +792,14 @@ export class AccountPage {
             !busy && !!r.approveOk,
           );
         } else
-          App.AnimationsLayer.DrawSprite(c, 'loading', W * 0.5, Lo.approve.ok.y + 20 * u, 16, true);
+          App.AnimationsLayer.DrawSprite(
+            c,
+            'loading',
+            W * 0.5,
+            Lo.approve.ok.y + 20 * unit,
+            16,
+            true,
+          );
       } else {
         this.heading(COPY.enterTitle, '', top, Lo.L);
         App.StrokeColor(c, txt);
@@ -795,10 +823,10 @@ export class AccountPage {
         App.FillColor(c, txt);
         c.textAlign = 'left';
         c.font = App.Metrics.TxtMid;
-        c.fillText(row.label.toUpperCase(), Lo.L, row.y + 25 * u);
+        c.fillText(row.label.toUpperCase(), Lo.L, row.y + 25 * unit);
         if (row.detail) {
           c.font = App.Metrics.TxtItalic2;
-          c.fillText(row.detail, Lo.L + 110 * u, row.y + 25 * u);
+          c.fillText(row.detail, Lo.L + 110 * unit, row.y + 25 * unit);
         }
         if (row.remove) this.drawBordered(row.remove, App.Palette[r[`remove${i}`] ? menu[3] : 1]);
         App.StrokeColor(c, line);
@@ -812,7 +840,7 @@ export class AccountPage {
         App.FillColor(c, txt);
         c.textAlign = 'left';
         c.font = App.Metrics.TxtMid;
-        c.fillText(COPY.apps.toUpperCase(), Lo.L, Lo.appsTop + 10 * u);
+        c.fillText(COPY.apps.toUpperCase(), Lo.L, Lo.appsTop + 10 * unit);
         const when = (t: number | null) =>
           t
             ? new Date(t).toLocaleDateString('en-GB', {
@@ -826,18 +854,18 @@ export class AccountPage {
           c.textAlign = 'left';
           c.font = App.Metrics.TxtMid;
           const name = row.app.name.toUpperCase(),
-            max = Lo.R - Lo.L - 250 * u;
+            max = Lo.R - Lo.L - 250 * unit;
           c.fillText(
             c.measureText(name).width > max ? `${name.slice(0, 28)}…` : name,
             Lo.L,
-            row.y + 25 * u,
+            row.y + 25 * unit,
           );
           c.font = App.Metrics.TxtItalic2;
           c.textAlign = 'right';
           c.fillText(
             COPY.lastUsed(when(row.app.lastUsed ?? row.app.created)),
-            row.remove.x - 15 * u,
-            row.y + 25 * u,
+            row.remove.x - 15 * unit,
+            row.y + 25 * unit,
           );
           this.drawBordered(row.remove, App.Palette[r[`app${i}`] ? menu[3] : 1]);
           App.StrokeColor(c, App.Palette[1]);
@@ -879,7 +907,7 @@ export class AccountPage {
       App.FillColor(c, txt);
       c.textAlign = 'left';
       c.font = App.Metrics.TxtMid;
-      c.fillText(COPY.stats.toUpperCase(), Lo.L, top + 10 * u); // the corner already says who (owner, 2026-11-18)
+      c.fillText(COPY.stats.toUpperCase(), Lo.L, top + 10 * unit); // the corner already says who (owner, 2026-11-18)
       this.drawStats(top, Lo.L, Lo.R);
       const plugin = !!this.host.plugin; // the plugins: methods and deleting are the website's (SHARING-0011)
       // The plugins: SIGN OUT only (owner, 2026-11-19: the account's methods are on the website, and it is reached there).
@@ -916,10 +944,10 @@ export class AccountPage {
               ? COPY.pluginLine
               : COPY.line,
         Lo.L,
-        top + 10 * u,
+        top + 10 * unit,
       );
       if (this.Account === undefined && !this.noBackend)
-        App.AnimationsLayer.DrawSprite(c, 'loading', W * 0.5, top + 55 * u, 16, true);
+        App.AnimationsLayer.DrawSprite(c, 'loading', W * 0.5, top + 55 * unit, 16, true);
       else if (!this.noBackend) {
         // Each its own menu colour, as Connect's GUIDE buttons and the Patches panel's.
         const colours = {
@@ -941,7 +969,7 @@ export class AccountPage {
       App.FillColor(c, txt);
       c.font = App.Metrics.TxtItalic2;
       c.textAlign = 'left';
-      this.wrap(this.Message, Lo.L, Lo.message, 14 * u, this.pageW());
+      this.wrap(this.Message, Lo.L, Lo.message, 14 * unit, this.pageW());
     }
   }
 
@@ -954,12 +982,12 @@ export class AccountPage {
         (this.View === 'approve' && !!this.Account && !this.ApproveCode));
     this.field.style.display = on ? 'block' : 'none';
     if (!on) return;
-    const u = App.Unit,
+    const unit = App.Unit,
       pr = App.Metrics.PixelRatio;
     this.field.style.font = App.Metrics.TxtHeaderPR;
     this.field.style.width = `${this.pageW() / pr}px`;
-    this.field.style.height = `${(u * 42) / pr}px`;
-    this.field.style.lineHeight = `${(u * 42) / pr}px`;
+    this.field.style.height = `${(unit * 42) / pr}px`;
+    this.field.style.lineHeight = `${(unit * 42) / pr}px`;
     this.field.style.left = `${((App.Width - this.pageW()) * 0.5) / pr}px`;
     this.field.style.top = `${this.layout(top).naming.field / pr}px`;
   }
@@ -1168,13 +1196,15 @@ export class AccountPage {
       await this.host.signIn();
       this.View = this.ApproveCode ? 'approve' : 'main';
       await this.refresh();
-    } catch (e) {
-      if (this.host.cancelled(e) || (e as { status?: number }).status === 401) {
+    } catch (error) {
+      if (this.host.cancelled(error) || (error as { status?: number }).status === 401) {
         this.View = 'create';
         this.Message = COPY.noPasskey;
         this.input.value = '';
-        setTimeout(() => this.input.focus(), 0);
-      } else this.Message = (e as Error).message || 'That did not work. Try again.';
+        setTimeout(() => {
+          this.input.focus();
+        }, 0);
+      } else this.Message = (error as Error).message || 'That did not work. Try again.';
     } finally {
       this.Busy = false;
       this.mark();
@@ -1190,12 +1220,12 @@ export class AccountPage {
       plug.keep(r.key, r.user.handle);
       this.View = 'main';
       await this.refresh();
-    } catch (e) {
-      if ((e as Error).name !== 'AbortError')
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError')
         this.Message =
-          kind === 'passkey' && (e as { status?: number }).status === 401
+          kind === 'passkey' && (error as { status?: number }).status === 401
             ? 'This passkey is not known here. Make an account on the website first, or sign in with your browser.'
-            : (e as Error).message || 'That did not work. Try again.';
+            : (error as Error).message || 'That did not work. Try again.';
     } finally {
       this.Busy = false;
       this.mark();
@@ -1215,11 +1245,11 @@ export class AccountPage {
       this.View = 'code';
       if (plug.canOpenBrowser) plug.open(this.Device.verifyUrl);
       this.schedulePoll(this.Device.interval);
-    } catch (e) {
+    } catch (error) {
       this.Message =
-        (e as { status?: number }).status === undefined
+        (error as { status?: number }).status === undefined
           ? 'BlokDust couldn’t be reached. Check your connection and try again.'
-          : (e as Error).message;
+          : (error as Error).message;
     } finally {
       this.Busy = false;
       this.mark();
@@ -1234,9 +1264,9 @@ export class AccountPage {
     this.Device = null;
   }
   private async pollOnce(interval: number): Promise<void> {
-    const d = this.Device,
+    const device = this.Device,
       plug = this.host.plugin;
-    if (!d || !plug || this.View !== 'code') return;
+    if (!device || !plug || this.View !== 'code') return;
     if (Date.now() > this.deviceUntil) {
       this.stopCode();
       this.View = 'main';
@@ -1244,25 +1274,25 @@ export class AccountPage {
       this.mark();
       return;
     }
-    let r: Awaited<ReturnType<typeof plug.poll>>;
+    let devicePoll: Awaited<ReturnType<typeof plug.poll>>;
     try {
-      r = await plug.poll(d.deviceCode);
+      devicePoll = await plug.poll(device.deviceCode);
     } catch {
       this.schedulePoll(interval);
       return;
     } // offline a moment: keep asking until it expires
-    if (this.Device !== d) return; // BACK meanwhile
-    if (r.status === 'approved') {
+    if (this.Device !== device) return; // BACK meanwhile
+    if (devicePoll.status === 'approved') {
       this.stopCode();
       this.View = 'main';
-      plug.keep(r.key, r.user.handle);
+      plug.keep(devicePoll.key, devicePoll.user.handle);
       await this.refresh();
-    } else if (r.status === 'pending') this.schedulePoll(interval);
-    else if (r.status === 'slow_down') this.schedulePoll(interval + 5);
+    } else if (devicePoll.status === 'pending') this.schedulePoll(interval);
+    else if (devicePoll.status === 'slow_down') this.schedulePoll(interval + 5);
     else {
       this.stopCode();
       this.View = 'main';
-      this.Message = r.status === 'denied' ? COPY.denied : COPY.expired;
+      this.Message = devicePoll.status === 'denied' ? COPY.denied : COPY.expired;
     }
     this.mark();
   }
@@ -1279,8 +1309,8 @@ export class AccountPage {
       this.ApproveCode = null;
       this.ApproveName = null;
       this.View = 'main';
-    } catch (e) {
-      this.Message = (e as Error).message || 'That did not work. Try again.';
+    } catch (error) {
+      this.Message = (error as Error).message || 'That did not work. Try again.';
     } finally {
       this.Busy = false;
       this.mark();
@@ -1296,9 +1326,9 @@ export class AccountPage {
       if (!stay) this.View = 'main';
       await this.refresh();
       return true;
-    } catch (e) {
-      if (!this.host.cancelled(e))
-        this.Message = (e as Error).message || 'That did not work. Try again.';
+    } catch (error) {
+      if (!this.host.cancelled(error))
+        this.Message = (error as Error).message || 'That did not work. Try again.';
       return false;
     } finally {
       this.Busy = false;

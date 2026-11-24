@@ -48,11 +48,11 @@ export function computeMetrics(i: MetricsInput): Metrics {
   };
 }
 
-export const gridToPx = (m: Metrics, gx: number, gy: number): [number, number] => [
-  m.originX + gx * m.scaledGridSize,
-  m.originY + gy * m.scaledGridSize,
+export const gridToPx = (metrics: Metrics, gx: number, gy: number): [number, number] => [
+  metrics.originX + gx * metrics.scaledGridSize,
+  metrics.originY + gy * metrics.scaledGridSize,
 ];
-export const pxToGrid = (m: Metrics, px: number, py: number): [number, number] => [
-  (px - m.originX) / m.scaledGridSize,
-  (py - m.originY) / m.scaledGridSize,
+export const pxToGrid = (metrics: Metrics, px: number, py: number): [number, number] => [
+  (px - metrics.originX) / metrics.scaledGridSize,
+  (py - metrics.originY) / metrics.scaledGridSize,
 ];

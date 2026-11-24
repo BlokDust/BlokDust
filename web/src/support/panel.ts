@@ -59,7 +59,10 @@ export class FeedbackPanel {
       <span id="feedback-status" role="status" aria-live="polite"></span>`;
     document.body.appendChild(this.form);
     const get = <T extends HTMLElement>(id: string) => this.form.querySelector<T>(`#${id}`)!;
-    for (const c of CHOICES) get(`feedback-choice-${c.key}`).onclick = () => this.choose(c.key);
+    for (const c of CHOICES)
+      get(`feedback-choice-${c.key}`).onclick = () => {
+        this.choose(c.key);
+      };
     get('feedback-include').onclick = () => {
       this.include = !this.include;
       get('feedback-include').setAttribute('aria-checked', String(this.include));
@@ -74,10 +77,14 @@ export class FeedbackPanel {
       this.hover = false;
       this.redraw();
     };
-    this.form.addEventListener('keydown', (e) => e.stopPropagation());
-    this.form.addEventListener('keyup', (e) => e.stopPropagation());
-    this.form.onsubmit = async (e) => {
-      e.preventDefault();
+    this.form.addEventListener('keydown', (event) => {
+      event.stopPropagation();
+    });
+    this.form.addEventListener('keyup', (event) => {
+      event.stopPropagation();
+    });
+    this.form.onsubmit = async (submitEvent) => {
+      submitEvent.preventDefault();
       if (this.sending) return;
       const message = get<HTMLTextAreaElement>('feedback-message'),
         email = get<HTMLInputElement>('feedback-email');
@@ -183,8 +190,11 @@ export class FeedbackPanel {
   centreOf(name: string): [number, number] | null {
     const el = this.form.querySelector<HTMLElement>(`#feedback-${name}`);
     if (!el || this.form.hidden || el.style.display === 'none') return null;
-    const r = el.getBoundingClientRect();
-    return [r.left + r.width / 2, r.top + r.height / 2];
+    const boundingClientRect = el.getBoundingClientRect();
+    return [
+      boundingClientRect.left + boundingClientRect.width / 2,
+      boundingClientRect.top + boundingClientRect.height / 2,
+    ];
   }
   /** Lines `text` takes at `width` in the current font (v1 SettingsPanel.WordWrap's rule). */
   private lines(ctx: CanvasRenderingContext2D, text: string, width: number): number {
@@ -210,17 +220,17 @@ export class FeedbackPanel {
     this.form.hidden = !shown;
     if (!shown) return;
     const ctx = panel.Ctx as CanvasRenderingContext2D,
-      u = App.Unit,
+      unit = App.Unit,
       pr = App.Metrics.PixelRatio;
     const w = App.SettingsPhone
       ? App.SettingsMenuWidth(App.Width)
-      : Math.min(420 * u, App.SettingsMenuWidth(App.Width)); // a phone: the Settings page's width (owner, 2026-11-18)
+      : Math.min(420 * unit, App.SettingsMenuWidth(App.Width)); // a phone: the Settings page's width (owner, 2026-11-18)
     const x = (App.Width - w) / 2,
       topU = App.SettingsPhone ? 110 : 90,
-      top = panel.OffsetY + topU * u + tab.YOffset;
+      top = panel.OffsetY + topU * unit + tab.YOffset;
     const txt = App.Palette[App.ThemeManager.Txt],
       menu = App.ThemeManager.MenuOrder,
-      clipTop = panel.OffsetY + 60 * u;
+      clipTop = panel.OffsetY + 60 * unit;
     const place = (
       id: string,
       px: number,
@@ -255,18 +265,22 @@ export class FeedbackPanel {
       introH = this.lines(ctx, intro, w) * 16 + 14;
     const fixed =
       30 + introH + (field ? 26 + 12 : 0) + (report ? 0 : 100) + (report ? 20 : 12) + 40 + 12;
-    const room = (App.Height - panel.OffsetY) / u - topU - fixed;
+    const room = (App.Height - panel.OffsetY) / unit - topU - fixed;
     const boxH = field ? Math.max(30, Math.min(80, room)) : 0;
     // POSITIONS //
-    const introY = top + 36 * u,
-      labelY = introY + introH * u,
-      boxY = labelY + 12 * u,
-      ruleY = boxY + (boxH + 4) * u;
-    const emailLabelY = ruleY + 22 * u,
-      emailY = emailLabelY + 6 * u,
-      emailRuleY = emailY + 26 * u,
-      switchY = emailRuleY + 12 * u;
-    const sendY = report ? (field ? ruleY + 20 * u : introY + introH * u) : switchY + 54 * u;
+    const introY = top + 36 * unit,
+      labelY = introY + introH * unit,
+      boxY = labelY + 12 * unit,
+      ruleY = boxY + (boxH + 4) * unit;
+    const emailLabelY = ruleY + 22 * unit,
+      emailY = emailLabelY + 6 * unit,
+      emailRuleY = emailY + 26 * unit,
+      switchY = emailRuleY + 12 * unit;
+    const sendY = report
+      ? field
+        ? ruleY + 20 * unit
+        : introY + introH * unit
+      : switchY + 54 * unit;
     ctx.save();
     ctx.fillStyle = txt;
     ctx.strokeStyle = App.Palette[1];
@@ -274,39 +288,45 @@ export class FeedbackPanel {
     // THE CHOICES: words across the page, the chosen one underlined (the gallery's sorts).
     ctx.font = App.Metrics.TxtMid;
     const names = CHOICES.map((c) => c.label.toUpperCase()),
-      ws = names.map((t) => ctx.measureText(t).width);
+      ws = names.map((nameValue) => ctx.measureText(nameValue).width);
     const gap = (w - ws.reduce((a, b) => a + b, 0)) / (names.length - 1);
     let cx = x;
     CHOICES.forEach((c, i) => {
       ctx.fillStyle = txt;
-      ctx.fillText(names[i], cx, top + 10 * u);
+      ctx.fillText(names[i], cx, top + 10 * unit);
       if (c.key === this.Choice) {
         ctx.strokeStyle = txt;
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(cx, top + 14 * u);
-        ctx.lineTo(cx + ws[i], top + 14 * u);
+        ctx.moveTo(cx, top + 14 * unit);
+        ctx.lineTo(cx + ws[i], top + 14 * unit);
         ctx.stroke();
       }
-      place(`feedback-choice-${c.key}`, cx - 5 * u, top - 10 * u, ws[i] + 10 * u, 30 * u);
+      place(
+        `feedback-choice-${c.key}`,
+        cx - 5 * unit,
+        top - 10 * unit,
+        ws[i] + 10 * unit,
+        30 * unit,
+      );
       cx += ws[i] + gap;
     });
     ctx.strokeStyle = App.Palette[1];
     ctx.lineWidth = 2;
     ctx.fillStyle = txt;
     ctx.font = App.Metrics.TxtItalic2;
-    panel.WordWrap(ctx, intro, x, introY, 16 * u, w);
-    place('feedback-message', x, boxY, w, boxH * u, App.Metrics.TxtMid, field);
-    place('feedback-email', x, emailY, w, 18 * u, App.Metrics.TxtMid, !report);
-    place('feedback-include', x, switchY, w, 42 * u, App.Metrics.TxtMid, !report);
-    place('feedback-send', x, sendY, w, 40 * u, App.Metrics.TxtMid, !report || state !== 'none');
+    panel.WordWrap(ctx, intro, x, introY, 16 * unit, w);
+    place('feedback-message', x, boxY, w, boxH * unit, App.Metrics.TxtMid, field);
+    place('feedback-email', x, emailY, w, 18 * unit, App.Metrics.TxtMid, !report);
+    place('feedback-include', x, switchY, w, 42 * unit, App.Metrics.TxtMid, !report);
+    place('feedback-send', x, sendY, w, 40 * unit, App.Metrics.TxtMid, !report || state !== 'none');
     ctx.font = App.Metrics.TxtMid;
     if (field) {
       ctx.fillText(report ? 'WHY' : 'YOUR MESSAGE', x, labelY);
       if (report) {
         const ww = ctx.measureText('WHY').width;
         ctx.font = App.Metrics.TxtItalic2;
-        ctx.fillText('(optional)', x + ww + 8 * u, labelY);
+        ctx.fillText('(optional)', x + ww + 8 * unit, labelY);
         ctx.font = App.Metrics.TxtMid;
       }
       ctx.beginPath();
@@ -318,30 +338,30 @@ export class FeedbackPanel {
       ctx.fillText('EMAIL', x, emailLabelY);
       const emailWidth = ctx.measureText('EMAIL').width;
       ctx.font = App.Metrics.TxtItalic2;
-      ctx.fillText('(optional)', x + emailWidth + 8 * u, emailLabelY);
+      ctx.fillText('(optional)', x + emailWidth + 8 * unit, emailLabelY);
       // SharePanel/Patches title fields: transparent text with a single rule, never a textbox outline.
       ctx.beginPath();
       ctx.moveTo(x, emailRuleY);
       ctx.lineTo(x + w, emailRuleY);
       ctx.stroke();
       ctx.font = App.Metrics.TxtMid;
-      ctx.fillText('SHARE PATCH AND DIAGNOSTICS', x, switchY + 25 * u);
+      ctx.fillText('SHARE PATCH AND DIAGNOSTICS', x, switchY + 25 * unit);
       // OptionsPanel switch rows are 60u high. A 48u pair gives each half the same 24u square as its separator.
       const toggle = new OptionSwitch(
-        new Point(w - 48 * u, switchY),
+        new Point(w - 48 * unit, switchY),
         '',
         'includeContext',
         this.include,
-        new Size(48 * u, 60 * u * 0.43),
+        new Size(48 * unit, 60 * unit * 0.43),
         false,
         'offOn',
       );
       toggle.Draw(
         ctx,
         { SliderColours: App.ThemeManager.OptionsOrder.map((i: number) => App.Palette[i]) },
-        u,
+        unit,
         x,
-        60 * u,
+        60 * unit,
         0,
       );
     }
@@ -354,24 +374,24 @@ export class FeedbackPanel {
             : 'REPORT'
           : 'SEND';
       ctx.fillStyle = App.Palette[this.sending ? 1 : menu[3]];
-      ctx.fillRect(x, sendY, w, 40 * u);
+      ctx.fillRect(x, sendY, w, 40 * unit);
       if (this.hover && !this.sending) {
         const hx = x + w / 2;
         ctx.beginPath();
-        ctx.moveTo(hx, sendY + 49 * u);
-        ctx.lineTo(hx + 10 * u, sendY + 39 * u);
-        ctx.lineTo(hx - 10 * u, sendY + 39 * u);
+        ctx.moveTo(hx, sendY + 49 * unit);
+        ctx.lineTo(hx + 10 * unit, sendY + 39 * unit);
+        ctx.lineTo(hx - 10 * unit, sendY + 39 * unit);
         ctx.fill();
       }
       ctx.fillStyle = txt;
       ctx.font = App.Metrics.TxtUrl2;
       ctx.textAlign = 'center';
-      ctx.fillText(label, x + w / 2, sendY + 29 * u);
+      ctx.fillText(label, x + w / 2, sendY + 29 * unit);
     }
     ctx.font = App.Metrics.TxtItalic2;
     ctx.textAlign = 'left';
     ctx.fillStyle = txt;
-    panel.WordWrap(ctx, this.status, x, sendY + 60 * u, 16 * u, w);
+    panel.WordWrap(ctx, this.status, x, sendY + 60 * unit, 16 * unit, w);
     ctx.restore();
   }
 }

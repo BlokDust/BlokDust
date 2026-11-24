@@ -13,12 +13,12 @@ import { webBuildFor } from './web.ts';
 
 const DEVICE_APP = 'build/plugin-ios/plugin/BlokDust_artefacts/Release/Standalone/BlokDust.app';
 
-type Ipad = {
+interface Ipad {
   identifier: string;
   deviceProperties: { name: string };
   hardwareProperties: { deviceType?: string; productType?: string; udid?: string };
   connectionProperties: { pairingState?: string };
-};
+}
 
 /** The paired iPad: BLOKDUST_IOS_DEVICE (name or identifier), or the first one. */
 function findIpad(): Ipad {
@@ -29,15 +29,15 @@ function findIpad(): Ipad {
     'devicectl list',
   );
   const devices = (JSON.parse(readFileSync(tmp, 'utf8')).result.devices as Ipad[]).filter(
-    (d) => d.connectionProperties.pairingState === 'paired',
+    (ipad) => ipad.connectionProperties.pairingState === 'paired',
   );
   const want = setting('BLOKDUST_IOS_DEVICE');
   const ipad = want
-    ? devices.find((d) => d.identifier === want || d.deviceProperties.name === want)
+    ? devices.find((device) => device.identifier === want || device.deviceProperties.name === want)
     : devices.find(
-        (d) =>
-          d.hardwareProperties.deviceType === 'iPad' ||
-          /^iPad/.test(d.hardwareProperties.productType ?? ''),
+        (device) =>
+          device.hardwareProperties.deviceType === 'iPad' ||
+          (device.hardwareProperties.productType ?? '').startsWith('iPad'),
       );
   if (!ipad)
     throw new Error(

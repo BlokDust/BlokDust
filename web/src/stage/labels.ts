@@ -14,24 +14,25 @@ const SIZE = 12;
 const DOT = 3,
   GAP = 8;
 
-const font = (m: Metrics) => `400 ${Math.max(1, Math.round(SIZE * m.scaledUnit))}px Dosis`;
+const font = (metrics: Metrics) =>
+  `400 ${Math.max(1, Math.round(SIZE * metrics.scaledUnit))}px Dosis`;
 
 /** Draw every label (device px; under the v1 panels, over the blocks). `hidden`: the one being edited in its input. */
 export function drawLabels(
   ctx: CanvasRenderingContext2D,
-  m: Metrics,
+  metrics: Metrics,
   labels: Iterable<Label>,
   colour: string,
   hidden: string | null,
 ): void {
   ctx.save();
   ctx.fillStyle = colour;
-  ctx.font = font(m);
+  ctx.font = font(metrics);
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  for (const l of labels) {
-    const [x, y] = gridToPx(m, l.x, l.y),
-      d = DOT * m.scaledUnit;
+  for (const label of labels) {
+    const [x, y] = gridToPx(metrics, label.x, label.y),
+      d = DOT * metrics.scaledUnit;
     ctx.beginPath();
     ctx.moveTo(x - d, y);
     ctx.lineTo(x, y - d);
@@ -39,7 +40,8 @@ export function drawLabels(
     ctx.lineTo(x, y + d);
     ctx.closePath();
     ctx.fill();
-    if (l.id !== hidden) ctx.fillText(l.text.toUpperCase(), x + GAP * m.scaledUnit, y);
+    if (label.id !== hidden)
+      ctx.fillText(label.text.toUpperCase(), x + GAP * metrics.scaledUnit, y);
   }
   ctx.restore();
 }
@@ -47,16 +49,16 @@ export function drawLabels(
 /** A label's box in device px: the dot and the text, with a margin that is easy to hit. */
 export function labelRect(
   ctx: CanvasRenderingContext2D,
-  m: Metrics,
-  l: Label,
+  metrics: Metrics,
+  label: Label,
 ): { x: number; y: number; w: number; h: number; textX: number } {
   ctx.save();
-  ctx.font = font(m);
-  const w = ctx.measureText(l.text.toUpperCase()).width;
+  ctx.font = font(metrics);
+  const w = ctx.measureText(label.text.toUpperCase()).width;
   ctx.restore();
-  const [x, y] = gridToPx(m, l.x, l.y),
-    u = m.scaledUnit,
-    h = Math.max(SIZE * u * 1.6, 24 * m.dpr);
+  const [x, y] = gridToPx(metrics, label.x, label.y),
+    u = metrics.scaledUnit,
+    h = Math.max(SIZE * u * 1.6, 24 * metrics.dpr);
   return {
     x: x - (DOT + 5) * u,
     y: y - h / 2,
@@ -68,17 +70,17 @@ export function labelRect(
 /** The topmost label under device px (x, y), or null. */
 export function labelAt(
   ctx: CanvasRenderingContext2D,
-  m: Metrics,
+  metrics: Metrics,
   labels: Label[],
   x: number,
   y: number,
 ): Label | null {
   for (let i = labels.length - 1; i >= 0; i--) {
-    const r = labelRect(ctx, m, labels[i]);
+    const r = labelRect(ctx, metrics, labels[i]);
     if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return labels[i];
   }
   return null;
 }
 /** CSS font for the edit box, so the text does not jump when editing starts. */
-export const labelCssFont = (m: Metrics): string =>
-  `400 ${Math.max(1, Math.round(SIZE * m.scaledUnit)) / m.dpr}px Dosis, Arial, Helvetica, sans-serif`;
+export const labelCssFont = (metrics: Metrics): string =>
+  `400 ${Math.max(1, Math.round(SIZE * metrics.scaledUnit)) / metrics.dpr}px Dosis, Arial, Helvetica, sans-serif`;

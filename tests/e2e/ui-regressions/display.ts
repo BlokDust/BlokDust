@@ -17,9 +17,9 @@ const layout = (p: Page) =>
       w = innerWidth,
       h = innerHeight,
       A = (window as any).__bd_probe.v1App;
-    const canvases = [...document.querySelectorAll('#stage canvas')].map((c) => {
-      const e = c as HTMLCanvasElement;
-      return [e.width, e.height];
+    const canvases = [...document.querySelectorAll('#stage canvas')].map((element) => {
+      const canvas = element as HTMLCanvasElement;
+      return [canvas.width, canvas.height];
     });
     const unit = (Math.min(w, h * 2) / 850) * dpr; // Metrics: MAX_ASPECT 2, desktop division 850
     return {

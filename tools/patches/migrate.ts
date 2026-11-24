@@ -1,8 +1,14 @@
 // Patch conversions for block settings that changed shape (SPEC-PATCH-FORMAT-V2; no load-time conversion: patches are
 // rewritten where they are stored, once). Pure functions: `pnpm bd patches migrate` applies them to files or to D1.
 
-type Block = { type?: string; params?: Record<string, unknown> };
-type Patch = { blocks?: Block[]; macros?: { blocks?: Block[] }[] };
+interface Block {
+  type?: string;
+  params?: Record<string, unknown>;
+}
+interface Patch {
+  blocks?: Block[];
+  macros?: { blocks?: Block[] }[];
+}
 
 /** Random Note's old scales (engine kScales before CHG-0040): major, minor, dorian, lydian, mixolydian, pentatonic. */
 const SCALES = [

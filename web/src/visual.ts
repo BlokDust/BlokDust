@@ -34,9 +34,9 @@ async function makeApp(themeIndex: number, transparent = true) {
   return app;
 }
 const frames = (n: number) =>
-  new Promise<void>((r) => {
+  new Promise<void>((resolve) => {
     let k = 0;
-    const f = () => (++k >= n ? r() : requestAnimationFrame(f));
+    const f = () => (++k >= n ? resolve() : requestAnimationFrame(f));
     requestAnimationFrame(f);
   });
 
@@ -114,7 +114,7 @@ async function renderFixture(input: FixtureInput) {
   for (const b of patch.blocks) {
     const def = BLOCKS_BY_ID.get(b.type)!;
     const sp = input.starPos?.find(
-      (s) => def.v1Type === s.type && s.x === b.x && s.y === b.y,
+      (starPo) => def.v1Type === starPo.type && starPo.x === b.x && starPo.y === b.y,
     )?.starPos;
     stage.upsertBlock({
       id: loaded.ids.get(b.id)!,
@@ -126,7 +126,7 @@ async function renderFixture(input: FixtureInput) {
   }
   // Connections and power come from the engine itself (main-thread instance; no audio needed).
   const engine = WasmEngine.fromModule(await engineModule(), 48000, loaded.seed);
-  for (const c of loaded.commands) engine.push(c);
+  for (const command of loaded.commands) engine.push(command);
   engine.process(1);
   stage.setConnections(engine.connections());
   stage.setPowered(engine.powered());
@@ -143,7 +143,9 @@ async function renderFixture(input: FixtureInput) {
     y1 = -Infinity;
   for (const b of stage.allBlocks()) {
     const def = BLOCKS_BY_ID.get(b.type)!;
-    const pts = [...def.geometry.layers.flatMap((l) => (l.units === 'unit' ? [] : l.points))];
+    const pts = [
+      ...def.geometry.layers.flatMap((layer) => (layer.units === 'unit' ? [] : layer.points)),
+    ];
     for (const [gx, gy] of pts) {
       const [px, py] = gridToPx(m, b.x + gx, b.y + gy);
       x0 = Math.min(x0, px);
@@ -151,9 +153,9 @@ async function renderFixture(input: FixtureInput) {
       x1 = Math.max(x1, px);
       y1 = Math.max(y1, py);
     }
-    for (const o of def.geometry.overlays ?? [])
-      for (const l of o.states.idle ?? [])
-        for (const [ux, uy] of l.points) {
+    for (const overlay of def.geometry.overlays ?? [])
+      for (const geometryLayer of overlay.states.idle ?? [])
+        for (const [ux, uy] of geometryLayer.points) {
           const [bx, by] = gridToPx(m, b.x, b.y);
           const px = bx + ux * m.gridSize,
             py = by + uy * m.gridSize;
@@ -226,8 +228,8 @@ async function benchmark(
   const mean = times.reduce((a, b) => a + b, 0) / times.length;
   const glRenderer = (() => {
     try {
-      const e = gl?.getExtension('WEBGL_debug_renderer_info');
-      return e ? String(gl!.getParameter(e.UNMASKED_RENDERER_WEBGL)) : 'unknown';
+      const extension = gl?.getExtension('WEBGL_debug_renderer_info');
+      return extension ? String(gl!.getParameter(extension.UNMASKED_RENDERER_WEBGL)) : 'unknown';
     } catch {
       return 'unknown';
     }

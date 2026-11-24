@@ -41,8 +41,8 @@ interface Poly {
 
 /** Rasterise polygons (device px relative to an origin with fractional part fx, fy) exactly like v1's Canvas2D calls. */
 function bakePolys(polys: Poly[], fx: number, fy: number): BakedBlock {
-  const xs = polys.flatMap((p) => p.points.map((q) => q[0])),
-    ys = polys.flatMap((p) => p.points.map((q) => q[1]));
+  const xs = polys.flatMap((poly) => poly.points.map((point) => point[0])),
+    ys = polys.flatMap((poly) => poly.points.map((point) => point[1]));
   const pad = 2;
   const minX = Math.floor(Math.min(...xs) + fx) - pad,
     minY = Math.floor(Math.min(...ys) + fy) - pad;
@@ -52,17 +52,17 @@ function bakePolys(polys: Poly[], fx: number, fy: number): BakedBlock {
   canvas.width = maxX - minX;
   canvas.height = maxY - minY;
   const ctx = canvas.getContext('2d')!;
-  for (const p of polys) {
+  for (const poly of polys) {
     ctx.beginPath();
-    p.points.forEach(([x, y], i) => {
+    poly.points.forEach(([x, y], i) => {
       const px = x + fx - minX,
         py = y + fy - minY;
       if (i) ctx.lineTo(px, py);
       else ctx.moveTo(px, py);
     });
     ctx.closePath();
-    ctx.fillStyle = p.fill;
-    ctx.globalAlpha = p.alpha ?? 1;
+    ctx.fillStyle = poly.fill;
+    ctx.globalAlpha = poly.alpha ?? 1;
     ctx.fill();
   }
   return { canvas, offsetX: minX, offsetY: minY };
@@ -71,9 +71,9 @@ function bakePolys(polys: Poly[], fx: number, fy: number): BakedBlock {
 export function bakeBlock(def: BlockDef, opts: BakeOptions): BakedBlock {
   const upg = def.geometry.unitsPerGrid ?? 15;
   return bakePolys(
-    def.geometry.layers.map((l) => ({
-      fill: opts.colors[l.palette],
-      points: layerPoints(l, upg, opts.starPos).map(
+    def.geometry.layers.map((layer) => ({
+      fill: opts.colors[layer.palette],
+      points: layerPoints(layer, upg, opts.starPos).map(
         ([x, y]) => [x * opts.gridPx, y * opts.gridPx] as [number, number],
       ),
     })),
@@ -88,13 +88,15 @@ export function bakeOverlays(
   state: string,
   opts: { colors: readonly string[]; gridSize: number; fracX?: number; fracY?: number },
 ): BakedBlock | null {
-  const layers = (def.geometry.overlays ?? []).flatMap((o) => o.states[state] ?? []);
+  const layers = (def.geometry.overlays ?? []).flatMap((overlay) => overlay.states[state] ?? []);
   if (!layers.length) return null;
   return bakePolys(
-    layers.map((l) => ({
-      fill: opts.colors[l.palette],
-      alpha: l.alpha,
-      points: l.points.map(([x, y]) => [x * opts.gridSize, y * opts.gridSize] as [number, number]),
+    layers.map((layer) => ({
+      fill: opts.colors[layer.palette],
+      alpha: layer.alpha,
+      points: layer.points.map(
+        ([x, y]) => [x * opts.gridSize, y * opts.gridSize] as [number, number],
+      ),
     })),
     opts.fracX ?? 0,
     opts.fracY ?? 0,

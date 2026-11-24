@@ -65,28 +65,28 @@ async function visitorOf(env: Env, req: Request): Promise<string> {
 export function deviceOf(ua: string): { os: string; browser: string } {
   const os = /iPhone|iPad|iPod/.test(ua)
     ? 'ios'
-    : /Android/.test(ua)
+    : ua.includes('Android')
       ? 'android'
-      : /CrOS/.test(ua)
+      : ua.includes('CrOS')
         ? 'chromeos'
-        : /Windows/.test(ua)
+        : ua.includes('Windows')
           ? 'windows'
           : /Mac OS X|Macintosh/.test(ua)
             ? 'macos'
-            : /Linux/.test(ua)
+            : ua.includes('Linux')
               ? 'linux'
               : 'other';
-  const browser = /Edg\//.test(ua)
+  const browser = ua.includes('Edg/')
     ? 'edge'
-    : /OPR\//.test(ua)
+    : ua.includes('OPR/')
       ? 'opera'
-      : /SamsungBrowser/.test(ua)
+      : ua.includes('SamsungBrowser')
         ? 'samsung'
         : /Firefox\/|FxiOS/.test(ua)
           ? 'firefox'
           : /Chrome\/|CriOS/.test(ua)
             ? 'chrome'
-            : /Safari\//.test(ua) && /Version\//.test(ua)
+            : ua.includes('Safari/') && ua.includes('Version/')
               ? 'safari'
               : 'other';
   return { os, browser };
@@ -114,21 +114,21 @@ function write(
     visitor: string;
     w: number;
   },
-  p: Point,
+  point: Point,
 ): void {
   env.EVENTS?.writeDataPoint({
-    indexes: [p.e],
+    indexes: [point.e],
     blobs: [
-      p.e,
+      point.e,
       common.surface,
       common.v,
       common.os,
       common.browser,
       common.country,
       common.visitor,
-      ...p.strings.map((s) => s ?? ''),
+      ...point.strings.map((string) => string ?? ''),
     ],
-    doubles: [common.w, ...p.numbers],
+    doubles: [common.w, ...point.numbers],
   });
 }
 /** An event's properties in schema order, checked (R3); null when the event isn't one a client may send. */
@@ -190,10 +190,10 @@ export async function ingest(env: Env, req: Request): Promise<Response> {
   let accepted = 0;
   for (const ev of events) {
     const o = (ev && typeof ev === 'object' ? ev : {}) as Record<string, unknown>;
-    const p = pointOf(o.e, o.s, o.n, false);
-    if (!p) continue;
-    if (p.e.startsWith('plugin_') && !install) continue; // R8: plugin events only from a plugin
-    write(env, common, p);
+    const point = pointOf(o.e, o.s, o.n, false);
+    if (!point) continue;
+    if (point.e.startsWith('plugin_') && !install) continue; // R8: plugin events only from a plugin
+    write(env, common, point);
     accepted++;
   }
   return json({ accepted }, 200);
@@ -209,8 +209,8 @@ export async function record(
 ): Promise<void> {
   try {
     if (analyticsRate(env) <= 0) return;
-    const p = pointOf(name, s, n, true);
-    if (!p) return;
+    const point = pointOf(name, s, n, true);
+    if (!point) return;
     const device = deviceOf(req.headers.get('user-agent') ?? '');
     write(
       env,
@@ -222,7 +222,7 @@ export async function record(
         visitor: await visitorOf(env, req),
         w: 1,
       },
-      p,
+      point,
     );
   } catch (e) {
     console.error('analytics record', e);

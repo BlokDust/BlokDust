@@ -10,10 +10,12 @@ export const run = (cmd: string, args: string[], quiet = false) =>
     maxBuffer: 64 << 20,
   });
 export const must = <Result extends { status: number | null; stderr?: string | Buffer | null }>(
-  r: Result,
+  result: Result,
   what: string,
 ) => {
-  if (r.status !== 0)
-    throw new Error(`${what} failed${r.stderr ? `: ${String(r.stderr).slice(-2000)}` : ''}`);
-  return r;
+  if (result.status !== 0)
+    throw new Error(
+      `${what} failed${result.stderr ? `: ${String(result.stderr).slice(-2000)}` : ''}`,
+    );
+  return result;
 };

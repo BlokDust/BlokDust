@@ -9,19 +9,19 @@ export function engineModule(
   url = new URL('blokdust.wasm', document.baseURI).href,
 ): Promise<WebAssembly.Module> {
   modulePromise ??= fetch(url)
-    .then((r) => {
-      if (!r.ok) throw new Error(`fetch ${url}: ${r.status}`);
-      return r.arrayBuffer();
+    .then((response) => {
+      if (!response.ok) throw new Error(`fetch ${url}: ${response.status}`);
+      return response.arrayBuffer();
     })
     .then((b) => WebAssembly.compile(b));
   return modulePromise;
 }
 
-type EngineOptions = {
+interface EngineOptions {
   seed?: number;
   commands?: Command[];
   testInput?: { frequency: number; gain: number };
-};
+}
 const prepared = new WeakMap<BaseAudioContext, Promise<WebAssembly.Module>>();
 
 export class EngineNode {
@@ -41,7 +41,7 @@ export class EngineNode {
       prepared.set(
         ctx,
         (p = Promise.all([ctx.audioWorklet.addModule(processorUrl), engineModule()]).then(
-          ([, m]) => m,
+          ([, value]) => value,
         )),
       );
     return p;
@@ -104,7 +104,7 @@ export class EngineNode {
       })
       .then((stream) => {
         if (this.input !== asked) {
-          for (const t of stream.getTracks()) t.stop();
+          for (const mediaStreamTrack of stream.getTracks()) mediaStreamTrack.stop();
           return;
         } // let go while it was asked for
         this.stream = stream;
@@ -124,7 +124,7 @@ export class EngineNode {
     this.input = null;
     this.source?.disconnect();
     this.source = null;
-    for (const t of this.stream?.getTracks() ?? []) t.stop();
+    for (const mediaStreamTrack of this.stream?.getTracks() ?? []) mediaStreamTrack.stop();
     this.stream = null;
     setAudioSession('playback');
   }
@@ -173,7 +173,7 @@ export class EngineNode {
     return !!this.input;
   }
   /** v1 Recorder: capture the master output; `stop` resolves with what was recorded. */
-  private recordingDone: ((r: Recording) => void) | null = null;
+  private recordingDone: ((recording: Recording) => void) | null = null;
   startRecording(): void {
     this.node.port.postMessage({ type: 'record', on: true } satisfies ToWorklet);
   }
@@ -183,12 +183,12 @@ export class EngineNode {
       this.node.port.postMessage({ type: 'record', on: false } satisfies ToWorklet);
     });
   }
-  onSnapshot(cb: (s: Snapshot) => void): void {
-    this.node.port.onmessage = (e: MessageEvent<FromWorklet>) => {
-      if (e.data.type === 'recording') {
-        this.recordingDone?.(e.data);
+  onSnapshot(cb: (snapshot: Snapshot) => void): void {
+    this.node.port.onmessage = (event: MessageEvent<FromWorklet>) => {
+      if (event.data.type === 'recording') {
+        this.recordingDone?.(event.data);
         this.recordingDone = null;
-      } else cb(e.data);
+      } else cb(event.data);
     };
   }
 }

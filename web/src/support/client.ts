@@ -23,8 +23,8 @@ export class SupportClient {
   constructor(private context: SupportContext) {
     // Connect's attachment switch is independent of automatic-error consent; never reinterpret the old preference.
     this.enabled = false;
-    diagnostics.onError = (e) => {
-      void this.automatic(e);
+    diagnostics.onError = (diagnostic) => {
+      void this.automatic(diagnostic);
     };
   }
   get consent(): boolean {
@@ -78,9 +78,11 @@ export class SupportClient {
       ? configured
       : new URL('api/support', document.baseURI).href;
     const controller = new AbortController(),
-      timeout = setTimeout(() => controller.abort(), 15000);
+      timeout = setTimeout(() => {
+        controller.abort();
+      }, 15000);
     try {
-      const r = await fetch(endpoint, {
+      const response = await fetch(endpoint, {
         method: 'POST',
         credentials: 'omit',
         signal: controller.signal,
@@ -91,13 +93,13 @@ export class SupportClient {
           consent: report.kind === 'automatic' && this.consent,
         }),
       });
-      if (!r.ok)
+      if (!response.ok)
         throw new Error(
-          r.status === 429
+          response.status === 429
             ? 'Too many reports. Please try again later.'
             : 'Your support query couldn’t be sent. Please try again.',
         );
-      const result = (await r.json()) as { id?: unknown };
+      const result = (await response.json()) as { id?: unknown };
       if (typeof result.id !== 'string' || !/^[a-f0-9-]{36}$/.test(result.id))
         throw new Error('Your support query couldn’t be sent. Please try again.');
       return result.id;
@@ -113,7 +115,9 @@ export class SupportClient {
   private async automatic(event: Diagnostic): Promise<void> {
     if (!this.consent || !navigator.onLine || this.automaticPending) return;
     const key = `${event.kind}:${event.message}`;
-    this.automaticTimes = this.automaticTimes.filter((t) => t > Date.now() - 3600000);
+    this.automaticTimes = this.automaticTimes.filter(
+      (automaticTime) => automaticTime > Date.now() - 3600000,
+    );
     if (this.fingerprints.has(key) || this.automaticTimes.length >= 3) return;
     this.fingerprints.add(key);
     this.automaticTimes.push(Date.now());

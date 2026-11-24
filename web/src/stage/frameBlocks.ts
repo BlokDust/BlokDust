@@ -19,13 +19,17 @@ export interface Screen {
 /** Room kept round the blocks' centres, in v1 units (a block is about two grid cells across, so whole blocks show). */
 const MARGIN = 45;
 
-function inArea(points: readonly { x: number; y: number }[], v: View, s: Screen): boolean {
-  const g = UNITS_PER_GRID * s.unit * v.zoom,
-    m = MARGIN * s.unit * v.zoom * 0.5,
-    a = s.area;
-  return points.every((p) => {
-    const px = s.width / 2 + v.x * v.zoom * s.unit + p.x * g,
-      py = s.height / 2 + v.y * v.zoom * s.unit + p.y * g;
+function inArea(
+  points: readonly { x: number; y: number }[],
+  view: View,
+  screenValue: Screen,
+): boolean {
+  const g = UNITS_PER_GRID * screenValue.unit * view.zoom,
+    m = MARGIN * screenValue.unit * view.zoom * 0.5,
+    a = screenValue.area;
+  return points.every((point) => {
+    const px = screenValue.width / 2 + view.x * view.zoom * screenValue.unit + point.x * g,
+      py = screenValue.height / 2 + view.y * view.zoom * screenValue.unit + point.y * g;
     return px >= a.x + m && px <= a.x + a.w - m && py >= a.y + m && py <= a.y + a.h - m;
   });
 }
@@ -34,15 +38,15 @@ function inArea(points: readonly { x: number; y: number }[], v: View, s: Screen)
 export function frameBlocks(
   points: readonly { x: number; y: number }[],
   saved: View | undefined,
-  s: Screen,
+  screenValue: Screen,
 ): View {
   const start =
     saved && Number.isFinite(saved.zoom) && Number.isFinite(saved.x) && Number.isFinite(saved.y)
       ? saved
       : { x: 0, y: 0, zoom: 1 };
-  if (!points.length || inArea(points, start, s)) return start;
-  const xs = points.map((p) => p.x),
-    ys = points.map((p) => p.y);
+  if (!points.length || inArea(points, start, screenValue)) return start;
+  const xs = points.map((point) => point.x),
+    ys = points.map((point) => point.y);
   const minX = Math.min(...xs),
     maxX = Math.max(...xs),
     minY = Math.min(...ys),
@@ -52,14 +56,16 @@ export function frameBlocks(
   // In v1 units: the blocks' extent plus a margin, against the window.
   const w = (maxX - minX) * UNITS_PER_GRID + 2 * MARGIN,
     h = (maxY - minY) * UNITS_PER_GRID + 2 * MARGIN;
-  const fits = (z: number) => w * z * s.unit <= s.area.w && h * z * s.unit <= s.area.h;
+  const fits = (z: number) =>
+    w * z * screenValue.unit <= screenValue.area.w &&
+    h * z * screenValue.unit <= screenValue.area.h;
   const zoom = [...ZOOM_SLOTS].reverse().find((z) => z <= start.zoom && fits(z)) ?? ZOOM_SLOTS[0];
   // screen = W/2 + x·zoom·unit + p·15·unit·zoom: put the blocks' middle at the window's middle.
-  const dx = s.area.x + s.area.w / 2 - s.width / 2,
-    dy = s.area.y + s.area.h / 2 - s.height / 2;
+  const dx = screenValue.area.x + screenValue.area.w / 2 - screenValue.width / 2,
+    dy = screenValue.area.y + screenValue.area.h / 2 - screenValue.height / 2;
   return {
-    x: -cx * UNITS_PER_GRID + dx / (zoom * s.unit),
-    y: -cy * UNITS_PER_GRID + dy / (zoom * s.unit),
+    x: -cx * UNITS_PER_GRID + dx / (zoom * screenValue.unit),
+    y: -cy * UNITS_PER_GRID + dy / (zoom * screenValue.unit),
     zoom,
   };
 }

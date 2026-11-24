@@ -37,8 +37,8 @@ export const V1_BLOCKS: Record<string, string[]> = {
 };
 
 const sh = (cmd: string, args: string[]) => {
-  const r = spawnSync(cmd, args, { stdio: 'inherit' });
-  if (r.status !== 0) throw new Error(`${cmd} ${args.join(' ')} failed`);
+  const result = spawnSync(cmd, args, { stdio: 'inherit' });
+  if (result.status !== 0) throw new Error(`${cmd} ${args.join(' ')} failed`);
 };
 
 export function fetchV1() {
@@ -85,7 +85,11 @@ export function serve(port: number): Promise<Server> {
       .writeHead(200, { 'content-type': MIME[extname(f)] ?? 'application/octet-stream' })
       .end(readFileSync(f));
   });
-  return new Promise((r) => server.listen(port, () => r(server)));
+  return new Promise((resolve) =>
+    server.listen(port, () => {
+      resolve(server);
+    }),
+  );
 }
 
 export const randomPort = () => 8731 + Math.floor(Math.random() * 1000);
@@ -121,11 +125,11 @@ export async function bootV1(
     await page.addInitScript(({ seconds, sampleRate }) => {
       const Offline = window.OfflineAudioContext;
       function FakeAudioContext() {
-        const c = new Offline(2, Math.round(seconds * sampleRate), sampleRate);
-        Object.defineProperty(c, 'state', { get: () => 'running' });
-        (c as any).resume = () => Promise.resolve();
-        (window as any).__bdOffline = c;
-        return c;
+        const offline = new Offline(2, Math.round(seconds * sampleRate), sampleRate);
+        Object.defineProperty(offline, 'state', { get: () => 'running' });
+        (offline as any).resume = () => Promise.resolve();
+        (window as any).__bdOffline = offline;
+        return offline;
       }
       FakeAudioContext.prototype = Offline.prototype;
       (window as any).AudioContext = FakeAudioContext;
@@ -176,8 +180,8 @@ export async function bootV1(
   // Wait for the loading splash to finish and slide off-screen (LoadOffset tweens to 1).
   await until(
     () => {
-      const s = (window as any).App?.Stage?.Splash;
-      return !!(s && s.IsAnimationFinished && s.LoadOffset >= 1);
+      const splash = (window as any).App?.Stage?.Splash;
+      return !!(splash?.IsAnimationFinished && splash.LoadOffset >= 1);
     },
     30000,
     'splash',
@@ -197,8 +201,8 @@ export async function loadComposition(s: V1Session, composition: any): Promise<n
     let seed = 1234;
     Math.random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
     App.CompositionLoadComplete(JSON.stringify(c));
-    const t = App.MainScene.Tutorial;
-    if (t?.SplashOpen) t.CloseSplash(); // tour prompt ("Welcome to the Tour") is not part of the stage
+    const tutorial = App.MainScene.Tutorial;
+    if (tutorial?.SplashOpen) tutorial.CloseSplash(); // tour prompt ("Welcome to the Tour") is not part of the stage
     return App.Blocks.length;
   }, composition);
 }
@@ -207,16 +211,16 @@ export async function loadComposition(s: V1Session, composition: any): Promise<n
 export async function stageInfo(s: V1Session) {
   return s.page.evaluate(() => {
     const App = (window as any).App;
-    const M = App.Metrics;
+    const metrics = App.Metrics;
     return {
-      c: { x: M.C.x, y: M.C.y },
+      c: { x: metrics.C.x, y: metrics.C.y },
       unit: App.Unit,
       gridSize: App.GridSize,
       scaledGridSize: App.ScaledGridSize,
       scaledUnit: App.ScaledUnit,
       zoom: App.ZoomLevel,
       scaledDragOffset: { x: App.ScaledDragOffset.x, y: App.ScaledDragOffset.y },
-      pixelRatio: M.PixelRatio,
+      pixelRatio: metrics.PixelRatio,
       canvas: { width: App.Canvas.Width, height: App.Canvas.Height },
       theme: App.ThemeManager.CurrentThemeNo,
       palette: App.Palette.map((c: any) => App.ColorManager.ColorString(c)),

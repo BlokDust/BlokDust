@@ -16,16 +16,16 @@ interface Fixture {
 
 export function blockFixtures(): Fixture[] {
   return Object.entries(V1_BLOCKS).flatMap(([cat, types]) =>
-    types.map((t) => ({
+    types.map((type) => ({
       // Per-block references show the sprite only: v1's transient "loading" bubble (AnimationsLayer) is a state, not geometry.
-      name: `block-${cat}-${t}`,
+      name: `block-${cat}-${type}`,
       viewport: { width: 800, height: 600 },
       hideLoading: true,
       // v1 zoom only snaps to slots 0.25, 0.5, 1, 2, 4 (UI/ZoomButtons.ts).
       composition: {
         ZoomLevel: 2,
         DragOffset: { x: 0, y: 0 },
-        Composition: [{ Id: 1, Type: t, Position: { x: 0, y: 0 }, ZIndex: 1 }],
+        Composition: [{ Id: 1, Type: type, Position: { x: 0, y: 0 }, ZIndex: 1 }],
       },
     })),
   );
@@ -43,12 +43,12 @@ export async function capture(args: string[]) {
   const dpr = Number(opt('--dpr') ?? 1);
   const only = opt('--only')?.split(',');
   const files = args.filter((a, i) => a.endsWith('.json') && !args[i - 1]?.startsWith('--'));
-  let fixtures: Fixture[] = files.map((f) => ({
-    name: basename(f, '.json'),
-    ...JSON.parse(readFileSync(f, 'utf8')),
+  let fixtures: Fixture[] = files.map((file) => ({
+    name: basename(file, '.json'),
+    ...JSON.parse(readFileSync(file, 'utf8')),
   }));
   if (args.includes('--blocks')) fixtures.push(...blockFixtures());
-  if (only) fixtures = fixtures.filter((f) => only.includes(f.name));
+  if (only) fixtures = fixtures.filter((fixture) => only.includes(fixture.name));
   if (!fixtures.length) throw new Error('no fixtures: pass fixture .json files and/or --blocks');
 
   mkdirSync(out, { recursive: true });
@@ -130,7 +130,7 @@ export async function capture(args: string[]) {
     ? (JSON.parse(readFileSync(manifestPath, 'utf8')).results ?? [])
     : [];
   const merged = [
-    ...prev.filter((r: any) => !results.some((n) => n.name === r.name)),
+    ...prev.filter((r: any) => !results.some((result) => result.name === r.name)),
     ...results,
   ].sort((a, b) => a.name.localeCompare(b.name));
   writeFileSync(manifestPath, JSON.stringify({ v1Sha: V1_SHA, results: merged }, null, 2) + '\n');
@@ -138,7 +138,7 @@ export async function capture(args: string[]) {
     JSON.stringify({
       out,
       captured: results.length,
-      withErrors: results.filter((r) => r.errors.length).length,
+      withErrors: results.filter((result) => result.errors.length).length,
     }),
   );
 }

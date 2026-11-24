@@ -44,7 +44,9 @@ async function device(name: string | null, query = '?demo&video=1'): Promise<Dev
     }),
   );
   const page = await ctx.newPage();
-  page.on('pageerror', (e) => console.error(`  page error: ${e.message}`));
+  page.on('pageerror', (e) => {
+    console.error(`  page error: ${e.message}`);
+  });
   const cdp = await ctx.newCDPSession(page);
   await cdp.send('WebAuthn.enable');
   await cdp.send('WebAuthn.addVirtualAuthenticator', {
@@ -70,8 +72,8 @@ async function device(name: string | null, query = '?demo&video=1'): Promise<Dev
     await page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.openAccount());
     await page.waitForFunction(
       () => {
-        const s = (window as any).__bd_probe.scene.SettingsPanel;
-        return s.OffsetY === 0 && s.accountPage.Account !== undefined;
+        const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+        return settingsPanel.OffsetY === 0 && settingsPanel.accountPage.Account !== undefined;
       },
       null,
       { timeout: 10000 },
@@ -102,8 +104,8 @@ async function device(name: string | null, query = '?demo&video=1'): Promise<Dev
   }
   return d;
 }
-const P = (d: Device) =>
-  d.page.evaluate(() => {
+const P = (device: Device) =>
+  device.page.evaluate(() => {
     const x = (window as any).__bd_probe.scene.PatchesPanel;
     return {
       open: x.Open,
@@ -117,10 +119,10 @@ const P = (d: Device) =>
     };
   });
 /** SAVE on Patches › SAVE / SHARE (a new link the first time, then saves over it); resolves once saved. */
-async function save(d: Device): Promise<string> {
-  await tab(d, 0);
-  await press(d, 'share', 200);
-  await d.page.waitForFunction(
+async function save(device: Device): Promise<string> {
+  await tab(device, 0);
+  await press(device, 'share', 200);
+  await device.page.waitForFunction(
     () => {
       const s = (window as any).__bd_probe;
       const l = s.scene.host.links.current();
@@ -129,54 +131,54 @@ async function save(d: Device): Promise<string> {
     null,
     { timeout: 60000 },
   );
-  await d.page.waitForTimeout(400);
-  return d.page.evaluate(() => (window as any).__bd_probe.v1App.CompositionId);
+  await device.page.waitForTimeout(400);
+  return device.page.evaluate(() => (window as any).__bd_probe.v1App.CompositionId);
 }
 const GALLERY = 2;
-async function press(d: Device, name: string, wait = 400): Promise<void> {
-  const at = await d.page.evaluate(
+async function press(device: Device, name: string, wait = 400): Promise<void> {
+  const at = await device.page.evaluate(
     (n) => (window as any).__bd_probe.scene.PatchesPanel.centreOf(n),
     name,
   );
   if (!at) throw new Error(`no control ${name}`);
-  await d.page.mouse.move(at[0], at[1]);
-  await d.page.mouse.click(at[0], at[1]);
-  await d.page.waitForTimeout(wait);
+  await device.page.mouse.move(at[0], at[1]);
+  await device.page.mouse.click(at[0], at[1]);
+  await device.page.waitForTimeout(wait);
 }
-async function tab(d: Device, id: number): Promise<void> {
-  for (let i = 0; i < 8 && !(await P(d)).open; i++) {
-    await d.page.mouse.move(1138, 45);
-    await d.page.mouse.click(1138, 45);
-    await d.page.waitForTimeout(700);
+async function tab(device: Device, id: number): Promise<void> {
+  for (let i = 0; i < 8 && !(await P(device)).open; i++) {
+    await device.page.mouse.move(1138, 45);
+    await device.page.mouse.click(1138, 45);
+    await device.page.waitForTimeout(700);
   }
-  await d.page
+  await device.page
     .waitForFunction(() => (window as any).__bd_probe.scene.PatchesPanel.OffsetY === 0, null, {
       timeout: 5000,
     })
     .catch(() => {});
-  await press(d, `tab${id}`, 1100); // the page drops in (CHG-0035)
+  await press(device, `tab${id}`, 1100); // the page drops in (CHG-0035)
 }
-const idle = (d: Device) =>
-  d.page.waitForFunction(
+const idle = (device: Device) =>
+  device.page.waitForFunction(
     () => !(window as any).__bd_probe.scene.PatchesPanel.GalleryLoading,
     null,
     { timeout: 60000 },
   );
-async function search(d: Device, q: string): Promise<{ title: string; by: string }[]> {
-  await d.page.fill('#gallerySearchInput', q);
-  await press(d, 'search');
-  await idle(d);
-  return (await P(d)).items;
+async function search(device: Device, q: string): Promise<{ title: string; by: string }[]> {
+  await device.page.fill('#gallerySearchInput', q);
+  await press(device, 'search');
+  await idle(device);
+  return (await P(device)).items;
 }
-const api = (d: Device, method: string, path: string, body?: unknown) =>
-  d.page.evaluate(
+const api = (device: Device, method: string, path: string, body?: unknown) =>
+  device.page.evaluate(
     async ([m, url, b]) => {
-      const r = await fetch(url as string, {
-        method: m as string,
+      const response = await fetch(url, {
+        method: m,
         headers: { 'content-type': 'application/json' },
         body: b === undefined ? undefined : JSON.stringify(b),
       });
-      return { status: r.status, json: await r.json().catch(() => null) };
+      return { status: response.status, json: await response.json().catch(() => null) };
     },
     [method, `${base}/api/${path}`, body] as const,
   );
@@ -297,8 +299,8 @@ try {
   await anon.page.mouse.click(anonCorners.likeAt[0], anonCorners.likeAt[1]);
   await anon.page.waitForTimeout(1000);
   const anonSettings = await anon.page.evaluate(() => {
-    const s = (window as any).__bd_probe.scene.SettingsPanel;
-    return { open: s.Open, tab: s._OpenTab };
+    const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+    return { open: settingsPanel.Open, tab: settingsPanel._OpenTab };
   });
   check(
     'R8: a published patch has a like chevron under its credit and in its row; signed out, either opens SIGN IN',
@@ -359,13 +361,13 @@ try {
   const settled = (await api(erin, 'GET', `patches/${aliceId}`)).json;
   check(
     'Bug: a double press settles on the last press, without flipping back and forth',
-    trace.every((v) => v === true) && settled.liked && settled.likes === 1,
+    trace.every((v) => v) && settled.liked && settled.likes === 1,
     { trace, server: { liked: settled.liked, likes: settled.likes } },
   );
   // From the list: the row and the open patch's credit change together.
   await tab(erin, GALLERY);
   await idle(erin);
-  const ai = (await P(erin)).items.findIndex((r: { id: string }) => r.id === aliceId);
+  const ai = (await P(erin)).items.findIndex((item: { id: string }) => item.id === aliceId);
   await press(erin, `glike${ai}`, 1200);
   const fromList = await erin.page.evaluate((id) => {
     const pp = (window as any).__bd_probe.scene.PatchesPanel;
@@ -425,16 +427,16 @@ try {
     { byTitle, byBlock: byBlock.map((r) => r.title), byAt, byName: byName.map((r) => r.by), none },
   );
   await search(bob, '');
-  const popular = (await P(bob)).items.map((r: { title: string }) => r.title);
+  const popular = (await P(bob)).items.map((item: { title: string }) => item.title);
   await bob.page.mouse.move(5, 5);
   await bob.page.waitForTimeout(300);
   await bob.page.screenshot({ path: `${OUT}/gallery-rows.png` });
   await press(bob, 'sort_new', 300);
   await idle(bob);
-  const newest = (await P(bob)).items.map((r: { title: string }) => r.title);
+  const newest = (await P(bob)).items.map((item: { title: string }) => item.title);
   await press(bob, 'sort_top', 300);
   await idle(bob);
-  const top = (await P(bob)).items.map((r: { title: string }) => r.title);
+  const top = (await P(bob)).items.map((item: { title: string }) => item.title);
   check(
     'R7: POPULAR puts the liked patch first; NEW the newest; ALL TIME TOP the most liked (CHG-0035)',
     popular[0] === 'Glass Rain' && newest[0] === 'Bob Lasers' && top[0] === 'Glass Rain',
@@ -448,7 +450,7 @@ try {
     id: (window as any).__bd_probe.v1App.CompositionId,
   }));
   const glassAt = (await P(bob)).items.findIndex(
-    (r: { title: string }) => r.title === 'Glass Rain',
+    (item: { title: string }) => item.title === 'Glass Rain',
   );
   await press(bob, `gins${glassAt}`, 300);
   await bob.page.mouse.move(300, 600, { steps: 4 });
@@ -491,7 +493,7 @@ try {
   check(
     'R15: pressing @NAME opens the gallery on their patches',
     theirs.open &&
-      theirs.items.every((r: { by: string }) => r.by === 'alice_g') &&
+      theirs.items.every((item: { by: string }) => item.by === 'alice_g') &&
       theirs.items.length === 1 &&
       (await bob.page.evaluate(
         () =>
@@ -512,7 +514,7 @@ try {
   const rp = await api(bob, 'GET', `patches/${remix}`);
   await tab(bob, GALLERY);
   await search(bob, '');
-  const glass = (await P(bob)).items.find((r: { id: string }) => r.id === aliceId);
+  const glass = (await P(bob)).items.find((item: { id: string }) => item.id === aliceId);
   check(
     "R11: SAVE after opening someone's patch makes a remix; the original counts it; the credit goes",
     opened.id === aliceId &&
@@ -527,73 +529,75 @@ try {
   // credit is gone); five reports hide it; the site owner reviews with bd gallery ----
   const carol = await device('carol_g'),
     dave = await device('dave_g');
-  for (const d of [bob, carol, dave]) {
-    await tab(d, GALLERY);
-    await search(d, '');
-    const i = (await P(d)).items.findIndex((r: { id: string }) => r.id === aliceId);
-    await press(d, `gopen${i}`, 2500);
-    if (d === bob) {
+  for (const device of [bob, carol, dave]) {
+    await tab(device, GALLERY);
+    await search(device, '');
+    const i = (await P(device)).items.findIndex((item: { id: string }) => item.id === aliceId);
+    await press(device, `gopen${i}`, 2500);
+    if (device === bob) {
       // Blocks on screen, not just in the patch (a right-click's press used to begin a pan that never ended).
       const onScreen = () =>
-        d.page.evaluate(() => {
+        device.page.evaluate(() => {
           const s = (window as any).__bd_probe;
           return s.state.blocks.filter((b: any) => {
             const p = s.blockPoint(b.id);
             return p && p[0] > 0 && p[0] < innerWidth && p[1] > 90 && p[1] < innerHeight - 90;
           }).length;
         });
-      const c = await d.page.evaluate(() => (window as any).__bd_probe.corners);
+      const c = await device.page.evaluate(() => (window as any).__bd_probe.corners);
       const before = await onScreen();
-      await d.page.mouse.click(c.creditAt[0], c.creditAt[1], { button: 'right' });
-      await d.page.waitForTimeout(900);
-      await d.page.mouse.move(400, 500, { steps: 6 });
-      await d.page.waitForTimeout(300);
+      await device.page.mouse.click(c.creditAt[0], c.creditAt[1], { button: 'right' });
+      await device.page.waitForTimeout(900);
+      await device.page.mouse.move(400, 500, { steps: 6 });
+      await device.page.waitForTimeout(300);
       const after = await onScreen(),
-        opened = await d.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Open);
+        opened = await device.page.evaluate(
+          () => (window as any).__bd_probe.scene.PatchesPanel.Open,
+        );
       check(
         'CHG-0041: a right-click on the credit does nothing (no report; the stage stays put)',
         before > 0 && after === before && !opened,
         { before, after, opened },
       );
     }
-    await d.page.evaluate(() => {
-      const s = (window as any).__bd_probe.scene.SettingsPanel;
-      s._OpenTab = 1;
-      (s.MenuItems as any[]).forEach((m, k) => {
+    await device.page.evaluate(() => {
+      const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+      settingsPanel._OpenTab = 1;
+      (settingsPanel.MenuItems as any[]).forEach((m, k) => {
         m.Selected = k === 1 ? 1 : 0;
-        m.YOffset = k === 1 ? 0 : -s.DrawTo.Height;
+        m.YOffset = k === 1 ? 0 : -settingsPanel.DrawTo.Height;
       });
-      s.OpenPanel();
+      settingsPanel.OpenPanel();
     });
-    await d.page.waitForTimeout(900);
-    await d.page.getByRole('radio', { name: 'Report a patch' }).click();
-    await d.page.waitForTimeout(300);
-    if (d === bob) {
-      const intro = await d.page.evaluate(
+    await device.page.waitForTimeout(900);
+    await device.page.getByRole('radio', { name: 'Report a patch' }).click();
+    await device.page.waitForTimeout(300);
+    if (device === bob) {
+      const intro = await device.page.evaluate(
         () => document.getElementById('feedback-intro')!.textContent,
       );
-      await d.page.mouse.move(5, 5);
-      await d.page.waitForTimeout(300);
-      await d.page.screenshot({ path: `${OUT}/report-feedback.png` });
+      await device.page.mouse.move(5, 5);
+      await device.page.waitForTimeout(300);
+      await device.page.screenshot({ path: `${OUT}/report-feedback.png` });
       check(
         'CHG-0041: FEEDBACK › REPORT A PATCH names the patch on the stage and its maker, without saying how many reports hide it',
         /GLASS RAIN/i.test(intro ?? '') &&
-          /@alice_g/.test(intro ?? '') &&
+          (intro ?? '').includes('@alice_g') &&
           !/three|five|hidden/i.test(intro ?? ''),
         intro,
       );
-      await d.page.locator('#feedback-message').fill('Painfully loud');
+      await device.page.locator('#feedback-message').fill('Painfully loud');
     }
-    await d.page.click('#feedback-send');
-    await d.page
+    await device.page.click('#feedback-send');
+    await device.page
       .getByRole('status')
       .filter({ hasText: 'reported' })
       .waitFor({ timeout: 15000 })
       .catch(() => {});
-    if (d === bob) {
-      const bar = await d.page.evaluate(() => {
-        const m = (window as any).__bd_probe.scene.MessagePanel;
-        return { open: m.Open, text: m._Value?.string };
+    if (device === bob) {
+      const bar = await device.page.evaluate(() => {
+        const messagePanel = (window as any).__bd_probe.scene.MessagePanel;
+        return { open: messagePanel.Open, text: messagePanel._Value?.string };
       });
       check(
         'R9: REPORT sends it; the message bar thanks you',
@@ -601,14 +605,14 @@ try {
         bar,
       );
     }
-    await d.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel());
-    await d.page.waitForTimeout(600);
+    await device.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel());
+    await device.page.waitForTimeout(600);
   }
   const atThree = await api(anon, 'GET', 'gallery?sort=new');
   check(
     'R9 (security review, PR 13): three reports no longer hide it',
-    atThree.json.items.some((r: { id: string }) => r.id === aliceId),
-    atThree.json.items.map((r: { title: string }) => r.title),
+    atThree.json.items.some((item: { id: string }) => item.id === aliceId),
+    atThree.json.items.map((item: { title: string }) => item.title),
   );
   const fay = await device('fay_g'),
     gus = await device('gus_g');
@@ -619,9 +623,9 @@ try {
   const after = await api(anon, 'GET', 'gallery?sort=new');
   check(
     'R9: reported by five people, it is hidden',
-    lastReports.every((r) => r.status === 200) &&
-      !after.json.items.some((r: { id: string }) => r.id === aliceId),
-    after.json.items.map((r: { title: string }) => r.title),
+    lastReports.every((lastReport) => lastReport.status === 200) &&
+      !after.json.items.some((item: { id: string }) => item.id === aliceId),
+    after.json.items.map((item: { title: string }) => item.title),
   );
   const listed = bd('reports');
   check(
@@ -639,8 +643,8 @@ try {
   bd('keep', aliceId);
   check(
     'R10: keep shows it again; hide takes it out',
-    kept.json.items.some((r: { id: string }) => r.id === aliceId) &&
-      !hidden.json.items.some((r: { id: string }) => r.id === aliceId),
+    kept.json.items.some((item: { id: string }) => item.id === aliceId) &&
+      !hidden.json.items.some((item: { id: string }) => item.id === aliceId),
   );
 
   // ---- R5: saving a published patch updates it ----
@@ -796,7 +800,7 @@ try {
     'R7a: 20 a page; scrolling to the end loads the rest onto the same list, each once',
     first.items.length === 20 &&
       more.items.length === 22 &&
-      new Set(more.items.map((r: { id: string }) => r.id)).size === 22 &&
+      new Set(more.items.map((item: { id: string }) => item.id)).size === 22 &&
       scrolled > 0,
     { first: first.items.length, more: more.items.length, scrolled },
   );
@@ -848,12 +852,14 @@ try {
     seeded.added.length === 6 &&
       again2.added.length === 0 &&
       examples.sort === 'examples' &&
-      examples.items.map((r: { title: string }) => r.title).join() === want.join() &&
-      examples.items.every((r: { by: string }) => r.by === 'blokdust'),
+      examples.items.map((item: { title: string }) => item.title).join() === want.join() &&
+      examples.items.every((item: { by: string }) => item.by === 'blokdust'),
     {
       seeded,
       again: again2,
-      examples: examples.items.map((r: { title: string; by: string }) => `${r.title} @${r.by}`),
+      examples: examples.items.map(
+        (item: { title: string; by: string }) => `${item.title} @${item.by}`,
+      ),
     },
   );
   // TUTORIALS has no button while there are none (CHG-0035); the API still lists them.
@@ -879,11 +885,11 @@ try {
   const opening = () =>
     carol.page.evaluate(() => {
       const pp = (window as any).__bd_probe.scene.PatchesPanel;
-      const m = (window as any).__bd_probe.scene.MessagePanel;
+      const messagePanel = (window as any).__bd_probe.scene.MessagePanel;
       return {
         opening: pp.Opening,
         open: pp.Open,
-        error: m.Open ? String(m._Value?.string ?? '') : '',
+        error: messagePanel.Open ? String(messagePanel._Value?.string ?? '') : '',
         blocks: (window as any).__bd_probe.state.patch.blocks.length,
       };
     });
@@ -925,7 +931,7 @@ try {
     'Owner review 3: while a gallery patch is fetched the panel stays up with the spinner, then closes; a failed fetch says so',
     failed.open &&
       !failed.opening &&
-      /couldn’t be loaded\. Check your connection/.test(failed.error) &&
+      failed.error.includes('couldn’t be loaded. Check your connection') &&
       failed.blocks === blocksBefore &&
       during.opening &&
       during.open &&
@@ -991,22 +997,22 @@ try {
     'Bug: after an INSERT, OPEN in the gallery asks first (shown, answered) and OPEN ANYWAY opens it',
     askedView === 'confirm' &&
       /REPLACE CURRENT PATCH/i.test(askedText) &&
-      !/SEARCH/.test(askedText) &&
+      !askedText.includes('SEARCH') &&
       !afterAsk.open &&
       afterAsk.blocks === 6,
     { askedView, askedText: askedText.slice(0, 200), afterAsk },
   );
   // ---- SPEC-PATCH-FORMAT-V2 R11 (owner review 3): a saved patch lists the saved patches inserted into it, and
   // inserting that one carries them along, so how patches were combined can be followed back ----
-  const place = async (d: Device, x: number) => {
-    await d.page.waitForFunction(
+  const place = async (device: Device, x: number) => {
+    await device.page.waitForFunction(
       () => !(window as any).__bd_probe.scene.PatchesPanel.Opening,
       null,
       { timeout: 15000 },
     );
-    await d.page.mouse.move(x, 650, { steps: 4 });
-    await d.page.mouse.click(x, 650);
-    await d.page.waitForTimeout(800);
+    await device.page.mouse.move(x, 650, { steps: 4 });
+    await device.page.mouse.click(x, 650);
+    await device.page.waitForTimeout(800);
   };
   await tab(carol, GALLERY);
   await idle(carol);
@@ -1082,7 +1088,7 @@ try {
   const merged = bd('official', 'zed_g');
   const zedMe = (await api(zed, 'GET', 'me')).json;
   const zedNow = (await api(anon, 'GET', 'gallery?sort=examples')).json.items.map(
-    (r: { id: string; by: string }) => `${r.id} @${r.by}`,
+    (item: { id: string; by: string }) => `${item.id} @${item.by}`,
   );
   check(
     "R16: nobody can choose the name; bd gallery official hands an account's sign-ins and patches to @blokdust",
@@ -1097,15 +1103,15 @@ try {
   // ---- R9 (security review, PR 13): reports never hide @blokdust's EXAMPLES and TUTORIALS; they are still recorded ----
   const example = ex[0].id;
   const exReports = await Promise.all(
-    [alice, bob, carol, dave, fay, gus].map((d) =>
-      api(d, 'POST', `gallery/${example}/report`, { reason: '' }),
+    [alice, bob, carol, dave, fay, gus].map((device) =>
+      api(device, 'POST', `gallery/${example}/report`, { reason: '' }),
     ),
   );
   const exStill = (await api(anon, 'GET', 'gallery?sort=examples')).json.items as { id: string }[];
   const exListed = bd('reports');
   check(
     'R9: six reports leave an @blokdust example listed; bd gallery reports still shows them',
-    exReports.every((r) => r.status === 200) &&
+    exReports.every((exReport) => exReport.status === 200) &&
       exStill.some((r) => r.id === example) &&
       exListed.reported.some(
         (r: { id: string; reports: number; hidden: number }) =>
@@ -1143,7 +1149,7 @@ try {
     likedByBob.json?.likes === 2 &&
       exAfter.get(likedEx) === 1 &&
       exBefore.get(otherEx) === 1 &&
-      [...exBefore].every(([id, n]) => id === likedEx || exAfter.get(id) === n),
+      [...exBefore].every(([id, value]) => id === likedEx || exAfter.get(id) === value),
     { before: [...exBefore], after: [...exAfter] },
   );
   await tab(alice, 0);
@@ -1250,21 +1256,19 @@ try {
             emitEvent: (id: string, v: unknown) => {
               sent.push({ id, v });
               if (id === 'bd_hello')
-                setTimeout(
-                  () =>
-                    listeners.bd_patch?.forEach((f) =>
-                      f({
-                        patch: JSON.stringify({
-                          format: 'blokdust.patch',
-                          version: 2,
-                          seed: 1,
-                          blocks: [],
-                        }),
-                        ids: {},
+                setTimeout(() => {
+                  listeners.bd_patch?.forEach((f) => {
+                    f({
+                      patch: JSON.stringify({
+                        format: 'blokdust.patch',
+                        version: 2,
+                        seed: 1,
+                        blocks: [],
                       }),
-                    ),
-                  50,
-                );
+                      ids: {},
+                    });
+                  });
+                }, 50);
             },
           },
         };
@@ -1272,7 +1276,9 @@ try {
       [`${base}/`] as const,
     );
     const plug: Device = { ctx: pctx, page: await pctx.newPage() };
-    plug.page.on('pageerror', (e) => console.error(`  page error: ${e.message}`));
+    plug.page.on('pageerror', (e) => {
+      console.error(`  page error: ${e.message}`);
+    });
     await plug.page.goto(`${base}/index.html`);
     await plug.page.waitForFunction(() => (window as any).__bd_probe?.state.started, null, {
       timeout: 20000,
@@ -1282,7 +1288,7 @@ try {
     await idle(plug);
     await press(plug, 'sort_examples', 300);
     await idle(plug);
-    const listed = (await P(plug)).items.map((r: { title: string }) => r.title);
+    const listed = (await P(plug)).items.map((item: { title: string }) => item.title);
     await press(plug, 'gopen0', 600);
     if (
       (await plug.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View)) ===
@@ -1329,17 +1335,17 @@ try {
       method: 'OPTIONS',
       headers: { origin: 'https://evil.example', 'access-control-request-method': 'DELETE' },
     });
-    const h = (r: Response) => ({
-      status: r.status,
-      acao: r.headers.get('access-control-allow-origin'),
-      creds: r.headers.get('access-control-allow-credentials'),
-      headers: r.headers.get('access-control-allow-headers'),
+    const h = (response: Response) => ({
+      status: response.status,
+      acao: response.headers.get('access-control-allow-origin'),
+      creds: response.headers.get('access-control-allow-credentials'),
+      headers: response.headers.get('access-control-allow-headers'),
     });
     check(
       "CHG-0039: the API allows the plugins' origins (juce://, https://juce.backend), with a key header, never credentials; no other origin",
       pre.status === 204 &&
         h(pre).acao === 'juce://juce.backend' &&
-        /authorization/.test(h(pre).headers ?? '') &&
+        (h(pre).headers ?? '').includes('authorization') &&
         !h(pre).creds &&
         h(get).acao === 'juce://juce.backend' &&
         !h(get).creds &&
@@ -1349,20 +1355,20 @@ try {
       { pre: h(pre), get: h(get), win: h(win), evil: h(evil), evilPre: h(evilPre) },
     );
   }
-} catch (e) {
-  check('gallery run', false, String((e as Error).stack ?? e).slice(0, 800));
+} catch (error) {
+  check('gallery run', false, String((error as Error).stack ?? error).slice(0, 800));
 } finally {
   await browser.close();
   await server.stop();
   mocks.close();
 }
 writeFileSync(`${OUT}/summary.json`, JSON.stringify(results, null, 2));
-const ok = results.length > 0 && results.every((r) => r.ok);
+const ok = results.length > 0 && results.every((result) => result.ok);
 console.log(
   JSON.stringify({
     ok,
-    passed: results.filter((r) => r.ok).length,
-    failed: results.filter((r) => !r.ok).map((r) => r.name),
+    passed: results.filter((result) => result.ok).length,
+    failed: results.filter((result) => !result.ok).map((r) => r.name),
   }),
 );
 process.exit(ok ? 0 : 1);

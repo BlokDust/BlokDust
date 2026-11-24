@@ -50,11 +50,11 @@ function findSource(type: string): { path: string; text: string } | null {
 function uiValueExprs(text: string): Record<string, string> {
   const out: Record<string, string> = {};
   const settings = [...text.matchAll(/"setting"\s*:\s*"(\w*)"/g)];
-  settings.forEach((m, i) => {
-    const key = m[1];
+  settings.forEach((match, i) => {
+    const key = match[1];
     if (!key || key in out) return;
-    const end = i + 1 < settings.length ? settings[i + 1].index! : text.length;
-    const v = /"value"\s*:\s*([^,\n]+)/.exec(text.slice(m.index!, end));
+    const end = i + 1 < settings.length ? settings[i + 1].index : text.length;
+    const v = /"value"\s*:\s*([^,\n]+)/.exec(text.slice(match.index, end));
     if (v) out[key] = v[1].trim();
   });
   return out;
@@ -72,14 +72,14 @@ export async function extract(args: string[]) {
   const server = await serve(port);
   const browser = await chromium.launch();
   let runtime: any;
-  let palettes: any[] = [];
+  const palettes: any[] = [];
   try {
     const s = await bootV1(browser, port, { width: 1280, height: 800 }, 1);
     runtime = await s.page.evaluate((groups: Record<string, string[]>) => {
       const App = (window as any).App;
       const W = window as any;
       const Point = W.etch.primitives.Point;
-      const S = App.BlockSprites;
+      const blockSprites = App.BlockSprites;
       const safe = (v: any, depth = 0): any => {
         if (
           v === null ||
@@ -109,10 +109,10 @@ export async function extract(args: string[]) {
         let color: number | null = null;
         const saved = {
           fill: App.FillColor,
-          m: S.DrawMoveTo,
-          l: S.DrawLineTo,
-          fm: S.DrawFloatMoveTo,
-          fl: S.DrawFloatLineTo,
+          m: blockSprites.DrawMoveTo,
+          l: blockSprites.DrawLineTo,
+          fm: blockSprites.DrawFloatMoveTo,
+          fl: blockSprites.DrawFloatLineTo,
         };
         App.FillColor = (_ctx: any, col: any) => {
           color = App.Palette.indexOf(col);
@@ -122,10 +122,10 @@ export async function extract(args: string[]) {
           cur.space = space;
           cur.points.push([x, y]);
         };
-        S.DrawMoveTo = pt('grid');
-        S.DrawLineTo = pt('grid');
-        S.DrawFloatMoveTo = pt('unit');
-        S.DrawFloatLineTo = pt('unit');
+        blockSprites.DrawMoveTo = pt('grid');
+        blockSprites.DrawLineTo = pt('grid');
+        blockSprites.DrawFloatMoveTo = pt('unit');
+        blockSprites.DrawFloatLineTo = pt('unit');
         const ctx: any = {
           beginPath() {
             cur = null;
@@ -140,19 +140,19 @@ export async function extract(args: string[]) {
           },
         };
         try {
-          S.DrawSprite({ Ctx: ctx }, new Point(0, 0), scaled, name.toLowerCase(), pos2);
+          blockSprites.DrawSprite({ Ctx: ctx }, new Point(0, 0), scaled, name.toLowerCase(), pos2);
         } finally {
           App.FillColor = saved.fill;
-          S.DrawMoveTo = saved.m;
-          S.DrawLineTo = saved.l;
-          S.DrawFloatMoveTo = saved.fm;
-          S.DrawFloatLineTo = saved.fl;
+          blockSprites.DrawMoveTo = saved.m;
+          blockSprites.DrawLineTo = saved.l;
+          blockSprites.DrawFloatMoveTo = saved.fm;
+          blockSprites.DrawFloatLineTo = saved.fl;
         }
-        return { polys, xOffset: S._XOffset, yOffset: S._YOffset };
+        return { polys, xOffset: blockSprites._XOffset, yOffset: blockSprites._YOffset };
       };
       const findL10n = (blockName: string) => {
-        for (const [cat, v] of Object.entries<any>(App.L10n.Blocks))
-          for (const [key, b] of Object.entries<any>(v.Blocks ?? {}))
+        for (const [cat, value] of Object.entries<any>(App.L10n.Blocks))
+          for (const [key, b] of Object.entries<any>(value.Blocks ?? {}))
             if (b.name === blockName)
               return { category: cat, key, name: b.name, description: b.description };
         return null;
@@ -233,13 +233,13 @@ export async function extract(args: string[]) {
             b.LastPosition = new Point(0, 0);
             b.Init(App.MainScene);
             b.UpdateOptionsForm?.();
-          } catch (e: any) {
-            errors.push(`init: ${e.message}`);
+          } catch (error: any) {
+            errors.push(`init: ${error.message}`);
           }
           const chain: string[] = [];
           for (
             let p = b && Object.getPrototypeOf(b);
-            p && p.constructor && p.constructor !== Object;
+            p?.constructor && p.constructor !== Object;
             p = Object.getPrototypeOf(p)
           )
             chain.push(p.constructor.name);
@@ -249,13 +249,13 @@ export async function extract(args: string[]) {
           const SENTINEL = { x: 1000, y: 2000 }; // Void draws a star pixel at a random per-block position (pos2)
           try {
             sprite = recordSprite(name, true, new Point(SENTINEL.x, SENTINEL.y));
-          } catch (e: any) {
-            errors.push(`sprite: ${e.message}`);
+          } catch (error: any) {
+            errors.push(`sprite: ${error.message}`);
           }
           try {
             menuSprite = recordSprite(name, false, new Point(SENTINEL.x, SENTINEL.y));
-          } catch (e: any) {
-            errors.push(`menuSprite: ${e.message}`);
+          } catch (error: any) {
+            errors.push(`menuSprite: ${error.message}`);
           }
           out.blocks.push({
             category,
@@ -297,14 +297,19 @@ export async function extract(args: string[]) {
       palettes.push(
         await s.page.evaluate((n) => {
           const App = (window as any).App;
-          const T = App.ThemeManager;
-          const th = T.Themes[n];
+          const themeManager = App.ThemeManager;
+          const th = themeManager.Themes[n];
           return {
             index: n,
             name: th.Name ?? th.name ?? null,
             url: th.PaletteURL ?? null,
             colors: App.Palette.map((c: any) => App.ColorManager.ColorString(c)),
-            roles: { txt: T.Txt, menu: T.MenuOrder, options: T.OptionsOrder, power: T.Power },
+            roles: {
+              txt: themeManager.Txt,
+              menu: themeManager.MenuOrder,
+              options: themeManager.OptionsOrder,
+              power: themeManager.Power,
+            },
           };
         }, t),
       );
@@ -343,7 +348,8 @@ export async function extract(args: string[]) {
       return layer;
     });
     if (!layers.length) notes.push('no sprite polygons recorded');
-    if (layers.some((l: any) => l.palette < 0)) notes.push('fill colour not found in App.Palette');
+    if (layers.some((layer: any) => layer.palette < 0))
+      notes.push('fill colour not found in App.Palette');
     const keys = [...new Set([...Object.keys(b.defaults ?? {}), ...Object.keys(exprs)])];
     const sliders: Record<string, any> = {};
     const walkForm = (o: any) => {
@@ -403,10 +409,10 @@ export async function extract(args: string[]) {
           : [0, 0],
         ...(b.overlays.length
           ? {
-              overlays: b.overlays.map((o: any) => ({
-                ...o,
+              overlays: b.overlays.map((overlay: any) => ({
+                ...overlay,
                 states: Object.fromEntries(
-                  Object.entries(o.states).map(([k, ls]: [string, any]) => [
+                  Object.entries(overlay.states).map(([k, ls]: [string, any]) => [
                     k,
                     ls.map((l: any) => ({
                       palette: l.palette,
@@ -444,8 +450,8 @@ export async function extract(args: string[]) {
       skipped,
       palettes: palettes.length,
       withIssues: Object.entries(review)
-        .filter(([, n]) => n.length > 1)
-        .map(([id, n]) => `${id}(${n.length - 1})`),
+        .filter(([, value]) => value.length > 1)
+        .map(([id, value]) => `${id}(${value.length - 1})`),
     }),
   );
 }

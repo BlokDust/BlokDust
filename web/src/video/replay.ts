@@ -28,31 +28,34 @@ export interface ReplaySource {
 }
 
 /** What the stage draws of the outer world, kept from the commands (a command for a Stage block's inside has `stage`). */
-export function applyToBlocks(blocks: Map<number, StageBlock>, c: Command): StageBlock | undefined {
-  if (c.stage) return undefined;
-  if (c.type === CommandType.AddBlock) {
-    const type = BLOCKS[c.blockType ?? -1]?.id;
+export function applyToBlocks(
+  blocks: Map<number, StageBlock>,
+  command: Command,
+): StageBlock | undefined {
+  if (command.stage) return undefined;
+  if (command.type === CommandType.AddBlock) {
+    const type = BLOCKS[command.blockType ?? -1]?.id;
     if (!type) return undefined;
     const b: StageBlock = {
-      id: c.id,
+      id: command.id,
       type,
-      x: c.x ?? 0,
-      y: c.y ?? 0,
-      ...(type === 'power.void' ? { starPos: starPos(c.id) } : {}),
+      x: command.x ?? 0,
+      y: command.y ?? 0,
+      ...(type === 'power.void' ? { starPos: starPos(command.id) } : {}),
     };
-    blocks.delete(c.id); // a re-added id goes on top, as the stage's map order does
-    blocks.set(c.id, b);
+    blocks.delete(command.id); // a re-added id goes on top, as the stage's map order does
+    blocks.set(command.id, b);
     return b;
   }
-  if (c.type === CommandType.MoveBlock) {
-    const b = blocks.get(c.id);
+  if (command.type === CommandType.MoveBlock) {
+    const b = blocks.get(command.id);
     if (b) {
-      b.x = c.x ?? b.x;
-      b.y = c.y ?? b.y;
+      b.x = command.x ?? b.x;
+      b.y = command.y ?? b.y;
     }
     return b;
   }
-  if (c.type === CommandType.RemoveBlock) blocks.delete(c.id);
+  if (command.type === CommandType.RemoveBlock) blocks.delete(command.id);
   return undefined;
 }
 
@@ -62,37 +65,37 @@ export interface Bounds {
   x1: number;
   y1: number;
 }
-const extend = (r: Bounds, b: StageBlock) => {
+const extend = (bounds: Bounds, b: StageBlock) => {
   const o = BLOCKS_BY_ID.get(b.type)?.geometry.outline ?? [
     [-1, -1],
     [1, 1],
   ];
   for (const [x, y] of o) {
-    r.x0 = Math.min(r.x0, b.x + x);
-    r.y0 = Math.min(r.y0, b.y + y);
-    r.x1 = Math.max(r.x1, b.x + x);
-    r.y1 = Math.max(r.y1, b.y + y);
+    bounds.x0 = Math.min(bounds.x0, b.x + x);
+    bounds.y0 = Math.min(bounds.y0, b.y + y);
+    bounds.x1 = Math.max(bounds.x1, b.x + x);
+    bounds.y1 = Math.max(bounds.y1, b.y + y);
   }
 };
 /** Grid-unit box around every outer block on the stage at any time in [from, to] (R7). Null: no blocks. */
 export function blockBounds(entries: LogEntry[], from: number, to: number): Bounds | null {
   const blocks = new Map<number, StageBlock>(),
-    r: Bounds = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+    bounds: Bounds = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
   let started = false;
-  for (const e of entries) {
-    if (e.frame > to) break;
-    if (!started && e.frame > from) {
+  for (const logEntry of entries) {
+    if (logEntry.frame > to) break;
+    if (!started && logEntry.frame > from) {
       started = true;
-      for (const b of blocks.values()) extend(r, b);
+      for (const b of blocks.values()) extend(bounds, b);
     }
-    if (!('commands' in e)) continue;
-    for (const c of e.commands) {
-      const b = applyToBlocks(blocks, c);
-      if (started && b) extend(r, b);
+    if (!('commands' in logEntry)) continue;
+    for (const command of logEntry.commands) {
+      const b = applyToBlocks(blocks, command);
+      if (started && b) extend(bounds, b);
     }
   }
-  if (!started) for (const b of blocks.values()) extend(r, b);
-  return Number.isFinite(r.x0) ? r : null;
+  if (!started) for (const b of blocks.values()) extend(bounds, b);
+  return Number.isFinite(bounds.x0) ? bounds : null;
 }
 
 export interface WorldSnapshot {
@@ -121,15 +124,22 @@ export class Replay {
   private feed(): void {
     const es = this.src.entries;
     while (this.next < es.length && es[this.next].frame <= this.frame) {
-      const e = es[this.next++];
-      if ('commands' in e)
-        for (const c of e.commands) {
-          this.engine.push(c);
-          applyToBlocks(this.blocks, c);
+      const logEntry = es[this.next++];
+      if ('commands' in logEntry)
+        for (const command of logEntry.commands) {
+          this.engine.push(command);
+          applyToBlocks(this.blocks, command);
         }
       else {
-        const s = this.src.sample(e.sample);
-        if (s) this.engine.attachSample(s.id, s.left, s.right, s.sampleRate, s.stage);
+        const replaySample = this.src.sample(logEntry.sample);
+        if (replaySample)
+          this.engine.attachSample(
+            replaySample.id,
+            replaySample.left,
+            replaySample.right,
+            replaySample.sampleRate,
+            replaySample.stage,
+          );
       }
     }
   }

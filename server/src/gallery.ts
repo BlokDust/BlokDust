@@ -30,28 +30,24 @@ interface PatchJson {
   macros?: { blocks?: { type?: unknown; params?: Record<string, unknown> }[] }[];
 }
 /** Every block in the patch, Stage insides included. */
-export const allBlocks = (p: PatchJson) => [
-  ...(p.blocks ?? []),
-  ...(p.macros ?? []).flatMap((m) => m.blocks ?? []),
+export const allBlocks = (patchJson: PatchJson) => [
+  ...(patchJson.blocks ?? []),
+  ...(patchJson.macros ?? []).flatMap((m) => m.blocks ?? []),
 ];
 /** R3: why a patch can't be in the gallery (others can't hear the user's own audio files: DATA-0005), or null. */
-export function notPublishable(p: PatchJson): string | null {
-  const bs = allBlocks(p);
+export function notPublishable(patchJson: PatchJson): string | null {
+  const bs = allBlocks(patchJson);
   if (!bs.length) return 'Add some blocks first.';
-  if (
-    bs.some(
-      (b) => typeof b.params?.track === 'string' && (b.params.track as string).startsWith('file:'),
-    )
-  )
+  if (bs.some((b) => typeof b.params?.track === 'string' && b.params.track.startsWith('file:')))
     return 'This patch uses audio files from your device, which others can’t hear. Use Freesound sounds to publish it.';
   if (bs.some((b) => b.type === 'source.recorder'))
     return 'Recordings stay on your device, so a patch with a Recorder can’t be published.';
   return null;
 }
-const blockTypes = (p: PatchJson) =>
+const blockTypes = (patchJson: PatchJson) =>
   [
     ...new Set(
-      allBlocks(p)
+      allBlocks(patchJson)
         .map((b) => String(b.type ?? ''))
         .filter(Boolean),
     ),
@@ -147,9 +143,14 @@ export async function unpublish(
 export async function list(env: Env, req: Request, url: URL): Promise<Response> {
   const me = await currentUser(env, req, { app: true }),
     now = Date.now();
-  const s = url.searchParams.get('sort'),
+  const searchParam = url.searchParams.get('sort'),
     sort: Sort =
-      s === 'top' || s === 'new' || s === 'examples' || s === 'tutorials' ? s : 'popular';
+      searchParam === 'top' ||
+      searchParam === 'new' ||
+      searchParam === 'examples' ||
+      searchParam === 'tutorials'
+        ? searchParam
+        : 'popular';
   const kind = sort === 'examples' ? 'example' : sort === 'tutorials' ? 'tutorial' : null;
   const page = Math.max(1, Math.min(500, Number(url.searchParams.get('page')) || 1));
   const q = (url.searchParams.get('q') ?? '').trim().toLowerCase().slice(0, 40);
@@ -223,7 +224,7 @@ export async function list(env: Env, req: Request, url: URL): Promise<Response> 
 
 /** POST /api/gallery/:id/like {on} — signed in; one like per person (R8; no down votes). */
 export async function like(env: Env, req: Request, id: string): Promise<Response> {
-  const u = await requireUser(env, req, { app: true }); // a plugin's key too (SHARING-0011)
+  const user = await requireUser(env, req, { app: true }); // a plugin's key too (SHARING-0011)
   const { on } = await body<{ on?: unknown }>(req);
   if (
     !(await env.DB.prepare('SELECT 1 FROM gallery WHERE patch_id = ? AND hidden = 0')
@@ -233,10 +234,10 @@ export async function like(env: Env, req: Request, id: string): Promise<Response
     throw new HttpError(404, 'not in the gallery');
   const stmt =
     on === false
-      ? env.DB.prepare('DELETE FROM likes WHERE patch_id = ? AND user_id = ?').bind(id, u.id)
+      ? env.DB.prepare('DELETE FROM likes WHERE patch_id = ? AND user_id = ?').bind(id, user.id)
       : env.DB.prepare(
           'INSERT OR IGNORE INTO likes (patch_id, user_id, created) VALUES (?, ?, ?)',
-        ).bind(id, u.id, Date.now());
+        ).bind(id, user.id, Date.now());
   await env.DB.batch([
     stmt,
     env.DB.prepare(
@@ -252,14 +253,14 @@ export async function like(env: Env, req: Request, id: string): Promise<Response
 /** POST /api/gallery/:id/report {reason} — signed in; once per person; hidden at REPORTS_TO_HIDE (R9), except
  * @blokdust's own patches (the EXAMPLES and TUTORIALS), whose reports are kept for `bd gallery reports` only. */
 export async function report(env: Env, req: Request, id: string): Promise<Response> {
-  const u = await requireUser(env, req, { app: true });
+  const user = await requireUser(env, req, { app: true });
   const { reason } = await body<{ reason?: unknown }>(req);
   if (!(await env.DB.prepare('SELECT 1 FROM gallery WHERE patch_id = ?').bind(id).first()))
     throw new HttpError(404, 'not in the gallery');
   await env.DB.batch([
     env.DB.prepare(
       'INSERT OR IGNORE INTO reports (patch_id, user_id, reason, created) VALUES (?, ?, ?, ?)',
-    ).bind(id, u.id, typeof reason === 'string' ? reason.slice(0, 200) : '', Date.now()),
+    ).bind(id, user.id, typeof reason === 'string' ? reason.slice(0, 200) : '', Date.now()),
     env.DB.prepare(
       `UPDATE gallery SET reports = (SELECT COUNT(*) FROM reports WHERE patch_id = ?),
       hidden = CASE WHEN hidden = 2 THEN 2

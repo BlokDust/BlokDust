@@ -54,14 +54,14 @@ export function appleStart(env: Env, req: Request, url: URL): Response {
     back = safeReturn(url.searchParams.get('return'));
   if (!appleConfigured(env)) throw new HttpError(503, 'Apple sign-in is not configured');
   const to = new URL(env.APPLE_AUTH_URL || AUTH_URL);
-  for (const [k, v] of Object.entries({
+  for (const [k, value] of Object.entries({
     response_type: 'code',
     response_mode: 'query',
     client_id: env.APPLE_CLIENT_ID!,
     redirect_uri: redirectUri(env, req),
     state,
   }))
-    to.searchParams.set(k, v);
+    to.searchParams.set(k, value);
   const headers = new Headers({ location: to.toString(), 'cache-control': 'no-store' });
   headers.append(
     'set-cookie',
@@ -86,14 +86,14 @@ export async function appleCallback(env: Env, req: Request, url: URL): Promise<R
       client_id: env.APPLE_CLIENT_ID!,
       client_secret: await clientSecret(env),
     });
-    const r = await fetch(env.APPLE_TOKEN_URL || TOKEN_URL, {
+    const response = await fetch(env.APPLE_TOKEN_URL || TOKEN_URL, {
       method: 'POST',
       body,
       headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
     });
-    const j = (await r.json()) as { id_token?: string };
-    if (!r.ok || !j.id_token) throw new Error('no id token');
-    claims = decodeIdToken(j.id_token) as typeof claims;
+    const j = (await response.json()) as { id_token?: string };
+    if (!response.ok || !j.id_token) throw new Error('no id token');
+    claims = decodeIdToken(j.id_token);
   } catch {
     throw new HttpError(401, 'Apple did not confirm the sign-in');
   }

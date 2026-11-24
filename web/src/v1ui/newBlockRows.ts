@@ -21,13 +21,13 @@ type RowDraw = (
  * any slider (its value is the threshold, CONVERT). */
 const drawCompressorMeter: RowDraw = function (ctx, units, i, panel) {
   const x = panel.Margin,
-    w = panel.Range,
+    range = panel.Range,
     y = this.Position.y,
     h = this.Size.height,
     mid = y + h * 0.5;
   const block = panel.SelectedBlock,
     m = monitorOf(block?.Id) ?? [-100, 0];
-  const at = (db: number) => Math.max(0, Math.min(1, (db + 60) / 60)) * w;
+  const at = (db: number) => Math.max(0, Math.min(1, (db + 60) / 60)) * range;
   const colours = panel.SliderColours,
     dataType = Math.round(units * 10);
   // DIVIDER (v1 OptionSlider) //
@@ -36,25 +36,25 @@ const drawCompressorMeter: RowDraw = function (ctx, units, i, panel) {
   if (i !== panel.Options.length - 1) {
     ctx.beginPath();
     ctx.moveTo(panel.Margin - units, y + h);
-    ctx.lineTo(w + panel.Margin + units, y + h);
+    ctx.lineTo(range + panel.Margin + units, y + h);
     ctx.stroke();
   }
-  panel.diagonalFill(x - units, y + units, w + 2 * units, h - 2 * units, 9);
+  panel.diagonalFill(x - units, y + units, range + 2 * units, h - 2 * units, 9);
   // LEVEL //
   App.FillColor(ctx, colours[i % colours.length]);
   ctx.fillRect(x - units, y + h * 0.19, units + at(m[0]), h * 0.4);
   if (block?.def?.id === 'fx.compressor') {
     // GAIN REDUCTION (24 dB across the row) //
-    const gr = Math.max(0, Math.min(1, -m[1] / 24)) * w;
+    const gr = Math.max(0, Math.min(1, -m[1] / 24)) * range;
     App.FillColor(ctx, colours[(i + 1) % colours.length]);
-    ctx.fillRect(x + w - gr, y + h * 0.65, gr, h * 0.16);
+    ctx.fillRect(x + range - gr, y + h * 0.65, gr, h * 0.16);
   } else if (m[1] > 0) {
     // SOUND LASER: its beam is on (the Laser's colour, a bar under the level) //
     App.FillColor(ctx, colours[(i + 1) % colours.length]);
-    ctx.fillRect(x - units, y + h * 0.65, w + units, h * 0.16);
+    ctx.fillRect(x - units, y + h * 0.65, range + units, h * 0.16);
   }
   // THRESHOLD: v1 OptionSlider's line and grab triangles, in the text colour //
-  const tx = x + Math.max(0, Math.min(w, this.Position.x)),
+  const tx = x + Math.max(0, Math.min(range, this.Position.x)),
     d = h * 0.2;
   App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
   ctx.fillRect(tx - units, y, 2 * units, h);
@@ -84,14 +84,14 @@ const drawCompressorMeter: RowDraw = function (ctx, units, i, panel) {
   ctx.font = App.Metrics.TxtMid;
   ctx.textAlign = 'right';
   ctx.fillText(this.Name.toUpperCase(), panel.Margin - 15 * units, mid + dataType * 0.4);
-  this.Shown = { level: m[0], reduction: m[1], on: m[1] > 0, thresholdX: tx - x, width: w }; // tests
+  this.Shown = { level: m[0], reduction: m[1], on: m[1] > 0, thresholdX: tx - x, width: range }; // tests
 };
 
 /** The Counter's pattern: a diamond per step (v1's slider grab shape), filled where it fires; the step the next
  * hit lands on is underlined (v1's selection bar). */
 const drawCounterPattern: RowDraw = function (ctx, units, i, panel) {
   const x = panel.Margin,
-    w = panel.Range,
+    range = panel.Range,
     y = this.Position.y,
     h = this.Size.height,
     mid = y + h * 0.5;
@@ -99,11 +99,11 @@ const drawCounterPattern: RowDraw = function (ctx, units, i, panel) {
     p = block?.Params ?? {},
     m = monitorOf(block?.Id) ?? [0, 0];
   const pattern = counterSteps(p),
-    n = pattern.length;
-  const cell = w / 16,
+    lengthValue = pattern.length;
+  const cell = range / 16,
     r = Math.min(cell * 0.36, h * 0.3),
-    x0 = x + (w - cell * n) * 0.5,
-    next = Math.round(m[0]) % n;
+    x0 = x + (range - cell * lengthValue) * 0.5,
+    next = Math.round(m[0]) % lengthValue;
   const colours = panel.SliderColours,
     dataType = Math.round(units * 10);
   ctx.globalAlpha = 1;
@@ -111,7 +111,7 @@ const drawCounterPattern: RowDraw = function (ctx, units, i, panel) {
   if (i !== panel.Options.length - 1) {
     ctx.beginPath();
     ctx.moveTo(panel.Margin - units, y + h);
-    ctx.lineTo(w + panel.Margin + units, y + h);
+    ctx.lineTo(range + panel.Margin + units, y + h);
     ctx.stroke();
   }
   ctx.lineWidth = units;
@@ -174,27 +174,27 @@ function counterPress(panel: any, mx: number, my: number): boolean {
 // ---- the Wavetable's picture (CHG-0031, SPEC-AUDIO-WAVETABLE R7) ----
 let tableModule: WebAssembly.Module | null = null;
 /** The engine module the pictures are drawn with (the app hands it over once loaded). */
-export function setTableModule(m: WebAssembly.Module): void {
-  tableModule = m;
+export function setTableModule(module: WebAssembly.Module): void {
+  tableModule = module;
 }
 const pictures = new Map<string, Float32Array>();
 function pictureOf(table: number, position: number): Float32Array | null {
   if (!tableModule) return null;
   const key = `${table}:${Math.round(position * 512)}`;
-  let p = pictures.get(key);
-  if (!p) {
+  let samples = pictures.get(key);
+  if (!samples) {
     if (pictures.size > 256) pictures.clear();
-    p = tablePicture(tableModule, table, Math.round(position * 512) / 512, 200);
-    pictures.set(key, p);
+    samples = tablePicture(tableModule, table, Math.round(position * 512) / 512, 200);
+    pictures.set(key, samples);
   }
-  return p;
+  return samples;
 }
 /** v1 OptionWave's look (the Sample's waveform: divider, fill in palette 1, name on the left), but the wave itself,
  * filled between it and the middle line: one cycle of the frame the block plays (two note cycles of a bell or gong).
  * It reads the Position slider as shown, so it moves with an LFO or Dust automation. */
 const drawWavePicture: RowDraw = function (ctx, units, i, panel) {
   const x = panel.Margin,
-    w = panel.Range,
+    range = panel.Range,
     y = this.Position.y,
     h = this.Size.height,
     mid = y + h * 0.5;
@@ -211,7 +211,7 @@ const drawWavePicture: RowDraw = function (ctx, units, i, panel) {
   if (i !== panel.Options.length - 1) {
     ctx.beginPath();
     ctx.moveTo(x - units, y + h);
-    ctx.lineTo(w + x + units, y + h);
+    ctx.lineTo(range + x + units, y + h);
     ctx.stroke();
   }
   const pic = pictureOf(table, position);
@@ -219,11 +219,13 @@ const drawWavePicture: RowDraw = function (ctx, units, i, panel) {
   if (pic) {
     ctx.beginPath();
     ctx.moveTo(x, mid);
-    pic.forEach((v, j) => ctx.lineTo(x + (w / (pic.length - 1)) * j, mid - v * h * 0.45));
-    ctx.lineTo(x + w, mid);
+    pic.forEach((v, j) => {
+      ctx.lineTo(x + (range / (pic.length - 1)) * j, mid - v * h * 0.45);
+    });
+    ctx.lineTo(x + range, mid);
     ctx.closePath();
     ctx.fill();
-  } else App.AnimationsLayer.DrawSprite(ctx, 'loading', x + w * 0.5, mid, 11, true); // v1's loading square
+  } else App.AnimationsLayer.DrawSprite(ctx, 'loading', x + range * 0.5, mid, 11, true); // v1's loading square
   App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
   ctx.font = App.Metrics.TxtMid;
   ctx.textAlign = 'right';

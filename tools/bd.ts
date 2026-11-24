@@ -23,5 +23,5 @@ if (!existsSync(entry)) {
   console.error(`unknown tool '${name}'. Run: pnpm bd list`);
   process.exit(2);
 }
-const r = spawnSync(process.execPath, [entry, ...args], { stdio: 'inherit' });
-process.exit(r.status ?? 1);
+const result = spawnSync(process.execPath, [entry, ...args], { stdio: 'inherit' });
+process.exit(result.status ?? 1);

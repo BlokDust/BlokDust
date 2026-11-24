@@ -79,7 +79,7 @@ export interface AccountHost {
   apple(): void;
   addPasskey(): Promise<void>;
   /** R7c: remove a way in (never the last). */
-  removeMethod(m: import('../account/client.ts').SignInMethod): Promise<void>;
+  removeMethod(signInMethod: import('../account/client.ts').SignInMethod): Promise<void>;
   setHandle(handle: string): Promise<void>;
   signOut(everywhere: boolean): Promise<void>;
   deleteAccount(): Promise<void>;
@@ -210,7 +210,7 @@ export interface PatchesHost {
   video: null | {
     make(
       choice: VideoChoice,
-      progress: (p: VideoProgressInfo) => void,
+      progress: (videoProgressInfo: VideoProgressInfo) => void,
       signal: AbortSignal,
     ): Promise<File>;
     /** In a click: the system share sheet (where a browser can't share files, the file is downloaded). */
@@ -351,8 +351,8 @@ export class PatchesPanel extends DisplayObject {
   GalleryItems: GalleryRow[] = [];
   GallerySort: GallerySort = (() => {
     try {
-      const v = localStorage.getItem(SORT_KEY) as GallerySort;
-      return GALLERY_SORTS.includes(v) ? v : 'popular';
+      const item = localStorage.getItem(SORT_KEY) as GallerySort;
+      return GALLERY_SORTS.includes(item) ? item : 'popular';
     } catch {
       return 'popular';
     }
@@ -423,15 +423,15 @@ export class PatchesPanel extends DisplayObject {
     this.Input.addEventListener('input', () => {
       this.Title = this.Input.value;
     });
-    this.Input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') this.Input.blur();
+    this.Input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') this.Input.blur();
     });
     this.UrlInput.addEventListener('click', () => void this.copyLink());
     this.player = document.getElementById('patchVideo') as HTMLVideoElement | null;
     this.SearchContainer = document.getElementById('gallerySearch')!;
     this.SearchInput = document.getElementById('gallerySearchInput') as HTMLInputElement;
-    this.SearchInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+    this.SearchInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
         this.SearchInput.blur();
         this.GalleryQuery = this.SearchInput.value.trim();
         void this.browse();
@@ -553,14 +553,14 @@ export class PatchesPanel extends DisplayObject {
   }
   /** v1 SettingsPanel.Populate: the tab bar's width, and each tab's centre and width. */
   private tabs() {
-    const u = App.Unit,
-      W = App.Width,
-      menuWidth = this.mobile ? (W / 7) * 5 : (W / 7) * 4,
+    const unit = App.Unit,
+      width = App.Width,
+      menuWidth = this.mobile ? (width / 7) * 5 : (width / 7) * 4,
       gutter = App.Metrics.Device !== Device.desktop ? 40 : 60;
-    let x = W * 0.5 - menuWidth * 0.5;
+    let x = width * 0.5 - menuWidth * 0.5;
     const tabs = ALL_TABS.filter((id) => this.hasTab(id)).map((id) => {
       const name = COPY.tabs[id],
-        w = this.textW(name, `400 ${u * 10}px Dosis`) + gutter * u,
+        w = this.textW(name, `400 ${unit * 10}px Dosis`) + gutter * unit,
         t = { id, name: name.toUpperCase(), x: x + w * 0.5, w };
       x += w;
       return t;
@@ -573,41 +573,41 @@ export class PatchesPanel extends DisplayObject {
   }
   /** v1's bordered button (Search Freesound, Randomise Title): right edge at `right`, text baseline 14 units under `top`. */
   private bordered(label: string, right: number, top: number) {
-    const u = App.Unit,
+    const unit = App.Unit,
       w = this.textW(label);
     return {
       label,
-      x: right - 10 * u - w,
+      x: right - 10 * unit - w,
       y: top,
-      w: w + 10 * u,
-      h: 20 * u,
-      textX: right - 5 * u - w,
-      textY: top + 14 * u,
+      w: w + 10 * unit,
+      h: 20 * unit,
+      textX: right - 5 * unit - w,
+      textY: top + 14 * unit,
     };
   }
   private randomise() {
-    const u = App.Unit;
-    return this.bordered(COPY.randomise, App.Width * 0.5 + 210 * u, this.cy - 120 * u);
+    const unit = App.Unit;
+    return this.bordered(COPY.randomise, App.Width * 0.5 + 210 * unit, this.cy - 120 * unit);
   }
   /** v1 SharePanel SAVE / SAVE AS: two filled half-width buttons. */
   private halves() {
-    const u = App.Unit,
-      W = App.Width,
+    const unit = App.Unit,
+      width = App.Width,
       cy = this.cy;
     return {
       left: {
-        x: W * 0.5 - 210 * u,
-        y: cy - 20 * u,
-        w: 202.5 * u,
-        h: 40 * u,
-        cx: W * 0.5 - 108.75 * u,
+        x: width * 0.5 - 210 * unit,
+        y: cy - 20 * unit,
+        w: 202.5 * unit,
+        h: 40 * unit,
+        cx: width * 0.5 - 108.75 * unit,
       },
       right: {
-        x: W * 0.5 + 7.5 * u,
-        y: cy - 20 * u,
-        w: 202.5 * u,
-        h: 40 * u,
-        cx: W * 0.5 + 108.75 * u,
+        x: width * 0.5 + 7.5 * unit,
+        y: cy - 20 * unit,
+        w: 202.5 * unit,
+        h: 40 * unit,
+        cx: width * 0.5 + 108.75 * unit,
       },
     };
   }
@@ -635,65 +635,65 @@ export class PatchesPanel extends DisplayObject {
   }
   /** v1 SettingsPanel › Connect: three 130×30 buttons. */
   private thirds() {
-    const u = App.Unit,
-      W = App.Width,
-      y = this.cy + 5 * u;
+    const unit = App.Unit,
+      width = App.Width,
+      y = this.cy + 5 * unit;
     return [-210, -65, 80].map((dx) => ({
-      x: W * 0.5 + dx * u,
+      x: width * 0.5 + dx * unit,
       y,
-      w: 130 * u,
-      h: 30 * u,
-      cx: W * 0.5 + (dx + 65) * u,
+      w: 130 * unit,
+      h: 30 * unit,
+      cx: width * 0.5 + (dx + 65) * unit,
     }));
   }
   /** OPEN, INSERT and (the user's own patches) a bin at the right: a small copy of v1's trash can. */
   private rowButtons(n: number) {
-    const u = App.Unit,
+    const unit = App.Unit,
       y = this.openRowY(n);
-    const insert = this.bordered(COPY.insert, this.margin + this.pageW - 30 * u, y - 19 * u);
-    const open = this.bordered(COPY.open, insert.x - 10 * u, y - 19 * u);
+    const insert = this.bordered(COPY.insert, this.margin + this.pageW - 30 * unit, y - 19 * unit);
+    const open = this.bordered(COPY.open, insert.x - 10 * unit, y - 19 * unit);
     return {
       open,
       insert,
       bin: {
-        x: this.margin + this.pageW - 20 * u,
-        y: y - 19 * u,
-        w: 20 * u,
-        h: 20 * u,
-        cx: this.margin + this.pageW - 9 * u,
-        cy: y - 9 * u,
+        x: this.margin + this.pageW - 20 * unit,
+        y: y - 19 * unit,
+        w: 20 * unit,
+        h: 20 * unit,
+        cx: this.margin + this.pageW - 9 * unit,
+        cy: y - 9 * unit,
       },
     };
   }
   /** OPEN FROM YOUR DEVICE: bordered like RANDOMISE TITLE (owner, 2026-11-18), at the right of the row under the list
    * (where GALLERY has its sorts). */
   private fileButton() {
-    const u = App.Unit;
-    return this.bordered(COPY.file, this.margin + this.pageW, this.listFoot - 14 * u);
+    const unit = App.Unit;
+    return this.bordered(COPY.file, this.margin + this.pageW, this.listFoot - 14 * unit);
   }
   // ---- SAVE / SHARE (web): units from the panel centre ----
   /** ADD TO GALLERY and MAKE VIDEO: v1's OptionSwitch in an options-panel row's proportions (60 units: the icons sit 7
    * units clear of the underline; owner review 2), one under the other between the name and SAVE. */
   /** ADD TO GALLERY and MAKE VIDEO side by side, each in half the page (owner review 3, 2026-11-16). */
   private gallerySwitch() {
-    const u = App.Unit;
-    return { x: this.margin, y: this.cy - 72 * u, w: 60 * u, h: 60 * u };
+    const unit = App.Unit;
+    return { x: this.margin, y: this.cy - 72 * unit, w: 60 * unit, h: 60 * unit };
   }
   /** SIGN IN (signed out): bordered, right of ADD TO GALLERY, under RANDOMISE TITLE (owner, 2026-11-17, CHG-0035). */
   private signInButton() {
-    const u = App.Unit;
-    return this.bordered(COPY.signIn, App.Width * 0.5 + 210 * u, this.cy - 61 * u);
+    const unit = App.Unit;
+    return this.bordered(COPY.signIn, App.Width * 0.5 + 210 * unit, this.cy - 61 * unit);
   }
   private get signInShown() {
     return this.web && !!this.host.gallery && !!this.host.signInToSave && !this.host.signedIn();
   }
   private videoSwitch() {
-    const u = App.Unit;
+    const unit = App.Unit;
     return {
-      x: this.host.gallery ? this.margin + this.pageW * 0.5 + 10 * u : this.margin,
-      y: this.cy - 72 * u,
-      w: 60 * u,
-      h: 60 * u,
+      x: this.host.gallery ? this.margin + this.pageW * 0.5 + 10 * unit : this.margin,
+      y: this.cy - 72 * unit,
+      w: 60 * unit,
+      h: 60 * unit,
     };
   }
   /** Saved and nothing changed (owner, 2026-11-18): no SAVE button, the link takes its place. */
@@ -709,69 +709,81 @@ export class PatchesPanel extends DisplayObject {
   }
   /** COPY LINK: at the right of the link on a desktop; under it on a phone, with SHARE beside it. */
   private copyButton() {
-    const u = App.Unit;
+    const unit = App.Unit;
     if (!this.mobile)
-      return this.bordered(COPY.copyLink, this.margin + this.pageW, this.urlTop() + 6 * u);
+      return this.bordered(COPY.copyLink, this.margin + this.pageW, this.urlTop() + 6 * unit);
     return this.bordered(
       COPY.copyLink,
-      this.margin + this.textW(COPY.copyLink) + 10 * u,
-      this.urlTop() + 42 * u,
+      this.margin + this.textW(COPY.copyLink) + 10 * unit,
+      this.urlTop() + 42 * unit,
     );
   }
   private shareButton() {
-    const u = App.Unit,
+    const unit = App.Unit,
       c = this.copyButton();
     return this.bordered(
       COPY.shareLink,
-      c.x + c.w + 15 * u + this.textW(COPY.shareLink) + 10 * u,
+      c.x + c.w + 15 * unit + this.textW(COPY.shareLink) + 10 * unit,
       c.y,
     );
   }
   /** The link field's width: up to COPY LINK on a desktop, the page on a phone. */
   private urlWidth() {
-    const u = App.Unit;
-    return this.mobile ? this.pageW : this.pageW - this.copyButton().w - 15 * u;
+    const unit = App.Unit;
+    return this.mobile ? this.pageW : this.pageW - this.copyButton().w - 15 * unit;
   }
   /** SAVE (or MAKE VIDEO): Connect's 420×40 GUIDE button. */
   private mainButton() {
-    const u = App.Unit,
-      W = App.Width;
-    return { x: W * 0.5 - 210 * u, y: this.cy + 20 * u, w: 420 * u, h: 40 * u, cx: W * 0.5 };
+    const unit = App.Unit,
+      width = App.Width;
+    return {
+      x: width * 0.5 - 210 * unit,
+      y: this.cy + 20 * unit,
+      w: 420 * unit,
+      h: 40 * unit,
+      cx: width * 0.5,
+    };
   }
   /** SAVE AS (left) and DOWNLOAD PATCH (right, not on phones): v1's bordered buttons at the bottom. */
   private secondary() {
-    const u = App.Unit,
-      top = this.cy + 190 * u,
+    const unit = App.Unit,
+      top = this.cy + 190 * unit,
       L = this.margin;
     return {
-      saveAs: this.bordered(COPY.saveAs, L + this.textW(COPY.saveAs) + 10 * u, top),
+      saveAs: this.bordered(COPY.saveAs, L + this.textW(COPY.saveAs) + 10 * unit, top),
       download: this.mobile ? null : this.bordered(COPY.download, L + this.pageW, top),
     };
   }
   /** The video view: the portrait player (9:16), the button under it and the link under that (owner, 2026-11-16: no
    * name or RANDOMISE here, the name is chosen by now; BACK at the top left; larger on a phone). */
   private playerBox() {
-    const u = App.Unit,
-      w = (this.mobile ? 252 : 126) * u,
+    const unit = App.Unit,
+      w = (this.mobile ? 252 : 126) * unit,
       h = (w * 16) / 9;
     return {
       x: App.Width * 0.5 - w / 2,
-      y: this.mobile ? this.top + 70 * u : this.cy - 150 * u,
+      y: this.mobile ? this.top + 70 * unit : this.cy - 150 * unit,
       w,
       h,
     };
   }
   private videoMain() {
-    const u = App.Unit,
-      W = App.Width,
+    const unit = App.Unit,
+      width = App.Width,
       pb = this.playerBox();
-    return { x: W * 0.5 - 210 * u, y: pb.y + pb.h + 20 * u, w: 420 * u, h: 40 * u, cx: W * 0.5 };
+    return {
+      x: width * 0.5 - 210 * unit,
+      y: pb.y + pb.h + 20 * unit,
+      w: 420 * unit,
+      h: 40 * unit,
+      cx: width * 0.5,
+    };
   }
   /** The link's line (baseline) and its box's top, under the video's button: the link can be shared alone. */
   private videoLink() {
-    const u = App.Unit,
+    const unit = App.Unit,
       m = this.videoMain();
-    return { line: m.y + m.h + 30 * u, box: m.y + m.h + 42 * u };
+    return { line: m.y + m.h + 30 * unit, box: m.y + m.h + 42 * unit };
   }
   private get videoOn(): boolean {
     return !!this.host.video && (this.VideoOn ?? this.shareFiles);
@@ -783,18 +795,18 @@ export class PatchesPanel extends DisplayObject {
    * review 2: the same place on every device). `x` is the chevron's middle (the label is centred under it), `y` its
    * point, in device px. */
   private backArrow() {
-    const u = App.Unit,
+    const unit = App.Unit,
       video = this.Tab === 0 && this.View === 'video';
     // The video's BACK at the top left (owner, 2026-11-16), as a browser's.
     return {
-      x: video ? this.margin + 10 * u : App.Width * 0.5 + 195 * u,
-      y: video ? this.playerBox().y + 20 * u : this.cy - 175 * u,
+      x: video ? this.margin + 10 * unit : App.Width * 0.5 + 195 * unit,
+      y: video ? this.playerBox().y + 20 * unit : this.cy - 175 * unit,
     };
   }
   private backHit(pt: { x: number; y: number }) {
-    const u = App.Unit,
+    const unit = App.Unit,
       b = this.backArrow();
-    return Dimensions.hitRect(b.x - 20 * u, b.y - 22 * u, 40 * u, 64 * u, pt.x, pt.y);
+    return Dimensions.hitRect(b.x - 20 * unit, b.y - 22 * unit, 40 * unit, 64 * unit, pt.x, pt.y);
   }
   private get link() {
     return this.host.links?.current() ?? null;
@@ -803,15 +815,15 @@ export class PatchesPanel extends DisplayObject {
   Draw(): void {
     if (!this.shown) return;
     const ctx = this.Ctx,
-      u = App.Unit,
-      W = App.Width,
+      unit = App.Unit,
+      width = App.Width,
       txt = App.Palette[App.ThemeManager.Txt],
       tabY = this.OffsetY;
 
     // BG //
     App.FillColor(ctx, App.Palette[2]);
     ctx.globalAlpha = 0.95;
-    ctx.fillRect(0, this.OffsetY, W, App.Height);
+    ctx.fillRect(0, this.OffsetY, width, App.Height);
     ctx.globalAlpha = 1;
     ctx.lineWidth = 2;
     App.FillColor(ctx, txt);
@@ -821,28 +833,28 @@ export class PatchesPanel extends DisplayObject {
     if (App.Metrics.Device === Device.desktop) {
       ctx.textAlign = 'left';
       ctx.font = App.Metrics.TxtHeader;
-      ctx.fillText(COPY.panel.toUpperCase(), 20 * u, tabY + 41 * u);
+      ctx.fillText(COPY.panel.toUpperCase(), 20 * unit, tabY + 41 * unit);
     }
 
     // TABS (v1 SettingsPanel categories + MenuCategory.Draw) //
     const { tabs, half } = this.tabs(),
-      h = Math.round(60 * u);
+      h = Math.round(60 * unit);
     App.StrokeColor(ctx, App.Palette[1]);
     ctx.beginPath();
-    ctx.moveTo(W * 0.5 - half, tabY + 60 * u - 1);
-    ctx.lineTo(W * 0.5 + half, tabY + 60 * u - 1);
+    ctx.moveTo(width * 0.5 - half, tabY + 60 * unit - 1);
+    ctx.lineTo(width * 0.5 + half, tabY + 60 * unit - 1);
     for (let i = 1; i < tabs.length; i++) {
       const x = Math.round(tabs[i].x - tabs[i].w * 0.5);
-      ctx.moveTo(x, tabY + 16 * u);
-      ctx.lineTo(x, tabY + 44 * u);
+      ctx.moveTo(x, tabY + 16 * unit);
+      ctx.lineTo(x, tabY + 44 * unit);
     }
     ctx.stroke();
     ctx.textAlign = 'center';
     ctx.font = App.Metrics.TxtMid;
-    tabs.forEach((t, i) => {
-      const s = this.selected[t.id],
-        hw = t.w * 0.5,
-        x = t.x;
+    tabs.forEach((tab, i) => {
+      const s = this.selected[tab.id],
+        hw = tab.w * 0.5,
+        x = tab.x;
       App.FillColor(
         ctx,
         App.Palette[App.ThemeManager.MenuOrder[i % App.ThemeManager.MenuOrder.length]],
@@ -851,30 +863,30 @@ export class PatchesPanel extends DisplayObject {
       ctx.moveTo(x - hw, tabY);
       ctx.lineTo(x + hw, tabY);
       ctx.lineTo(x + hw, tabY + h * s);
-      ctx.lineTo(x + 10 * u, tabY + h * s);
-      ctx.lineTo(x, tabY + (h + 10 * u) * s);
-      ctx.lineTo(x - 10 * u, tabY + h * s);
+      ctx.lineTo(x + 10 * unit, tabY + h * s);
+      ctx.lineTo(x, tabY + (h + 10 * unit) * s);
+      ctx.lineTo(x - 10 * unit, tabY + h * s);
       ctx.lineTo(x - hw, tabY + h * s);
       ctx.closePath();
       ctx.fill();
       App.FillColor(ctx, txt);
-      ctx.fillText(t.name, x, tabY + h * 0.5 + 10 * u * 0.38);
+      ctx.fillText(tab.name, x, tabY + h * 0.5 + 10 * unit * 0.38);
     });
 
     // CLOSE (v1 SettingsPanel) //
     App.StrokeColor(ctx, txt);
-    const closeY = tabY + 30 * u;
+    const closeY = tabY + 30 * unit;
     ctx.beginPath();
-    ctx.moveTo(W * 0.5 + half + 12.5 * u, closeY - 7.5 * u);
-    ctx.lineTo(W * 0.5 + half + 27.5 * u, closeY + 7.5 * u);
-    ctx.moveTo(W * 0.5 + half + 27.5 * u, closeY - 7.5 * u);
-    ctx.lineTo(W * 0.5 + half + 12.5 * u, closeY + 7.5 * u);
+    ctx.moveTo(width * 0.5 + half + 12.5 * unit, closeY - 7.5 * unit);
+    ctx.lineTo(width * 0.5 + half + 27.5 * unit, closeY + 7.5 * unit);
+    ctx.moveTo(width * 0.5 + half + 27.5 * unit, closeY - 7.5 * unit);
+    ctx.lineTo(width * 0.5 + half + 12.5 * unit, closeY + 7.5 * unit);
     ctx.stroke();
 
     // THE PAGES, sliding under the tabs (v1 SettingsPanel's clipping box: from the tabs' rule down) //
     ctx.save();
     ctx.beginPath();
-    ctx.rect(0, tabY + 60 * u, W, App.Height);
+    ctx.rect(0, tabY + 60 * unit, width, App.Height);
     ctx.clip();
     try {
       const away = -App.Height + 1,
@@ -897,18 +909,18 @@ export class PatchesPanel extends DisplayObject {
   }
   private drawPage(): void {
     const ctx = this.Ctx,
-      u = App.Unit,
-      W = App.Width,
+      unit = App.Unit,
+      width = App.Width,
       txt = App.Palette[App.ThemeManager.Txt];
     if (this.Opening) {
-      App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, this.cy, 16, true);
+      App.AnimationsLayer.DrawSprite(ctx, 'loading', width * 0.5, this.cy, 16, true);
       return;
     }
     if (this.OpenError) {
       App.FillColor(ctx, txt);
       ctx.font = App.Metrics.TxtItalic2;
       ctx.textAlign = 'left';
-      this.wordWrap(this.OpenError, this.margin, this.cy + 205 * u, 14 * u, this.pageW);
+      this.wordWrap(this.OpenError, this.margin, this.cy + 205 * unit, 14 * unit, this.pageW);
     }
     // OPEN over unsaved changes asks first, from the OPEN tab or the gallery (bug, owner review 3: the gallery's
     // question was never drawn nor answered, so OPEN did nothing after an INSERT).
@@ -932,14 +944,14 @@ export class PatchesPanel extends DisplayObject {
     text = App.Palette[App.ThemeManager.Txt],
   ) {
     const ctx = this.Ctx,
-      u = App.Unit;
+      unit = App.Unit;
     App.FillColor(ctx, colour);
     ctx.fillRect(b.x, b.y, b.w, b.h);
     if (hover) {
       ctx.beginPath();
-      ctx.moveTo(b.cx, b.y + b.h + 9 * u);
-      ctx.lineTo(b.cx - 10 * u, b.y + b.h - u);
-      ctx.lineTo(b.cx + 10 * u, b.y + b.h - u);
+      ctx.moveTo(b.cx, b.y + b.h + 9 * unit);
+      ctx.lineTo(b.cx - 10 * unit, b.y + b.h - unit);
+      ctx.lineTo(b.cx + 10 * unit, b.y + b.h - unit);
       ctx.closePath();
       ctx.fill();
     }
@@ -948,14 +960,14 @@ export class PatchesPanel extends DisplayObject {
     ctx.font = font;
     // v1's 24-unit type, narrowed to fit a half button when a label is longer than v1's ("OVERWRITE", "CREATE NEW").
     const w = ctx.measureText(label.toUpperCase()).width,
-      max = b.w - 12 * u;
+      max = b.w - 12 * unit;
     if (w > max) {
       ctx.save();
       ctx.translate(b.cx, 0);
       ctx.scale(max / w, 1);
-      ctx.fillText(label.toUpperCase(), 0, b.y + textDy * u);
+      ctx.fillText(label.toUpperCase(), 0, b.y + textDy * unit);
       ctx.restore();
-    } else ctx.fillText(label.toUpperCase(), b.cx, b.y + textDy * u);
+    } else ctx.fillText(label.toUpperCase(), b.cx, b.y + textDy * unit);
   }
   private drawBordered(
     b: { label: string; x: number; y: number; w: number; h: number; textX: number; textY: number },
@@ -979,8 +991,8 @@ export class PatchesPanel extends DisplayObject {
       return;
     }
     const ctx = this.Ctx,
-      u = App.Unit,
-      W = App.Width,
+      unit = App.Unit,
+      width = App.Width,
       cy = this.cy,
       txt = App.Palette[App.ThemeManager.Txt],
       menu = App.ThemeManager.MenuOrder;
@@ -988,15 +1000,15 @@ export class PatchesPanel extends DisplayObject {
     ctx.font = App.Metrics.TxtMid;
     if (this.mobile) {
       ctx.textAlign = 'left';
-      ctx.fillText(COPY.name.toUpperCase(), W * 0.5 - 210 * u, cy - 150 * u);
+      ctx.fillText(COPY.name.toUpperCase(), width * 0.5 - 210 * unit, cy - 150 * unit);
     } else {
       ctx.textAlign = 'right';
-      ctx.fillText(COPY.name.toUpperCase(), W * 0.5 - 225 * u, cy - 106 * u);
+      ctx.fillText(COPY.name.toUpperCase(), width * 0.5 - 225 * unit, cy - 106 * unit);
     }
     App.StrokeColor(ctx, txt);
     ctx.beginPath();
-    ctx.moveTo(W * 0.5 - 210 * u, cy - 90 * u);
-    ctx.lineTo(W * 0.5 + 210 * u, cy - 90 * u);
+    ctx.moveTo(width * 0.5 - 210 * unit, cy - 90 * unit);
+    ctx.lineTo(width * 0.5 + 210 * unit, cy - 90 * unit);
     ctx.stroke();
     this.drawBordered(this.randomise(), txt);
     const off = this.Saving || !this.host.hasBlocks(),
@@ -1038,7 +1050,7 @@ export class PatchesPanel extends DisplayObject {
 
     // THE LINK: its line, the link small on a rule (a DOM field: a click copies it), COPY LINK (and SHARE on a phone) //
     App.FillColor(ctx, txt);
-    let warnY = cy + 85 * u;
+    let warnY = cy + 85 * unit;
     if (link && !this.Saving) {
       ctx.save();
       if (!this.linkOnly) ctx.globalAlpha = 0.6; // changed since: the link is the last save's
@@ -1048,20 +1060,20 @@ export class PatchesPanel extends DisplayObject {
         this.linkOnly ? COPY.savedLine : COPY.linkLine,
         this.margin,
         this.linkLineY(),
-        14 * u,
+        14 * unit,
         this.pageW,
       );
       App.StrokeColor(ctx, App.Palette[1]);
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(this.margin, this.urlTop() + 32 * u);
-      ctx.lineTo(this.margin + this.urlWidth(), this.urlTop() + 32 * u);
+      ctx.moveTo(this.margin, this.urlTop() + 32 * unit);
+      ctx.lineTo(this.margin + this.urlWidth(), this.urlTop() + 32 * unit);
       ctx.stroke();
       const c = this.copyButton();
       this.drawBordered(c, this.roll.copyLink ? txt : this.linkOnly ? txt : App.Palette[1]);
       if (this.canShare) this.drawBordered(this.shareButton(), txt);
       ctx.restore();
-      warnY = this.urlTop() + (this.mobile ? 85 : 60) * u;
+      warnY = this.urlTop() + (this.mobile ? 85 : 60) * unit;
     }
     // WARNINGS (v1 SharePanel) //
     if (!this.Saving) {
@@ -1071,7 +1083,7 @@ export class PatchesPanel extends DisplayObject {
       const warn = !this.host.hasBlocks()
         ? App.L10n.UI.SharePanel.NoBlocks
         : this.GalleryNote || links?.warning();
-      if (warn) this.wordWrap(warn, W * 0.5 - 210 * u, warnY, 14 * u, 420 * u);
+      if (warn) this.wordWrap(warn, width * 0.5 - 210 * unit, warnY, 14 * unit, 420 * unit);
     }
     // SAVE AS · DOWNLOAD PATCH (v1's bordered buttons, quieter: owner review 2) //
     const sec = this.secondary(),
@@ -1099,7 +1111,7 @@ export class PatchesPanel extends DisplayObject {
   /** Plugin: SAVE TO COMPUTER · CREATE SHARE LINK (v1 SAVE / SAVE AS), each with its line. */
   private drawPluginSave(off: boolean): void {
     const ctx = this.Ctx,
-      u = App.Unit,
+      unit = App.Unit,
       cy = this.cy,
       txt = App.Palette[App.ThemeManager.Txt],
       menu = App.ThemeManager.MenuOrder;
@@ -1109,8 +1121,8 @@ export class PatchesPanel extends DisplayObject {
     ctx.font = App.Metrics.TxtItalic2;
     ctx.textAlign = 'left';
     App.FillColor(ctx, txt);
-    this.wordWrap(COPY.saveLinePlugin, save.x, cy - 59 * u, 14 * u, save.w);
-    this.wordWrap(COPY.shareLinePlugin, share.x, cy - 59 * u, 14 * u, share.w);
+    this.wordWrap(COPY.saveLinePlugin, save.x, cy - 59 * unit, 14 * unit, save.w);
+    this.wordWrap(COPY.shareLinePlugin, share.x, cy - 59 * unit, 14 * unit, share.w);
     this.filled(
       save,
       App.Palette[off ? 1 : menu[3]],
@@ -1127,13 +1139,13 @@ export class PatchesPanel extends DisplayObject {
     if (!this.host.hasBlocks()) {
       App.FillColor(ctx, txt);
       ctx.font = App.Metrics.TxtItalic2;
-      this.wordWrap(App.L10n.UI.SharePanel.NoBlocks, save.x, cy + 75 * u, 14 * u, this.pageW);
+      this.wordWrap(App.L10n.UI.SharePanel.NoBlocks, save.x, cy + 75 * unit, 14 * unit, this.pageW);
     } else {
       const warn = this.host.links?.warning();
       if (warn) {
         App.FillColor(ctx, txt);
         ctx.font = App.Metrics.TxtItalic2;
-        this.wordWrap(warn, save.x, cy + 75 * u, 14 * u, this.pageW);
+        this.wordWrap(warn, save.x, cy + 75 * unit, 14 * unit, this.pageW);
       }
     }
   }
@@ -1147,7 +1159,7 @@ export class PatchesPanel extends DisplayObject {
     note: string,
   ): void {
     const ctx = this.Ctx,
-      u = App.Unit,
+      unit = App.Unit,
       txt = App.Palette[App.ThemeManager.Txt],
       { x, y, w, h } = b;
     ctx.save();
@@ -1165,28 +1177,28 @@ export class PatchesPanel extends DisplayObject {
       lx = x + w * 0.25,
       rx = x + w * 0.75;
     ctx.beginPath();
-    ctx.moveTo(lx - 5 * u, cy);
-    ctx.lineTo(lx + 5 * u, cy);
-    ctx.moveTo(rx + 5 * u, cy);
-    ctx.lineTo(rx, cy - 5 * u);
-    ctx.lineTo(rx - 5 * u, cy);
-    ctx.lineTo(rx, cy + 5 * u);
-    ctx.lineTo(rx + 5 * u, cy);
+    ctx.moveTo(lx - 5 * unit, cy);
+    ctx.lineTo(lx + 5 * unit, cy);
+    ctx.moveTo(rx + 5 * unit, cy);
+    ctx.lineTo(rx, cy - 5 * unit);
+    ctx.lineTo(rx - 5 * unit, cy);
+    ctx.lineTo(rx, cy + 5 * unit);
+    ctx.lineTo(rx + 5 * unit, cy);
     ctx.stroke();
     ctx.restore();
     App.FillColor(ctx, txt);
     ctx.textAlign = 'left';
     ctx.font = App.Metrics.TxtMid;
-    ctx.fillText(name.toUpperCase(), x + w + 12 * u, cy + (note ? -2 : 4) * u);
+    ctx.fillText(name.toUpperCase(), x + w + 12 * unit, cy + (note ? -2 : 4) * unit);
     // The note wraps inside this switch's half of the page.
     if (note) {
       ctx.font = App.Metrics.TxtItalic2;
       this.wordWrap(
         note,
-        x + w + 12 * u,
-        cy + 12 * u,
-        12 * u,
-        this.pageW * 0.5 - 10 * u - w - 12 * u,
+        x + w + 12 * unit,
+        cy + 12 * unit,
+        12 * unit,
+        this.pageW * 0.5 - 10 * unit - w - 12 * unit,
       );
     }
   }
@@ -1195,22 +1207,24 @@ export class PatchesPanel extends DisplayObject {
    * (SEARCH above it stays clear of the tab's notch), at most 175 units over the centre (owner, 2026-11-18: the lists
    * started too low). */
   private get listRule() {
-    const u = App.Unit;
-    return this.mobile ? this.top + 60 * u : Math.max(this.cy - 175 * u, this.top + 50 * u);
+    const unit = App.Unit;
+    return this.mobile
+      ? this.top + 60 * unit
+      : Math.max(this.cy - 175 * unit, this.top + 50 * unit);
   }
   /** The bottom row (GALLERY's sorts; OPEN's OPEN FROM YOUR DEVICE): its baseline. */
   private get listFoot() {
-    const u = App.Unit;
-    return this.mobile ? this.bottom - 30 * u : this.cy + 185 * u;
+    const unit = App.Unit;
+    return this.mobile ? this.bottom - 30 * unit : this.cy + 185 * unit;
   }
   /** OPEN: a rule, then the list in a window, scrolled, the same size as the gallery's (owner, 2026-11-18). */
   private openLayout() {
-    const u = App.Unit,
+    const unit = App.Unit,
       rule = this.listRule,
-      top = rule - 2 * u;
+      top = rule - 2 * unit;
     // The rows start right under the rule (a row's top is 2 units above its divider) and go under it as they scroll;
     // the window shows whole rows and a half.
-    return { rule, top, bottom: top + this.windowH(this.listFoot - 35 * u - top) };
+    return { rule, top, bottom: top + this.windowH(this.listFoot - 35 * unit - top) };
   }
   /** Row n's second line's baseline, scrolled. */
   private openRowY(n: number) {
@@ -1219,8 +1233,8 @@ export class PatchesPanel extends DisplayObject {
   /** The last row ends 10 units above the window's foot (owner, 2026-11-17: it was cut off). */
   private openMaxScroll() {
     const L = this.openLayout(),
-      n = this.Items.length;
-    return Math.max(0, n * this.rowH + 10 * App.Unit - (L.bottom - L.top));
+      lengthValue = this.Items.length;
+    return Math.max(0, lengthValue * this.rowH + 10 * App.Unit - (L.bottom - L.top));
   }
   scrollOpen(dy: number): void {
     this.OpenScroll = Math.max(0, Math.min(this.openMaxScroll(), this.OpenScroll + dy));
@@ -1228,7 +1242,7 @@ export class PatchesPanel extends DisplayObject {
   }
   private drawList(): void {
     const ctx = this.Ctx,
-      u = App.Unit,
+      unit = App.Unit,
       margin = this.margin,
       pageW = this.pageW,
       W = App.Width,
@@ -1245,11 +1259,11 @@ export class PatchesPanel extends DisplayObject {
     const n0 = this.Items.length;
     ctx.save();
     ctx.beginPath();
-    ctx.rect(margin - 5 * u, L.rule + u, pageW + 15 * u, L.bottom - L.rule - u);
+    ctx.rect(margin - 5 * unit, L.rule + unit, pageW + 15 * unit, L.bottom - L.rule - unit);
     ctx.clip();
     for (let n = 0; n < n0; n++) {
       const y = this.openRowY(n);
-      if (y + 20 * u < L.top || y - 40 * u > L.bottom) continue;
+      if (y + 20 * unit < L.top || y - 40 * unit > L.bottom) continue;
       if (n < n0 - 1) {
         App.StrokeColor(ctx, App.Palette[1]);
         ctx.beginPath();
@@ -1263,15 +1277,15 @@ export class PatchesPanel extends DisplayObject {
       ctx.font = this.rowFont;
       ctx.textAlign = 'left';
       // A long name is narrowed to the room left of OPEN, not run under it.
-      const room = b.open.x - 8 * u - (margin + u),
+      const room = b.open.x - 8 * unit - (margin + unit),
         fit = (t: string, yy: number) => {
           const w = ctx.measureText(t).width;
           if (w <= room) {
-            ctx.fillText(t, margin + u, yy);
+            ctx.fillText(t, margin + unit, yy);
             return;
           }
           ctx.save();
-          ctx.translate(margin + u, yy);
+          ctx.translate(margin + unit, yy);
           ctx.scale(room / w, 1);
           ctx.fillText(t, 0, 0);
           ctx.restore();
@@ -1294,7 +1308,7 @@ export class PatchesPanel extends DisplayObject {
     else if (!n0) {
       ctx.font = App.Metrics.TxtHeader;
       ctx.textAlign = 'center';
-      ctx.fillText(COPY.empty.toUpperCase(), W * 0.5, (L.top + L.bottom) / 2 + 10 * u);
+      ctx.fillText(COPY.empty.toUpperCase(), W * 0.5, (L.top + L.bottom) / 2 + 10 * unit);
     }
 
     // OPEN FROM YOUR DEVICE: bordered, as RANDOMISE TITLE (owner, 2026-11-18) //
@@ -1304,7 +1318,7 @@ export class PatchesPanel extends DisplayObject {
   /** The heading of the file and confirm steps: v1's header type over italic copy (SharePanel title + share line). */
   private heading(title: string, line: string): void {
     const ctx = this.Ctx,
-      u = App.Unit,
+      unit = App.Unit,
       cy = this.cy;
     App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
     ctx.textAlign = 'left';
@@ -1315,49 +1329,52 @@ export class PatchesPanel extends DisplayObject {
       ctx.save();
       ctx.translate(this.margin, 0);
       ctx.scale(this.pageW / w, 1);
-      ctx.fillText(title.toUpperCase(), 0, cy - 72 * u);
+      ctx.fillText(title.toUpperCase(), 0, cy - 72 * unit);
       ctx.restore();
-    } else ctx.fillText(title.toUpperCase(), this.margin, cy - 72 * u);
+    } else ctx.fillText(title.toUpperCase(), this.margin, cy - 72 * unit);
     App.StrokeColor(ctx, App.Palette[App.ThemeManager.Txt]);
     ctx.beginPath();
-    ctx.moveTo(this.margin, cy - 60 * u);
-    ctx.lineTo(this.margin + this.pageW, cy - 60 * u);
+    ctx.moveTo(this.margin, cy - 60 * unit);
+    ctx.lineTo(this.margin + this.pageW, cy - 60 * unit);
     ctx.stroke();
     ctx.font = App.Metrics.TxtItalic2;
-    this.wordWrap(line, this.margin, cy - 40 * u, 14 * u, this.pageW);
+    this.wordWrap(line, this.margin, cy - 40 * unit, 14 * unit, this.pageW);
   }
   private drawBack(): void {
     const ctx = this.Ctx,
-      u = App.Unit,
+      unit = App.Unit,
       { x, y } = this.backArrow();
     App.StrokeColor(ctx, App.Palette[App.ThemeManager.Txt]);
     App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
     ctx.beginPath();
-    ctx.moveTo(x + 10 * u, y - 20 * u);
-    ctx.lineTo(x - 10 * u, y);
-    ctx.lineTo(x + 10 * u, y + 20 * u);
+    ctx.moveTo(x + 10 * unit, y - 20 * unit);
+    ctx.lineTo(x - 10 * unit, y);
+    ctx.lineTo(x + 10 * unit, y + 20 * unit);
     ctx.stroke();
     ctx.font = App.Metrics.TxtMid;
     ctx.textAlign = 'center';
-    ctx.fillText(COPY.back.toUpperCase(), x, y + 35 * u);
+    ctx.fillText(COPY.back.toUpperCase(), x, y + 35 * unit);
   }
   private drawFile(): void {
-    const f = this.Picked,
-      u = App.Unit,
+    const picked = this.Picked,
+      unit = App.Unit,
       menu = App.ThemeManager.MenuOrder;
-    if (!f) return;
-    this.heading(f.error ? 'Not a BlokDust patch' : f.title, f.error ?? f.fileName);
-    if (!f.error) {
+    if (!picked) return;
+    this.heading(
+      picked.error ? 'Not a BlokDust patch' : picked.title,
+      picked.error ?? picked.fileName,
+    );
+    if (!picked.error) {
       const { left, right } = this.halves(),
         ctx = this.Ctx;
-      for (const b of [left, right]) b.y = this.cy + 5 * u;
+      for (const b of [left, right]) b.y = this.cy + 5 * unit;
       this.filled(left, App.Palette[menu[3]], COPY.open, !!this.roll.fileOpen);
       this.filled(right, App.Palette[menu[1]], COPY.insert, !!this.roll.fileInsert);
       App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
       ctx.font = App.Metrics.TxtItalic2;
       ctx.textAlign = 'center';
-      ctx.fillText(COPY.openDesc, left.cx, this.cy + 70 * u);
-      ctx.fillText(COPY.insertDesc, right.cx, this.cy + 70 * u);
+      ctx.fillText(COPY.openDesc, left.cx, this.cy + 70 * unit);
+      ctx.fillText(COPY.insertDesc, right.cx, this.cy + 70 * unit);
     }
     this.drawBack();
   }
@@ -1365,11 +1382,11 @@ export class PatchesPanel extends DisplayObject {
   private drawRemove(): void {
     const item = this.removing,
       menu = App.ThemeManager.MenuOrder,
-      u = App.Unit,
+      unit = App.Unit,
       { left, right } = this.halves();
     if (!item) return;
     this.heading(`${COPY.remove} ${item.name}?`, this.host.removeLine(item));
-    for (const b of [left, right]) b.y = this.cy + 5 * u;
+    for (const b of [left, right]) b.y = this.cy + 5 * unit;
     this.filled(left, App.Palette[1], COPY.cancel, !!this.roll.removeCancel);
     this.filled(right, App.Palette[menu[3]], COPY.removeButton, !!this.roll.removeOk);
   }
@@ -1394,8 +1411,8 @@ export class PatchesPanel extends DisplayObject {
    * (DOWNLOAD VIDEO on desktop) under it; BACK at the top right. */
   private drawVideo(): void {
     const ctx = this.Ctx,
-      u = App.Unit,
-      W = App.Width,
+      unit = App.Unit,
+      width = App.Width,
       txt = App.Palette[App.ThemeManager.Txt],
       menu = App.ThemeManager.MenuOrder;
     this.drawBack();
@@ -1413,10 +1430,10 @@ export class PatchesPanel extends DisplayObject {
       ctx.textAlign = 'center';
       ctx.fillText(
         `${COPY.rendering}... ${Math.floor(this.VideoProgress.done * 100)}%`.toUpperCase(),
-        W * 0.5,
-        mid + 25 * u,
+        width * 0.5,
+        mid + 25 * unit,
       );
-      App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, mid, 16, true);
+      App.AnimationsLayer.DrawSprite(ctx, 'loading', width * 0.5, mid, 16, true);
       this.filled(m, App.Palette[1], COPY.cancelVideo, !!this.roll.make);
     } else if (this.VideoState === 'ready') {
       this.filled(
@@ -1435,7 +1452,7 @@ export class PatchesPanel extends DisplayObject {
       if (line) {
         ctx.font = App.Metrics.TxtItalic2;
         ctx.textAlign = 'left';
-        this.wordWrap(line, pb.x + 10 * u, mid, 14 * u, pb.w - 20 * u);
+        this.wordWrap(line, pb.x + 10 * unit, mid, 14 * unit, pb.w - 20 * unit);
       }
       this.filled(
         m,
@@ -1450,9 +1467,9 @@ export class PatchesPanel extends DisplayObject {
       App.FillColor(ctx, txt);
       ctx.font = App.Metrics.TxtItalic2;
       ctx.textAlign = 'left';
-      this.wordWrap(this.label('url', COPY.linkLine), this.margin, L.line, 14 * u, this.pageW);
+      this.wordWrap(this.label('url', COPY.linkLine), this.margin, L.line, 14 * unit, this.pageW);
       App.FillColor(ctx, App.Palette[1]);
-      ctx.fillRect(this.margin, L.box, this.pageW, 40 * u);
+      ctx.fillRect(this.margin, L.box, this.pageW, 40 * unit);
     }
   }
 
@@ -1473,8 +1490,8 @@ export class PatchesPanel extends DisplayObject {
     try {
       const file = await v.make(
         { shape: 'portrait', seconds: v.seconds() },
-        (p) => {
-          if (current()) this.VideoProgress = p;
+        (videoProgressInfo) => {
+          if (current()) this.VideoProgress = videoProgressInfo;
         },
         abort.signal,
       );
@@ -1484,10 +1501,10 @@ export class PatchesPanel extends DisplayObject {
       this.showPlayer(file);
       // Where the share sheet can't take files (desktop browsers), it downloads at once (owner, 2026-11-15).
       if (!this.shareFiles) await v.share(file).catch(() => {});
-    } catch (e) {
+    } catch (error) {
       if (current()) {
         this.VideoState = 'error';
-        this.VideoMessage = (e as Error).message || 'The video could not be made.';
+        this.VideoMessage = (error as Error).message || 'The video could not be made.';
       }
     } finally {
       if (current()) this.videoAbort = null;
@@ -1530,11 +1547,11 @@ export class PatchesPanel extends DisplayObject {
   /** SEARCH and its rule at the top, POPULAR · NEW · … at the bottom; on a phone, right under the tabs and at the foot of
    * the screen, the list between them (owner, 2026-11-16). */
   private galleryLayout() {
-    const u = App.Unit,
-      right = App.Width * 0.5 + 210 * u,
+    const unit = App.Unit,
+      right = App.Width * 0.5 + 210 * unit,
       rule = this.listRule;
     return {
-      search: this.bordered(COPY.search, right, rule - 30 * u),
+      search: this.bordered(COPY.search, right, rule - 30 * unit),
       rule,
       sortY: this.listFoot,
       sortRight: right,
@@ -1544,10 +1561,10 @@ export class PatchesPanel extends DisplayObject {
   /** The list's window: from the search rule (rows go under it as they scroll; a row's top is 2 units above its
    * divider) to 45 units above the sorts, holding whole rows and a half (owner, 2026-11-17, CHG-0035). */
   private galleryWindow() {
-    const u = App.Unit,
+    const unit = App.Unit,
       L = this.galleryLayout(),
-      top = L.rule - 2 * u;
-    return { top, bottom: top + this.windowH(L.sortY - 35 * u - top), clip: L.rule + u };
+      top = L.rule - 2 * unit;
+    return { top, bottom: top + this.windowH(L.sortY - 35 * unit - top), clip: L.rule + unit };
   }
   /** Row n's second line's baseline (v1 SoundcloudPanel's row: name 10 units above it), scrolled. */
   private galleryRowY(n: number) {
@@ -1555,30 +1572,30 @@ export class PatchesPanel extends DisplayObject {
   }
   /** Every row, the SHOW MORE row when there are more, and 10 units under the last (owner, 2026-11-17: it was cut off). */
   private galleryMaxScroll() {
-    const u = App.Unit,
+    const unit = App.Unit,
       w = this.galleryWindow();
     return Math.max(
       0,
       this.GalleryItems.length * this.rowH +
         (this.GalleryMore || this.GalleryLoading ? this.rowH : 0) +
-        10 * u -
+        10 * unit -
         (w.bottom - w.top),
     );
   }
   /** SHOW MORE, centred in the row after the last (more to fetch; a spinner while they come). */
   private showMoreButton() {
-    const u = App.Unit,
+    const unit = App.Unit,
       y = this.galleryRowY(this.GalleryItems.length),
       w = this.textW(COPY.showMore);
-    return this.bordered(COPY.showMore, App.Width * 0.5 + (w + 10 * u) / 2, y - 19 * u);
+    return this.bordered(COPY.showMore, App.Width * 0.5 + (w + 10 * unit) / 2, y - 19 * unit);
   }
   /** OPEN and INSERT, as OPEN's rows (owner review 3: insert from the gallery too). */
   private galleryRow(n: number) {
-    const u = App.Unit,
+    const unit = App.Unit,
       y = this.galleryRowY(n),
-      insert = this.bordered(COPY.insert, this.margin + this.pageW, y - 19 * u);
-    const open = this.bordered(COPY.open, insert.x - 10 * u, y - 19 * u);
-    return { open, insert, textRight: open.x - 6 * u };
+      insert = this.bordered(COPY.insert, this.margin + this.pageW, y - 19 * unit);
+    const open = this.bordered(COPY.open, insert.x - 10 * unit, y - 19 * unit);
+    return { open, insert, textRight: open.x - 6 * unit };
   }
   /** POPULAR · NEW · EXAMPLES · TUTORIALS along the bottom (where v1 SoundcloudPanel had its count and RANDOMISE),
    * spread across the page; the chosen one underlined. */
@@ -1586,8 +1603,8 @@ export class PatchesPanel extends DisplayObject {
     const L = this.galleryLayout(),
       ctx = this.Ctx;
     ctx.font = App.Metrics.TxtMid;
-    const names = GALLERY_SORTS.map((s) => COPY.sorts[s].toUpperCase()),
-      ws = names.map((t) => ctx.measureText(t).width);
+    const names = GALLERY_SORTS.map((gallerySort) => COPY.sorts[gallerySort].toUpperCase()),
+      ws = names.map((nameValue) => ctx.measureText(nameValue).width);
     const gap = (this.pageW - ws.reduce((a, b) => a + b, 0)) / (names.length - 1);
     let x = this.margin;
     return GALLERY_SORTS.map((sort, i) => {
@@ -1608,14 +1625,14 @@ export class PatchesPanel extends DisplayObject {
     this.settled();
   }
   /** A mouse wheel over the open panel (scene.wheel). */
-  Wheel(e: WheelEvent): void {
-    const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+  Wheel(event: WheelEvent): void {
+    const dy = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
     if (this.Tab === 2 && this.GalleryView === 'list') this.scrollGallery(dy);
     else if (this.Tab === 1 && this.View === 'list') this.scrollOpen(dy);
   }
   private drawGallery(): void {
     const ctx = this.Ctx,
-      u = App.Unit,
+      unit = App.Unit,
       W = App.Width,
       cy = this.cy,
       margin = this.margin,
@@ -1639,8 +1656,8 @@ export class PatchesPanel extends DisplayObject {
       const on = b.sort === this.GallerySort;
       if (!on && !this.roll[`sort_${b.sort}`]) continue;
       ctx.beginPath();
-      ctx.moveTo(b.x, b.y + 4 * u);
-      ctx.lineTo(b.x + b.w, b.y + 4 * u);
+      ctx.moveTo(b.x, b.y + 4 * unit);
+      ctx.lineTo(b.x + b.w, b.y + 4 * unit);
       ctx.lineWidth = on ? 2 : 1;
       ctx.stroke();
       ctx.lineWidth = 2;
@@ -1649,13 +1666,13 @@ export class PatchesPanel extends DisplayObject {
     const n0 = this.GalleryItems.length;
     ctx.save();
     ctx.beginPath();
-    ctx.rect(margin - 5 * u, win.clip, this.pageW + 15 * u, win.bottom - win.clip);
+    ctx.rect(margin - 5 * unit, win.clip, this.pageW + 15 * unit, win.bottom - win.clip);
     ctx.clip();
     for (let n = 0; n < n0; n++) {
       const y = this.galleryRowY(n),
         it = this.GalleryItems[n],
         b = this.galleryRow(n);
-      if (y + 20 * u < win.top || y - 40 * u > win.bottom) continue;
+      if (y + 20 * unit < win.top || y - 40 * unit > win.bottom) continue;
       if (n < n0 - 1 || this.GalleryMore) {
         App.StrokeColor(ctx, App.Palette[1]);
         ctx.beginPath();
@@ -1666,7 +1683,7 @@ export class PatchesPanel extends DisplayObject {
       App.FillColor(ctx, txt);
       ctx.font = this.rowFont;
       ctx.textAlign = 'left';
-      const left = margin + u + 30 * u,
+      const left = margin + unit + 30 * unit,
         maxW = b.textRight - left;
       const fit = (t: string, yy: number, x = left) => {
         const w = ctx.measureText(t).width;
@@ -1687,9 +1704,9 @@ export class PatchesPanel extends DisplayObject {
           : '',
         views = plural(it.views, 'view');
       // Reddit's column (owner's pick, B): the like chevron over the count, left of the row; pressing it likes.
-      drawUpArrow(ctx, margin + 12 * u, y - 15 * u, 10 * u, it.liked, txt, on);
+      drawUpArrow(ctx, margin + 12 * unit, y - 15 * unit, 10 * unit, it.liked, txt, on);
       ctx.textAlign = 'center';
-      ctx.fillText(String(it.likes), margin + 12 * u, y);
+      ctx.fillText(String(it.likes), margin + 12 * unit, y);
       ctx.textAlign = 'left';
       fit(`${COPY.by} @${it.by} \u00b7 ${views}${remixes}`, y);
       this.drawBordered(b.open, txt);
@@ -1702,7 +1719,7 @@ export class PatchesPanel extends DisplayObject {
         ctx,
         'loading',
         W * 0.5,
-        this.galleryRowY(n0) - 9 * u,
+        this.galleryRowY(n0) - 9 * unit,
         16,
         true,
       );
@@ -1715,7 +1732,7 @@ export class PatchesPanel extends DisplayObject {
     else if (!n0) {
       ctx.font = App.Metrics.TxtHeader;
       ctx.textAlign = 'center';
-      ctx.fillText(COPY.noneYet.toUpperCase(), W * 0.5, cy + 10 * u);
+      ctx.fillText(COPY.noneYet.toUpperCase(), W * 0.5, cy + 10 * unit);
     }
     if (this.GalleryMessage) {
       App.FillColor(ctx, txt);
@@ -1724,8 +1741,8 @@ export class PatchesPanel extends DisplayObject {
       this.wordWrap(
         this.GalleryMessage,
         margin,
-        this.mobile ? win.top + 30 * u : cy + 185 * u,
-        14 * u,
+        this.mobile ? win.top + 30 * unit : cy + 185 * unit,
+        14 * unit,
         this.pageW,
       );
     }
@@ -1756,8 +1773,8 @@ export class PatchesPanel extends DisplayObject {
       this.GalleryMore = !!r?.more;
       this.GalleryPage = page;
       if (!r) this.GalleryMessage = 'The gallery is not available here.';
-    } catch (e) {
-      if (ask === this.galleryAsk) this.GalleryMessage = (e as Error).message;
+    } catch (error) {
+      if (ask === this.galleryAsk) this.GalleryMessage = (error as Error).message;
     } finally {
       if (ask === this.galleryAsk) {
         this.GalleryLoading = false;
@@ -1786,22 +1803,22 @@ export class PatchesPanel extends DisplayObject {
 
   // ---- input ----
   HitTests(pt: { x: number; y: number }): void {
-    const u = App.Unit,
-      W = App.Width,
+    const unit = App.Unit,
+      width = App.Width,
       cy = this.cy,
       hit = (x: number, y: number, w: number, h: number) =>
         Dimensions.hitRect(x, y, w, h, pt.x, pt.y);
     const { tabs, half } = this.tabs(),
       tabY = this.OffsetY;
     const r: Record<string, boolean> = {
-      close: hit(W * 0.5 + half, tabY + 10 * u, 40 * u, 40 * u),
+      close: hit(width * 0.5 + half, tabY + 10 * unit, 40 * unit, 40 * unit),
     };
-    tabs.forEach((t) => {
-      r[`tab${t.id}`] = hit(t.x - t.w * 0.5, tabY, t.w, 60 * u);
+    tabs.forEach((tab) => {
+      r[`tab${tab.id}`] = hit(tab.x - tab.w * 0.5, tabY, tab.w, 60 * unit);
     });
     const box = (b: { x: number; y: number; w: number; h: number }) => hit(b.x, b.y, b.w, b.h);
     const pad = (b: { x: number; y: number; w: number }) =>
-      hit(b.x - 5 * u, b.y - 10 * u, b.w + 10 * u, 40 * u);
+      hit(b.x - 5 * unit, b.y - 10 * unit, b.w + 10 * unit, 40 * unit);
     if (this.View === 'confirm') {
       const [a, b, c] = this.thirds();
       r.cancel = box(a);
@@ -1812,16 +1829,23 @@ export class PatchesPanel extends DisplayObject {
         const L = this.galleryLayout();
         r.search = pad(L.search);
         for (const b of this.sortButtons())
-          r[`sort_${b.sort}`] = hit(b.x - 5 * u, b.y - 20 * u, b.w + 10 * u, 30 * u);
+          r[`sort_${b.sort}`] = hit(b.x - 5 * unit, b.y - 20 * unit, b.w + 10 * unit, 30 * unit);
         const win = this.galleryWindow();
-        r.list = hit(this.margin - 5 * u, win.clip, this.pageW + 15 * u, win.bottom - win.clip);
+        r.list = hit(
+          this.margin - 5 * unit,
+          win.clip,
+          this.pageW + 15 * unit,
+          win.bottom - win.clip,
+        );
         if (r.list)
           for (let n = 0; n < this.GalleryItems.length; n++) {
             const b = this.galleryRow(n);
             if (b.open.y > win.bottom || b.open.y + b.open.h < win.top) continue;
             if (pad(b.open)) r[`gopen${n}`] = true;
             else if (pad(b.insert)) r[`gins${n}`] = true;
-            else if (hit(this.margin - 5 * u, this.galleryRowY(n) - 30 * u, 35 * u, 40 * u))
+            else if (
+              hit(this.margin - 5 * unit, this.galleryRowY(n) - 30 * unit, 35 * unit, 40 * unit)
+            )
               r[`glike${n}`] = true;
           }
         if (r.list && this.GalleryMore && !this.GalleryLoading && this.GalleryItems.length)
@@ -1839,7 +1863,7 @@ export class PatchesPanel extends DisplayObject {
       r.share = box(right);
     } else if (this.Tab === 0) {
       const sw = (g: { x: number; y: number; w: number; h: number }, name: string) =>
-        hit(g.x, g.y + g.h * 0.1, g.w + 12 * u + this.textW(name), g.h * 0.55);
+        hit(g.x, g.y + g.h * 0.1, g.w + 12 * unit + this.textW(name), g.h * 0.55);
       if (this.host.gallery) r.gallerySwitch = sw(this.gallerySwitch(), COPY.addToGallery);
       if (this.host.video) r.videoSwitch = sw(this.videoSwitch(), COPY.makeVideo);
       if (this.signInShown) r.signIn = pad(this.signInButton());
@@ -1855,7 +1879,7 @@ export class PatchesPanel extends DisplayObject {
     } else if (this.View === 'list') {
       if (this.fileButtonShown) r.file = pad(this.fileButton());
       const L = this.openLayout();
-      r.list = hit(this.margin - 5 * u, L.top, this.pageW + 15 * u, L.bottom - L.top);
+      r.list = hit(this.margin - 5 * unit, L.top, this.pageW + 15 * unit, L.bottom - L.top);
       if (r.list)
         for (let n = 0; n < this.Items.length; n++) {
           const b = this.rowButtons(n);
@@ -1864,19 +1888,19 @@ export class PatchesPanel extends DisplayObject {
           else if (pad(b.insert)) r[`ins${n}`] = true;
           else if (
             this.Items[n].removable &&
-            hit(b.bin.x, b.bin.y - 10 * u, b.bin.w + 5 * u, 40 * u)
+            hit(b.bin.x, b.bin.y - 10 * unit, b.bin.w + 5 * unit, 40 * unit)
           )
             r[`bin${n}`] = true;
         }
     } else {
       if (this.View === 'remove') {
         const { left, right } = this.halves();
-        for (const b of [left, right]) b.y = cy + 5 * u;
+        for (const b of [left, right]) b.y = cy + 5 * unit;
         r.removeCancel = box(left);
         r.removeOk = box(right);
       } else if (this.View === 'file') {
         const { left, right } = this.halves();
-        for (const b of [left, right]) b.y = cy + 5 * u;
+        for (const b of [left, right]) b.y = cy + 5 * unit;
         r.fileOpen = !this.Picked?.error && box(left);
         r.fileInsert = !this.Picked?.error && box(right);
         r.fileBack = this.backHit(pt);
@@ -1893,15 +1917,15 @@ export class PatchesPanel extends DisplayObject {
    * SAVE), saveAs, url, open<n>,
    * ins<n>, file, fileOpen, fileInsert, fileBack, cancel, saveFirst, openAnyway). */
   centreOf(name: string): [number, number] | null {
-    const u = App.Unit,
+    const unit = App.Unit,
       pr = App.Metrics.PixelRatio,
       at = (x: number, y: number): [number, number] => [x / pr, y / pr];
     const mid = (b: { x: number; y: number; w: number; h: number }) =>
       at(b.x + b.w / 2, b.y + b.h / 2);
-    const m = /^(open|ins|bin)(\d+)$/.exec(name);
-    if (m) {
-      const b = this.rowButtons(Number(m[2]));
-      return mid(m[1] === 'open' ? b.open : m[1] === 'ins' ? b.insert : b.bin);
+    const match = /^(open|ins|bin)(\d+)$/.exec(name);
+    if (match) {
+      const b = this.rowButtons(Number(match[2]));
+      return mid(match[1] === 'open' ? b.open : match[1] === 'ins' ? b.insert : b.bin);
     }
     {
       const gm = /^g(open|ins)(\d+)$/.exec(name);
@@ -1910,7 +1934,7 @@ export class PatchesPanel extends DisplayObject {
         return mid(gm[1] === 'open' ? b.open : b.insert);
       }
       const lm = /^glike(\d+)$/.exec(name);
-      if (lm) return at(this.margin + 12 * u, this.galleryRowY(Number(lm[1])) - 12 * u);
+      if (lm) return at(this.margin + 12 * unit, this.galleryRowY(Number(lm[1])) - 12 * unit);
       if (name === 'list') {
         const w = this.galleryWindow();
         return at(App.Width * 0.5, (w.top + w.bottom) / 2);
@@ -1919,7 +1943,7 @@ export class PatchesPanel extends DisplayObject {
       if (name === 'search') return mid(L.search);
       const sb =
         /^sort_(\w+)$/.exec(name) && this.sortButtons().find((b) => `sort_${b.sort}` === name);
-      if (sb) return at(sb.x + sb.w / 2, sb.y - 5 * u);
+      if (sb) return at(sb.x + sb.w / 2, sb.y - 5 * unit);
     }
     if (name === 'gallerySwitch' || name === 'videoSwitch') {
       const g = name === 'gallerySwitch' ? this.gallerySwitch() : this.videoSwitch();
@@ -1938,14 +1962,14 @@ export class PatchesPanel extends DisplayObject {
     const t = /^tab(\d)$/.exec(name);
     if (t) {
       const tab = this.tabs().tabs.find((x) => x.id === Number(t[1]));
-      return tab ? at(tab.x, this.OffsetY + 30 * u) : null;
+      return tab ? at(tab.x, this.OffsetY + 30 * unit) : null;
     }
     const { left, right } = this.halves(),
       [a, b, c] = this.thirds(),
       f = this.fileButton();
     switch (name) {
       case 'close':
-        return at(App.Width * 0.5 + this.tabs().half + 20 * u, this.OffsetY + 30 * u);
+        return at(App.Width * 0.5 + this.tabs().half + 20 * unit, this.OffsetY + 30 * unit);
       case 'randomise':
         return mid(this.randomise());
       case 'signIn':
@@ -1963,8 +1987,8 @@ export class PatchesPanel extends DisplayObject {
         return this.web ? mid(this.secondary().saveAs) : null;
       case 'url':
         return this.View === 'video'
-          ? at(App.Width * 0.5, this.videoLink().box + 20 * u)
-          : at(this.margin + this.urlWidth() / 2, this.urlTop() + 15 * u);
+          ? at(App.Width * 0.5, this.videoLink().box + 20 * unit)
+          : at(this.margin + this.urlWidth() / 2, this.urlTop() + 15 * unit);
       case 'copyLink':
         return this.link ? mid(this.copyButton()) : null;
       case 'shareLink':
@@ -1972,13 +1996,13 @@ export class PatchesPanel extends DisplayObject {
       case 'file':
         return mid(f);
       case 'fileOpen':
-        return at(left.cx, this.cy + 25 * u);
+        return at(left.cx, this.cy + 25 * unit);
       case 'fileInsert':
-        return at(right.cx, this.cy + 25 * u);
+        return at(right.cx, this.cy + 25 * unit);
       case 'removeCancel':
-        return at(left.cx, this.cy + 25 * u);
+        return at(left.cx, this.cy + 25 * unit);
       case 'removeOk':
-        return at(right.cx, this.cy + 25 * u);
+        return at(right.cx, this.cy + 25 * unit);
       case 'cancel':
         return mid(a);
       case 'saveFirst':
@@ -2071,7 +2095,7 @@ export class PatchesPanel extends DisplayObject {
         void this.browse();
         return;
       }
-      const sort = GALLERY_SORTS.find((s) => r[`sort_${s}`]);
+      const sort = GALLERY_SORTS.find((gallerySort) => r[`sort_${gallerySort}`]);
       if (sort) {
         this.GallerySort = sort;
         try {
@@ -2125,9 +2149,9 @@ export class PatchesPanel extends DisplayObject {
       }
       // The share sheet needs this click's user activation: call it straight away.
       if (r.shareVideo && this.videoFile) {
-        void this.host.video?.share(this.videoFile).catch((e) => {
+        void this.host.video?.share(this.videoFile).catch((error) => {
           this.VideoState = 'error';
-          this.VideoMessage = (e as Error).message;
+          this.VideoMessage = (error as Error).message;
         });
         return;
       }
@@ -2247,7 +2271,9 @@ export class PatchesPanel extends DisplayObject {
         return;
       }
       if (r.fileOpen) {
-        this.requestOpen(() => this.host.usePickedFile('open'));
+        this.requestOpen(() => {
+          this.host.usePickedFile('open');
+        });
         return;
       }
       return;
@@ -2308,8 +2334,12 @@ export class PatchesPanel extends DisplayObject {
       this.settled();
     };
     r.then(
-      (ok) => done(ok === undefined ? true : ok),
-      () => done(false),
+      (ok) => {
+        done(ok === undefined ? true : ok);
+      },
+      () => {
+        done(false);
+      },
     );
   }
   /** v1 SettingsPanel category select: the new tab's fill drops in, the others lift. */
@@ -2405,7 +2435,9 @@ export class PatchesPanel extends DisplayObject {
       return done;
     }
     const url = new Promise<string>((res, rej) => {
-      done = (u) => (u ? res(u) : rej(new Error('not saved')));
+      done = (u) => {
+        u ? res(u) : rej(new Error('not saved'));
+      };
     });
     url.catch(() => {});
     const text = () =>
@@ -2521,10 +2553,10 @@ export class PatchesPanel extends DisplayObject {
     void this.refresh();
   }
   /** A picked or dropped file: the OPEN tab asks what to do with it. */
-  showFile(f: PickedFile): void {
+  showFile(pickedFile: PickedFile): void {
     if (!this.Open) this.OpenPanel(1);
     else this.selectTab(1);
-    this.Picked = f;
+    this.Picked = pickedFile;
     this.View = 'file';
     this.settled();
   }
@@ -2589,33 +2621,34 @@ export class PatchesPanel extends DisplayObject {
   }
   private placeDom(): void {
     const pr = App.Metrics.PixelRatio,
-      u = App.Unit,
+      unit = App.Unit,
       mid = this.cy;
     // The fields slide with their page and, like the canvas, are cut off at the tabs' foot (owner, 2026-11-18: the name
     // showed above the tabs as SAVE / SHARE lifted out).
-    const clipTop = this.OffsetY + 60 * u;
+    const clipTop = this.OffsetY + 60 * unit;
     const at = (el: HTMLElement, top: number, h: number) => {
       el.style.top = `${top / pr}px`;
       const hidden = Math.max(0, Math.min(h, clipTop - top));
       el.style.clipPath = hidden > 0 ? `inset(${hidden / pr}px 0 0 0)` : '';
       el.style.visibility = hidden >= h ? 'hidden' : '';
     };
-    at(this.TitleContainer, mid - u * 132, u * 42);
+    at(this.TitleContainer, mid - unit * 132, unit * 42);
     // The link: v1's large URL box under the video; on SAVE / SHARE small, on a rule, up to COPY LINK (owner, 2026-11-18).
     const video = this.Tab === 0 && this.View === 'video',
       url = this.UrlContainer.style;
-    const font = video ? App.Metrics.TxtUrl : `300 ${Math.round((u * 12) / pr)}px Dosis`,
-      w = video ? u * 400 : this.urlWidth(),
-      h = u * (video ? 40 : 30);
+    const font = video ? App.Metrics.TxtUrl : `300 ${Math.round((unit * 12) / pr)}px Dosis`,
+      w = video ? unit * 400 : this.urlWidth(),
+      h = unit * (video ? 40 : 30);
     if (url.font !== font) url.font = font;
     url.width = `${w / pr}px`;
     url.height = `${h / pr}px`;
     url.lineHeight = `${h / pr}px`;
-    url.left = `${(video ? App.Width * 0.5 - u * 200 : this.margin) / pr}px`;
+    url.left = `${(video ? App.Width * 0.5 - unit * 200 : this.margin) / pr}px`;
     url.opacity = video || this.linkOnly ? '' : '0.6';
     at(this.UrlContainer, video ? this.videoLink().box : this.urlTop(), h);
     if (this.player) at(this.player, this.playerBox().y, this.playerBox().h);
-    if (this.SearchContainer) at(this.SearchContainer, this.galleryLayout().rule - u * 42, u * 42); // v1 StyleDom(…, 152): 42 above the rule
+    if (this.SearchContainer)
+      at(this.SearchContainer, this.galleryLayout().rule - unit * 42, unit * 42); // v1 StyleDom(…, 152): 42 above the rule
   }
   /** The name field shows on the SAVE tab; the link field when there is a link (v1 ShowDom / HideDom). */
   private showDom(): void {
@@ -2647,32 +2680,32 @@ export class PatchesPanel extends DisplayObject {
     if (this.shown) this.showDom();
   }
   Resize(): void {
-    const u = App.Unit,
+    const unit = App.Unit,
       pr = App.Metrics.PixelRatio,
       el = this.TitleContainer,
       url = this.UrlContainer;
     if (!el) return;
     // v1 StyleDom(TitleInputContainer, 300, 42, 210, 132): up to RANDOMISE TITLE.
-    const width = 420 - this.textW(COPY.randomise) / u - 20;
+    const width = 420 - this.textW(COPY.randomise) / unit - 20;
     el.style.font = App.Metrics.TxtHeaderPR;
-    el.style.width = `${(u * width) / pr}px`;
-    el.style.height = `${(u * 42) / pr}px`;
-    el.style.lineHeight = `${(u * 42) / pr}px`;
-    el.style.left = `${(App.Width / pr) * 0.5 - (u * 210) / pr}px`;
+    el.style.width = `${(unit * width) / pr}px`;
+    el.style.height = `${(unit * 42) / pr}px`;
+    el.style.lineHeight = `${(unit * 42) / pr}px`;
+    el.style.left = `${(App.Width / pr) * 0.5 - (unit * 210) / pr}px`;
     // v1 StyleDom(URLInputContainer, 400, 40, 200, 20, …, TxtUrl): in v1's URL box.
     url.style.font = App.Metrics.TxtUrl;
-    url.style.width = `${(u * 400) / pr}px`;
-    url.style.height = `${(u * 40) / pr}px`;
-    url.style.lineHeight = `${(u * 40) / pr}px`;
-    url.style.left = `${(App.Width / pr) * 0.5 - (u * 200) / pr}px`;
+    url.style.width = `${(unit * 400) / pr}px`;
+    url.style.height = `${(unit * 40) / pr}px`;
+    url.style.lineHeight = `${(unit * 40) / pr}px`;
+    url.style.left = `${(App.Width / pr) * 0.5 - (unit * 200) / pr}px`;
     // The gallery search field: v1 SoundcloudPanel StyleDom(SearchInputContainer, 300, 42, 210, 152, 0, TxtHeaderPR).
     const sf = this.SearchContainer;
     if (sf) {
       sf.style.font = App.Metrics.TxtHeaderPR;
-      sf.style.width = `${(u * 300) / pr}px`;
-      sf.style.height = `${(u * 42) / pr}px`;
-      sf.style.lineHeight = `${(u * 42) / pr}px`;
-      sf.style.left = `${(App.Width / pr) * 0.5 - (u * 210) / pr}px`;
+      sf.style.width = `${(unit * 300) / pr}px`;
+      sf.style.height = `${(unit * 42) / pr}px`;
+      sf.style.lineHeight = `${(unit * 42) / pr}px`;
+      sf.style.left = `${(App.Width / pr) * 0.5 - (unit * 210) / pr}px`;
     }
     if (this.player) {
       const b = this.playerBox();
@@ -2690,20 +2723,20 @@ export class PatchesPanel extends DisplayObject {
 
 /** v1's trash can (UI/TrashCan.Draw: a tapering bin with a cross), at `scale` and centred on (x, y). */
 export function drawBin(ctx: CanvasRenderingContext2D, x: number, y: number, scale: number): void {
-  const u = App.Unit,
+  const unit = App.Unit,
     s = scale;
   App.StrokeColor(ctx, App.Palette[App.ThemeManager.Txt]);
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(x - 11 * s * u, y - 11 * s * u);
-  ctx.lineTo(x + 11 * s * u, y - 11 * s * u);
-  ctx.lineTo(x + 8 * s * u, y + 11 * s * u);
-  ctx.lineTo(x - 8 * s * u, y + 11 * s * u);
+  ctx.moveTo(x - 11 * s * unit, y - 11 * s * unit);
+  ctx.lineTo(x + 11 * s * unit, y - 11 * s * unit);
+  ctx.lineTo(x + 8 * s * unit, y + 11 * s * unit);
+  ctx.lineTo(x - 8 * s * unit, y + 11 * s * unit);
   ctx.closePath();
-  ctx.moveTo(x - 4 * s * u, y - 4 * s * u);
-  ctx.lineTo(x + 4 * s * u, y + 4 * s * u);
-  ctx.moveTo(x + 4 * s * u, y - 4 * s * u);
-  ctx.lineTo(x - 4 * s * u, y + 4 * s * u);
+  ctx.moveTo(x - 4 * s * unit, y - 4 * s * unit);
+  ctx.lineTo(x + 4 * s * unit, y + 4 * s * unit);
+  ctx.moveTo(x + 4 * s * unit, y - 4 * s * unit);
+  ctx.lineTo(x - 4 * s * unit, y + 4 * s * unit);
   ctx.stroke();
 }
 
@@ -2719,7 +2752,7 @@ export function drawUploadLink(
   base: number,
   hover: boolean,
 ): void {
-  const u = App.Unit,
+  const unit = App.Unit,
     txt = App.Palette[App.ThemeManager.Txt],
     text = label.toUpperCase();
   App.FillColor(ctx, txt);
@@ -2731,27 +2764,27 @@ export function drawUploadLink(
   if (hover) {
     const w = ctx.measureText(text).width;
     ctx.beginPath();
-    ctx.moveTo(cx - w / 2, base + 3 * u);
-    ctx.lineTo(cx + w / 2, base + 3 * u);
+    ctx.moveTo(cx - w / 2, base + 3 * unit);
+    ctx.lineTo(cx + w / 2, base + 3 * unit);
     ctx.stroke();
   }
-  drawUploadMark(ctx, cx, base + 7 * u);
+  drawUploadMark(ctx, cx, base + 7 * unit);
 }
 /** The upload mark: an arrow (its tip at (cx, top)) out of an open tray, 14 × 11 units, in v1's 2 px text-colour line. */
 export function drawUploadMark(ctx: CanvasRenderingContext2D, cx: number, top: number): void {
-  const u = App.Unit,
+  const unit = App.Unit,
     txt = App.Palette[App.ThemeManager.Txt];
   App.StrokeColor(ctx, txt);
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(cx - 7 * u, top + 5 * u);
-  ctx.lineTo(cx - 7 * u, top + 11 * u);
-  ctx.lineTo(cx + 7 * u, top + 11 * u);
-  ctx.lineTo(cx + 7 * u, top + 5 * u);
-  ctx.moveTo(cx, top + 8 * u);
+  ctx.moveTo(cx - 7 * unit, top + 5 * unit);
+  ctx.lineTo(cx - 7 * unit, top + 11 * unit);
+  ctx.lineTo(cx + 7 * unit, top + 11 * unit);
+  ctx.lineTo(cx + 7 * unit, top + 5 * unit);
+  ctx.moveTo(cx, top + 8 * unit);
   ctx.lineTo(cx, top);
-  ctx.moveTo(cx - 3.5 * u, top + 3.5 * u);
+  ctx.moveTo(cx - 3.5 * unit, top + 3.5 * unit);
   ctx.lineTo(cx, top);
-  ctx.lineTo(cx + 3.5 * u, top + 3.5 * u);
+  ctx.lineTo(cx + 3.5 * unit, top + 3.5 * unit);
   ctx.stroke();
 }

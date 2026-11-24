@@ -63,14 +63,14 @@ export async function appleApp(env: Env, req: Request): Promise<Response> {
       client_id: env.APPLE_APP_ID,
       client_secret: await clientSecret(env, env.APPLE_APP_ID),
     });
-    const r = await fetch(env.APPLE_TOKEN_URL || TOKEN_URL, {
+    const response = await fetch(env.APPLE_TOKEN_URL || TOKEN_URL, {
       method: 'POST',
       body: form,
       headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
     });
-    const j = (await r.json()) as { id_token?: string };
-    if (!r.ok || !j.id_token) throw new Error('no id token');
-    claims = decodeIdToken(j.id_token) as typeof claims; // straight from Apple over TLS (OIDC Core 3.1.3.7)
+    const j = (await response.json()) as { id_token?: string };
+    if (!response.ok || !j.id_token) throw new Error('no id token');
+    claims = decodeIdToken(j.id_token); // straight from Apple over TLS (OIDC Core 3.1.3.7)
   } catch {
     throw new HttpError(401, 'Apple did not confirm the sign-in');
   }

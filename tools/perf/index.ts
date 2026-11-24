@@ -19,7 +19,13 @@ const SR = 48000,
   BUFFER = 128;
 const budgetUs = (BUFFER / SR) * 1e6; // 2666.7 µs per 128-frame buffer at 48 kHz
 
-type B = { id: string; type: string; x: number; y: number; params?: Record<string, number> };
+interface B {
+  id: string;
+  type: string;
+  x: number;
+  y: number;
+  params?: Record<string, number>;
+}
 /** n voices laid out 12 cells apart (beyond the 6-cell catchment, so voices never interact). */
 function scene(n: number, voice: (i: number, x: number, y: number) => B[]) {
   const blocks: B[] = [];
@@ -73,11 +79,11 @@ function nativeBinary() {
     throw new Error('release build failed');
   return 'build/release/engine/blokdust_render';
 }
-const best = <T>(n: number, f: () => T, key: (t: T) => number) => {
+const best = <T>(n: number, f: () => T, key: (nonNullable: T) => number) => {
   let b: T | undefined;
   for (let i = 0; i < n; i++) {
-    const r = f();
-    if (!b || key(r) < key(b)) b = r;
+    const nonNullable = f();
+    if (!b || key(nonNullable) < key(b)) b = nonNullable;
   }
   return b!;
 };
@@ -86,9 +92,12 @@ function native(bin: string, file: string) {
   return best(
     3,
     () => {
-      const r = spawnSync(bin, [file, '--block', String(BUFFER)], { encoding: 'utf8' });
-      if (r.status !== 0) throw new Error(r.stderr);
-      return JSON.parse(r.stdout) as { processSeconds: number; events: Record<string, number> };
+      const result = spawnSync(bin, [file, '--block', String(BUFFER)], { encoding: 'utf8' });
+      if (result.status !== 0) throw new Error(result.stderr);
+      return JSON.parse(result.stdout) as {
+        processSeconds: number;
+        events: Record<string, number>;
+      };
     },
     (r) => r.processSeconds,
   );
@@ -98,16 +107,16 @@ function wasm(module: WebAssembly.Module, fixture: any) {
     3,
     () => {
       const loaded = loadPatch(fixture.patch, []);
-      const e = WasmEngine.fromModule(module, SR, loaded.seed);
-      for (const c of loaded.commands) e.push(c);
+      const engine = WasmEngine.fromModule(module, SR, loaded.seed);
+      for (const command of loaded.commands) engine.push(command);
       const frames = SECONDS * SR;
       const t0 = performance.now();
       for (let done = 0; done < frames; done += BUFFER) {
-        e.process(Math.min(BUFFER, frames - done));
-        e.drainEvents();
+        engine.process(Math.min(BUFFER, frames - done));
+        engine.drainEvents();
       }
       const s = (performance.now() - t0) / 1000;
-      e.dispose();
+      engine.dispose();
       return s;
     },
     (s) => s,
@@ -141,7 +150,7 @@ const engineRows = SCENES.map((s) => {
   return row;
 });
 
-let webRows: any[] = [];
+const webRows: any[] = [];
 if (!args.includes('--no-web')) {
   spawnSync('pnpm', ['-s', '-C', 'web', 'build'], { stdio: ['ignore', 'ignore', 'inherit'] });
   const { url, server } = await serveDist();
@@ -196,7 +205,7 @@ compressor); Phase 1 effects (reverb, delay, granular…) will add to these numb
 
 | Scene | Blocks | Particle hits | Native µs/buffer | Native CPU | WASM µs/buffer | WASM CPU | WASM / native |
 |---|---|---|---|---|---|---|---|
-${engineRows.map((r) => `| ${r.scene} | ${r.blocks} | ${r.hits} | ${r.native.usPerBuffer} | ${r.native.cpuPercent}% | ${r.wasm.usPerBuffer} | ${r.wasm.cpuPercent}% | ${(r.wasm.usPerBuffer / Math.max(r.native.usPerBuffer, 0.001)).toFixed(2)}× |`).join('\n')}
+${engineRows.map((engineRow) => `| ${engineRow.scene} | ${engineRow.blocks} | ${engineRow.hits} | ${engineRow.native.usPerBuffer} | ${engineRow.native.cpuPercent}% | ${engineRow.wasm.usPerBuffer} | ${engineRow.wasm.cpuPercent}% | ${(engineRow.wasm.usPerBuffer / Math.max(engineRow.native.usPerBuffer, 0.001)).toFixed(2)}× |`).join('\n')}
 ${
   webRows.length
     ? `
@@ -211,7 +220,7 @@ browser with DevTools before relying on headroom.
 
 | Blocks | Particles | Blocks moved / frame | Mean frame | Median frame | p95 frame | fps (median) |
 |---|---|---|---|---|---|---|
-${webRows.map((r) => `| ${r.blocks} | ${r.particles} | ${r.moves} | ${r.meanMs} ms | ${r.medianMs} ms | ${r.p95Ms} ms | ${Math.round(1000 / Math.max(r.medianMs, 0.01))} |`).join('\n')}
+${webRows.map((webRow) => `| ${webRow.blocks} | ${webRow.particles} | ${webRow.moves} | ${webRow.meanMs} ms | ${webRow.medianMs} ms | ${webRow.p95Ms} ms | ${Math.round(1000 / Math.max(webRow.medianMs, 0.01))} |`).join('\n')}
 `
     : ''
 }`;

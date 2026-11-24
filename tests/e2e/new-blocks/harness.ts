@@ -80,8 +80,10 @@ export async function openPanel(p: Page, uid: string): Promise<void> {
   await p.mouse.click(at[0], at[1]);
   await p.waitForFunction(
     (i) => {
-      const o = (window as any).__bd_probe.scene.OptionsPanel;
-      return o.Scale === 1 && !o.Opening && o.SelectedBlock?.Id === i;
+      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel;
+      return (
+        optionsPanel.Scale === 1 && !optionsPanel.Opening && optionsPanel.SelectedBlock?.Id === i
+      );
     },
     id,
     { timeout: 5000 },
@@ -102,13 +104,13 @@ export const rows = (p: Page) =>
 /** css px of a point `frac` of the way along the open panel's row `setting` (v1's slider range), at its middle. */
 export const rowPoint = (p: Page, setting: string, frac: number) =>
   p.evaluate(
-    ([s, f]) => {
-      const o = (window as any).__bd_probe.scene.OptionsPanel,
+    ([key, value]) => {
+      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
         pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio,
-        r = (o.Options as any[]).find((x) => x.Setting === s);
+        r = (optionsPanel.Options as any[]).find((x) => x.Setting === key);
       return [
-        (o.Position.x + o.Margin + o.Range * (f as number)) / pr,
-        (o.Position.y + r.Position.y + r.Size.height / 2) / pr,
+        (optionsPanel.Position.x + optionsPanel.Margin + optionsPanel.Range * value) / pr,
+        (optionsPanel.Position.y + r.Position.y + r.Size.height / 2) / pr,
       ] as [number, number];
     },
     [setting, frac] as const,

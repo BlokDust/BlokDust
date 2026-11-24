@@ -53,16 +53,20 @@ export async function runQueries(
   await Promise.all(
     Object.entries(queries(dataset, days)).map(async ([name, sql]) => {
       try {
-        const r = await fetcher(target.url, {
+        const response = await fetcher(target.url, {
           method: 'POST',
           headers: { authorization: `Bearer ${target.token}` },
           body: `${sql} FORMAT JSON`,
         });
-        if (!r.ok) {
-          out[name] = { error: `HTTP ${r.status}: ${(await r.text()).slice(0, 200)}` };
+        if (!response.ok) {
+          out[name] = {
+            error: `HTTP ${response.status}: ${(await response.text()).slice(0, 200)}`,
+          };
           return;
         }
-        out[name] = { rows: ((await r.json()) as { data?: Record<string, unknown>[] }).data ?? [] };
+        out[name] = {
+          rows: ((await response.json()) as { data?: Record<string, unknown>[] }).data ?? [],
+        };
       } catch (e) {
         out[name] = { error: String(e).slice(0, 200) };
       }

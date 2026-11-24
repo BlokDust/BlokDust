@@ -37,7 +37,7 @@ async function api(
   body?: unknown,
   token?: string,
 ): Promise<{ status: number; json: any }> {
-  const r = await fetch(`${base}/api/${path}`, {
+  const response = await fetch(`${base}/api/${path}`, {
     method,
     headers: {
       'content-type': 'application/json',
@@ -45,7 +45,7 @@ async function api(
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  return { status: r.status, json: await r.json().catch(() => null) };
+  return { status: response.status, json: await response.json().catch(() => null) };
 }
 const PATCH = {
   format: 'blokdust.patch',
@@ -70,7 +70,9 @@ async function open(browser: Browser, url: string): Promise<Page> {
       }),
     );
   const page = await ctx.newPage();
-  page.on('pageerror', (e) => console.error(`  page error: ${e.message}`));
+  page.on('pageerror', (e) => {
+    console.error(`  page error: ${e.message}`);
+  });
   await page.goto(url);
   await page.waitForFunction(() => (window as any).__bd_probe);
   // Start audio like a user: the "Click to start" overlay covers the stage until then.
@@ -130,7 +132,7 @@ async function shareVia(
       ([prev, old, same]) => {
         const pp = (window as any).__bd_probe.scene.PatchesPanel,
           v = (document.getElementById('patchUrlText') as HTMLInputElement).value;
-        const id = v.match(/[?&]c=([^&]+)/)?.[1];
+        const id = /[?&]c=([^&]+)/.exec(v)?.[1];
         return (
           !!id &&
           !pp.Saving &&
@@ -148,7 +150,7 @@ async function shareVia(
     (document.getElementById('patchUrlText') as HTMLInputElement).value.trim(),
   );
 }
-const idOf = (url: string) => url.match(/[?&]c=([^&]+)/)?.[1] ?? '';
+const idOf = (url: string) => /[?&]c=([^&]+)/.exec(url)?.[1] ?? '';
 const local = (url: string) => url.replace(/^https?:\/\/[^/]+/, new URL(base).origin); // links carry the base path already
 async function closeShare(page: Page) {
   if (await page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Open)) {
@@ -165,10 +167,10 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
    * base redirects to base/, links from before the move (root `/?c=`, `/embed/`) redirect into it, and the API also
    * answers at the root (plugin builds that call it there). */
   async 'base-path'() {
-    const u = new URL(base),
-      b = u.pathname.replace(/\/+$/, '');
+    const url = new URL(base),
+      b = url.pathname.replace(/\/+$/, '');
     if (!b) return; // served at the root: nothing to check
-    const get = (path: string) => fetch(`${u.origin}${path}`, { redirect: 'manual' });
+    const get = (path: string) => fetch(`${url.origin}${path}`, { redirect: 'manual' });
     const page = await get(`${b}/`),
       html = await page.text();
     check(
@@ -176,7 +178,7 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
       page.status === 200 && html.includes(`content="${base}"`),
       page.status,
     );
-    const asset = (html.match(/src="\.\/(assets\/[^"]+\.js)"/) ?? [])[1];
+    const asset = (/src="\.\/(assets\/[^"]+\.js)"/.exec(html) ?? [])[1];
     check(
       "base/: the build's files under the base",
       !!asset && (await get(`${b}/${asset}`)).status === 200,
@@ -185,7 +187,7 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
     const bare = await get(b);
     check(
       'bare base → base/',
-      bare.status === 301 && new URL(bare.headers.get('location')!, u).pathname === `${b}/`,
+      bare.status === 301 && new URL(bare.headers.get('location')!, url).pathname === `${b}/`,
       bare.headers.get('location'),
     );
     const old = await get('/?c=A000000000&t=x');
@@ -212,7 +214,7 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
    * sends its pages there; the API stays answerable where it is. Local `--base` runs only (a second Worker). */
   async 'canonical-host'() {
     if (remote || !based) return;
-    const s = await startLocal({
+    const localServer = await startLocal({
       name: 'canon',
       env: 'based',
       vars: {
@@ -222,8 +224,8 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
     });
     try {
       const loc = async (path: string) => {
-        const r = await fetch(`${s.url}${path}`, { redirect: 'manual' });
-        return [r.status, r.headers.get('location')] as const;
+        const response = await fetch(`${localServer.url}${path}`, { redirect: 'manual' });
+        return [response.status, response.headers.get('location')] as const;
       };
       const page = await loc('/blokdust/?c=A000000000&t=x'),
         root = await loc('/?c=A000000000'),
@@ -238,15 +240,15 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
       );
       check(
         '… the API stays answerable there',
-        (await fetch(`${s.url}/blokdust/api/config`)).status === 200 &&
-          (await fetch(`${s.url}/api/config`)).status === 200,
+        (await fetch(`${localServer.url}/blokdust/api/config`)).status === 200 &&
+          (await fetch(`${localServer.url}/api/config`)).status === 200,
       );
       check(
         "… and the build's files too",
-        (await fetch(`${s.url}/blokdust/favicon.ico`)).status === 200,
+        (await fetch(`${localServer.url}/blokdust/favicon.ico`)).status === 200,
       );
     } finally {
-      await s.stop();
+      await localServer.stop();
     }
   },
 
@@ -257,26 +259,26 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
   async 'legacy-path'() {
     if (based) return;
     const loc = async (url: string, method = 'GET') => {
-      const r = await fetch(url, { method, redirect: 'manual' });
-      return [r.status, r.headers.get('location')] as const;
+      const response = await fetch(url, { method, redirect: 'manual' });
+      return [response.status, response.headers.get('location')] as const;
     };
     if (remote) {
-      const u = new URL(base);
-      if (u.pathname.replace(/\/+$/, '')) return; // a deployment under a prefix has no legacy path
-      const page = await loc(`${u.origin}/blokdust/?c=A000000000&t=x`);
+      const url = new URL(base);
+      if (url.pathname.replace(/\/+$/, '')) return; // a deployment under a prefix has no legacy path
+      const page = await loc(`${url.origin}/blokdust/?c=A000000000&t=x`);
       check(
         '/blokdust/ → 302 to the same page at the root',
-        page[0] === 302 && page[1] === `${u.origin}/?c=A000000000&t=x`,
+        page[0] === 302 && page[1] === `${url.origin}/?c=A000000000&t=x`,
         page,
       );
       check(
         '/blokdust/api answers in place',
-        (await fetch(`${u.origin}/blokdust/api/config`)).status === 200,
+        (await fetch(`${url.origin}/blokdust/api/config`)).status === 200,
       );
       return;
     }
     const pub = 'https://blokdust.example';
-    const s = await startLocal({
+    const localServer = await startLocal({
       name: 'legacy',
       vars: {
         TURNSTILE_SECRET: 'test-secret',
@@ -293,7 +295,7 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
           '/blokdust/embed/A000000000',
           '/?c=A000000000',
           '/embed/A000000000',
-        ].map((p) => loc(s.url + p)),
+        ].map((p) => loc(localServer.url + p)),
       );
       check(
         'legacy pages → 302 to the same page on the public site',
@@ -308,13 +310,16 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
       );
       check(
         '… other files under it too',
-        (await loc(`${s.url}/blokdust/favicon.ico`))[1] === `${pub}/favicon.ico`,
+        (await loc(`${localServer.url}/blokdust/favicon.ico`))[1] === `${pub}/favicon.ico`,
       );
       check(
         '… the API answers in place',
-        (await fetch(`${s.url}/blokdust/api/config`)).status === 200,
+        (await fetch(`${localServer.url}/blokdust/api/config`)).status === 200,
       );
-      check('… other methods there: 404', (await loc(`${s.url}/blokdust/`, 'POST'))[0] === 404);
+      check(
+        '… other methods there: 404',
+        (await loc(`${localServer.url}/blokdust/`, 'POST'))[0] === 404,
+      );
       check(
         'pages on another host → the public site (301)',
         root[0] === 301 &&
@@ -325,11 +330,11 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
       );
       check(
         "… its API and the build's files answer there",
-        (await fetch(`${s.url}/api/config`)).status === 200 &&
-          (await fetch(`${s.url}/favicon.ico`)).status === 200,
+        (await fetch(`${localServer.url}/api/config`)).status === 200 &&
+          (await fetch(`${localServer.url}/favicon.ico`)).status === 200,
       );
     } finally {
-      await s.stop();
+      await localServer.stop();
     }
   },
 
@@ -531,12 +536,16 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
       );
     const msg = () =>
       a.evaluate(() => {
-        const m = (window as any).__bd_probe.scene.MessagePanel;
-        return { open: m.Open, shown: m._Alpha > 0, text: m._Value?.string };
+        const messagePanel = (window as any).__bd_probe.scene.MessagePanel;
+        return {
+          open: messagePanel.Open,
+          shown: messagePanel._Alpha > 0,
+          text: messagePanel._Value?.string,
+        };
       });
     const puts: { url: string; body: any }[] = [];
     a.on('request', (r) => {
-      if (/\/api\/patches/.test(r.url()) && r.method() !== 'GET')
+      if (r.url().includes('/api/patches') && r.method() !== 'GET')
         puts.push({
           url: `${r.method()} ${r.url().replace(/^.*\/api\//, '')}`,
           body: JSON.parse(r.postData() ?? '{}'),
@@ -627,7 +636,7 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
         g1.json?.patch?.blocks?.some((x: any) => x.params?.transpose === 5) &&
         idOf(a.url()) === id &&
         !(await a.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Open)),
-      { puts: puts.map((p) => p.url), rev: g1.json?.rev, title: g1.json?.title, at: a.url() },
+      { puts: puts.map((put) => put.url), rev: g1.json?.rev, title: g1.json?.title, at: a.url() },
     );
     check(
       'R18: v1 message bar says SAVED; the corner is clean again',
@@ -722,7 +731,9 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
       id = idOf(url);
     check(
       'share=1 → the address bar shows a server link',
-      /^[0-9A-Za-oq-z][0-9A-Za-z]{9}$/.test(id) && !/share=/.test(url) && /t=From/.test(url),
+      /^[0-9A-Za-oq-z][0-9A-Za-z]{9}$/.test(id) &&
+        !url.includes('share=') &&
+        url.includes('t=From'),
       url,
     );
     check(
@@ -923,7 +934,7 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
     // Link previews for that id.
     const html = await (await fetch(`${base}/?c=${id}`)).text();
     const meta = (p: string) =>
-      html.match(new RegExp(`<meta (?:property|name)="${p}" content="([^"]*)"`))?.[1] ?? null;
+      new RegExp(`<meta (?:property|name)="${p}" content="([^"]*)"`).exec(html)?.[1] ?? null;
     check(
       'share page: Open Graph + twitter tags',
       !!meta('og:title') &&
@@ -936,10 +947,10 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
     check(
       'share page: og:title is the patch title alone, og:description says what BlokDust is (SPEC-SHARING-BACKEND R9)',
       meta('og:title') === (saved || 'BlokDust') &&
-        /^Connect blocks to make sounds/.test(meta('og:description') ?? ''),
+        (meta('og:description') ?? '').startsWith('Connect blocks to make sounds'),
       { title: meta('og:title'), saved, description: meta('og:description') },
     );
-    check('share page: oEmbed discovery link', /type="application\/json\+oembed"/.test(html));
+    check('share page: oEmbed discovery link', html.includes('type="application/json+oembed"'));
     const img = await fetch(local(meta('og:image')!.replace(/&amp;/g, '&')));
     const png = new Uint8Array(await img.arrayBuffer());
     const dv = new DataView(png.buffer);
@@ -954,10 +965,10 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
     let off = 8;
     const idat: Uint8Array[] = [];
     while (off < png.length) {
-      const n = dv.getUint32(off),
+      const uint32 = dv.getUint32(off),
         t = String.fromCharCode(...png.subarray(off + 4, off + 8));
-      if (t === 'IDAT') idat.push(png.subarray(off + 8, off + 8 + n));
-      off += 12 + n;
+      if (t === 'IDAT') idat.push(png.subarray(off + 8, off + 8 + uint32));
+      off += 12 + uint32;
     }
     const raw = inflateSync(Buffer.concat(idat));
     const corner =
@@ -967,9 +978,9 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
       [raw[1], raw[2], raw[3]].join() === themeBg.match(/\d+/g)!.slice(0, 3).join(),
       { corner, themeBg },
     );
-    const oe = (await (
+    const oe = await (
       await fetch(`${base}/oembed?url=${encodeURIComponent(`${base}/?c=${id}`)}&maxwidth=480`)
-    ).json()) as any;
+    ).json();
     check(
       '/oembed: rich JSON with an iframe to /embed/<id>, maxwidth respected',
       oe.type === 'rich' &&
@@ -994,9 +1005,9 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
       check('embed: needs share-and-load first', false);
       return;
     }
-    const oe = (await (
+    const oe = await (
       await fetch(`${base}/oembed?url=${encodeURIComponent(`${base}/?c=${id}`)}`)
-    ).json()) as any;
+    ).json();
     // A third-party page (another origin) pasting the oEmbed HTML. Not a data: URL: an opaque-origin parent can't
     // delegate autoplay to the iframe, which no real embedding site is.
     const hostUrl = `${mocks!.url}/host.html?html=${encodeURIComponent(oe.html)}`;
@@ -1027,8 +1038,8 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
       'embed never autosaves',
       await frame.evaluate(() => localStorage.getItem('blokdust2.autosave') === null),
     );
-    const r = await fetch(`${base}/embed/A000000000`);
-    check('embed of an unknown id → 404', r.status === 404);
+    const response = await fetch(`${base}/embed/A000000000`);
+    check('embed of an unknown id → 404', response.status === 404);
     await ctx.close();
   },
 };
@@ -1058,7 +1069,7 @@ async function realChrome(): Promise<{ browser: Browser; close(): void }> {
       const browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
       return { browser, close: () => chrome.kill() };
     } catch {
-      await new Promise((r) => setTimeout(r, 250));
+      await new Promise((resolve) => setTimeout(resolve, 250));
     }
   }
   chrome.kill();
@@ -1085,7 +1096,8 @@ const sampleState = (p: Page) =>
 async function openSamplePanel(page: Page, gx: number, gy: number): Promise<void> {
   const id = await page.evaluate(
     ([a, b]) =>
-      (window as any).__bd_probe.state.blocks.find((q: any) => q.x === a && q.y === b)?.id,
+      (window as any).__bd_probe.state.blocks.find((block: any) => block.x === a && block.y === b)
+        ?.id,
     [gx, gy],
   );
   const [x, y] = await page.evaluate((i) => (window as any).__bd_probe.blockPoint(i), id);
@@ -1124,14 +1136,14 @@ async function dropFile(
   );
   await page.evaluate(
     ([b64, n, cx, cy]) => {
-      const bin = Uint8Array.from(atob(b64 as string), (c) => c.charCodeAt(0));
+      const bin = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
       const dt = new DataTransfer();
-      dt.items.add(new File([bin], n as string, { type: 'audio/wav' }));
-      const canvas = document.querySelector('#stage canvas:last-of-type') as HTMLCanvasElement,
-        r = canvas.getBoundingClientRect();
+      dt.items.add(new File([bin], n, { type: 'audio/wav' }));
+      const canvas = document.querySelector('#stage canvas:last-of-type')!,
+        boundingClientRect = canvas.getBoundingClientRect();
       const at = {
-        clientX: r.left + (cx as number),
-        clientY: r.top + (cy as number),
+        clientX: boundingClientRect.left + (cx as number),
+        clientY: boundingClientRect.top + (cy as number),
         bubbles: true,
         cancelable: true,
         dataTransfer: dt,
@@ -1147,7 +1159,7 @@ tests.samples = async (browser) => {
   const wait = searchLimitedAt + 61000 - Date.now();
   if (wait > 0) {
     console.error(`  (waiting ${Math.ceil(wait / 1000)} s for api-guards' search limit to reset)`);
-    await new Promise((r) => setTimeout(r, wait));
+    await new Promise((resolve) => setTimeout(resolve, wait));
   }
   // A Sample next to a Power block (v1 composition import, DATA-0004).
   const comp = {
@@ -1202,8 +1214,13 @@ tests.samples = async (browser) => {
   // Type a search (Enter submits, as v1's EnterCheck), without reloading the page or playing notes.
   const notesBefore = (await probe(a)).gateOns;
   const [ix, iy] = await a.evaluate(() => {
-    const r = document.getElementById('soundCloudSearchInput')!.getBoundingClientRect();
-    return [r.left + r.width / 2, r.top + r.height / 2];
+    const boundingClientRect = document
+      .getElementById('soundCloudSearchInput')!
+      .getBoundingClientRect();
+    return [
+      boundingClientRect.left + boundingClientRect.width / 2,
+      boundingClientRect.top + boundingClientRect.height / 2,
+    ];
   });
   await a.mouse.click(ix, iy);
   await a.keyboard.press('Meta+A');
@@ -1230,7 +1247,7 @@ tests.samples = async (browser) => {
   );
   check('typing in the search box plays no notes', (await probe(a)).gateOns === notesBefore);
   if (!remote) {
-    const sr = mocks!.requests.filter((r) => r.path.startsWith('/apiv2/search/text/'));
+    const sr = mocks!.requests.filter((request) => request.path.startsWith('/apiv2/search/text/'));
     check(
       'the Worker searched Freesound with its own key (never the browser)',
       sr.length > 0 &&
@@ -1252,7 +1269,8 @@ tests.samples = async (browser) => {
     .waitForFunction(
       () =>
         (window as any).__bd_probe.samples.some(
-          (x: any) => x.loaded && /^freesound:/.test(x.track) && x.track !== 'freesound:223835',
+          (x: any) =>
+            x.loaded && x.track.startsWith('freesound:') && x.track !== 'freesound:223835',
         ),
       null,
       { timeout: 30000 },
@@ -1271,7 +1289,7 @@ tests.samples = async (browser) => {
     'the patch references it (id, user, licence, preview), no audio',
     ref?.provider === 'freesound' &&
       !!ref.username &&
-      /^CC/.test(ref.license) &&
+      ref.license.startsWith('CC') &&
       /^https?:/.test(ref.preview) &&
       JSON.stringify(pa.patch).length < 8000,
     ref,
@@ -1279,8 +1297,8 @@ tests.samples = async (browser) => {
   check(
     'options panel credits the sound (v1 "By <user>")',
     await a.evaluate(() => {
-      const v = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock;
-      return !!v?.Params.user && !!v?.Params.permalink;
+      const selectedBlock = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock;
+      return !!selectedBlock?.Params.user && !!selectedBlock?.Params.permalink;
     }),
   );
   const hashA = await renderHash(a);
@@ -1400,7 +1418,7 @@ tests.samples = async (browser) => {
 async function openSamplePanelIfMissingLabel(c: Page): Promise<void> {
   const [x, y] = await c.evaluate(() => {
     const s = (window as any).__bd_probe;
-    const b = s.state.blocks.find((q: any) => q.type === 'source.sample');
+    const b = s.state.blocks.find((block: any) => block.type === 'source.sample');
     return s.blockPoint(b.id);
   });
   await c.mouse.click(x, y);
@@ -1416,7 +1434,7 @@ async function openSamplePanelIfMissingLabel(c: Page): Promise<void> {
   await c.screenshot({ path: `${OUT}/sample-missing.png` });
   check(
     '… and its options panel says MISSING with the file name',
-    /^MISSING · MY-LOOP\.WAV/.test(label),
+    label.startsWith('MISSING · MY-LOOP.WAV'),
     label,
   );
 }
@@ -1510,8 +1528,8 @@ async function main() {
       console.error(`— ${name}`);
       try {
         await fn(browser);
-      } catch (e) {
-        check(`${name} threw`, false, String(e));
+      } catch (error) {
+        check(`${name} threw`, false, String(error));
       }
     }
   } finally {
@@ -1522,7 +1540,7 @@ async function main() {
     if (server) await server.stop();
     mocks?.close();
   }
-  const failed = results.filter((r) => !r.ok);
+  const failed = results.filter((result) => !result.ok);
   console.log(
     JSON.stringify({
       base,
@@ -1533,5 +1551,5 @@ async function main() {
   );
   process.exitCode = failed.length ? 1 : 0;
 }
-void MOCK_SOUNDS;
+MOCK_SOUNDS;
 void main();

@@ -66,8 +66,9 @@ function resignAdHoc(): void {
     if (!existsSync(b)) continue;
     if (run('codesign', ['--force', '--deep', '--sign', '-', b], true).status !== 0)
       throw new Error(`codesign failed: ${b}`);
-    const v = run('codesign', ['-v', b], true);
-    if (v.status !== 0) throw new Error(`invalid signature after re-signing ${b}: ${v.stderr}`);
+    const result = run('codesign', ['-v', b], true);
+    if (result.status !== 0)
+      throw new Error(`invalid signature after re-signing ${b}: ${result.stderr}`);
   }
 }
 
@@ -103,8 +104,8 @@ function deploy(noBuild: boolean, force = false): void {
       ? 'Library/Audio/Plug-Ins/VST3/'
       : 'Library/Audio/Plug-Ins/Components/';
     // Compare contents so rewritten signature/resource files cannot be skipped on matching size/mtime.
-    const r = run('rsync', ['-a', '--checksum', '--delete', b, `${host}:${dest}`], true);
-    if (r.status !== 0) throw new Error(`rsync failed for ${b}: ${r.stderr}`);
+    const result = run('rsync', ['-a', '--checksum', '--delete', b, `${host}:${dest}`], true);
+    if (result.status !== 0) throw new Error(`rsync failed for ${b}: ${result.stderr}`);
     shipped.push(dest + b.split('/').pop());
   }
   const quoted = shipped.map((p) => `"$HOME/${p}"`).join(' ');
@@ -138,19 +139,19 @@ function validate(): Record<string, string> {
       out[name] = 'not built';
       continue;
     }
-    const r = run(
+    const result = run(
       PLUGINVAL,
       ['--strictness-level', '5', '--skip-gui-tests', '--validate', resolve(path)],
       true,
     );
-    const log = `${r.stdout}${r.stderr}`;
+    const log = `${result.stdout}${result.stderr}`;
     out[name] =
-      r.status === 0
+      result.status === 0
         ? 'pass'
         : /No types found|Unable to load|not found/i.test(log)
           ? 'not loadable from build dir'
-          : `fail (exit ${r.status})`;
-    if (r.status !== 0)
+          : `fail (exit ${result.status})`;
+    if (result.status !== 0)
       console.error(`--- pluginval ${name} ---\n${log.split('\n').slice(-25).join('\n')}`);
   }
   return out;
@@ -162,12 +163,12 @@ const hostRender = (
   extra: string[] = [],
   env: Record<string, string> = {},
 ) => {
-  const r = spawnSync(HOST, [plugin, fixture, ...extra], {
+  const result = spawnSync(HOST, [plugin, fixture, ...extra], {
     encoding: 'utf8',
     env: { ...process.env, ...env },
   });
-  if (r.status !== 0) return { error: r.stderr.trim() } as any;
-  return JSON.parse(r.stdout.trim().split('\n').pop()!);
+  if (result.status !== 0) return { error: result.stderr.trim() } as any;
+  return JSON.parse(result.stdout.trim().split('\n').pop()!);
 };
 const expected = (fixture: string) =>
   JSON.parse(readFileSync(join('tests/golden/expected', fixture.split('/').pop()!), 'utf8'));
@@ -311,23 +312,23 @@ function test() {
       ],
     },
   ].filter((c) => !c.skip) as any[];
-  const renders = cases.map((c) => {
-    const got = hostRender(c.plugin, c.fixture, c.extra, { BLOKDUST_DIAG_FILE: diag });
-    const exp = c.native ? nativeRender(c.fixture) : expected(c.fixture);
-    const nameOk = !c.paramName || got.params?.[c.paramName[0]] === c.paramName[1];
+  const renders = cases.map((cas) => {
+    const got = hostRender(cas.plugin, cas.fixture, cas.extra, { BLOKDUST_DIAG_FILE: diag });
+    const exp = cas.native ? nativeRender(cas.fixture) : expected(cas.fixture);
+    const nameOk = !cas.paramName || got.params?.[cas.paramName[0]] === cas.paramName[1];
     const ok =
       nameOk &&
       got.audioHash === exp.audioHash &&
-      (c.noRoundTripCheck || got.stateRoundTrips === true) &&
-      (c.editorBlocks === undefined ||
-        (got.editor?.blocks === c.editorBlocks &&
+      (cas.noRoundTripCheck || got.stateRoundTrips === true) &&
+      (cas.editorBlocks === undefined ||
+        (got.editor?.blocks === cas.editorBlocks &&
           got.editor?.supportSystem?.format === 'VST3' &&
           got.editor?.supportSystem?.sampleRate > 0 &&
           got.editor?.supportSystem?.bufferSize > 0 &&
           // Owner (iPad, 2026-11-20): the Wavetable's picture is drawn by the engine's wasm; the editor must serve it.
           got.editor?.wasm === true));
     return {
-      case: c.name,
+      case: cas.name,
       ok,
       audioHash: got.audioHash ?? got.error,
       expected: exp.audioHash,
@@ -501,10 +502,10 @@ function test() {
   // CHG-0038: Stage blocks' inner worlds as the processor keeps them (edits inside go to the Stage's world, made on
   // first use; a removed Stage's world is freed once the engine let it go; macros keep the processor's sampler fields).
   {
-    const r = spawnSync(HOST, ['--selftest-stages'], { encoding: 'utf8' });
+    const result = spawnSync(HOST, ['--selftest-stages'], { encoding: 'utf8' });
     const j = (() => {
       try {
-        return JSON.parse(r.stdout.trim().split('\n').pop()!);
+        return JSON.parse(result.stdout.trim().split('\n').pop()!);
       } catch {
         return {};
       }
@@ -512,28 +513,31 @@ function test() {
     renders.push({
       case: 'Stage worlds: edits inside reach their own world',
       ok: j.ok === true,
-      audioHash: JSON.stringify(j.checks ?? r.stderr),
+      audioHash: JSON.stringify(j.checks ?? result.stderr),
       expected: 'all checks true',
     });
   }
   // CHG-0005: patch files (save, list) and the Open / Insert merge the processor applies.
   {
-    const r = spawnSync(HOST, ['--selftest-patches'], { encoding: 'utf8' });
+    const result = spawnSync(HOST, ['--selftest-patches'], { encoding: 'utf8' });
     let j: any = {};
     try {
-      j = JSON.parse(r.stdout.trim().split('\n').pop() ?? '{}');
+      j = JSON.parse(result.stdout.trim().split('\n').pop() ?? '{}');
     } catch {
       /* reported below */
     }
     renders.push({
       case: 'patch files: save, list, open/insert merge',
       ok: j.ok === true,
-      audioHash: JSON.stringify(j.checks ?? r.stderr),
+      audioHash: JSON.stringify(j.checks ?? result.stderr),
       expected: 'all checks true',
     });
   }
   for (const r of renders.filter((r) => !r.ok)) console.error(`FAIL ${JSON.stringify(r)}`);
-  const ok = pluginval.vst3 === 'pass' && pluginval.fxVst3 === 'pass' && renders.every((r) => r.ok);
+  const ok =
+    pluginval.vst3 === 'pass' &&
+    pluginval.fxVst3 === 'pass' &&
+    renders.every((render) => render.ok);
   console.log(
     JSON.stringify({
       pluginval,
@@ -582,7 +586,7 @@ function au(keep = false) {
     for (const p of plugins) {
       const r: any = { plugin: p.id };
       const auval = run('auval', ['-v', ...p.auval], true);
-      r.auval = /AU VALIDATION SUCCEEDED/.test(auval.stdout) ? 'pass' : 'fail';
+      r.auval = auval.stdout.includes('AU VALIDATION SUCCEEDED') ? 'pass' : 'fail';
       if (r.auval !== 'pass') console.error(auval.stdout.split('\n').slice(-30).join('\n'));
       const pv = run(
         PLUGINVAL,
@@ -607,7 +611,11 @@ function au(keep = false) {
     }
   }
   console.log(JSON.stringify({ results, installed: keep ? 'kept' : 'removed after the test' }));
-  if (results.some((r) => r.auval !== 'pass' || r.pluginval !== 'pass' || !r.render.ok))
+  if (
+    results.some(
+      (result) => result.auval !== 'pass' || result.pluginval !== 'pass' || !result.render.ok,
+    )
+  )
     process.exit(1);
 }
 
@@ -642,7 +650,7 @@ function signBundles(
     }
   }
   for (const b of bundles) {
-    const r = run(
+    const result = run(
       'codesign',
       [
         '--force',
@@ -657,7 +665,7 @@ function signBundles(
       ],
       true,
     );
-    if (r.status !== 0) throw new Error(`codesign ${b.path}: ${r.stderr}`);
+    if (result.status !== 0) throw new Error(`codesign ${b.path}: ${result.stderr}`);
     const v = run('codesign', ['--verify', '--strict', '--deep', b.path], true);
     if (v.status !== 0) throw new Error(`verify ${b.path}: ${v.stderr}`);
   }
@@ -730,11 +738,11 @@ function sign(profile: string, identity: string) {
   result.gatekeeper = bundles
     .filter((b) => b.path.endsWith('.app'))
     .map((b) => {
-      const g = run('spctl', ['--assess', '--type', 'execute', '-vv', b.path], true);
+      const result = run('spctl', ['--assess', '--type', 'execute', '-vv', b.path], true);
       return {
         app: b.path.split('/').pop(),
-        ok: g.status === 0,
-        source: /source=(.*)/.exec(`${g.stdout}${g.stderr}`)?.[1] ?? null,
+        ok: result.status === 0,
+        source: /source=(.*)/.exec(`${result.stdout}${result.stderr}`)?.[1] ?? null,
       };
     });
   rmSync(zip, { force: true });
@@ -779,7 +787,8 @@ function packageMac(profile: string, appId: string, installerId: string, noBuild
     return { name, archs, minos, version: plist };
   });
   const bad = checks.filter(
-    (c) => c.archs !== 'arm64,x86_64' || c.minos !== '11.0' || c.version !== VERSION,
+    (check) =>
+      check.archs !== 'arm64,x86_64' || check.minos !== '11.0' || check.version !== VERSION,
   );
   if (bad.length) throw new Error(`not releasable: ${JSON.stringify(bad)}`);
   // One component package per install location.
@@ -791,32 +800,32 @@ function packageMac(profile: string, appId: string, installerId: string, noBuild
   };
   const pkgs = join(staging, 'pkgs');
   mkdirSync(pkgs, { recursive: true });
-  for (const [key, r] of Object.entries(roots)) {
-    mkdirSync(r.dir, { recursive: true });
-    if (r.ext)
-      for (const b of bundles.filter((x) => x.path.endsWith(r.ext!)))
-        cpSync(b.path, join(r.dir, b.path.split('/').pop()!), {
+  for (const [key, value] of Object.entries(roots)) {
+    mkdirSync(value.dir, { recursive: true });
+    if (value.ext)
+      for (const b of bundles.filter((x) => x.path.endsWith(value.ext!)))
+        cpSync(b.path, join(value.dir, b.path.split('/').pop()!), {
           recursive: true,
           verbatimSymlinks: true,
         });
     else {
-      cpSync('NOTICE.md', join(r.dir, 'NOTICE.txt'));
-      cpSync('LICENSE', join(r.dir, 'LICENSE.txt'));
+      cpSync('NOTICE.md', join(value.dir, 'NOTICE.txt'));
+      cpSync('LICENSE', join(value.dir, 'LICENSE.txt'));
     }
     const args = [
       '--root',
-      r.dir,
+      value.dir,
       '--identifier',
       `com.funputs.blokdust.pkg.${key}`,
       '--version',
       VERSION,
       '--install-location',
-      r.to,
+      value.to,
     ];
-    if (r.ext) {
+    if (value.ext) {
       // Install where it says, not over a copy the user moved elsewhere (bundles are relocatable by default).
       const plist = join(staging, `${key}.plist`);
-      run('pkgbuild', ['--analyze', '--root', r.dir, plist], true);
+      run('pkgbuild', ['--analyze', '--root', value.dir, plist], true);
       // The plist is an array with one entry per top-level bundle.
       for (
         let i = 0;
@@ -826,8 +835,8 @@ function packageMac(profile: string, appId: string, installerId: string, noBuild
       );
       args.push('--component-plist', plist);
     }
-    const p = run('pkgbuild', [...args, join(pkgs, `${key}.pkg`)], true);
-    if (p.status !== 0) throw new Error(`pkgbuild ${key}: ${p.stderr}`);
+    const result = run('pkgbuild', [...args, join(pkgs, `${key}.pkg`)], true);
+    if (result.status !== 0) throw new Error(`pkgbuild ${key}: ${result.stderr}`);
   }
   const ref = (key: string) =>
     `<pkg-ref id="com.funputs.blokdust.pkg.${key}" version="${VERSION}">${key}.pkg</pkg-ref>`;
@@ -916,7 +925,7 @@ function packageMac(profile: string, appId: string, installerId: string, noBuild
   // What a user's Mac decides, asked the way it asks.
   const g = run('spctl', ['--assess', '--type', 'install', '-vv', pkg], true);
   result.gatekeeper = {
-    ok: /accepted/.test(`${g.stdout}${g.stderr}`),
+    ok: `${g.stdout}${g.stderr}`.includes('accepted'),
     source: /source=(.*)/.exec(`${g.stdout}${g.stderr}`)?.[1] ?? null,
   };
   const sha = run('shasum', ['-a', '256', pkg], true).stdout.split(/\s+/)[0];
@@ -1023,8 +1032,8 @@ async function reaperMac() {
     spawn(click, ['90'], { stdio: 'ignore', detached: true }).unref(); // presses "Still evaluating" when the dialog shows
     const deadline = Date.now() + (p.seconds + 120) * 1000; // first launch scans plugins
     while (Date.now() < deadline && !existsSync(report))
-      await new Promise((r) => setTimeout(r, 500));
-    await new Promise((r) => setTimeout(r, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
     try {
       process.kill(-child.pid!, 'SIGTERM');
     } catch {
@@ -1038,7 +1047,7 @@ async function reaperMac() {
     console.error(`${ok ? 'pass' : 'FAIL'} ${p.name} ${JSON.stringify(r)}`);
   }
   console.log(JSON.stringify({ reaper: results[0]?.reaper, results }));
-  if (results.some((r) => !r.ok)) process.exit(1);
+  if (results.some((result) => !result.ok)) process.exit(1);
 }
 
 const cmd = process.argv[2];

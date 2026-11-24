@@ -6,7 +6,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { WRANGLER, run } from '../server/lib.ts';
-import { remoteConfig, type EnvName } from '../server/config.ts';
+import { remoteConfig } from '../server/config.ts';
 import { migratePatch } from './migrate.ts';
 
 const args = process.argv.slice(2);
@@ -26,17 +26,17 @@ function target(): { db: string[]; name: string } {
     };
   if (env !== 'staging' && env !== 'production')
     throw new Error('--files, --env staging|production or --local <state> required');
-  const e = env as EnvName;
+  const envName = env;
   return {
     db: [
-      e === 'staging' ? 'blokdust-staging' : 'blokdust',
+      envName === 'staging' ? 'blokdust-staging' : 'blokdust',
       '--remote',
       '--env',
-      e,
+      envName,
       '--config',
-      remoteConfig(e),
+      remoteConfig(envName),
     ],
-    name: e,
+    name: envName,
   };
 }
 async function sql<T>(db: string[], command: string): Promise<T[]> {

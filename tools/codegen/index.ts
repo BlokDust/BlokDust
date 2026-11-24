@@ -102,23 +102,23 @@ export function automation(p: any): { transform: string; min: number; max: numbe
   const e = (p.v1.uiValueExpr ?? '').replace(/\s+/g, '');
   const key = p.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const n = '(-?\\d+(?:\\.\\d+)?)';
-  let m: RegExpExecArray | null;
+  let match: RegExpExecArray | null;
   const base = { min: props.min, max: props.max };
   if (e === `this.Params.${p.key}`) return { transform: 'Identity', ...base, k: 0 };
   if (
-    (m = new RegExp(`^${n}-this\\.Params\\.${key}$`).exec(e)) ||
-    (m = new RegExp(`^Math\\.round\\(${n}-this\\.Params\\.${key}\\)$`).exec(e))
+    (match = new RegExp(`^${n}-this\\.Params\\.${key}$`).exec(e)) ||
+    (match = new RegExp(`^Math\\.round\\(${n}-this\\.Params\\.${key}\\)$`).exec(e))
   )
-    return { transform: 'SubtractFrom', ...base, k: Number(m[1]) }; // ui = k − param  ⇒ param = k − ui
-  if ((m = new RegExp(`^this\\.Params\\.${key}\\+${n}$`).exec(e)))
-    return { transform: 'Minus', ...base, k: Number(m[1]) }; // ui = param + k
-  if ((m = new RegExp(`^this\\.Params\\.${key}\\*${n}$`).exec(e)))
-    return { transform: 'Divide', ...base, k: Number(m[1]) }; // ui = param · k
+    return { transform: 'SubtractFrom', ...base, k: Number(match[1]) }; // ui = k − param  ⇒ param = k − ui
+  if ((match = new RegExp(`^this\\.Params\\.${key}\\+${n}$`).exec(e)))
+    return { transform: 'Minus', ...base, k: Number(match[1]) }; // ui = param + k
+  if ((match = new RegExp(`^this\\.Params\\.${key}\\*${n}$`).exec(e)))
+    return { transform: 'Divide', ...base, k: Number(match[1]) }; // ui = param · k
   return none;
 }
 
 function genCpp(manifests: any[]): string {
-  const maxParams = Math.max(...manifests.map((m) => m.params.length));
+  const maxParams = Math.max(...manifests.map((manifest) => manifest.params.length));
   const L: string[] = [];
   L.push(
     `// ${HEADER}`,
@@ -175,9 +175,16 @@ function genCpp(manifests: any[]): string {
     if (m.params.length) {
       L.push(`inline constexpr ParamInfo kParams${P}[] = {`);
       for (const p of m.params) {
-        const d = p.default;
-        const numeric = typeof d === 'number' || typeof d === 'boolean';
-        const v = typeof d === 'number' ? d : typeof d === 'boolean' ? (d ? 1 : 0) : 0;
+        const defaultValue = p.default;
+        const numeric = typeof defaultValue === 'number' || typeof defaultValue === 'boolean';
+        const v =
+          typeof defaultValue === 'number'
+            ? defaultValue
+            : typeof defaultValue === 'boolean'
+              ? defaultValue
+                ? 1
+                : 0
+              : 0;
         const a = automation(p);
         L.push(
           `  {"${p.key}", ${num(v)}, ${numeric}, UiTransform::${a.transform}, ${num(a.min)}, ${num(a.max)}, ${num(a.k)}${p.curve === 'log' ? ', true' : ''}},`,
@@ -186,7 +193,7 @@ function genCpp(manifests: any[]): string {
       L.push('};');
     }
     L.push(
-      `namespace param::${P} { enum : std::uint8_t { ${[...m.params.map((p: any) => cppIdent(p.key)), 'Count'].join(', ')} }; }`,
+      `namespace param::${P} { enum : std::uint8_t { ${[...m.params.map((param: any) => cppIdent(param.key)), 'Count'].join(', ')} }; }`,
       '',
     );
   }
@@ -215,22 +222,22 @@ function genCpp(manifests: any[]): string {
 }
 
 function genTs(manifests: any[]): string {
-  const data = manifests.map((m) => ({
-    id: m.id,
-    category: m.category,
-    kind: m.kind,
-    name: m.name,
-    description: m.description,
-    draft: m.draft,
-    v1Type: m.v1?.type ?? null,
-    menuId: m.v1?.type ?? m.name.replace(/[^A-Za-z0-9]/g, ''),
-    catchment: m.connection?.catchment ?? 0,
-    geometry: m.geometry,
-    params: m.params.map((p: any) => ({
-      key: p.key,
-      default: p.default,
-      unit: p.unit ?? null,
-      ui: automation(p),
+  const data = manifests.map((manifest) => ({
+    id: manifest.id,
+    category: manifest.category,
+    kind: manifest.kind,
+    name: manifest.name,
+    description: manifest.description,
+    draft: manifest.draft,
+    v1Type: manifest.v1?.type ?? null,
+    menuId: manifest.v1?.type ?? manifest.name.replace(/[^A-Za-z0-9]/g, ''),
+    catchment: manifest.connection?.catchment ?? 0,
+    geometry: manifest.geometry,
+    params: manifest.params.map((param: any) => ({
+      key: param.key,
+      default: param.default,
+      unit: param.unit ?? null,
+      ui: automation(param),
     })),
   }));
   return (
@@ -242,18 +249,18 @@ function genTs(manifests: any[]): string {
     `export interface BlockGeometry { units: 'grid'; unitsPerGrid?: number; layers: GeometryLayer[]; /** Drawn instead of layers while a Gate is open (SIMULATION-0011). */ openLayers?: GeometryLayer[]; outline: [number, number][]; menuOffset?: [number, number]; overlays?: Overlay[] }\n` +
     `export interface BlockDef { id: string; category: string; kind: BlockKind; name: string; description: string; draft: boolean; v1Type: string | null; /** The block's id in the menus: v1's type name, or the name without spaces for v2-only blocks. */ menuId: string; catchment: number; geometry: BlockGeometry; params: { key: string; default: unknown; unit: string | null; ui: { transform: 'None' | 'Identity' | 'SubtractFrom' | 'Minus' | 'Divide'; min: number; max: number; k: number } }[] }\n\n` +
     `export const BLOCKS: readonly BlockDef[] = ${JSON.stringify(data, null, 2)} as const as unknown as readonly BlockDef[];\n\n` +
-    `export type BlockId = ${manifests.map((m) => `'${m.id}'`).join(' | ')};\n\n` +
+    `export type BlockId = ${manifests.map((manifest) => `'${manifest.id}'`).join(' | ')};\n\n` +
     `export const BLOCKS_BY_ID: ReadonlyMap<string, BlockDef> = new Map(BLOCKS.map(b => [b.id, b]));\n`
   );
 }
 
 function genPalettesTs(): string {
   const p = JSON.parse(readFileSync(join(BLOCKS_DIR, 'v1-palettes.json'), 'utf8'));
-  const themes = p.themes.map((t: any) => ({
-    index: t.index,
-    name: t.name,
-    colors: t.colors,
-    roles: t.roles,
+  const themes = p.themes.map((theme: any) => ({
+    index: theme.index,
+    name: theme.name,
+    colors: theme.colors,
+    roles: theme.roles,
   }));
   return (
     `// GENERATED by \`pnpm bd codegen\` from blocks/v1-palettes.json. Do not edit by hand.\n\n` +
@@ -291,7 +298,7 @@ for (const [path, content] of outputs) {
 console.log(
   JSON.stringify({
     manifests: manifests.length,
-    drafts: manifests.filter((m) => m.draft).length,
+    drafts: manifests.filter((manifest) => manifest.draft).length,
     errors: 0,
     stale,
   }),

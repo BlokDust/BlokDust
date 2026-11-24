@@ -42,28 +42,32 @@ export function renderV2(
 ): Audio {
   const { patch } = importV1(composition);
   const loaded = loadPatch(patch, []);
-  const e = WasmEngine.fromModule(module, sampleRate, seed ?? loaded.seed);
-  for (const c of loaded.commands) if (!e.push(c)) throw new Error('command queue full');
+  const engine = WasmEngine.fromModule(module, sampleRate, seed ?? loaded.seed);
+  for (const command of loaded.commands)
+    if (!engine.push(command)) throw new Error('command queue full');
   const frames = Math.round(seconds * sampleRate),
-    L = new Float32Array(frames),
+    samples = new Float32Array(frames),
     R = new Float32Array(frames);
   for (let done = 0; done < frames; done += 128) {
     const n = Math.min(128, frames - done),
-      out = e.process(n);
-    L.set(out.left.subarray(0, n), done);
+      out = engine.process(n);
+    samples.set(out.left.subarray(0, n), done);
     R.set(out.right.subarray(0, n), done);
-    e.drainEvents();
+    engine.drainEvents();
     // Sample files (v1 fetched them): attached after the first quantum, once the blocks exist (as the app does).
     if (done === 0)
       for (const f of files) {
         const a = readWav(f.wav),
           id = loaded.ids.get(`v1-${f.block}`);
         if (id === undefined) throw new Error(`no v1 block ${f.block}`);
-        e.attachSample(id, a.channels[0], a.channels[1], a.sampleRate);
+        engine.attachSample(id, a.channels[0], a.channels[1], a.sampleRate);
       }
   }
-  e.dispose();
-  return { sampleRate, channels: L.every((v, i) => v === R[i]) ? [L] : [L, R] };
+  engine.dispose();
+  return {
+    sampleRate,
+    channels: samples.every((sample, i) => sample === R[i]) ? [samples] : [samples, R],
+  };
 }
 
 function compareAll() {
@@ -75,8 +79,8 @@ function compareAll() {
   // Every fixture must have a reference: a missing one fails loudly (a partial re-capture once dropped 33 silently).
   const refs = manifest().results;
   const missing = loadAudioFixtures(only)
-    .filter((f) => !refs.some((r) => r.name === f.name))
-    .map((f) => f.name);
+    .filter((audioFixture) => !refs.some((ref) => ref.name === audioFixture.name))
+    .map((audioFixture) => audioFixture.name);
   if (missing.length) {
     console.log(
       JSON.stringify({
@@ -89,14 +93,14 @@ function compareAll() {
     return;
   }
   const rows = refs
-    .filter((r) => !only || only.includes(r.name))
+    .filter((ref) => !only || only.includes(ref.name))
     .map((r) => {
       const v2 = renderV2(module, r.composition, r.seconds, r.sampleRate, undefined, r.files ?? []);
       if (save) writeWav(join(OUT, `${r.name}.v2.wav`), v2);
-      const d = describe(v2);
+      const descriptors = describe(v2);
       // Describe the stored reference now (not the manifest copy), so analysis improvements never need a v1 re-capture.
       const v1 = describe(readWav(join(REFS, `${r.name}.wav`)));
-      const res = compare(d, v1, limitsFor(r.name), r.spread);
+      const res = compare(descriptors, v1, limitsFor(r.name), r.spread);
       const known = thresholds.fixtures?.[r.name]?.knownFailure;
       return {
         name: r.name,
@@ -105,19 +109,23 @@ function compareAll() {
         metrics: res.metrics,
         ...(known ? { knownFailure: known } : {}),
         v1: { rmsDb: v1.rmsDb, f0Hz: v1.f0Hz, centroidHz: v1.centroidHz },
-        v2: { rmsDb: d.rmsDb, f0Hz: d.f0Hz, centroidHz: d.centroidHz },
+        v2: {
+          rmsDb: descriptors.rmsDb,
+          f0Hz: descriptors.f0Hz,
+          centroidHz: descriptors.centroidHz,
+        },
       };
     });
   for (const r of rows)
     console.error(
       `${r.pass ? 'pass' : r.knownFailure ? 'KNOWN' : 'FAIL'} ${r.name.padEnd(16)} ${JSON.stringify(r.metrics)}${r.fails.length ? ` over: ${r.fails.join(',')}` : ''}`,
     );
-  const unexpected = rows.filter((r) => !r.pass && !r.knownFailure);
+  const unexpected = rows.filter((row) => !row.pass && !row.knownFailure);
   console.log(
     JSON.stringify({
       checked: rows.length,
-      passed: rows.filter((r) => r.pass).length,
-      knownFailures: rows.filter((r) => !r.pass && r.knownFailure).map((r) => r.name),
+      passed: rows.filter((row) => row.pass).length,
+      knownFailures: rows.filter((row) => !row.pass && row.knownFailure).map((r) => r.name),
       failed: unexpected.map((r) => r.name),
       rows,
     }),
@@ -127,7 +135,8 @@ function compareAll() {
 
 /** The check must reject audible differences: a 20-cent detune, a 1 kHz low-pass and +2 dB, and accept the reference itself. */
 function selftest() {
-  const ref = manifest().results.find((r) => r.name === 'tone-saw') ?? manifest().results[0];
+  const ref =
+    manifest().results.find((result) => result.name === 'tone-saw') ?? manifest().results[0];
   const a = readWav(join(REFS, `${ref.name}.wav`)),
     x = a.channels[0],
     sr = a.sampleRate;
@@ -165,8 +174,10 @@ function selftest() {
     const r = compare(describe(audio), describe(a), limitsFor(ref.name));
     return { name, expectPass, pass: r.pass, ok: r.pass === expectPass, fails: r.fails };
   });
-  console.log(JSON.stringify({ reference: ref.name, results, ok: results.every((r) => r.ok) }));
-  if (!results.every((r) => r.ok)) process.exitCode = 1;
+  console.log(
+    JSON.stringify({ reference: ref.name, results, ok: results.every((result) => result.ok) }),
+  );
+  if (!results.every((result) => result.ok)) process.exitCode = 1;
 }
 
 // Run as a CLI only when executed directly (tools may import renderV2).

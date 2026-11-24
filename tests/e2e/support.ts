@@ -216,19 +216,23 @@ try {
   await page.waitForTimeout(900);
   const point = await page.evaluate(() => {
     const { scene: s, v1App: a } = (window as any).__bd_probe,
-      p = s.SettingsPanel;
+      settingsPanel = s.SettingsPanel;
     return [
-      p.MenuItems[1].Position.x / devicePixelRatio,
-      (p.OffsetY + 30 * a.Unit) / devicePixelRatio,
+      settingsPanel.MenuItems[1].Position.x / devicePixelRatio,
+      (settingsPanel.OffsetY + 30 * a.Unit) / devicePixelRatio,
     ];
   });
   await page.mouse.click(point[0], point[1]);
   // Owner (2026-11-18): Connect's page popped in once its tab had arrived; it slides in under the tabs, as the others do.
   await page.waitForTimeout(450);
   const sliding = await page.evaluate(() => {
-    const p = (window as any).__bd_probe.scene.SettingsPanel,
-      m = document.querySelector<HTMLElement>('#feedback-panel');
-    return { y: p.MenuItems[1].YOffset, h: p.DrawTo.Height, shown: !!m && !m.hidden };
+    const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel,
+      element = document.querySelector<HTMLElement>('#feedback-panel');
+    return {
+      y: settingsPanel.MenuItems[1].YOffset,
+      h: settingsPanel.DrawTo.Height,
+      shown: !!element && !element.hidden,
+    };
   });
   check(
     'FEEDBACK slides in with its tab (shown while its page is still arriving)',
@@ -244,7 +248,7 @@ try {
     'context included by default',
     (await page.getByRole('switch').getAttribute('aria-checked')) === 'true',
   );
-  let submissions: any[] = [];
+  const submissions: any[] = [];
   await page.route('**/api/support', async (route) => {
     const value = route.request().postDataJSON();
     submissions.push(value);
@@ -291,8 +295,8 @@ try {
   await page.click('#feedback-send');
   await page.getByRole('status').filter({ hasText: 'Message sent' }).waitFor();
   const bar = await page.evaluate(() => {
-    const m = (window as any).__bd_probe.scene.MessagePanel;
-    return { open: m.Open, text: m._Value?.string };
+    const messagePanel = (window as any).__bd_probe.scene.MessagePanel;
+    return { open: messagePanel.Open, text: messagePanel._Value?.string };
   });
   check(
     "sent: v1's message bar says MESSAGE SENT, not a line under the form (owner, 2026-11-18)",
@@ -347,7 +351,7 @@ try {
     "CHG-0041: BUG is sent as a bug; REPORT A PATCH with no one else's patch open says what to do, no fields",
     submissions.length === 3 &&
       submissions[2].kind === 'bug' &&
-      /Open the patch you want to report/.test(reportView.intro ?? '') &&
+      (reportView.intro ?? '').includes('Open the patch you want to report') &&
       reportView.send === 'none' &&
       reportView.email === 'none',
     { kind: submissions[2]?.kind, reportView },
@@ -385,8 +389,8 @@ try {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.waitForTimeout(300);
   const settingsPoint = await page.evaluate(() => {
-    const s = (window as any).__bd_probe.scene.SettingsPanel;
-    return [s.MenuItems[0].Position.x / devicePixelRatio, 30];
+    const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+    return [settingsPanel.MenuItems[0].Position.x / devicePixelRatio, 30];
   });
   await page.mouse.click(settingsPoint[0], settingsPoint[1]);
   await page.waitForTimeout(800);

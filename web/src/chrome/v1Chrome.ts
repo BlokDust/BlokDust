@@ -29,12 +29,12 @@ export interface ChromeInput {
   blockCount: number; // v1 CreateNew shows its icon (and shifts the logo) when there is more than one block
 }
 
-export function drawV1Chrome(c: ChromeInput): void {
-  const { ctx, theme, units } = c;
+export function drawV1Chrome(chromeInput: ChromeInput): void {
+  const { ctx, theme, units } = chromeInput;
   const txt = theme.colors[theme.roles.txt];
-  const W = c.width,
-    H = c.height;
-  const { device, itemsPerPage } = deviceOf(c.cssWidth, c.cssHeight);
+  const W = chromeInput.width,
+    H = chromeInput.height;
+  const { device, itemsPerPage } = deviceOf(chromeInput.cssWidth, chromeInput.cssHeight);
 
   // ---- ZoomButtons.Draw ----
   {
@@ -99,7 +99,7 @@ export function drawV1Chrome(c: ChromeInput): void {
     const thisHeight = Math.round(HEADER_HEIGHT * units);
     const rowOffset = (rows - 1) * HEADER_HEIGHT * units;
     const dropDownHeight = W / (itemsPerPage + 1) / units;
-    const createNewMargin = c.blockCount > 1 ? 30 : 0;
+    const createNewMargin = chromeInput.blockCount > 1 ? 30 : 0;
 
     ctx.font = '400 ' + dataType + 'px Dosis';
     ctx.textAlign = 'left';
@@ -193,7 +193,7 @@ export function drawV1Chrome(c: ChromeInput): void {
   }
 
   // ---- CreateNew icon (visible when more than one block) ----
-  if (c.blockCount > 1) {
+  if (chromeInput.blockCount > 1) {
     const x = 25,
       y = HEADER_HEIGHT * 0.5,
       m = 1,
@@ -231,7 +231,7 @@ export async function loadV1Fonts(base = document.baseURI): Promise<void> {
   ];
   // A missing font must never stop the app starting: chrome text then falls back to the default font (and visual
   // diffs will show it), but the stage, audio and host bridge keep working.
-  const loaded = await Promise.allSettled(faces.map((f) => f.load()));
+  const loaded = await Promise.allSettled(faces.map((face) => face.load()));
   for (const r of loaded) {
     if (r.status === 'fulfilled') document.fonts.add(r.value);
     else console.warn('v1 font failed to load:', r.reason);

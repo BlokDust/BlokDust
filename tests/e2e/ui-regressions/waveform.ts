@@ -1,7 +1,11 @@
 // Waveform zoom in the options panel (CHG-0028; web/src/v1ui/waveZoom.ts): ui-regressions' tests for it, one file per area.
 import type { Browser, Page } from 'playwright';
 
-type Block = { Id: number; Type: string; Position: { x: number; y: number } };
+interface Block {
+  Id: number;
+  Type: string;
+  Position: { x: number; y: number };
+}
 export interface Harness {
   browser: Browser;
   url: string;
@@ -97,22 +101,22 @@ export function waveformTests({
       const geo = () =>
         p.evaluate(() => {
           const P = (window as any).__bd_probe,
-            o = P.scene.OptionsPanel,
-            w = (o.Options as any[]).find((x) => x.Type === 'waveregion'),
-            v = o.SelectedBlock;
+            optionsPanel = P.scene.OptionsPanel,
+            w = (optionsPanel.Options as any[]).find((x) => x.Type === 'waveregion'),
+            selectedBlock = optionsPanel.SelectedBlock;
           return {
-            x: o.Position.x + o.Margin,
-            w: o.Range,
-            y: o.Position.y + w.Position.y,
+            x: optionsPanel.Position.x + optionsPanel.Margin,
+            w: optionsPanel.Range,
+            y: optionsPanel.Position.y + w.Position.y,
             h: w.Size.height,
             min: w.Min,
             max: w.Max,
             span: w.Max - w.Min,
             wave: (w.Waveform as number[]).length,
-            start: v.Params.startPosition,
-            end: v.Params.endPosition,
-            loopStart: v.Params.loopStart,
-            dur: v.GetDuration(),
+            start: selectedBlock.Params.startPosition,
+            end: selectedBlock.Params.endPosition,
+            loopStart: selectedBlock.Params.loopStart,
+            dur: selectedBlock.GetDuration(),
             handle0: w.Handles[0].Position.x,
             stageZoom: P.v1App.ZoomLevel,
             drag: { ...P.v1App.DragOffset },
@@ -259,14 +263,14 @@ export function waveformTests({
       // Where the burst is drawn (the loudest of the row's points, 0..1 across the row) and where the scale puts it.
       const look = () =>
         p.evaluate((at) => {
-          const o = (window as any).__bd_probe.scene.OptionsPanel,
-            w = (o.Options as any[]).find((x) => x.Type === 'waveregion');
+          const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
+            w = (optionsPanel.Options as any[]).find((x) => x.Type === 'waveregion');
           const wave = w.Waveform as number[],
             peak = wave.indexOf(Math.max(...wave));
           return {
-            x: o.Position.x + o.Margin,
-            y: o.Position.y + w.Position.y + w.Size.height / 2,
-            w: o.Range,
+            x: optionsPanel.Position.x + optionsPanel.Margin,
+            y: optionsPanel.Position.y + w.Position.y + w.Size.height / 2,
+            w: optionsPanel.Range,
             min: w.Min,
             max: w.Max,
             drawn: (peak + 0.5) / wave.length,
@@ -350,14 +354,14 @@ export function waveformTests({
       await pg.waitForTimeout(1200);
       const look = () =>
         pg.evaluate((at) => {
-          const o = (window as any).__bd_probe.scene.OptionsPanel,
-            w = (o.Options as any[]).find((x) => x.Type === 'waveregion');
+          const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
+            w = (optionsPanel.Options as any[]).find((x) => x.Type === 'waveregion');
           const wave = w.Waveform as number[],
             peak = wave.indexOf(Math.max(...wave));
           return {
-            x: o.Position.x + o.Margin,
-            y: o.Position.y + w.Position.y + w.Size.height / 2,
-            w: o.Range,
+            x: optionsPanel.Position.x + optionsPanel.Margin,
+            y: optionsPanel.Position.y + w.Position.y + w.Size.height / 2,
+            w: optionsPanel.Range,
             min: w.Min,
             max: w.Max,
             drawn: (peak + 0.5) / wave.length,

@@ -14,12 +14,12 @@ async function accessKeys(
 ): Promise<(JsonWebKey & { kid?: string })[]> {
   if (!refresh && certs && certs.team === team && Date.now() - certs.at < 3600_000)
     return certs.keys;
-  const r = await fetch(`${team}/cdn-cgi/access/certs`);
-  if (!r.ok) throw new HttpError(503, 'access keys unavailable');
+  const response = await fetch(`${team}/cdn-cgi/access/certs`);
+  if (!response.ok) throw new HttpError(503, 'access keys unavailable');
   certs = {
     at: Date.now(),
     team,
-    keys: ((await r.json()) as { keys: (JsonWebKey & { kid?: string })[] }).keys ?? [],
+    keys: ((await response.json()) as { keys: (JsonWebKey & { kid?: string })[] }).keys ?? [],
   };
   return certs.keys;
 }

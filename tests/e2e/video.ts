@@ -18,7 +18,11 @@ const browser = await chromium.launch({
   args: ['--autoplay-policy=no-user-gesture-required'],
 });
 
-type Block = { Id: number; Type: string; Position: { x: number; y: number } };
+interface Block {
+  Id: number;
+  Type: string;
+  Position: { x: number; y: number };
+}
 const comp = (blocks: Block[]) =>
   encodeURIComponent(
     JSON.stringify({
@@ -117,7 +121,7 @@ const startVideo = (p: Page) =>
 const panel = (p: Page) =>
   p.evaluate(() => {
     const pp = (window as any).__bd_probe.scene.PatchesPanel,
-      v = document.getElementById('patchVideo') as HTMLVideoElement;
+      elementById = document.getElementById('patchVideo') as HTMLVideoElement;
     return {
       state: pp.VideoState,
       view: pp.View,
@@ -125,7 +129,7 @@ const panel = (p: Page) =>
       progress: pp.VideoProgress,
       videoOn: pp.videoOn,
       seconds: (window as any).__bd_probe.scene.host.video.seconds(),
-      player: { shown: v.style.display === 'block', src: !!v.src },
+      player: { shown: elementById.style.display === 'block', src: !!elementById.src },
     };
   });
 /** Make the video and save what downloads (desktop Chrome can't share files: it downloads once made). */
@@ -168,12 +172,12 @@ const ffprobe = (file: string): Probe =>
   );
 /** Mean audio level in dB (ffmpeg volumedetect, which reports on stderr). */
 function meanDb(file: string): number {
-  const r = spawnSync(
+  const result = spawnSync(
     'ffmpeg',
     ['-hide_banner', '-i', file, '-af', 'volumedetect', '-vn', '-f', 'null', '-'],
     { encoding: 'utf8' },
   );
-  return Number(/mean_volume: (-?[\d.]+) dB/.exec(r.stderr)?.[1] ?? -999);
+  return Number(/mean_volume: (-?[\d.]+) dB/.exec(result.stderr)?.[1] ?? -999);
 }
 /** Distinct decoded frames (framemd5): a moving scene has many. */
 const frameHashes = (file: string) =>
@@ -208,16 +212,16 @@ const rawFrame = (file: string, n: number) =>
 /** R6: particles fly. Pixels that are the particle colour (the theme's power colour) in frame n and not 5 frames later,
  * or the other way round: blocks and lines don't move, so only particles (and beams) count. */
 function particlesMoving(file: string): number {
-  const t = THEMES[0],
-    [r, g, b] = t.colors[t.roles.power].match(/\d+/g)!.map(Number);
+  const theme = THEMES[0],
+    [red, g, b] = theme.colors[theme.roles.power].match(/\d+/g)!.map(Number);
   const is = (x: Buffer, i: number) =>
-    Math.abs(x[i] - r) + Math.abs(x[i + 1] - g) + Math.abs(x[i + 2] - b) < 60;
+    Math.abs(x[i] - red) + Math.abs(x[i + 1] - g) + Math.abs(x[i + 2] - b) < 60;
   let most = 0;
   for (const n of [45, 90, 135]) {
     const a = rawFrame(file, n),
-      c = rawFrame(file, n + 5);
+      nonSharedBuffer = rawFrame(file, n + 5);
     let k = 0;
-    for (let i = 0; i + 2 < a.length; i += 3) if (is(a, i) !== is(c, i)) k++;
+    for (let i = 0; i + 2 < a.length; i += 3) if (is(a, i) !== is(nonSharedBuffer, i)) k++;
     most = Math.max(most, k);
   }
   return most;
@@ -231,8 +235,8 @@ function checkMp4(
   seconds: number | [number, number],
 ): [boolean, Record<string, unknown>] {
   const pr = ffprobe(file),
-    v = pr.streams.find((s) => s.codec_type === 'video'),
-    a = pr.streams.find((s) => s.codec_type === 'audio');
+    v = pr.streams.find((stream) => stream.codec_type === 'video'),
+    a = pr.streams.find((stream) => stream.codec_type === 'audio');
   const dur = Number(pr.format.duration),
     hashes = frameHashes(file),
     distinct = new Set(hashes).size,
@@ -353,7 +357,7 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
       on === true &&
         !!shared &&
         shared.type === 'video/mp4' &&
-        /\.mp4$/.test(shared.name) &&
+        shared.name.endsWith('.mp4') &&
         shared.size > 50_000 &&
         /made with BlokDust/.test(shared.text) &&
         /https?:\/\//.test(shared.text),
@@ -408,8 +412,8 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     await p
       .waitForFunction(
         () => {
-          const s = (window as any).__bd_probe.scene.PatchesPanel.VideoState;
-          return s === 'ready' || s === 'error';
+          const videoState = (window as any).__bd_probe.scene.PatchesPanel.VideoState;
+          return videoState === 'ready' || videoState === 'error';
         },
         null,
         { timeout: 60_000 },
@@ -423,15 +427,15 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
 
 const results: Record<string, unknown> = {};
 let ok = true;
-for (const [name, t] of Object.entries(tests)) {
+for (const [name, value] of Object.entries(tests)) {
   if (only && !only.includes(name)) continue;
   const errors: string[] = [];
   let pass = false,
     info: unknown;
   try {
-    [pass, info] = await t(errors);
-  } catch (e) {
-    info = String((e as Error).stack ?? e);
+    [pass, info] = await value(errors);
+  } catch (error) {
+    info = String((error as Error).stack ?? error);
   }
   if (errors.length) {
     pass = false;

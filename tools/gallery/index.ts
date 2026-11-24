@@ -17,7 +17,7 @@ import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { resolve } from 'node:path';
 import { WRANGLER, run } from '../server/lib.ts';
-import { remoteConfig, type EnvName } from '../server/config.ts';
+import { remoteConfig } from '../server/config.ts';
 
 const args = process.argv.slice(2);
 const opt = (k: string) => {
@@ -34,14 +34,14 @@ function target(): string[] {
   if (local) return ['blokdust-dev', '--local', '--persist-to', resolve('.cache/server', local)];
   if (env !== 'staging' && env !== 'production')
     throw new Error('--env staging|production or --local <state> required');
-  const e = env as EnvName;
+  const envName = env;
   return [
-    e === 'staging' ? 'blokdust-staging' : 'blokdust',
+    envName === 'staging' ? 'blokdust-staging' : 'blokdust',
     '--remote',
     '--env',
-    e,
+    envName,
     '--config',
-    remoteConfig(e),
+    remoteConfig(envName),
   ];
 }
 async function sql<T>(command: string): Promise<T[]> {
@@ -80,10 +80,10 @@ const q = (v: string) => `'${v.replace(/'/g, "''")}'`;
 const ID_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 /** A share id as the Worker makes them (server/src/patches.ts newId). */
 function newId(): string {
-  const r = randomBytes(10);
+  const nonSharedBuffer = randomBytes(10);
   let s = '';
   for (let i = 0; i < 10; i++) {
-    const c = ID_CHARS[r[i] % 62];
+    const c = ID_CHARS[nonSharedBuffer[i] % 62];
     s += i === 0 && c === 'p' ? 'P' : c;
   }
   return s;

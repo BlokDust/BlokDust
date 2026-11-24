@@ -67,20 +67,25 @@ export function frameFor(
 
 /** The window's outline, added to the current path (v1 OptionsPanel.panelDraw: a name tab and a close tab rising 20
  * units, with 45° sides). */
-function windowPath(ctx: CanvasRenderingContext2D, f: InsideFrame, u: number, nameW: number): void {
-  const m = f.x + 44 * u,
-    r = f.x + f.w,
-    b = f.y + f.h;
-  ctx.moveTo(f.x, f.y);
-  ctx.lineTo(m - 25 * u, f.y);
-  ctx.lineTo(m - 5 * u, f.y - 20 * u);
-  ctx.lineTo(m + 5 * u + nameW, f.y - 20 * u);
-  ctx.lineTo(m + 25 * u + nameW, f.y);
-  ctx.lineTo(r - 40 * u, f.y);
-  ctx.lineTo(r - 20 * u, f.y - 20 * u);
-  ctx.lineTo(r, f.y);
+function windowPath(
+  ctx: CanvasRenderingContext2D,
+  insideFrame: InsideFrame,
+  u: number,
+  nameW: number,
+): void {
+  const m = insideFrame.x + 44 * u,
+    r = insideFrame.x + insideFrame.w,
+    b = insideFrame.y + insideFrame.h;
+  ctx.moveTo(insideFrame.x, insideFrame.y);
+  ctx.lineTo(m - 25 * u, insideFrame.y);
+  ctx.lineTo(m - 5 * u, insideFrame.y - 20 * u);
+  ctx.lineTo(m + 5 * u + nameW, insideFrame.y - 20 * u);
+  ctx.lineTo(m + 25 * u + nameW, insideFrame.y);
+  ctx.lineTo(r - 40 * u, insideFrame.y);
+  ctx.lineTo(r - 20 * u, insideFrame.y - 20 * u);
+  ctx.lineTo(r, insideFrame.y);
   ctx.lineTo(r, b);
-  ctx.lineTo(f.x, b);
+  ctx.lineTo(insideFrame.x, b);
   ctx.closePath();
 }
 
@@ -90,7 +95,7 @@ function windowPath(ctx: CanvasRenderingContext2D, f: InsideFrame, u: number, na
  */
 export function drawInside(
   ctx: CanvasRenderingContext2D,
-  f: InsideFrame,
+  insideFrame: InsideFrame,
   u: number,
   name: string,
   outer: {
@@ -113,10 +118,10 @@ export function drawInside(
   ctx.save();
   ctx.beginPath();
   ctx.rect(0, 0, W, H);
-  windowPath(ctx, f, u, nameW);
+  windowPath(ctx, insideFrame, u, nameW);
   ctx.clip('evenodd');
-  const dx = f.blockX - outer.blockX,
-    dy = f.blockY - outer.blockY;
+  const dx = insideFrame.blockX - outer.blockX,
+    dy = insideFrame.blockY - outer.blockY;
   ctx.fillStyle = colors[0];
   ctx.fillRect(0, 0, W, H);
   ctx.drawImage(outer.image, dx, dy);
@@ -129,8 +134,8 @@ export function drawInside(
   for (const l of outer.layers) {
     ctx.beginPath();
     l.points.forEach(([x, y], i) => {
-      const px = f.blockX + x * outer.grid,
-        py = f.blockY + y * outer.grid;
+      const px = insideFrame.blockX + x * outer.grid,
+        py = insideFrame.blockY + y * outer.grid;
       if (i) ctx.lineTo(px, py);
       else ctx.moveTo(px, py);
     });
@@ -141,51 +146,55 @@ export function drawInside(
   // The pointer from the window to its block (v1's options-panel pointer; down from the block on a phone).
   ctx.fillStyle = colors[0];
   ctx.beginPath();
-  if (f.phone) {
-    ctx.moveTo(f.blockX - 22 * u, f.y);
-    ctx.lineTo(f.blockX, f.blockY + 22 * u);
-    ctx.lineTo(f.blockX + 22 * u, f.y);
+  if (insideFrame.phone) {
+    ctx.moveTo(insideFrame.blockX - 22 * u, insideFrame.y);
+    ctx.lineTo(insideFrame.blockX, insideFrame.blockY + 22 * u);
+    ctx.lineTo(insideFrame.blockX + 22 * u, insideFrame.y);
   } else {
-    ctx.moveTo(f.x, f.blockY - 30 * u);
-    ctx.lineTo(f.blockX + 22 * u, f.blockY);
-    ctx.lineTo(f.x, f.blockY + 30 * u);
+    ctx.moveTo(insideFrame.x, insideFrame.blockY - 30 * u);
+    ctx.lineTo(insideFrame.blockX + 22 * u, insideFrame.blockY);
+    ctx.lineTo(insideFrame.x, insideFrame.blockY + 30 * u);
   }
   ctx.closePath();
   ctx.fill();
   // The name tab and the close tab, in the stage's own colour (the window is the inner stage).
-  const m = f.x + 44 * u,
-    r = f.x + f.w;
+  const m = insideFrame.x + 44 * u,
+    r = insideFrame.x + insideFrame.w;
   ctx.beginPath();
-  ctx.moveTo(m - 25 * u, f.y + 1);
-  ctx.lineTo(m - 5 * u, f.y - 20 * u);
-  ctx.lineTo(m + 5 * u + nameW, f.y - 20 * u);
-  ctx.lineTo(m + 25 * u + nameW, f.y + 1);
+  ctx.moveTo(m - 25 * u, insideFrame.y + 1);
+  ctx.lineTo(m - 5 * u, insideFrame.y - 20 * u);
+  ctx.lineTo(m + 5 * u + nameW, insideFrame.y - 20 * u);
+  ctx.lineTo(m + 25 * u + nameW, insideFrame.y + 1);
   ctx.closePath();
   ctx.fill();
   ctx.beginPath();
-  ctx.moveTo(r - 40 * u, f.y + 1);
-  ctx.lineTo(r - 20 * u, f.y - 20 * u);
-  ctx.lineTo(r, f.y + 1);
+  ctx.moveTo(r - 40 * u, insideFrame.y + 1);
+  ctx.lineTo(r - 20 * u, insideFrame.y - 20 * u);
+  ctx.lineTo(r, insideFrame.y + 1);
   ctx.closePath();
   ctx.fill();
   ctx.fillStyle = colors[txt];
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText(name, m, f.y);
+  ctx.fillText(name, m, insideFrame.y);
   ctx.strokeStyle = colors[txt];
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(f.closeX - 4 * u, f.closeY - 4 * u);
-  ctx.lineTo(f.closeX + 4 * u, f.closeY + 4 * u);
-  ctx.moveTo(f.closeX + 4 * u, f.closeY - 4 * u);
-  ctx.lineTo(f.closeX - 4 * u, f.closeY + 4 * u);
+  ctx.moveTo(insideFrame.closeX - 4 * u, insideFrame.closeY - 4 * u);
+  ctx.lineTo(insideFrame.closeX + 4 * u, insideFrame.closeY + 4 * u);
+  ctx.moveTo(insideFrame.closeX + 4 * u, insideFrame.closeY - 4 * u);
+  ctx.lineTo(insideFrame.closeX - 4 * u, insideFrame.closeY + 4 * u);
   ctx.stroke();
   ctx.restore();
 }
 
 /** Is device px (x, y) inside the window (its body, not the margin)? */
-export const inWindow = (f: InsideFrame, x: number, y: number): boolean =>
-  x >= f.x && x <= f.x + f.w && y >= f.y && y <= f.y + f.h;
+export const inWindow = (insideFrame: InsideFrame, x: number, y: number): boolean =>
+  x >= insideFrame.x &&
+  x <= insideFrame.x + insideFrame.w &&
+  y >= insideFrame.y &&
+  y <= insideFrame.y + insideFrame.h;
 /** Is it on the close ×? */
-export const onClose = (f: InsideFrame, x: number, y: number): boolean =>
-  Math.abs(x - f.closeX) <= f.closeR && Math.abs(y - f.closeY) <= f.closeR;
+export const onClose = (insideFrame: InsideFrame, x: number, y: number): boolean =>
+  Math.abs(x - insideFrame.closeX) <= insideFrame.closeR &&
+  Math.abs(y - insideFrame.closeY) <= insideFrame.closeR;

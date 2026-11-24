@@ -85,21 +85,21 @@ export function installSelectors(panel: any): void {
   const rollover = panel.RolloverCheck.bind(panel);
   panel.RolloverCheck = (mx: number, my: number) => {
     rollover(mx, my);
-    const u = App.Unit;
+    const unit = App.Unit;
     for (const o of selectors()) {
       const y = panel.Position.y + o.Position.y;
       o.HandleRoll[0] = Dimensions.hitRect(
-        panel.Position.x + panel.Margin - 10 * u,
+        panel.Position.x + panel.Margin - 10 * unit,
         y,
-        40 * u,
+        40 * unit,
         o.Size.height,
         mx,
         my,
       );
       o.HandleRoll[1] = Dimensions.hitRect(
-        panel.Position.x + panel.Margin + panel.Range - 30 * u,
+        panel.Position.x + panel.Margin + panel.Range - 30 * unit,
         y,
-        40 * u,
+        40 * unit,
         o.Size.height,
         mx,
         my,

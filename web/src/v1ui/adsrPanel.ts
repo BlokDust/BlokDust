@@ -28,11 +28,11 @@ export function timeText(t: number): string {
 
 let shift = false;
 if (typeof window !== 'undefined') {
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Shift') shift = true;
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Shift') shift = true;
   });
-  window.addEventListener('keyup', (e) => {
-    if (e.key === 'Shift') shift = false;
+  window.addEventListener('keyup', (event) => {
+    if (event.key === 'Shift') shift = false;
   });
   window.addEventListener('blur', () => {
     shift = false;
@@ -41,18 +41,22 @@ if (typeof window !== 'undefined') {
 
 /** Where handle `j` of an ADSR row is drawn, in panel-relative px (as v1 OptionsPanel's hit test). */
 function handlePoint(panel: any, o: any, j: number): [number, number] {
-  const h = o.Handles,
+  const handles = o.Handles,
     x0 = panel.Position.x + panel.Margin,
     y0 = panel.Position.y + o.Position.y,
     ht = o.Size.height;
-  if (j === 0) return [x0 + h[0].Position.x, y0 + ht * 0.1];
-  if (j === 1) return [x0 + h[0].Position.x + h[1].Position.x, y0 + ht * 0.9 - h[1].Position.y];
-  return [x0 + panel.Range * 0.6 + h[2].Position.x, y0 + ht * 0.9];
+  if (j === 0) return [x0 + handles[0].Position.x, y0 + ht * 0.1];
+  if (j === 1)
+    return [
+      x0 + handles[0].Position.x + handles[1].Position.x,
+      y0 + ht * 0.9 - handles[1].Position.y,
+    ];
+  return [x0 + panel.Range * 0.6 + handles[2].Position.x, y0 + ht * 0.9];
 }
 
 /** The held handle's value, above the graph's top-right corner. */
 function drawReadout(ctx: CanvasRenderingContext2D, o: any, panel: any, units: number): void {
-  const j = o.Handles.findIndex((h: any) => h.Selected);
+  const j = o.Handles.findIndex((Handle: any) => Handle.Selected);
   if (j < 0) return;
   const h = o.Handles[j];
   const text =

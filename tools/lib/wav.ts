@@ -7,9 +7,9 @@ export interface Audio {
 }
 
 export function writeWav(path: string, a: Audio) {
-  const n = a.channels[0].length,
+  const lengthValue = a.channels[0].length,
     ch = a.channels.length,
-    bytes = n * ch * 4;
+    bytes = lengthValue * ch * 4;
   const b = Buffer.alloc(44 + bytes);
   b.write('RIFF', 0);
   b.writeUInt32LE(36 + bytes, 4);
@@ -24,7 +24,7 @@ export function writeWav(path: string, a: Audio) {
   b.writeUInt16LE(32, 34);
   b.write('data', 36);
   b.writeUInt32LE(bytes, 40);
-  for (let i = 0; i < n; i++)
+  for (let i = 0; i < lengthValue; i++)
     for (let c = 0; c < ch; c++) b.writeFloatLE(a.channels[c][i], 44 + (i * ch + c) * 4);
   writeFileSync(path, b);
 }

@@ -102,8 +102,8 @@ export async function deviceStart(env: Env, req: Request): Promise<Response> {
         200,
         { 'cache-control': 'no-store' },
       );
-    } catch (e) {
-      if (!String(e).includes('UNIQUE')) throw e;
+    } catch (error) {
+      if (!String(error).includes('UNIQUE')) throw error;
     }
   }
   throw new HttpError(500, 'could not make a code');
@@ -184,7 +184,7 @@ export async function deviceInfo(env: Env, req: Request, url: URL): Promise<Resp
 /** POST /api/device/approve {code, approve} — signs that plugin in to this account, or turns it away (the website's
  * session only: a plugin key can't approve another device). */
 export async function deviceApprove(env: Env, req: Request): Promise<Response> {
-  const u = await requireUser(env, req);
+  const user = await requireUser(env, req);
   const b = await body<{ code?: unknown; approve?: unknown }>(req);
   const row = await waiting(env, b.code);
   const r =
@@ -192,7 +192,7 @@ export async function deviceApprove(env: Env, req: Request): Promise<Response> {
       ? await env.DB.prepare(
           'UPDATE device_codes SET user_id = ? WHERE user_code_hash = ? AND user_id IS NULL AND denied = 0',
         )
-          .bind(u.id, row.user_code_hash)
+          .bind(user.id, row.user_code_hash)
           .run()
       : await env.DB.prepare(
           'UPDATE device_codes SET denied = 1 WHERE user_code_hash = ? AND user_id IS NULL',
@@ -205,22 +205,22 @@ export async function deviceApprove(env: Env, req: Request): Promise<Response> {
 
 /** GET /api/me/apps — the plugins signed in to this account (the website's session only). */
 export async function listApps(env: Env, req: Request): Promise<Response> {
-  const u = await requireUser(env, req);
+  const user = await requireUser(env, req);
   const r = await env.DB.prepare(
     'SELECT id, name, created, last_used AS lastUsed FROM app_keys WHERE user_id = ? AND expires > ? ORDER BY last_used DESC',
   )
-    .bind(u.id, Date.now())
+    .bind(user.id, Date.now())
     .all();
   return json({ apps: r.results }, 200, { 'cache-control': 'no-store' });
 }
 
 /** DELETE /api/me/apps {id} — signs that plugin out (the website's session only). */
 export async function removeApp(env: Env, req: Request): Promise<Response> {
-  const u = await requireUser(env, req);
+  const user = await requireUser(env, req);
   const { id } = await body<{ id?: unknown }>(req);
   if (typeof id !== 'string' || id.length > 32) throw new HttpError(400, 'id required');
   const r = await env.DB.prepare('DELETE FROM app_keys WHERE id = ? AND user_id = ?')
-    .bind(id, u.id)
+    .bind(id, user.id)
     .run();
   if (!r.meta.changes) throw new HttpError(404, 'no such app');
   return json({ ok: true });

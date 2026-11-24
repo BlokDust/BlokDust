@@ -75,13 +75,13 @@ export async function audio(args: string[]) {
       1,
       { seconds, sampleRate },
       async (page) => {
-        for (const f of fx.files ?? [])
-          await page.route(f.url, (r) =>
+        for (const audioFile of fx.files ?? [])
+          await page.route(audioFile.url, (r) =>
             r.fulfill({
               status: 200,
               contentType: 'audio/wav',
               headers: { 'access-control-allow-origin': '*' },
-              body: readFileSync(f.wav),
+              body: readFileSync(audioFile.wav),
             }),
           );
       },
@@ -126,7 +126,7 @@ export async function audio(args: string[]) {
           while ((await s.page.evaluate(() => (window as any).__bdAt)) < t - 1e-9) {
             if (Date.now() > until)
               throw new Error(`stepped render stuck before ${t.toFixed(3)} s`);
-            await new Promise((r) => setTimeout(r, 2));
+            await new Promise((resolve) => setTimeout(resolve, 2));
           }
           await s.advance(step);
           // The fake context's resume() is a no-op (v1's start-up checks); resume the real offline render.
@@ -142,10 +142,10 @@ export async function audio(args: string[]) {
           throw new Error('v1 is not using the offline context');
         const buf = stepped ? ((window as any).__bdBuf as AudioBuffer) : await ctx.startRendering();
         const enc = (a: Float32Array) => {
-          const u = new Uint8Array(a.buffer.slice(0));
+          const bytes = new Uint8Array(a.buffer.slice(0));
           let s = '';
-          for (let i = 0; i < u.length; i += 0x8000)
-            s += String.fromCharCode(...u.subarray(i, i + 0x8000));
+          for (let i = 0; i < bytes.length; i += 0x8000)
+            s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
           return btoa(s);
         };
         return {
@@ -160,8 +160,8 @@ export async function audio(args: string[]) {
       const mono = ch[0].every((v, i) => v === ch[1][i]);
       const audio: Audio = { sampleRate: r.sampleRate, channels: mono ? [ch[0]] : ch };
       const hash = createHash('sha256');
-      for (const c of audio.channels)
-        hash.update(Buffer.from(c.buffer, c.byteOffset, c.byteLength));
+      for (const samples of audio.channels)
+        hash.update(Buffer.from(samples.buffer, samples.byteOffset, samples.byteLength));
       return { audio, blocks, composition, sha256: hash.digest('hex'), errors: s.errors };
     } finally {
       await s.close();
@@ -176,8 +176,8 @@ export async function audio(args: string[]) {
     const first = takes[0];
     const wav = join(out, `${fx.name}.wav`);
     writeWav(wav, first.audio);
-    const descriptors = takes.map((t) => describe(t.audio));
-    const deterministic = takes.every((t) => t.sha256 === first.sha256);
+    const descriptors = takes.map((take) => describe(take.audio));
+    const deterministic = takes.every((take) => take.sha256 === first.sha256);
     const res = {
       name: fx.name,
       wav,
@@ -193,9 +193,12 @@ export async function audio(args: string[]) {
       sha256: first.sha256,
       ...(deterministic
         ? {}
-        : { takes: takes.map((t) => t.sha256), spread: spreadOf(descriptors, thresholds.default) }),
+        : {
+            takes: takes.map((take) => take.sha256),
+            spread: spreadOf(descriptors, thresholds.default),
+          }),
       descriptors: descriptors[0],
-      errors: [...new Set(takes.flatMap((t) => t.errors))],
+      errors: [...new Set(takes.flatMap((take) => take.errors))],
     };
     results.push(res);
     console.error(
@@ -217,9 +220,10 @@ export async function audio(args: string[]) {
   const prev: any[] = existsSync(manifestPath)
     ? (JSON.parse(readFileSync(manifestPath, 'utf8')).results ?? [])
     : [];
-  const merged = [...prev.filter((p) => !results.some((r) => r.name === p.name)), ...results].sort(
-    (a, b) => a.name.localeCompare(b.name),
-  );
+  const merged = [
+    ...prev.filter((p) => !results.some((result) => result.name === p.name)),
+    ...results,
+  ].sort((a, b) => a.name.localeCompare(b.name));
   writeFileSync(
     manifestPath,
     JSON.stringify({ v1Sha: V1_SHA, chromium: chromiumVersion, results: merged }, null, 2) + '\n',
@@ -228,9 +232,9 @@ export async function audio(args: string[]) {
     JSON.stringify({
       out,
       rendered: results.length,
-      nondeterministic: results.filter((r) => !r.deterministic).map((r) => r.name),
-      silent: results.filter((r) => r.descriptors.rmsDb <= -90).map((r) => r.name),
-      withErrors: results.filter((r) => r.errors.length).length,
+      nondeterministic: results.filter((result) => !result.deterministic).map((r) => r.name),
+      silent: results.filter((result) => result.descriptors.rmsDb <= -90).map((r) => r.name),
+      withErrors: results.filter((result) => result.errors.length).length,
     }),
   );
 }

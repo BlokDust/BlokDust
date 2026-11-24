@@ -21,13 +21,15 @@ export interface DrawnBlock {
 }
 
 // The Gate (CHG-0032) takes power as a source does: its lines run from it, thick while it is powered.
-const isSourceKind = (d: BlockDef) =>
-  d.kind === 'audio-source' || d.kind === 'power-source' || d.kind === 'gate';
+const isSourceKind = (definition: BlockDef) =>
+  definition.kind === 'audio-source' ||
+  definition.kind === 'power-source' ||
+  definition.kind === 'gate';
 
 /** v1 ConnectionLines: palette[15], 1 px unpowered then 2 px powered, each line routed source → effect. */
 export function drawConnections(
   ctx: CanvasRenderingContext2D,
-  m: Metrics,
+  metrics: Metrics,
   theme: Theme,
   blocks: ReadonlyMap<number, DrawnBlock>,
   pairs: Uint32Array,
@@ -44,7 +46,7 @@ export function drawConnections(
       if (!isSourceKind(s.def)) [s, t] = [t, s]; // lines run source → effect
       if (powered.has(s.block.id) !== on) continue;
       routeConnection(s.block.x, s.block.y, t.block.x, t.block.y).forEach(([gx, gy], k) => {
-        const [px, py] = gridToPx(m, gx, gy);
+        const [px, py] = gridToPx(metrics, gx, gy);
         if (k) ctx.lineTo(px, py);
         else ctx.moveTo(px, py);
       });
@@ -60,7 +62,9 @@ function poly(
   alpha = 1,
 ): void {
   ctx.beginPath();
-  pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+  pts.forEach(([x, y], i) => {
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  });
   ctx.closePath();
   ctx.fillStyle = fill;
   ctx.globalAlpha = alpha;
@@ -72,7 +76,9 @@ function poly(
 function paths(ctx: CanvasRenderingContext2D, ps: [number, number][][], fill: string): void {
   ctx.beginPath();
   for (const pts of ps) {
-    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    pts.forEach(([x, y], i) => {
+      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    });
     ctx.closePath();
   }
   ctx.fillStyle = fill;
@@ -84,7 +90,7 @@ function paths(ctx: CanvasRenderingContext2D, ps: [number, number][][], fill: st
  * no hairline of a hidden face along the outer edge, owner 2026-11-20). */
 export function drawBlocks(
   ctx: CanvasRenderingContext2D,
-  m: Metrics,
+  metrics: Metrics,
   theme: Theme,
   blocks: Iterable<DrawnBlock>,
   alpha: (id: number) => number = () => 1,
@@ -97,19 +103,23 @@ export function drawBlocks(
     const layers =
       def.geometry.openLayers && open(block.id) ? def.geometry.openLayers : def.geometry.layers;
     if (a >= 1) {
-      for (const l of flatLayers(layers, upg, block.starPos))
+      for (const flatLayer of flatLayers(layers, upg, block.starPos))
         paths(
           ctx,
-          l.paths.map((ps) => ps.map(([x, y]) => gridToPx(m, block.x + x, block.y + y))),
-          theme.colors[l.palette],
+          flatLayer.paths.map((ps) =>
+            ps.map(([x, y]) => gridToPx(metrics, block.x + x, block.y + y)),
+          ),
+          theme.colors[flatLayer.palette],
         );
       continue;
     }
-    for (const l of layers)
+    for (const geometryLayer of layers)
       poly(
         ctx,
-        layerPoints(l, upg, block.starPos).map(([x, y]) => gridToPx(m, block.x + x, block.y + y)),
-        theme.colors[l.palette],
+        layerPoints(geometryLayer, upg, block.starPos).map(([x, y]) =>
+          gridToPx(metrics, block.x + x, block.y + y),
+        ),
+        theme.colors[geometryLayer.palette],
         a,
       );
   }
@@ -118,18 +128,18 @@ export function drawBlocks(
 /** v1 LaserBeams.Draw: width 2·unit·(0.8 + jitter·0.5), jitter in [0, 1) (v1: Math.random() every frame). */
 export function drawBeams(
   ctx: CanvasRenderingContext2D,
-  m: Metrics,
+  metrics: Metrics,
   theme: Theme,
   beams: Float32Array,
   jitter: number,
 ): void {
   if (!beams.length) return;
   ctx.strokeStyle = theme.colors[theme.roles.power];
-  ctx.lineWidth = m.scaledUnit * 2 * (0.8 + jitter * 0.5);
+  ctx.lineWidth = metrics.scaledUnit * 2 * (0.8 + jitter * 0.5);
   ctx.beginPath();
   for (let i = 0; i < beams.length; i += 4) {
-    const [x0, y0] = gridToPx(m, beams[i], beams[i + 1]),
-      [x1, y1] = gridToPx(m, beams[i + 2], beams[i + 3]);
+    const [x0, y0] = gridToPx(metrics, beams[i], beams[i + 1]),
+      [x1, y1] = gridToPx(metrics, beams[i + 2], beams[i + 3]);
     ctx.moveTo(x0, y0);
     ctx.lineTo(x1, y1);
   }
@@ -140,23 +150,24 @@ export function drawBeams(
 /** Manifest overlays in their idle state (e.g. the Recorder's button), unless drawn by live UI instead (`skip`). */
 export function drawOverlays(
   ctx: CanvasRenderingContext2D,
-  m: Metrics,
+  metrics: Metrics,
   theme: Theme,
   blocks: Iterable<DrawnBlock>,
   skip: ReadonlySet<string> = new Set(),
 ): void {
   for (const { block, def } of blocks) {
-    const [bx, by] = gridToPx(m, block.x, block.y);
-    for (const o of def.geometry.overlays ?? [])
-      if (!skip.has(o.name))
-        for (const l of o.states.idle ?? [])
+    const [bx, by] = gridToPx(metrics, block.x, block.y);
+    for (const overlay of def.geometry.overlays ?? [])
+      if (!skip.has(overlay.name))
+        for (const geometryLayer of overlay.states.idle ?? [])
           poly(
             ctx,
-            l.points.map(
-              ([x, y]) => [bx + x * m.gridSize, by + y * m.gridSize] as [number, number],
+            geometryLayer.points.map(
+              ([x, y]) =>
+                [bx + x * metrics.gridSize, by + y * metrics.gridSize] as [number, number],
             ),
-            theme.colors[l.palette],
-            l.alpha,
+            theme.colors[geometryLayer.palette],
+            geometryLayer.alpha,
           );
   }
 }
@@ -164,16 +175,16 @@ export function drawOverlays(
 /** v1 ParticleLayer.Draw: one diamond path per particle, packed [x, y, size]* in grid units. */
 export function drawParticles(
   ctx: CanvasRenderingContext2D,
-  m: Metrics,
+  metrics: Metrics,
   theme: Theme,
-  p: Float32Array,
+  samples: Float32Array,
 ): void {
-  if (!p.length) return;
+  if (!samples.length) return;
   ctx.fillStyle = theme.colors[theme.roles.power];
   ctx.globalAlpha = 1;
-  for (let i = 0; i < p.length; i += 3) {
-    const [sx, sy] = gridToPx(m, p[i], p[i + 1]),
-      size = p[i + 2] * m.scaledUnit;
+  for (let i = 0; i < samples.length; i += 3) {
+    const [sx, sy] = gridToPx(metrics, samples[i], samples[i + 1]),
+      size = samples[i + 2] * metrics.scaledUnit;
     ctx.beginPath();
     ctx.moveTo(sx - size, sy);
     ctx.lineTo(sx, sy - size);

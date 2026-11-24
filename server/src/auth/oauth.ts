@@ -11,12 +11,12 @@ import { countNewAccount, mayCreateAccount } from './newAccounts.ts';
  * "/<TAB>/evil.example" is "//evil.example" (security review, PR 13).
  */
 export function safeReturn(r: string | null): string {
-  if (!r || !r.startsWith('/')) return '/';
+  if (!r?.startsWith('/')) return '/';
   const probe = 'https://return.invalid';
   try {
-    const u = new URL(r, probe);
-    if (u.origin !== probe) return '/';
-    const path = `${u.pathname}${u.search}${u.hash}`;
+    const url = new URL(r, probe);
+    if (url.origin !== probe) return '/';
+    const path = `${url.pathname}${url.search}${url.hash}`;
     return path.length <= 512 ? path : '/';
   } catch {
     return '/';

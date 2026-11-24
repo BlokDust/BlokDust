@@ -26,8 +26,8 @@ const plistOf = (path: string) =>
   );
 
 /** The first compiler or signing errors of a failed xcodebuild, with a hint when signing is what failed. */
-function xcodeFailure(what: string, r: ReturnType<typeof spawnSync>): Error {
-  const out = `${r.stdout ?? ''}\n${r.stderr ?? ''}`;
+function xcodeFailure(what: string, result: ReturnType<typeof spawnSync>): Error {
+  const out = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
   const errors = [
     ...new Set(
       out.split('\n').filter((l) => /error:|BUILD FAILED|ARCHIVE FAILED|EXPORT FAILED/.test(l)),
@@ -64,9 +64,9 @@ function apiKey(): string[] {
 
 /** UTC time as YYYYMMDD.HHMM: a valid CFBundleVersion that grows with every archive. */
 function defaultBuild(): string {
-  const d = new Date(),
+  const date = new Date(),
     p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}.${p(d.getUTCHours())}${p(d.getUTCMinutes())}`;
+  return `${date.getUTCFullYear()}${p(date.getUTCMonth() + 1)}${p(date.getUTCDate())}.${p(date.getUTCHours())}${p(date.getUTCMinutes())}`;
 }
 
 /** The bundles' dSYMs (crash-report symbols): CMake's targets write them beside their products, where Xcode's archive
@@ -78,7 +78,7 @@ const DSYMS: [string, string][] = [
 ];
 const uuids = (path: string) =>
   [...run('dwarfdump', ['--uuid', path], true).stdout.matchAll(/UUID: ([0-9A-F-]{36})/g)]
-    .map((m) => m[1])
+    .map((match) => match[1])
     .sort()
     .join();
 function collectDsyms(archive: string): void {
@@ -200,7 +200,7 @@ export function iosArchive(args: string[]): void {
 </dict></plist>
 `,
   );
-  const e = spawnSync(
+  const result = spawnSync(
     'xcodebuild',
     [
       '-exportArchive',
@@ -215,7 +215,7 @@ export function iosArchive(args: string[]): void {
     ],
     { encoding: 'utf8', env, maxBuffer: 64 << 20 },
   );
-  if (e.status !== 0) throw xcodeFailure(upload ? 'upload' : 'export', e);
+  if (result.status !== 0) throw xcodeFailure(upload ? 'upload' : 'export', result);
   const ipa = resolve(out, 'BlokDust.ipa');
   console.log(
     JSON.stringify({

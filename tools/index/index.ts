@@ -14,61 +14,62 @@ const errors: string[] = [];
 const outputs = new Map<string, string>();
 const isIndex = (p: string) => basename(p) === 'README.md';
 const rel = (from: string, to: string) => relative(dirname(from), to).replaceAll('\\', '/');
-const need = (d: Doc, keys: string[]) =>
+const need = (doc: Doc, keys: string[]) => {
   keys.forEach((k) => {
-    if (!str(d.meta[k])) errors.push(`${d.path}: missing '${k}'`);
+    if (!str(doc.meta[k])) errors.push(`${doc.path}: missing '${k}'`);
   });
+};
 
 // ---------- ADRs ----------
 const adrDir = 'docs/decisions';
 const { docs: adrs, errors: adrErr } = loadDocs(ROOT, adrDir, isIndex);
 errors.push(...adrErr);
 const adrById = new Map<string, Doc>();
-for (const d of adrs) {
-  need(d, ['id', 'title', 'status', 'date', 'domain']);
-  const id = str(d.meta.id),
-    domain = str(d.meta.domain),
-    status = str(d.meta.status);
-  const folder = basename(dirname(d.path));
+for (const doc of adrs) {
+  need(doc, ['id', 'title', 'status', 'date', 'domain']);
+  const id = str(doc.meta.id),
+    domain = str(doc.meta.domain),
+    status = str(doc.meta.status);
+  const folder = basename(dirname(doc.path));
   if (folder !== domain)
-    errors.push(`${d.path}: domain '${domain}' does not match folder '${folder}'`);
+    errors.push(`${doc.path}: domain '${domain}' does not match folder '${folder}'`);
   if (!id.startsWith(domain.toUpperCase() + '-'))
-    errors.push(`${d.path}: id '${id}' must start with '${domain.toUpperCase()}-'`);
-  if (!basename(d.path).startsWith(id + '-'))
-    errors.push(`${d.path}: filename must start with '${id}-'`);
+    errors.push(`${doc.path}: id '${id}' must start with '${domain.toUpperCase()}-'`);
+  if (!basename(doc.path).startsWith(id + '-'))
+    errors.push(`${doc.path}: filename must start with '${id}-'`);
   if (!ADR_STATUSES.includes(status))
-    errors.push(`${d.path}: status '${status}' not in ${ADR_STATUSES.join('|')}`);
-  if (adrById.has(id)) errors.push(`${d.path}: duplicate id ${id}`);
-  adrById.set(id, d);
+    errors.push(`${doc.path}: status '${status}' not in ${ADR_STATUSES.join('|')}`);
+  if (adrById.has(id)) errors.push(`${doc.path}: duplicate id ${id}`);
+  adrById.set(id, doc);
 }
-for (const d of adrs) {
-  for (const s of list(d.meta.supersedes))
-    if (!adrById.has(s)) errors.push(`${d.path}: supersedes unknown ${s}`);
-  const by = str(d.meta.superseded_by);
-  if (str(d.meta.status) === 'superseded' && !by)
-    errors.push(`${d.path}: status superseded needs superseded_by`);
-  if (by && !adrById.has(by)) errors.push(`${d.path}: superseded_by unknown ${by}`);
+for (const doc of adrs) {
+  for (const s of list(doc.meta.supersedes))
+    if (!adrById.has(s)) errors.push(`${doc.path}: supersedes unknown ${s}`);
+  const by = str(doc.meta.superseded_by);
+  if (str(doc.meta.status) === 'superseded' && !by)
+    errors.push(`${doc.path}: status superseded needs superseded_by`);
+  if (by && !adrById.has(by)) errors.push(`${doc.path}: superseded_by unknown ${by}`);
 }
-const domains = [...new Set(adrs.map((d) => str(d.meta.domain)))].sort();
-const adrRow = (from: string) => (d: Doc) =>
-  `| [${str(d.meta.id)}](${rel(from, d.path)}) | ${str(d.meta.title)} | **${str(d.meta.status)}** | ${str(d.meta.date)} | ${list(d.meta.tags).join(', ')} |`;
+const domains = [...new Set(adrs.map((adr) => str(adr.meta.domain)))].sort();
+const adrRow = (from: string) => (doc: Doc) =>
+  `| [${str(doc.meta.id)}](${rel(from, doc.path)}) | ${str(doc.meta.title)} | **${str(doc.meta.status)}** | ${str(doc.meta.date)} | ${list(doc.meta.tags).join(', ')} |`;
 const head = '| ID | Decision | Status | Date | Tags |\n|---|---|---|---|---|';
 {
   const target = `${adrDir}/README.md`;
   const counts = ADR_STATUSES.map(
-    (s) => `${s}: ${adrs.filter((d) => str(d.meta.status) === s).length}`,
+    (s) => `${s}: ${adrs.filter((adr) => str(adr.meta.status) === s).length}`,
   ).join(' · ');
   let md =
     `${GEN}\n# Architecture Decision Records\n\nDomain-organised ADRs. One decision per file, with explicit status in frontmatter.\n` +
     `Create one with \`pnpm bd new adr <domain> "Title"\`. Statuses: ${ADR_STATUSES.map((s) => '`' + s + '`').join(', ')}.\n\n**${adrs.length} decisions** · ${counts}\n`;
   for (const dom of domains) {
-    const rows = adrs.filter((d) => str(d.meta.domain) === dom).map(adrRow(target));
+    const rows = adrs.filter((adr) => str(adr.meta.domain) === dom).map(adrRow(target));
     md += `\n## [${dom}](${dom}/README.md)\n\n${head}\n${rows.join('\n')}\n`;
     const dt = `${adrDir}/${dom}/README.md`;
     outputs.set(
       dt,
       `${GEN}\n# ${dom} decisions\n\n[All domains](../README.md)\n\n${head}\n${adrs
-        .filter((d) => str(d.meta.domain) === dom)
+        .filter((adr) => str(adr.meta.domain) === dom)
         .map(adrRow(dt))
         .join('\n')}\n`,
     );
@@ -84,34 +85,35 @@ const { docs: changeDocs, errors: cErr } = loadDocs(
   (p) => basename(p) !== 'proposal.md',
 );
 errors.push(...sErr, ...cErr);
-const checkRefs = (d: Doc) =>
-  list(d.meta.adrs).forEach((a) => {
-    if (!adrById.has(a)) errors.push(`${d.path}: references unknown ADR ${a}`);
+const checkRefs = (doc: Doc) => {
+  list(doc.meta.adrs).forEach((a) => {
+    if (!adrById.has(a)) errors.push(`${doc.path}: references unknown ADR ${a}`);
   });
+};
 const specIds = new Set<string>();
-for (const d of specs) {
-  need(d, ['id', 'title', 'status', 'domain']);
-  if (!SPEC_STATUSES.includes(str(d.meta.status)))
-    errors.push(`${d.path}: status not in ${SPEC_STATUSES.join('|')}`);
-  if (basename(dirname(d.path)) !== str(d.meta.domain))
-    errors.push(`${d.path}: domain does not match folder`);
-  specIds.add(str(d.meta.id));
-  checkRefs(d);
+for (const doc of specs) {
+  need(doc, ['id', 'title', 'status', 'domain']);
+  if (!SPEC_STATUSES.includes(str(doc.meta.status)))
+    errors.push(`${doc.path}: status not in ${SPEC_STATUSES.join('|')}`);
+  if (basename(dirname(doc.path)) !== str(doc.meta.domain))
+    errors.push(`${doc.path}: domain does not match folder`);
+  specIds.add(str(doc.meta.id));
+  checkRefs(doc);
 }
-for (const d of changeDocs) {
-  need(d, ['id', 'title', 'status']);
-  if (!CHANGE_STATUSES.includes(str(d.meta.status)))
-    errors.push(`${d.path}: status not in ${CHANGE_STATUSES.join('|')}`);
-  for (const s of list(d.meta.specs))
-    if (!specIds.has(s)) errors.push(`${d.path}: references unknown spec ${s}`);
-  checkRefs(d);
+for (const doc of changeDocs) {
+  need(doc, ['id', 'title', 'status']);
+  if (!CHANGE_STATUSES.includes(str(doc.meta.status)))
+    errors.push(`${doc.path}: status not in ${CHANGE_STATUSES.join('|')}`);
+  for (const s of list(doc.meta.specs))
+    if (!specIds.has(s)) errors.push(`${doc.path}: references unknown spec ${s}`);
+  checkRefs(doc);
 }
 {
   const target = 'docs/specs/README.md';
-  const sRow = (d: Doc) =>
-    `| [${str(d.meta.id)}](${rel(target, d.path)}) | ${str(d.meta.title)} | ${str(d.meta.domain)} | **${str(d.meta.status)}** | ${list(d.meta.adrs).join(', ')} |`;
-  const cRow = (d: Doc) =>
-    `| [${str(d.meta.id)}](${rel(target, d.path)}) | ${str(d.meta.title)} | **${str(d.meta.status)}** | ${list(d.meta.specs).join(', ')} |`;
+  const sRow = (doc: Doc) =>
+    `| [${str(doc.meta.id)}](${rel(target, doc.path)}) | ${str(doc.meta.title)} | ${str(doc.meta.domain)} | **${str(doc.meta.status)}** | ${list(doc.meta.adrs).join(', ')} |`;
+  const cRow = (doc: Doc) =>
+    `| [${str(doc.meta.id)}](${rel(target, doc.path)}) | ${str(doc.meta.title)} | **${str(doc.meta.status)}** | ${list(doc.meta.specs).join(', ')} |`;
   outputs.set(
     target,
     `${GEN}\n# Specs\n\n- **domains/**: living behaviour specs, the source of truth for *what* the system does. Statuses: ${SPEC_STATUSES.join(', ')}.\n` +
@@ -134,8 +136,8 @@ for (const d of changeDocs) {
       rows.push(
         `| \`${t.name}\` | ${t.summary} | ${(t.usage ?? []).map((u: string) => '`' + u + '`').join('<br>')} | ${t.outputs ?? ''} |`,
       );
-    } catch (e) {
-      errors.push(`${manifest}: ${(e as Error).message}`);
+    } catch (error) {
+      errors.push(`${manifest}: ${(error as Error).message}`);
     }
   }
   outputs.set(
@@ -149,15 +151,15 @@ for (const d of changeDocs) {
 // ---------- write / check ----------
 const check = process.argv.includes('--check');
 let stale = 0;
-for (const [p, content] of outputs) {
-  const cur = existsSync(p) ? readFileSync(p, 'utf8') : '';
+for (const [key, content] of outputs) {
+  const cur = existsSync(key) ? readFileSync(key, 'utf8') : '';
   if (cur === content) continue;
   if (check) {
     stale++;
-    console.error(`stale: ${p}`);
+    console.error(`stale: ${key}`);
   } else {
-    writeFileSync(p, content);
-    console.log(`wrote ${p}`);
+    writeFileSync(key, content);
+    console.log(`wrote ${key}`);
   }
 }
 for (const e of errors) console.error(`error: ${e}`);

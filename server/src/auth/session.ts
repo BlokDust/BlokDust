@@ -50,7 +50,7 @@ export async function startSession(env: Env, req: Request, userId: string): Prom
 /** A plugin's key in this request (CHG-0039, SHARING-0011): `Authorization: Bearer bdk_…`, else null. Patches' edit
  * tokens travel in the same header without the prefix. */
 export function appKeyOf(req: Request): string | null {
-  const m = (req.headers.get('authorization') ?? '').match(/^Bearer (bdk_[A-Za-z0-9_-]{20,64})$/);
+  const m = /^Bearer (bdk_[A-Za-z0-9_-]{20,64})$/.exec(req.headers.get('authorization') ?? '');
   return m ? m[1] : null;
 }
 export const APP_KEY_DAYS = 180;
@@ -114,9 +114,9 @@ export async function requireUser(
   req: Request,
   opts: { app?: boolean } = {},
 ): Promise<User> {
-  const u = await currentUser(env, req, opts);
-  if (!u) throw new HttpError(401, 'sign in first');
-  return u;
+  const user = await currentUser(env, req, opts);
+  if (!user) throw new HttpError(401, 'sign in first');
+  return user;
 }
 
 /** Sign out: this session, or every session of the user (`everywhere`). Returns the clearing Set-Cookie. */

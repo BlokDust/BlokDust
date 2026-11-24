@@ -41,6 +41,9 @@ try {
 }
 for (const r of results.filter((r) => !r.ok)) console.error(`MISMATCH ${JSON.stringify(r)}`);
 console.log(
-  JSON.stringify({ fixtures: results.length, identical: results.filter((r) => r.ok).length }),
+  JSON.stringify({
+    fixtures: results.length,
+    identical: results.filter((result) => result.ok).length,
+  }),
 );
-if (results.some((r) => !r.ok)) process.exit(1);
+if (results.some((result) => !result.ok)) process.exit(1);

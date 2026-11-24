@@ -34,14 +34,14 @@ export function toPixels(
   const upg = geometry.unitsPerGrid ?? 15;
   const ox = stage.c.x + stage.scaledDragOffset.x * stage.unit;
   const oy = stage.c.y + stage.scaledDragOffset.y * stage.unit;
-  return (geometry.layers as Layer[]).map((l) => ({
-    fill: stage.palette[l.palette],
-    points: l.points.map(([x, y]) => {
+  return (geometry.layers as Layer[]).map((layer) => ({
+    fill: stage.palette[layer.palette],
+    points: layer.points.map(([x, y]) => {
       let gx = x,
         gy = y;
-      if (l.units === 'unit') {
-        const ax = l.anchor === 'randomStar' ? (block.starPos?.x ?? 0) : 0;
-        const ay = l.anchor === 'randomStar' ? (block.starPos?.y ?? 0) : 0;
+      if (layer.units === 'unit') {
+        const ax = layer.anchor === 'randomStar' ? (block.starPos?.x ?? 0) : 0;
+        const ay = layer.anchor === 'randomStar' ? (block.starPos?.y ?? 0) : 0;
         gx = (x + ax) / upg;
         gy = (y + ay) / upg;
       }
@@ -89,10 +89,10 @@ export async function verify(args: string[]) {
   const thresholds = JSON.parse(readFileSync('tests/visual/thresholds.json', 'utf8'));
   const manifests = loadManifests(opt('--blocks') ?? 'blocks');
   const refs = JSON.parse(readFileSync(join(refDir, 'manifest.json'), 'utf8')).results.filter(
-    (r: any) =>
-      r.fixture?.startsWith('block-') &&
-      dprs.includes(r.dpr) &&
-      (!only || only.some((o) => r.name.includes(o))),
+    (result: any) =>
+      result.fixture?.startsWith('block-') &&
+      dprs.includes(result.dpr) &&
+      (!only || only.some((o) => result.name.includes(o))),
   );
   if (!refs.length)
     throw new Error(`no per-block references in ${refDir} (run: pnpm bd v1 capture --blocks)`);
@@ -106,38 +106,38 @@ export async function verify(args: string[]) {
   try {
     for (const r of refs) {
       const type = r.fixture.split('-').slice(2).join('-');
-      const m = manifests.get(type);
+      const manifest = manifests.get(type);
       const t = { ...thresholds.default, ...(thresholds.overrides?.[r.fixture] ?? {}) };
-      if (!m) {
+      if (!manifest) {
         results.push({ name: r.name, status: 'missing-manifest' });
         continue;
       }
       const stage = r.stage;
       const placed = stage.blocks.filter((b: any) => b.type === type);
       const polys = [
-        ...placed.flatMap((b: any) => toPixels(m.geometry, stage, b)),
-        ...placed.flatMap((b: any) => overlayPixels(m.geometry, stage, b, 'idle')),
+        ...placed.flatMap((b: any) => toPixels(manifest.geometry, stage, b)),
+        ...placed.flatMap((b: any) => overlayPixels(manifest.geometry, stage, b, 'idle')),
       ];
       const dataUrl: string = await page.evaluate(
         ({ w, h, bg, polys }) => {
-          const c = document.createElement('canvas');
-          c.width = w;
-          c.height = h;
-          const ctx = c.getContext('2d')!;
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d')!;
           ctx.fillStyle = bg;
           ctx.fillRect(0, 0, w, h);
           for (const p of polys) {
             ctx.beginPath();
-            p.points.forEach(([x, y]: number[], i: number) =>
-              i ? ctx.lineTo(x, y) : ctx.moveTo(x, y),
-            );
+            p.points.forEach(([x, y]: number[], i: number) => {
+              i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+            });
             ctx.closePath();
             ctx.fillStyle = p.fill;
             ctx.globalAlpha = p.alpha ?? 1;
             ctx.fill();
             ctx.globalAlpha = 1;
           }
-          return c.toDataURL('image/png');
+          return canvas.toDataURL('image/png');
         },
         { w: stage.canvas.width, h: stage.canvas.height, bg: stage.palette[0], polys },
       );
@@ -153,8 +153,8 @@ export async function verify(args: string[]) {
         continue;
       }
       // Compare the block's bounding box (+ margin): the rest of the screenshot is chrome, not block pixels.
-      const xs = polys.flatMap((p: any) => p.points.map((q: number[]) => q[0])),
-        ys = polys.flatMap((p: any) => p.points.map((q: number[]) => q[1]));
+      const xs = polys.flatMap((poly: any) => poly.points.map((point: number[]) => point[0])),
+        ys = polys.flatMap((poly: any) => poly.points.map((point: number[]) => point[1]));
       const pad = 4 * r.dpr;
       const x0 = Math.max(0, Math.floor(Math.min(...xs)) - pad),
         y0 = Math.max(0, Math.floor(Math.min(...ys)) - pad);
@@ -163,15 +163,15 @@ export async function verify(args: string[]) {
       const w = x1 - x0,
         h = y1 - y0;
       const crop = (img: any) => {
-        const o = Buffer.alloc(w * h * 4);
+        const bytes = Buffer.alloc(w * h * 4);
         for (let y = 0; y < h; y++)
           img.data.copy(
-            o,
+            bytes,
             y * w * 4,
             ((y0 + y) * img.width + x0) * 4,
             ((y0 + y) * img.width + x1) * 4,
           );
-        return o;
+        return bytes;
       };
       const a = crop(v2),
         b = crop(ref);
@@ -191,7 +191,7 @@ export async function verify(args: string[]) {
       }
       results.push({
         name: r.name,
-        id: m.id,
+        id: manifest.id,
         status: pass ? 'pass' : 'fail',
         ratio: +ratio.toFixed(5),
         exactRatio: +(exact / (w * h)).toFixed(5),
@@ -201,17 +201,19 @@ export async function verify(args: string[]) {
   } finally {
     await browser.close();
   }
-  const failed = results.filter((r) => r.status !== 'pass');
+  const failed = results.filter((result) => result.status !== 'pass');
   writeFileSync(join(outDir, 'summary.json'), JSON.stringify({ results }, null, 2) + '\n');
   for (const f of failed)
     console.error(`${f.status}: ${f.name}${f.ratio != null ? ` ratio=${f.ratio}` : ''}`);
-  const worst = results.filter((r) => r.ratio != null).sort((a, b) => b.ratio - a.ratio)[0];
+  const worst = results
+    .filter((result) => result.ratio != null)
+    .sort((a, b) => b.ratio - a.ratio)[0];
   console.log(
     JSON.stringify({
       checked: results.length,
       passed: results.length - failed.length,
       failed: failed.length,
-      identical: results.filter((r) => r.exactRatio === 0).length,
+      identical: results.filter((result) => result.exactRatio === 0).length,
       worst: worst ? { name: worst.name, ratio: worst.ratio } : null,
     }),
   );

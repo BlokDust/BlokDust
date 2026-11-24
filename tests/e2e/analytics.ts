@@ -21,12 +21,12 @@ function check(name: string, ok: boolean, detail?: unknown) {
   );
 }
 const post = async (base: string, body: unknown, raw?: string) => {
-  const r = await fetch(`${base}/api/events`, {
+  const response = await fetch(`${base}/api/events`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: raw ?? JSON.stringify(body),
   });
-  return { status: r.status, json: (await r.json().catch(() => null)) as any };
+  return { status: response.status, json: (await response.json().catch(() => null)) as any };
 };
 const batch = (events: unknown[], extra: Record<string, unknown> = {}) => ({
   surface: 'web',
@@ -85,7 +85,11 @@ async function startMocks(): Promise<Mocks> {
     res.writeHead(404);
     res.end();
   });
-  await new Promise<void>((r) => server.listen(0, '127.0.0.1', () => r()));
+  await new Promise<void>((resolve) =>
+    server.listen(0, '127.0.0.1', () => {
+      resolve();
+    }),
+  );
   return {
     url: `http://127.0.0.1:${(server.address() as { port: number }).port}`,
     server,
@@ -95,10 +99,13 @@ async function startMocks(): Promise<Mocks> {
   };
 }
 const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url');
-function jwt(m: Mocks, claims: Record<string, unknown>): string {
-  const head = b64({ alg: 'RS256', kid: m.kid, typ: 'JWT' }),
+function jwt(mocks: Mocks, claims: Record<string, unknown>): string {
+  const head = b64({ alg: 'RS256', kid: mocks.kid, typ: 'JWT' }),
     body = b64(claims);
-  const sig = createSign('RSA-SHA256').update(`${head}.${body}`).sign(m.key).toString('base64url');
+  const sig = createSign('RSA-SHA256')
+    .update(`${head}.${body}`)
+    .sign(mocks.key)
+    .toString('base64url');
   return `${head}.${body}.${sig}`;
 }
 
@@ -118,7 +125,7 @@ async function main() {
   const browser = await chromium.launch();
   try {
     // ---- the default local Worker: analytics on, dashboard open locally (ADMIN_LOCAL=1, wrangler.jsonc) ----
-    const s = await startLocal({
+    const localServer = await startLocal({
       name: 'analytics',
       vars: {
         TURNSTILE_SECRET: '1x0000000000000000000000000000000AA',
@@ -126,8 +133,8 @@ async function main() {
         CF_ANALYTICS_TOKEN: 'test-token',
       },
     });
-    servers.push(s);
-    const base = s.url;
+    servers.push(localServer);
+    const base = localServer.url;
 
     // R3: accepted and refused
     let r = await post(
@@ -205,9 +212,9 @@ async function main() {
     const html = await (await fetch(`${base}/`)).text();
     check(
       'R5 the page carries the rate',
-      /<meta name="blokdust-analytics" content="1">/.test(html),
+      html.includes('<meta name="blokdust-analytics" content="1">'),
     );
-    const cfg = (await (await fetch(`${base}/api/config`)).json()) as any;
+    const cfg = await (await fetch(`${base}/api/config`)).json();
     check('R5 /api/config carries the rate', cfg.analytics?.rate === 1, cfg.analytics);
 
     // R6: the Worker's own events (shares, Freesound searches) never change the response: a search without a
@@ -220,12 +227,12 @@ async function main() {
     );
 
     // R10: dashboard locally
-    let d = await fetch(`${base}/admin/analytics`);
-    const csp = d.headers.get('content-security-policy') ?? '';
+    let response = await fetch(`${base}/admin/analytics`);
+    const csp = response.headers.get('content-security-policy') ?? '';
     check(
       'R10 local dashboard page',
-      d.status === 200 && (await d.text()).includes('BLOKDUST ANALYTICS'),
-      d.status,
+      response.status === 200 && (await response.text()).includes('BLOKDUST ANALYTICS'),
+      response.status,
     );
     check(
       'R11 dashboard CSP allows only its own nonce script',
@@ -234,8 +241,8 @@ async function main() {
         csp.includes("frame-ancestors 'none'"),
       csp,
     );
-    d = await fetch(`${base}/admin/analytics/data?days=7`);
-    const data = (await d.json()) as any;
+    response = await fetch(`${base}/admin/analytics/data?days=7`);
+    const data = await response.json();
     check(
       'R10 dashboard data from the SQL API',
       data.configured === true &&
@@ -251,10 +258,10 @@ async function main() {
         ),
       mocks.sql[0],
     );
-    d = await fetch(`${base}/admin/analytics/data?days=7;DROP`);
+    response = await fetch(`${base}/admin/analytics/data?days=7;DROP`);
     check(
       'R10 a bad day count falls back to 7',
-      d.status === 200 && mocks.sql.at(-1)!.includes("INTERVAL '7' DAY"),
+      response.status === 200 && mocks.sql.at(-1)!.includes("INTERVAL '7' DAY"),
     );
 
     // R11: client-sent text is shown as text in the browser
@@ -297,7 +304,7 @@ async function main() {
       timeout: 20000,
     });
     await eventsFrom(app);
-    const names = sent.flatMap((b) => b.events.map((e: any) => e.e));
+    const names = sent.flatMap((b) => b.events.map((value: any) => value.e));
     check(
       'R2 the app sends session_start, patch_opened and audio_started',
       ['session_start', 'patch_opened', 'audio_started'].every((n) => names.includes(n)),
@@ -379,8 +386,8 @@ async function main() {
     );
     check(
       'R5 kill switch: the page is told 0',
-      /<meta name="blokdust-analytics" content="0">/.test(
-        await (await fetch(`${off.url}/`)).text(),
+      (await (await fetch(`${off.url}/`)).text()).includes(
+        '<meta name="blokdust-analytics" content="0">',
       ),
     );
 
@@ -432,10 +439,10 @@ async function main() {
     );
   } finally {
     await browser.close();
-    for (const s of servers) await s.stop();
+    for (const localServer of servers) await localServer.stop();
     mocks.server.close();
   }
-  const failed = results.filter((r) => !r.ok);
+  const failed = results.filter((result) => !result.ok);
   console.log(
     JSON.stringify({
       checked: results.length,

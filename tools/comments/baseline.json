@@ -240,7 +240,7 @@
   },
   "server/src/auth/native.ts": {
     "comment-block-lines": 1,
-    "comment-line-length": 8
+    "comment-line-length": 7
   },
   "server/src/auth/newAccounts.ts": {
     "comment-block-lines": 1,
@@ -345,7 +345,7 @@
   },
   "tests/e2e/sharing.ts": {
     "comment-block-lines": 5,
-    "comment-line-length": 38
+    "comment-line-length": 39
   },
   "tests/e2e/stage-e2e.ts": {
     "comment-line-length": 4
@@ -358,7 +358,7 @@
   },
   "tests/e2e/ui-regressions.ts": {
     "comment-block-lines": 54,
-    "comment-line-length": 290
+    "comment-line-length": 289
   },
   "tests/e2e/ui-regressions/display.ts": {
     "comment-line-length": 6
@@ -709,8 +709,7 @@
     "comment-line-length": 2
   },
   "web/src/app/patchFiles/showPatch.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 4
+    "comment-line-length": 1
   },
   "web/src/app/pluginValues.ts": {
     "comment-line-length": 1
@@ -800,7 +799,7 @@
     "comment-line-length": 1
   },
   "web/src/input/keys.ts": {
-    "comment-line-length": 9
+    "comment-line-length": 10
   },
   "web/src/input/mpe.ts": {
     "comment-block-lines": 1,
@@ -818,7 +817,7 @@
   },
   "web/src/patch/loadPatch.ts": {
     "comment-block-lines": 1,
-    "comment-line-length": 15
+    "comment-line-length": 16
   },
   "web/src/patch/samples.ts": {
     "comment-block-lines": 2,

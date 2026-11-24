@@ -30,17 +30,21 @@ async function call<T>(
     body === undefined ? {} : { 'content-type': 'application/json' };
   if (token) headers.authorization = `Bearer ${token}`;
   else Object.assign(headers, keyHeader()); // a signed-in plugin (SHARING-0011)
-  const r = await fetch(api(path), {
+  const response = await fetch(api(path), {
     method,
     credentials: 'same-origin',
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  const j = (await r.json().catch(() => ({}))) as { error?: string };
-  if (!r.ok)
+  const j = (await response.json().catch(() => ({}))) as { error?: string };
+  if (!response.ok)
     throw Object.assign(
-      new Error(r.status === 401 ? 'Sign in first (Settings).' : (j.error ?? `HTTP ${r.status}`)),
-      { status: r.status },
+      new Error(
+        response.status === 401
+          ? 'Sign in first (Settings).'
+          : (j.error ?? `HTTP ${response.status}`),
+      ),
+      { status: response.status },
     );
   return j as T;
 }

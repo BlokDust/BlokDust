@@ -50,8 +50,8 @@ if (args.includes('--sql')) {
   const results = only
     ? Object.fromEntries(Object.entries(all).filter(([k]) => only.includes(k)))
     : all;
-  const failed = Object.entries(results).filter(([, r]) => r.error);
-  for (const [k, r] of failed) console.error(`${k}: ${r.error}`);
+  const failed = Object.entries(results).filter(([, value]) => value.error);
+  for (const [k, value] of failed) console.error(`${k}: ${value.error}`);
   console.log(JSON.stringify({ env, dataset, days, results }, null, 2));
   if (failed.length === Object.keys(results).length) process.exit(1);
 }

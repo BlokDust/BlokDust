@@ -56,11 +56,11 @@ export async function me(env: Env, req: Request, url?: URL): Promise<Response> {
     ...ids.results
       .sort((a, b) => order(a.provider) - order(b.provider))
       .map((r) => ({ kind: r.provider, created: r.created })),
-    ...pks.results.map((c) => ({
+    ...pks.results.map((result) => ({
       kind: 'passkey',
-      id: c.id,
-      created: c.created,
-      lastUsed: c.last_used,
+      id: result.id,
+      created: result.created,
+      lastUsed: result.last_used,
     })),
   ];
   return json(
@@ -69,7 +69,7 @@ export async function me(env: Env, req: Request, url?: URL): Promise<Response> {
         id: u.id,
         handle: u.handle,
         passkeys: pks.results.length,
-        providers: ids.results.map((r) => r.provider),
+        providers: ids.results.map((result) => result.provider),
         methods,
         ...(stats ? { stats } : {}),
         ...(apps ? { apps: apps.results } : {}),
@@ -87,7 +87,7 @@ export async function me(env: Env, req: Request, url?: URL): Promise<Response> {
  * delete are one statement, so two at once can't leave an account with none.
  */
 export async function removeMethod(env: Env, req: Request): Promise<Response> {
-  const u = await requireUser(env, req);
+  const user = await requireUser(env, req);
   const { kind, id } = await body<{ kind?: unknown; id?: unknown }>(req);
   const others =
     '((SELECT COUNT(*) FROM identities WHERE user_id = ?1) + (SELECT COUNT(*) FROM credentials WHERE user_id = ?1)) > 1';
@@ -96,21 +96,21 @@ export async function removeMethod(env: Env, req: Request): Promise<Response> {
     r = await env.DB.prepare(
       `DELETE FROM identities WHERE user_id = ?1 AND provider = ?2 AND ${others}`,
     )
-      .bind(u.id, kind)
+      .bind(user.id, kind)
       .run();
     exists =
       !r.meta.changes &&
       (await env.DB.prepare('SELECT 1 FROM identities WHERE user_id = ? AND provider = ?')
-        .bind(u.id, kind)
+        .bind(user.id, kind)
         .first());
   } else if (kind === 'passkey' && typeof id === 'string' && id.length <= 1024) {
     r = await env.DB.prepare(`DELETE FROM credentials WHERE user_id = ?1 AND id = ?2 AND ${others}`)
-      .bind(u.id, id)
+      .bind(user.id, id)
       .run();
     exists =
       !r.meta.changes &&
       (await env.DB.prepare('SELECT 1 FROM credentials WHERE user_id = ? AND id = ?')
-        .bind(u.id, id)
+        .bind(user.id, id)
         .first());
   } else throw new HttpError(400, 'kind must be google, apple or passkey (with its id)');
   if (!r.meta.changes)
@@ -129,9 +129,9 @@ export async function setHandle(env: Env, req: Request): Promise<Response> {
   if (problem) throw new HttpError(400, problem);
   try {
     await env.DB.prepare('UPDATE users SET handle = ? WHERE id = ?').bind(handle, u.id).run();
-  } catch (e) {
-    if (String(e).includes('UNIQUE')) throw new HttpError(409, 'That name is taken.');
-    throw e;
+  } catch (error) {
+    if (String(error).includes('UNIQUE')) throw new HttpError(409, 'That name is taken.');
+    throw error;
   }
   return json({ user: { id: u.id, handle } });
 }
@@ -147,32 +147,32 @@ export async function logout(env: Env, req: Request): Promise<Response> {
 
 /** DELETE /api/me — the account, its sign-ins and sessions, and its patches (R10). */
 export async function deleteAccount(env: Env, req: Request): Promise<Response> {
-  const u = await requireUser(env, req);
+  const user = await requireUser(env, req);
   await env.DB.batch([
     env.DB.prepare(
       'DELETE FROM gallery WHERE user_id = ? OR patch_id IN (SELECT id FROM patches WHERE owner_id = ?)',
-    ).bind(u.id, u.id),
+    ).bind(user.id, user.id),
     // Their likes go: recount only what they had liked, before the likes are deleted (one write per liked patch, not
     // one per gallery row; security review, PR 13).
     env.DB.prepare(
       `UPDATE gallery SET likes = (SELECT COUNT(*) FROM likes l WHERE l.patch_id = gallery.patch_id AND l.user_id != ?)
       WHERE patch_id IN (SELECT patch_id FROM likes WHERE user_id = ?)`,
-    ).bind(u.id, u.id),
-    env.DB.prepare('DELETE FROM likes WHERE user_id = ?').bind(u.id),
-    env.DB.prepare('DELETE FROM reports WHERE user_id = ?').bind(u.id),
+    ).bind(user.id, user.id),
+    env.DB.prepare('DELETE FROM likes WHERE user_id = ?').bind(user.id),
+    env.DB.prepare('DELETE FROM reports WHERE user_id = ?').bind(user.id),
     env.DB.prepare(
       'DELETE FROM revisions WHERE patch_id IN (SELECT id FROM patches WHERE owner_id = ?)',
-    ).bind(u.id),
+    ).bind(user.id),
     // The ids stay taken (as a deleted patch's do) so an old link can never open someone else's patch.
     env.DB.prepare(
       'UPDATE patches SET deleted = 1, owner_id = NULL, updated = ? WHERE owner_id = ?',
-    ).bind(Date.now(), u.id),
-    env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(u.id),
-    env.DB.prepare('DELETE FROM app_keys WHERE user_id = ?').bind(u.id),
-    env.DB.prepare('DELETE FROM device_codes WHERE user_id = ?').bind(u.id),
-    env.DB.prepare('DELETE FROM credentials WHERE user_id = ?').bind(u.id),
-    env.DB.prepare('DELETE FROM identities WHERE user_id = ?').bind(u.id),
-    env.DB.prepare('DELETE FROM users WHERE id = ?').bind(u.id),
+    ).bind(Date.now(), user.id),
+    env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(user.id),
+    env.DB.prepare('DELETE FROM app_keys WHERE user_id = ?').bind(user.id),
+    env.DB.prepare('DELETE FROM device_codes WHERE user_id = ?').bind(user.id),
+    env.DB.prepare('DELETE FROM credentials WHERE user_id = ?').bind(user.id),
+    env.DB.prepare('DELETE FROM identities WHERE user_id = ?').bind(user.id),
+    env.DB.prepare('DELETE FROM users WHERE id = ?').bind(user.id),
   ]);
   const headers = new Headers({ 'cache-control': 'no-store' });
   headers.append('set-cookie', await endSession(env, req, false));
@@ -184,7 +184,7 @@ export async function deleteAccount(env: Env, req: Request): Promise<Response> {
  * account's. A token that doesn't match, or a patch with another owner, is skipped.
  */
 export async function claim(env: Env, req: Request): Promise<Response> {
-  const u = await requireUser(env, req);
+  const user = await requireUser(env, req);
   const { patches } = await body<{ patches?: { id?: unknown; token?: unknown }[] }>(req);
   // One select and one batch (D1 allows few queries per request and 100 bound values per query): the client sends
   // at most CLAIM_MAX at a time.
@@ -206,7 +206,7 @@ export async function claim(env: Env, req: Request): Promise<Response> {
   const claimed: string[] = [];
   for (const r of rows)
     if (
-      (!r.owner_id || r.owner_id === u.id) &&
+      (!r.owner_id || r.owner_id === user.id) &&
       sameDigest(await sha256Hex(asked.get(r.id)!), r.edit_hash)
     )
       claimed.push(r.id);
@@ -215,7 +215,7 @@ export async function claim(env: Env, req: Request): Promise<Response> {
       claimed.map((id) =>
         env.DB.prepare(
           'UPDATE patches SET owner_id = ? WHERE id = ? AND (owner_id IS NULL OR owner_id = ?)',
-        ).bind(u.id, id, u.id),
+        ).bind(user.id, id, user.id),
       ),
     );
   return json({ claimed });
@@ -223,11 +223,11 @@ export async function claim(env: Env, req: Request): Promise<Response> {
 
 /** GET /api/me/patches — the account's patches, newest first (R8). */
 export async function myPatches(env: Env, req: Request): Promise<Response> {
-  const u = await requireUser(env, req, { app: true });
+  const user = await requireUser(env, req, { app: true });
   const r = await env.DB.prepare(
     'SELECT id, title, rev, created, updated FROM patches WHERE owner_id = ? AND deleted = 0 ORDER BY updated DESC LIMIT 500',
   )
-    .bind(u.id)
+    .bind(user.id)
     .all();
   return json({ patches: r.results }, 200, { 'cache-control': 'no-store' });
 }
@@ -236,8 +236,8 @@ export async function myPatches(env: Env, req: Request): Promise<Response> {
  * (ACTIVITY_BEACON=off): answered without a write, and the browser keeps it for its next save. */
 export async function postActivity(env: Env, req: Request): Promise<Response> {
   if (!beaconOn(env)) return json({ added: false }); // off: no session lookup, no write
-  const u = await requireUser(env, req, { app: true });
+  const user = await requireUser(env, req, { app: true });
   const a = readActivity(await parseBody(req));
-  if (a) await addActivity(env, u.id, a).run();
+  if (a) await addActivity(env, user.id, a).run();
   return json({ added: !!a });
 }

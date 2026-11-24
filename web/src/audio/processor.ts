@@ -33,11 +33,11 @@ class BlokdustProcessor extends AudioWorkletProcessor {
     const opts = options.processorOptions as ProcessorOptions;
     this.engine = WasmEngine.fromModule(opts.module, sampleRate, opts.seed);
     this.testInput = opts.testInput;
-    for (const c of opts.commands) this.engine.push(c);
+    for (const command of opts.commands) this.engine.push(command);
     this.snapshotEvery = Math.max(1, Math.round(sampleRate / 128 / 60)); // ~60 snapshots per second
-    this.port.onmessage = (e: MessageEvent<ToWorklet>) => {
-      const m = e.data;
-      if (m.type === 'commands') for (const c of m.commands) this.engine.push(c);
+    this.port.onmessage = (event: MessageEvent<ToWorklet>) => {
+      const m = event.data;
+      if (m.type === 'commands') for (const command of m.commands) this.engine.push(command);
       else if (m.type === 'sample')
         this.engine.attachSample(m.id, m.left, m.right, m.sampleRate, m.stage ?? 0);
       else if (m.type === 'view') {
@@ -48,17 +48,17 @@ class BlokdustProcessor extends AudioWorkletProcessor {
         if (m.on) this.recorded = [];
         else if (this.recorded) {
           const total = this.recorded.reduce((a, c) => a + c[0].length, 0),
-            l = new Float32Array(total),
+            samples = new Float32Array(total),
             r = new Float32Array(total);
           let at = 0;
           for (const [a, b] of this.recorded) {
-            l.set(a, at);
+            samples.set(a, at);
             r.set(b, at);
             at += a.length;
           }
           this.recorded = null;
-          this.port.postMessage({ type: 'recording', left: l, right: r, sampleRate }, [
-            l.buffer,
+          this.port.postMessage({ type: 'recording', left: samples, right: r, sampleRate }, [
+            samples.buffer,
             r.buffer,
           ]);
         }
@@ -71,25 +71,25 @@ class BlokdustProcessor extends AudioWorkletProcessor {
 
   process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean {
     const out = outputs[0];
-    const n = out[0].length;
+    const lengthValue = out[0].length;
     const live = inputs[0]; // mic / line input for Audio In, when the node has one connected
     const { left, right } = this.testInput
       ? this.engine.processTestSine(
-          n,
+          lengthValue,
           this.frame,
           sampleRate,
           this.testInput.frequency,
           this.testInput.gain,
         )
       : live && live.length
-        ? this.engine.process(n, { left: live[0], right: live[1] })
-        : this.engine.process(n);
+        ? this.engine.process(lengthValue, { left: live[0], right: live[1] })
+        : this.engine.process(lengthValue);
     out[0].set(left);
     if (out[1]) out[1].set(right);
     if (this.recorded) this.recorded.push([left.slice(), right.slice()]);
-    for (let i = 0; i < n; i++) this.sumSq += left[i] * left[i];
-    this.count += n;
-    this.frame += n;
+    for (let i = 0; i < lengthValue; i++) this.sumSq += left[i] * left[i];
+    this.count += lengthValue;
+    this.frame += lengthValue;
     for (const ev of this.engine.drainEvents()) {
       // drain every quantum so the engine log never fills
       if (ev.type === EventType.Emit) {

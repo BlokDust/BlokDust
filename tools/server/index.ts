@@ -30,10 +30,10 @@ function envName(): EnvName {
   if (e !== 'staging' && e !== 'production') throw new Error('--env staging|production required');
   return e;
 }
-const workerName = (e: EnvName) => (e === 'staging' ? 'blokdust-staging' : 'blokdust');
+const workerName = (envName: EnvName) => (envName === 'staging' ? 'blokdust-staging' : 'blokdust');
 const dbName = workerName;
-const hostsOf = (e: EnvName) => [
-  ...new Set([new URL(workerUrl(e)).host, new URL(siteUrl(e)).host]),
+const hostsOf = (envName: EnvName) => [
+  ...new Set([new URL(workerUrl(envName)).host, new URL(siteUrl(envName)).host]),
 ];
 const secretFile = (name: string) => join(SECRETS, name);
 const readSecret = (name: string) =>
@@ -45,13 +45,13 @@ async function cfToken(): Promise<string> {
   await run([WRANGLER, 'whoami'], { quiet: true });
   const f = join(homedir(), 'Library/Preferences/.wrangler/config/default.toml');
   const t = existsSync(f)
-    ? readFileSync(f, 'utf8').match(/oauth_token = "([^"]+)"/)?.[1]
+    ? /oauth_token = "([^"]+)"/.exec(readFileSync(f, 'utf8'))?.[1]
     : undefined;
   if (!t) throw new Error('not logged in: run `npx wrangler login` in server/');
   return t;
 }
 async function cf<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const r = await fetch(
+  const response = await fetch(
     `https://api.cloudflare.com/client/v4/accounts/${requiredSetting('CLOUDFLARE_ACCOUNT_ID')}${path}`,
     {
       method,
@@ -59,7 +59,7 @@ async function cf<T>(method: string, path: string, body?: unknown): Promise<T> {
       body: body ? JSON.stringify(body) : undefined,
     },
   );
-  const j = (await r.json()) as { success: boolean; result: T; errors: unknown[] };
+  const j = (await response.json()) as { success: boolean; result: T; errors: unknown[] };
   if (!j.success) throw new Error(`${method} ${path}: ${JSON.stringify(j.errors)}`);
   return j.result;
 }
@@ -68,13 +68,13 @@ async function setup(): Promise<void> {
   const e = envName();
   // D1
   const dbs = await cf<{ uuid: string; name: string }[]>('GET', '/d1/database?per_page=100');
-  let db = dbs.find((d) => d.name === dbName(e));
+  let db = dbs.find((db) => db.name === dbName(e));
   if (!db) {
     db = await cf<{ uuid: string; name: string }>('POST', '/d1/database', { name: dbName(e) });
     console.error(`created D1 ${db.name}`);
   }
   saveSettings({ [envKey(e, 'DATABASE_ID')]: db.uuid });
-  let support = dbs.find((d) => d.name === `blokdust-support-${e}`);
+  let support = dbs.find((db) => db.name === `blokdust-support-${e}`);
   if (!support)
     support = await cf<{ uuid: string; name: string }>('POST', '/d1/database', {
       name: `blokdust-support-${e}`,
@@ -82,55 +82,67 @@ async function setup(): Promise<void> {
   saveSettings({ [envKey(e, 'SUPPORT_DATABASE_ID')]: support.uuid });
   // Turnstile (invisible), bound to the Worker's hostname
   const hosts = hostsOf(e);
-  type Widget = { sitekey: string; name: string; secret?: string; domains: string[]; mode: string };
+  interface Widget {
+    sitekey: string;
+    name: string;
+    secret?: string;
+    domains: string[];
+    mode: string;
+  }
   const widgets = await cf<Widget[]>('GET', '/challenges/widgets?per_page=50');
-  let w: Widget | undefined = widgets.find((x) => x.name === workerName(e));
-  if (!w) {
-    w = await cf<Widget>('POST', '/challenges/widgets', {
+  let widget: Widget | undefined = widgets.find((x) => x.name === workerName(e));
+  if (!widget) {
+    widget = await cf<Widget>('POST', '/challenges/widgets', {
       name: workerName(e),
       domains: hosts,
       mode: 'invisible',
     });
-    console.error(`created Turnstile widget ${w.name} for ${hosts.join(', ')}`);
-  } else if (hosts.some((h) => !w!.domains.includes(h))) {
+    console.error(`created Turnstile widget ${widget.name} for ${hosts.join(', ')}`);
+  } else if (hosts.some((host) => !widget!.domains.includes(host))) {
     // Add hosts, keep any already there.
-    const domains = [...new Set([...w.domains, ...hosts])];
-    w = {
-      ...(await cf<Widget>('PUT', `/challenges/widgets/${w.sitekey}`, {
-        name: w.name,
+    const domains = [...new Set([...widget.domains, ...hosts])];
+    widget = {
+      ...(await cf<Widget>('PUT', `/challenges/widgets/${widget.sitekey}`, {
+        name: widget.name,
         domains,
-        mode: w.mode,
+        mode: widget.mode,
       })),
       secret: undefined,
     };
-    console.error(`Turnstile widget ${w.name} now allows ${domains.join(', ')}`);
+    console.error(`Turnstile widget ${widget.name} now allows ${domains.join(', ')}`);
   }
-  if (!w.secret && !readSecret(`turnstile_${e}`)) {
-    w = {
-      ...w,
+  if (!widget.secret && !readSecret(`turnstile_${e}`)) {
+    widget = {
+      ...widget,
       ...(await cf<{ sitekey: string; secret: string; name: string }>(
         'POST',
-        `/challenges/widgets/${w.sitekey}/rotate_secret`,
+        `/challenges/widgets/${widget.sitekey}/rotate_secret`,
         { invalidate_immediately: true },
       )),
     };
-    console.error(`rotated the Turnstile secret for ${w.name} (no local copy)`);
+    console.error(`rotated the Turnstile secret for ${widget.name} (no local copy)`);
   }
-  if (w.secret) writeFileSync(secretFile(`turnstile_${e}`), w.secret, { mode: 0o600 });
-  saveSettings({ [envKey(e, 'TURNSTILE_SITE_KEY')]: w.sitekey });
+  if (widget.secret) writeFileSync(secretFile(`turnstile_${e}`), widget.secret, { mode: 0o600 });
+  saveSettings({ [envKey(e, 'TURNSTILE_SITE_KEY')]: widget.sitekey });
   console.log(JSON.stringify({ env: e, configured: true }));
 }
 
-async function putSecret(e: EnvName, name: string, value: string): Promise<void> {
+async function putSecret(envName: EnvName, name: string, value: string): Promise<void> {
   if (!value) throw new Error(`no value for ${name} (run setup, or add ${SECRETS}/…)`);
   const { spawn } = await import('node:child_process');
   await new Promise<void>((res, rej) => {
-    const p = spawn(WRANGLER, ['secret', 'put', name, '--env', e, '--config', remoteConfig(e)], {
-      cwd: SERVER_DIR,
-      stdio: ['pipe', 'inherit', 'inherit'],
-    });
+    const p = spawn(
+      WRANGLER,
+      ['secret', 'put', name, '--env', envName, '--config', remoteConfig(envName)],
+      {
+        cwd: SERVER_DIR,
+        stdio: ['pipe', 'inherit', 'inherit'],
+      },
+    );
     p.stdin.end(value);
-    p.on('close', (c) => (c ? rej(new Error(`wrangler secret put ${name} failed`)) : res()));
+    p.on('close', (c) => {
+      c ? rej(new Error(`wrangler secret put ${name} failed`)) : res();
+    });
   });
 }
 
@@ -174,7 +186,7 @@ async function deploy(): Promise<void> {
   for (let i = 0; i < 4 && m.code; i++) {
     if (i) {
       console.error(`migrations failed; retrying (${i}/3)`);
-      await new Promise((r) => setTimeout(r, 3000 * i));
+      await new Promise((resolve) => setTimeout(resolve, 3000 * i));
     }
     m = await run([
       WRANGLER,
@@ -216,17 +228,21 @@ async function dev(): Promise<void> {
         FREESOUND_TOKEN: readSecret('freesound_token'),
       }
     : { TURNSTILE_SECRET: '1x0000000000000000000000000000000AA' };
-  const s = await startLocal({
+  const localServer = await startLocal({
     name: 'dev',
     vars,
     port: Number(opt('--port') ?? 8787),
     fresh: false,
   });
   console.error(
-    `BlokDust Worker on ${s.url} (Ctrl-C to stop)${real ? '' : ' — Freesound off; add --real to use the key'}`,
+    `BlokDust Worker on ${localServer.url} (Ctrl-C to stop)${real ? '' : ' — Freesound off; add --real to use the key'}`,
   );
-  await new Promise<void>((r) => process.on('SIGINT', () => r()));
-  await s.stop();
+  await new Promise<void>((resolve) =>
+    process.on('SIGINT', () => {
+      resolve();
+    }),
+  );
+  await localServer.stop();
 }
 
 async function smoke(): Promise<void> {

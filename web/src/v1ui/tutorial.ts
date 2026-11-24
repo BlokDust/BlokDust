@@ -8,8 +8,8 @@
 //  - Its checks ran in v1's _Invalidate; v2's connections come from the engine a frame or two later, so they run a few
 //    times a second while the tour is open.
 import { App } from './shim.ts';
-import { Tutorial } from './ported/UI/Tutorial';
-import { TutorialHotspots } from './ported/UI/TutorialHotspots';
+import type { Tutorial } from './ported/UI/Tutorial';
+import type { TutorialHotspots } from './ported/UI/TutorialHotspots';
 
 /** v1's last step, in the owner's words (both tours: keys and touch). */
 export const TOUR_LAST =
@@ -42,8 +42,8 @@ const SLOT_BLOCK: Record<string, string> = {
   '2:1': 'Power',
 };
 
-export function installTour(t: Tutorial, hotspots: TutorialHotspots): void {
-  const tut = t as any;
+export function installTour(tutorial: Tutorial, hotspots: TutorialHotspots): void {
+  const tut = tutorial as any;
   for (const text of [App.L10n.UI.Tutorial, App.L10n.UI.TutorialTouch] as any[]) {
     const last = text.Scenes[text.Scenes.length - 1];
     last.Intro = TOUR_LAST;
@@ -99,8 +99,8 @@ export function installTour(t: Tutorial, hotspots: TutorialHotspots): void {
 /** While the tour is open, run v1's step check a few times a second. The options step is checked as v1 did, when the
  * options panel closes (OptionsPanel.Close calls it): the step says "close the options panel when you're done". */
 let lastCheck = 0;
-export function checkTour(t: Tutorial, now: number, optionsOpen: boolean): void {
-  const tut = t as any;
+export function checkTour(tutorial: Tutorial, now: number, optionsOpen: boolean): void {
+  const tut = tutorial as any;
   if (!tut.Open || now - lastCheck < 250) return;
   lastCheck = now;
   if (optionsOpen) return;

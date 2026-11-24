@@ -60,8 +60,8 @@ export const isDeadDefault = (track: unknown) =>
   track === '' ||
   (typeof track === 'string' && /^https?:\/\/files\.blokdust\.io\//.test(track));
 
-export const refKey = (r: SampleRef) =>
-  r.provider === 'freesound' ? `freesound:${r.id}` : `file:${r.name}`;
+export const refKey = (ref: SampleRef) =>
+  ref.provider === 'freesound' ? `freesound:${ref.id}` : `file:${ref.name}`;
 export const isPortable = (track: unknown) =>
   typeof track !== 'string' || !track.startsWith('file:');
 
@@ -75,11 +75,11 @@ export async function searchFreesound(
   query: string,
   maxSeconds: number,
 ): Promise<FreesoundSound[]> {
-  const r = await fetch(
+  const response = await fetch(
     api(`freesound/search?q=${encodeURIComponent(query)}&max=${Math.round(maxSeconds)}`),
   );
-  if (!r.ok) throw new Error(`search failed (${r.status})`);
-  return ((await r.json()) as { results: FreesoundSound[] }).results;
+  if (!response.ok) throw new Error(`search failed (${response.status})`);
+  return ((await response.json()) as { results: FreesoundSound[] }).results;
 }
 
 /**
@@ -92,8 +92,8 @@ export async function fetchFreesound(ref: FreesoundRef, maxSeconds?: number): Pr
     ? { range: `bytes=0-${Math.ceil((maxSeconds + 0.5) * 40_000)}` }
     : {};
   try {
-    const r = await fetch(ref.preview, { headers });
-    if (r.ok) return await r.arrayBuffer();
+    const response = await fetch(ref.preview, { headers });
+    if (response.ok) return await response.arrayBuffer();
   } catch {
     /* fall through to a lookup */
   }
@@ -126,51 +126,61 @@ const DB = 'blokdust2',
   STORE = 'fileHandles';
 function db(): Promise<IDBDatabase> {
   return new Promise((res, rej) => {
-    const r = indexedDB.open(DB, 1);
-    r.onupgradeneeded = () => r.result.createObjectStore(STORE);
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
+    const iDBOpenDBRequest = indexedDB.open(DB, 1);
+    iDBOpenDBRequest.onupgradeneeded = () => iDBOpenDBRequest.result.createObjectStore(STORE);
+    iDBOpenDBRequest.onsuccess = () => {
+      res(iDBOpenDBRequest.result);
+    };
+    iDBOpenDBRequest.onerror = () => {
+      rej(iDBOpenDBRequest.error);
+    };
   });
 }
 async function tx<T>(
   mode: IDBTransactionMode,
-  fn: (s: IDBObjectStore) => IDBRequest<T>,
+  fn: (iDBObjectStore: IDBObjectStore) => IDBRequest<T>,
 ): Promise<T> {
-  const d = await db();
+  const iDBDatabase = await db();
   return new Promise((res, rej) => {
-    const r = fn(d.transaction(STORE, mode).objectStore(STORE));
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
+    const iDBRequest = fn(iDBDatabase.transaction(STORE, mode).objectStore(STORE));
+    iDBRequest.onsuccess = () => {
+      res(iDBRequest.result);
+    };
+    iDBRequest.onerror = () => {
+      rej(iDBRequest.error);
+    };
   });
 }
 export async function rememberHandle(hash: string, handle: FileSystemFileHandle): Promise<void> {
   try {
-    await tx('readwrite', (s) => s.put(handle, hash));
+    await tx('readwrite', (iDBObjectStore) => iDBObjectStore.put(handle, hash));
   } catch {
     /* no IndexedDB (private mode): this session only */
   }
 }
-export async function handleFor(hash: string): Promise<FileSystemFileHandle | null> {
+/** A stored file handle; Chromium can ask for read permission again (not in every DOM typing). */
+type PermissionHandle = FileSystemFileHandle & {
+  queryPermission?: (options: { mode: 'read' }) => Promise<PermissionState>;
+  requestPermission?: (options: { mode: 'read' }) => Promise<PermissionState>;
+};
+
+export async function handleFor(hash: string): Promise<PermissionHandle | null> {
   try {
-    return (await tx<FileSystemFileHandle | undefined>('readonly', (s) => s.get(hash))) ?? null;
+    return (await tx<PermissionHandle | undefined>('readonly', (store) => store.get(hash))) ?? null;
   } catch {
     return null;
   }
 }
 
-type PermissionHandle = FileSystemFileHandle & {
-  queryPermission?(o: { mode: 'read' }): Promise<PermissionState>;
-  requestPermission?(o: { mode: 'read' }): Promise<PermissionState>;
-};
 /** A remembered file, if the browser still lets us read it. `ask` (needs a user gesture) prompts when it would. */
 export async function openRemembered(hash: string, ask: boolean): Promise<File | null> {
-  const h = (await handleFor(hash)) as PermissionHandle | null;
-  if (!h) return null;
+  const permissionHandle = await handleFor(hash);
+  if (!permissionHandle) return null;
   try {
-    let state = (await h.queryPermission?.({ mode: 'read' })) ?? 'granted';
+    let state = (await permissionHandle.queryPermission?.({ mode: 'read' })) ?? 'granted';
     if (state === 'prompt' && ask)
-      state = (await h.requestPermission?.({ mode: 'read' })) ?? 'denied';
-    return state === 'granted' ? await h.getFile() : null;
+      state = (await permissionHandle.requestPermission?.({ mode: 'read' })) ?? 'denied';
+    return state === 'granted' ? await permissionHandle.getFile() : null;
   } catch {
     return null;
   }
@@ -212,8 +222,8 @@ export async function pickAudioFile(): Promise<{
         multiple: false,
       });
       return { file: await handle.getFile(), handle };
-    } catch (e) {
-      if ((e as DOMException)?.name === 'AbortError') return null; // cancelled
+    } catch (error) {
+      if ((error as DOMException)?.name === 'AbortError') return null; // cancelled
       // Not allowed here (e.g. cross-origin iframe): fall back to the plain input.
     }
   }
@@ -225,7 +235,9 @@ export async function pickAudioFile(): Promise<{
       const f = input.files?.[0];
       res(f ? { file: f, handle: null } : null);
     };
-    input.oncancel = () => res(null);
+    input.oncancel = () => {
+      res(null);
+    };
     input.click();
   });
 }

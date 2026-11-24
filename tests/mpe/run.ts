@@ -11,9 +11,9 @@ const failures: string[] = [];
 const files = readdirSync('tests/mpe').filter((f) => f.endsWith('.json'));
 for (const f of files) {
   const j = JSON.parse(readFileSync(`tests/mpe/${f}`, 'utf8'));
-  const p = new MpeParser(7, 0);
-  p.setSettings({ mpe: !!j.settings?.mpe });
-  const out = j.messages.flatMap((m: number[]) => p.message(m[1], m[2], m[3], m[0]));
+  const mpeParser = new MpeParser(7, 0);
+  mpeParser.setSettings({ mpe: !!j.settings?.mpe });
+  const out = j.messages.flatMap((m: number[]) => mpeParser.message(m[1], m[2], m[3], m[0]));
   if (out.length !== j.expect.length) {
     failures.push(`${f}: ${out.length} commands, want ${j.expect.length}`);
     continue;

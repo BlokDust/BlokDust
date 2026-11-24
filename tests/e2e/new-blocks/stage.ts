@@ -32,7 +32,7 @@ export const stageTests: Tests = {
       browser,
       [blk('s', 'source.stage', 0, 0), blk('outer', 'fx.volume', 0, 8)],
       errors,
-      { macros } as any,
+      { macros },
     );
     const menu = await menuItems(p, 'Source');
     const silent = (await state(p)).rms < 0.0005; // nothing powers it
@@ -110,7 +110,7 @@ export const stageTests: Tests = {
       silent &&
       held &&
       names.includes('Volume') &&
-      names.filter((n: string) => n === 'actionbutton').length === 1 &&
+      names.filter((nameValue: string) => nameValue === 'actionbutton').length === 1 &&
       inner.join() === 'fx.filter,power.power,source.tone' &&
       !insideMenu.includes('Stage') &&
       insideMenu.includes('Sample') &&
@@ -219,7 +219,7 @@ export const stageTests: Tests = {
         blk('f2', 'fx.filter', 13, 6),
       ],
       errors,
-      { macros } as any,
+      { macros },
     );
     await p.waitForTimeout(400);
     const ids = await Promise.all(['t2', 'f2'].map((u) => idOf(p, u)));
@@ -240,7 +240,7 @@ export const stageTests: Tests = {
     await p.mouse.up();
     await p.waitForTimeout(600);
     const s = await state(p),
-      macro = s.patch.macros?.find((m: any) => m.block === 's');
+      macro = s.patch.macros?.find((macro: any) => macro.block === 's');
     const sounds = s.rms > 0.005; // the outer Power still powers the Stage, whose inner Tone plays
     await p.close();
     const inner = macro?.blocks
@@ -324,8 +324,18 @@ export const stageTests: Tests = {
   // its right, or its left with no room there. Only with every block selected and some out of view does it go top
   // right, under the SIGNED IN AS line. Drawn on v1's panel layer (no blurred shadow: no gradients in BlokDust).
   async 'make-stage-placement'(errors) {
-    type B = { x: number; y: number; w: number; h: number };
-    type R = { x0: number; y0: number; x1: number; y1: number };
+    interface B {
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    }
+    interface R {
+      x0: number;
+      y0: number;
+      x1: number;
+      y1: number;
+    }
     const hits = (a?: B | null, b?: B | null) =>
       !!a && !!b && a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
     const right = (b?: B, s?: R) =>
@@ -341,7 +351,7 @@ export const stageTests: Tests = {
       });
       await p.evaluate(
         (list) => (window as any).__bd_probe.select(list),
-        await Promise.all(uids.map((u) => idOf(p, u))),
+        await Promise.all(uids.map((uid) => idOf(p, uid))),
       );
       await p.waitForTimeout(200);
       await p.screenshot({ path: `${OUT}/make-stage-${shot}.png` });

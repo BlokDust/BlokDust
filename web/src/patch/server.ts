@@ -19,9 +19,9 @@ let configPromise: Promise<ServerConfig | null> | null = null;
 /** null when there is no backend (static hosting, the plugin, the Tailscale review build): sharing falls back to URLs. */
 export function serverConfig(): Promise<ServerConfig | null> {
   configPromise ??= fetch(api('config'), { cache: 'no-store' })
-    .then((r) =>
-      r.ok && (r.headers.get('content-type') ?? '').includes('json')
-        ? (r.json() as Promise<ServerConfig>)
+    .then((response) =>
+      response.ok && (response.headers.get('content-type') ?? '').includes('json')
+        ? (response.json() as Promise<ServerConfig>)
         : null,
     )
     .catch(() => null);
@@ -98,28 +98,32 @@ function loadTurnstile(): Promise<TurnstileApi> {
       resolve(w.turnstile);
       return;
     }
-    const s = document.createElement('script');
-    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-    s.async = true;
-    s.onload = () => (w.turnstile ? resolve(w.turnstile) : reject(new Error('turnstile missing')));
-    s.onerror = () => {
+    const hTMLScriptElement = document.createElement('script');
+    hTMLScriptElement.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    hTMLScriptElement.async = true;
+    hTMLScriptElement.onload = () => {
+      w.turnstile ? resolve(w.turnstile) : reject(new Error('turnstile missing'));
+    };
+    hTMLScriptElement.onerror = () => {
       turnstileLoad = null;
       reject(new Error('could not load the bot check'));
     };
-    document.head.appendChild(s);
+    document.head.appendChild(hTMLScriptElement);
   });
   return turnstileLoad;
 }
 export async function turnstileToken(siteKey: string): Promise<string> {
-  const t = await loadTurnstile();
+  const turnstileApi = await loadTurnstile();
   const host = document.createElement('div');
   // Invisible widget; if Cloudflare ever needs an interaction it shows its own small box here.
   host.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:20';
   document.body.appendChild(host);
   try {
     return await new Promise<string>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('bot check timed out')), 60000);
-      const id = t.render(host, {
+      const timer = setTimeout(() => {
+        reject(new Error('bot check timed out'));
+      }, 60000);
+      const id = turnstileApi.render(host, {
         sitekey: siteKey,
         size: 'invisible',
         execution: 'execute',
@@ -133,7 +137,7 @@ export async function turnstileToken(siteKey: string): Promise<string> {
           reject(new Error('bot check failed'));
         },
       });
-      t.execute(id);
+      turnstileApi.execute(id);
     });
   } finally {
     host.remove();
@@ -149,13 +153,16 @@ async function call<T>(
   const headers: Record<string, string> = { 'content-type': 'application/json' };
   token ??= appKey(); // a signed-in plugin is its account (SHARING-0011)
   if (token) headers.authorization = `Bearer ${token}`;
-  const r = await fetch(api(path), {
+  const response = await fetch(api(path), {
     method,
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  const j = (await r.json().catch(() => ({}))) as { error?: string };
-  if (!r.ok) throw Object.assign(new Error(j.error ?? `HTTP ${r.status}`), { status: r.status });
+  const j = (await response.json().catch(() => ({}))) as { error?: string };
+  if (!response.ok)
+    throw Object.assign(new Error(j.error ?? `HTTP ${response.status}`), {
+      status: response.status,
+    });
   return j as T;
 }
 
@@ -186,7 +193,7 @@ export async function save(
       if (r.activity && sending) activity.sent(sending);
       return r;
     };
-  input = { ...input, ...(sending ? { activity: sending } : {}) } as SaveInput;
+  input = { ...input, ...(sending ? { activity: sending } : {}) };
   if (mode === 'save' && currentId && canOverwrite(currentId)) {
     try {
       return credit(
@@ -197,9 +204,12 @@ export async function save(
           token,
         ),
       );
-    } catch (e) {
-      if ((e as { status?: number }).status !== 403 && (e as { status?: number }).status !== 404)
-        throw e;
+    } catch (error) {
+      if (
+        (error as { status?: number }).status !== 403 &&
+        (error as { status?: number }).status !== 404
+      )
+        throw error;
       // Not ours any more (token lost or patch deleted): save as new, as v1 did when it had no SessionId.
     }
   }
@@ -226,11 +236,11 @@ export const MISSING_TEXT: Record<Missing, string> = {
 /** A shared patch by id (latest revision), or why there is none. */
 export async function loadOrWhy(id: string): Promise<LoadedPatch | { missing: Missing }> {
   try {
-    const p = await call<LoadedPatch>('GET', `patches/${id}`);
-    if (p.mine) accountOwned.add(id);
-    return p;
-  } catch (e) {
-    const status = (e as { status?: number }).status;
+    const loadedPatch = await call<LoadedPatch>('GET', `patches/${id}`);
+    if (loadedPatch.mine) accountOwned.add(id);
+    return loadedPatch;
+  } catch (error) {
+    const status = (error as { status?: number }).status;
     return { missing: status === 410 ? 'deleted' : status === 404 ? 'unknown' : 'offline' };
   }
 }
@@ -239,8 +249,8 @@ export async function loadOrWhy(id: string): Promise<LoadedPatch | { missing: Mi
 export async function remove(id: string): Promise<void> {
   try {
     await call('DELETE', `patches/${id}`, undefined, editToken(id));
-  } catch (e) {
-    if ((e as { status?: number }).status !== 404) throw e;
+  } catch (error) {
+    if ((error as { status?: number }).status !== 404) throw error;
   }
   accountOwned.delete(id);
 }

@@ -36,40 +36,40 @@ test('R1–R4: dotenv stays outside checkout; environment wins; values are not s
         encoding: 'utf8',
         env: { ...process.env, BLOKDUST_CONFIG_DIR: dir, ...extra },
       });
-    let r = run(
+    let result = run(
       "import { setting, configEnvironment } from './tools/lib/local-config.ts'; console.log(JSON.stringify([setting('BLOKDUST_TEST_HOST'),setting('BLOKDUST_LITERAL'),configEnvironment().NODE_OPTIONS]));",
       { BLOKDUST_TEST_HOST: 'override' },
     );
-    assert.equal(r.status, 0, r.stderr);
-    assert.deepEqual(JSON.parse(r.stdout), [
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(JSON.parse(result.stdout), [
       'override',
       '$(touch should-not-exist)',
       process.env.NODE_OPTIONS ?? null,
     ]);
-    r = run(
+    result = run(
       "import { requiredSetting } from './tools/lib/local-config.ts'; requiredSetting('BLOKDUST_UNSET_TEST');",
     );
-    assert.notEqual(r.status, 0);
-    assert(r.stderr.includes('Missing BLOKDUST_UNSET_TEST'));
-    assert(!r.stderr.includes('local alias'));
-    r = run("import './tools/lib/local-config.ts';", { BLOKDUST_CONFIG_DIR: resolve('.') });
-    assert.notEqual(r.status, 0);
-    assert(r.stderr.includes('must be outside the checkout'));
+    assert.notEqual(result.status, 0);
+    assert(result.stderr.includes('Missing BLOKDUST_UNSET_TEST'));
+    assert(!result.stderr.includes('local alias'));
+    result = run("import './tools/lib/local-config.ts';", { BLOKDUST_CONFIG_DIR: resolve('.') });
+    assert.notEqual(result.status, 0);
+    assert(result.stderr.includes('must be outside the checkout'));
     symlinkSync(resolve('.'), join(dir, 'checkout'), 'dir');
-    r = run("import './tools/lib/local-config.ts';", {
+    result = run("import './tools/lib/local-config.ts';", {
       BLOKDUST_CONFIG_DIR: join(dir, 'checkout', 'not-created'),
     });
-    assert.notEqual(r.status, 0);
-    assert(r.stderr.includes('must be outside the checkout'));
-    r = run(
+    assert.notEqual(result.status, 0);
+    assert(result.stderr.includes('must be outside the checkout'));
+    result = run(
       "import { setting } from './tools/lib/local-config.ts'; console.log(setting('BLOKDUST_TEST_HOST', 'public-default'));",
       {
         BLOKDUST_CONFIG_DIR: join(dir, 'absent'),
         BLOKDUST_TEST_HOST: undefined,
       },
     );
-    assert.equal(r.status, 0, r.stderr);
-    assert.equal(r.stdout.trim(), 'public-default');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout.trim(), 'public-default');
     const config = {
       CLOUDFLARE_ACCOUNT_ID: 'account-for-test',
       BLOKDUST_STAGING_PUBLIC_URL: 'https://staging.example.com/blokdust',
@@ -77,12 +77,12 @@ test('R1–R4: dotenv stays outside checkout; environment wins; values are not s
       BLOKDUST_STAGING_SUPPORT_DATABASE_ID: '22222222-2222-4222-8222-222222222222',
       BLOKDUST_STAGING_TURNSTILE_SITE_KEY: 'test-site-key',
     };
-    r = run(
+    result = run(
       "import { remoteConfig } from './tools/server/config.ts'; console.log(remoteConfig('staging'));",
       config,
     );
-    assert.equal(r.status, 0, r.stderr);
-    const path = r.stdout.trim(),
+    assert.equal(result.status, 0, result.stderr);
+    const path = result.stdout.trim(),
       parsed = JSON.parse(readFileSync(path, 'utf8'));
     assert(path.startsWith(dir + '/'));
     assert.equal(statSync(path).mode & 0o777, 0o600);

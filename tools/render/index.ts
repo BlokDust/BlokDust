@@ -26,9 +26,9 @@ function binary(preset: string): string {
 }
 
 export function renderFixture(bin: string, fixture: string, extra: string[] = []): any {
-  const r = spawnSync(bin, [fixture, ...extra], { encoding: 'utf8' });
-  if (r.status !== 0) throw new Error(`${fixture}: ${r.stderr.trim()}`);
-  return JSON.parse(r.stdout);
+  const result = spawnSync(bin, [fixture, ...extra], { encoding: 'utf8' });
+  if (result.status !== 0) throw new Error(`${fixture}: ${result.stderr.trim()}`);
+  return JSON.parse(result.stdout);
 }
 
 const KEYS = ['audioHash', 'eventHash', 'eventCount', 'events', 'frames', 'sampleRate'] as const;
@@ -67,7 +67,7 @@ if (args.includes('--check') || args.includes('--update')) {
     const runs = bins.map((b) => ({ config: b.config, summary: pick(renderFixture(b.bin, fx)) }));
     const base = runs[0].summary;
     const crossConfigOk = runs.every(
-      (r) => r.summary.audioHash === base.audioHash && r.summary.eventHash === base.eventHash,
+      (run) => run.summary.audioHash === base.audioHash && run.summary.eventHash === base.eventHash,
     );
     if (update) {
       mkdirSync(join(GOLDEN, 'expected'), { recursive: true });
@@ -85,7 +85,9 @@ if (args.includes('--check') || args.includes('--update')) {
     }
     const exp = JSON.parse(readFileSync(expectedPath, 'utf8'));
     const mismatches = runs
-      .filter((r) => r.summary.audioHash !== exp.audioHash || r.summary.eventHash !== exp.eventHash)
+      .filter(
+        (run) => run.summary.audioHash !== exp.audioHash || run.summary.eventHash !== exp.eventHash,
+      )
       .map((r) => ({ config: r.config, got: r.summary, expected: exp }));
     results.push({
       name,
@@ -99,11 +101,13 @@ if (args.includes('--check') || args.includes('--update')) {
     JSON.stringify({
       configs,
       fixtures: results.length,
-      passed: results.filter((r) => ['pass', 'updated'].includes(r.status)).length,
-      failed: results.filter((r) => !['pass', 'updated'].includes(r.status)).map((r) => r.name),
+      passed: results.filter((result) => ['pass', 'updated'].includes(result.status)).length,
+      failed: results
+        .filter((result) => !['pass', 'updated'].includes(result.status))
+        .map((r) => r.name),
     }),
   );
-  if (results.some((r) => !['pass', 'updated'].includes(r.status))) process.exit(1);
+  if (results.some((result) => !['pass', 'updated'].includes(result.status))) process.exit(1);
 } else {
   const fx = args.find((a) => a.endsWith('.json'));
   if (!fx) {

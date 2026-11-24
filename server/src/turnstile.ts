@@ -15,8 +15,8 @@ export async function verifyTurnstile(env: Env, req: Request, token: unknown): P
     env.TURNSTILE_VERIFY_URL || 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
   let ok = false;
   try {
-    const r = await fetch(url, { method: 'POST', body: form });
-    ok = r.ok && ((await r.json()) as { success?: boolean }).success === true;
+    const response = await fetch(url, { method: 'POST', body: form });
+    ok = response.ok && ((await response.json()) as { success?: boolean }).success === true;
   } catch {
     throw new HttpError(503, 'bot check unavailable');
   }

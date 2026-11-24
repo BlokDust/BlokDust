@@ -21,7 +21,11 @@ const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gestur
 const results: Record<string, unknown> = {};
 let ok = true;
 
-type Block = { Id: number; Type: string; Position: { x: number; y: number } };
+interface Block {
+  Id: number;
+  Type: string;
+  Position: { x: number; y: number };
+}
 const comp = (blocks: Block[]) =>
   encodeURIComponent(
     JSON.stringify({
@@ -76,20 +80,18 @@ async function keepPresets(p: Page): Promise<void> {
       .filter((f) => f.endsWith('.blokdust'))
       .sort()
       .map((f) => JSON.parse(readFileSync(`${dir}/${f}`, 'utf8')));
-  await p.evaluate(
-    (l) =>
-      localStorage.setItem(
-        'blokdust.myPatches',
-        JSON.stringify(
-          l.map((patch: any, i: number) => ({
-            title: patch.meta.title,
-            saved: Date.UTC(2026, 10, 1) - i * 60_000,
-            patch,
-          })),
-        ),
+  await p.evaluate((l) => {
+    localStorage.setItem(
+      'blokdust.myPatches',
+      JSON.stringify(
+        l.map((patch: any, i: number) => ({
+          title: patch.meta.title,
+          saved: Date.UTC(2026, 10, 1) - i * 60_000,
+          patch,
+        })),
       ),
-    list,
-  );
+    );
+  }, list);
 }
 /** OPEN or INSERT on the row named `name`, scrolled into view first (OPEN is one scrolling list, owner 2026-11-16). */
 async function rowButton(p: Page, kind: 'open' | 'ins', name: string, wait = 700): Promise<void> {
@@ -112,9 +114,9 @@ async function makeLink(p: Page): Promise<string> {
   await patchesClick(p, 'share', 200);
   await p.waitForFunction(
     () => {
-      const e = document.getElementById('patchUrlText') as HTMLInputElement;
+      const input = document.getElementById('patchUrlText') as HTMLInputElement;
       return (
-        e.value.length > 20 &&
+        input.value.length > 20 &&
         getComputedStyle(document.getElementById('patchUrl')!).display !== 'none'
       );
     },
@@ -132,36 +134,31 @@ const toCss = (p: Page, x: number, y: number) =>
 const regionOf = (p: Page, _id: number) =>
   p.evaluate(() => {
     const s = (window as any).__bd_probe,
-      v = s.scene.OptionsPanel.SelectedBlock,
+      selectedBlock = s.scene.OptionsPanel.SelectedBlock,
       m = s.state.patch.blocks[0];
     const keys = ['startPosition', 'endPosition', 'loopStart', 'loopEnd'];
     return {
-      ui: keys.map((k) => v?.Params[k]),
+      ui: keys.map((k) => selectedBlock?.Params[k]),
       patch: keys.map((k) => m.params[k]),
-      reverse: [v?.Params.reverse, m.params.reverse],
-      wave: (v?.WaveForm ?? []).slice() as number[],
+      reverse: [selectedBlock?.Params.reverse, m.params.reverse],
+      wave: (selectedBlock?.WaveForm ?? []).slice() as number[],
     };
   });
 const near = (a: unknown[], b: unknown[], eps = 0.01) =>
   a.length === b.length &&
-  a.every(
-    (x, i) =>
-      typeof x === 'number' &&
-      typeof b[i] === 'number' &&
-      Math.abs((x as number) - (b[i] as number)) < eps,
-  );
+  a.every((x, i) => typeof x === 'number' && typeof b[i] === 'number' && Math.abs(x - b[i]) < eps);
 
 /** Points in the waveform the open options panel draws (its wave option: waveimage / waveregion / waveslider). */
 const waveDrawn = (p: Page) =>
   p.evaluate(() => {
-    const o = (window as any).__bd_probe.scene.OptionsPanel;
-    if (o.Scale !== 1) return -1;
-    const w = (o.Options ?? []).find((x: any) => /^wave/.test(x.Type));
+    const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel;
+    if (optionsPanel.Scale !== 1) return -1;
+    const w = (optionsPanel.Options ?? []).find((x: any) => x.Type.startsWith('wave'));
     return w ? (w.Waveform ?? []).length : -2;
   }) as Promise<number>;
 const txt = (() => {
-  const t = THEMES[0],
-    m = t.colors[t.roles.txt].match(/\d+/g)!;
+  const theme = THEMES[0],
+    m = theme.colors[theme.roles.txt].match(/\d+/g)!;
   return `rgb(${m[0]}, ${m[1]}, ${m[2]})`;
 })();
 
@@ -176,7 +173,7 @@ async function open(b: Browser, blocks: Block[], errors: string[]): Promise<Page
   const page = await b.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
   page.on('pageerror', (e) => errors.push(e.message));
   await page.route('https://cdn.freesound.org/**', async (r) => {
-    cdn.requests.push({ url: r.request().url(), range: r.request().headers()['range'] });
+    cdn.requests.push({ url: r.request().url(), range: r.request().headers().range });
     if (cdn.delayMs) await new Promise((res) => setTimeout(res, cdn.delayMs));
     await r.fulfill({
       status: 200,
@@ -299,8 +296,13 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     await p.waitForTimeout(1200); // ✓ (TickX 130·unit, header row 1.5)
     const s = await state(p);
     const ui = await p.evaluate(() => {
-      const c = (window as any).__bd_probe.scene.CreateNew;
-      return { open: c.Open, selected: c.Selected, panelY: c.PanelOffset.y, iconX: c.IconOffset.x };
+      const createNew = (window as any).__bd_probe.scene.CreateNew;
+      return {
+        open: createNew.Open,
+        selected: createNew.Selected,
+        panelY: createNew.PanelOffset.y,
+        iconX: createNew.IconOffset.x,
+      };
     });
     await p.screenshot({ path: `${OUT}/clear-stage.png` });
     await p.close();
@@ -372,15 +374,15 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     await p.waitForFunction(() => (window as any).__bd_probe);
     const r = await p.evaluate(() => {
       const canvas = document.querySelector('#stage canvas')!,
-        cs = (e: Element) => getComputedStyle(e) as any;
+        cs = (element: Element) => getComputedStyle(element) as any;
       const touch = (el: Element) => {
-        const t = new Touch({ identifier: 1, target: el, clientX: 100, clientY: 300 });
+        const touch = new Touch({ identifier: 1, target: el, clientX: 100, clientY: 300 });
         const ev = new TouchEvent('touchstart', {
           cancelable: true,
           bubbles: true,
-          touches: [t],
-          targetTouches: [t],
-          changedTouches: [t],
+          touches: [touch],
+          targetTouches: [touch],
+          changedTouches: [touch],
         });
         el.dispatchEvent(ev);
         return ev.defaultPrevented;
@@ -389,10 +391,12 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
       document.body.appendChild(field);
       const out = {
         coarse: matchMedia('(pointer: coarse)').matches,
-        callout: [...document.querySelectorAll('style')].some((s) =>
-          /touch-callout:\s*none/.test(s.textContent ?? ''),
+        callout: [...document.querySelectorAll('style')].some((hTMLStyleElement) =>
+          /touch-callout:\s*none/.test(hTMLStyleElement.textContent ?? ''),
         ), // Chromium drops the WebKit-only property
-        select: [document.documentElement, document.body, canvas].map((e) => cs(e).userSelect),
+        select: [document.documentElement, document.body, canvas].map(
+          (element) => cs(element).userSelect,
+        ),
         fieldSelect: cs(field).userSelect,
         stageTouchCancelled: touch(canvas),
         fieldTouchCancelled: touch(field),
@@ -576,7 +580,10 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     );
     await p.screenshot({ path: `${OUT}/share-text-colour.png` });
     await p.close();
-    return [colours.every((c) => c === txt), { want: txt, title: colours[0], url: colours[1] }];
+    return [
+      colours.every((colour) => colour === txt),
+      { want: txt, title: colours[0], url: colours[1] },
+    ];
   },
 
   /** The share link field: one line like the title field, scrollbars hidden (headless Chrome never draws them, so
@@ -585,15 +592,20 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     await makeLink(p);
     const el = await p.evaluate(() => {
-      const e = document.getElementById('patchUrlText') as HTMLInputElement,
-        r = e.getBoundingClientRect();
-      const cs = getComputedStyle(e);
+      const input = document.getElementById('patchUrlText') as HTMLInputElement,
+        boundingClientRect = input.getBoundingClientRect();
+      const cs = getComputedStyle(input);
       return {
-        tag: e.tagName,
-        len: e.value.length,
-        rect: [r.x, r.y, r.width, r.height],
-        scrollbarX: e.offsetHeight - e.clientHeight,
-        scrollbarY: e.offsetWidth - e.clientWidth,
+        tag: input.tagName,
+        len: input.value.length,
+        rect: [
+          boundingClientRect.x,
+          boundingClientRect.y,
+          boundingClientRect.width,
+          boundingClientRect.height,
+        ],
+        scrollbarX: input.offsetHeight - input.clientHeight,
+        scrollbarY: input.offsetWidth - input.clientWidth,
         overflow: cs.overflow,
         scrollbarWidth: cs.scrollbarWidth,
       };
@@ -601,8 +613,8 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     await p.mouse.click(el.rect[0] + el.rect[2] / 2, el.rect[1] + el.rect[3] / 2);
     await p.waitForTimeout(200);
     const sel = await p.evaluate(() => {
-      const e = document.getElementById('patchUrlText') as HTMLInputElement;
-      return [e.selectionStart, e.selectionEnd, document.activeElement === e];
+      const input = document.getElementById('patchUrlText') as HTMLInputElement;
+      return [input.selectionStart, input.selectionEnd, document.activeElement === input];
     });
     await p.screenshot({ path: `${OUT}/share-url-field.png` });
     await p.close();
@@ -680,8 +692,10 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     );
     await openPatches(p); // Patches › SAVE: its name field takes the focus on click
     const [x, y] = await p.evaluate(() => {
-      const r = document.getElementById('patchTitleInput')!.getBoundingClientRect();
-      return [r.left + 20, r.top + r.height / 2];
+      const boundingClientRect = document
+        .getElementById('patchTitleInput')!
+        .getBoundingClientRect();
+      return [boundingClientRect.left + 20, boundingClientRect.top + boundingClientRect.height / 2];
     });
     await p.mouse.click(x, y);
     const before = (await state(p)).gateOns;
@@ -739,8 +753,8 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
       grid = gy1 - by;
     const bar = () =>
       p.evaluate(() => {
-        const m = (window as any).__bd_probe.scene.MessagePanel;
-        return m.Open ? String(m._Value?.string ?? '') : '';
+        const messagePanel = (window as any).__bd_probe.scene.MessagePanel;
+        return messagePanel.Open ? String(messagePanel._Value?.string ?? '') : '';
       });
     await p.mouse.click(bx, by - 3 * grid);
     await p.waitForTimeout(250);
@@ -889,7 +903,7 @@ Object.assign(tests, {
     const r = await regionOf(p, id);
     const handles = await p.evaluate(() => {
       const w = (window as any).__bd_probe.scene.OptionsPanel.Options.find(
-        (o: any) => o.Type === 'waveregion',
+        (Option: any) => Option.Type === 'waveregion',
       );
       return { mode: w?.Mode, handles: w?.Handles?.length };
     });
@@ -919,11 +933,11 @@ Object.assign(tests, {
     await p.mouse.click(x, y);
     await p.waitForTimeout(1200);
     await p.evaluate(() => {
-      const v = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock;
-      v.SetParam('startPosition', 0.2);
-      v.SetParam('endPosition', 1.6);
-      v.SetParam('loopStart', 0.5);
-      v.SetParam('loopEnd', 0.9);
+      const selectedBlock = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock;
+      selectedBlock.SetParam('startPosition', 0.2);
+      selectedBlock.SetParam('endPosition', 1.6);
+      selectedBlock.SetParam('loopStart', 0.5);
+      selectedBlock.SetParam('loopEnd', 0.9);
     });
     const before = await regionOf(p, id);
     await p.evaluate(() =>
@@ -1013,7 +1027,7 @@ Object.assign(tests, {
       )
       .catch(() => {});
     await p.close();
-    const req = cdn.requests.find((r) => r.url.includes('/42_'));
+    const req = cdn.requests.find((request) => request.url.includes('/42_'));
     const end = Number(req?.range?.match(/^bytes=0-(\d+)$/)?.[1] ?? NaN);
     return [Number.isFinite(end) && end < 200_000, { range: req?.range ?? 'none (whole file)' }];
   },
@@ -1029,13 +1043,13 @@ Object.assign(tests, {
       await p.mouse.click(x, y);
       await p.waitForTimeout(1000);
       const box = await p.evaluate(() => {
-        const o = (window as any).__bd_probe.scene.OptionsPanel,
-          w = o.Options.find((q: any) => q.Type === 'waveregion'),
+        const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
+          w = optionsPanel.Options.find((Option: any) => Option.Type === 'waveregion'),
           pr = devicePixelRatio;
         return {
-          x: (o.Position.x + o.Margin) / pr,
-          y: (o.Position.y + w.Position.y) / pr,
-          width: o.Range / pr,
+          x: (optionsPanel.Position.x + optionsPanel.Margin) / pr,
+          y: (optionsPanel.Position.y + w.Position.y) / pr,
+          width: optionsPanel.Range / pr,
           height: w.Size.height / pr,
         };
       });
@@ -1079,16 +1093,18 @@ Object.assign(tests, {
     await p.waitForTimeout(1000);
     const names = () =>
       p.evaluate(() =>
-        (window as any).__bd_probe.scene.OptionsPanel.Options.map((o: any) =>
-          o.Type === 'switches' ? o.Switches.map((s: any) => s.Name).join('+') : o.Name,
+        (window as any).__bd_probe.scene.OptionsPanel.Options.map((Option: any) =>
+          Option.Type === 'switches'
+            ? Option.Switches.map((Switche: any) => Switche.Name).join('+')
+            : Option.Name,
         ),
       );
     const before = await names();
     // Choose device 1 (Funputs) and MPE on through the block (the panel's SetParam path), as the sliders/switches do.
     await p.evaluate(() => {
-      const v = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock;
-      v.SetParam('deviceIndex', 1);
-      v.SetParam('mpe', true);
+      const selectedBlock = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock;
+      selectedBlock.SetParam('deviceIndex', 1);
+      selectedBlock.SetParam('mpe', true);
     });
     await p.waitForTimeout(300);
     const after = await names();
@@ -1097,8 +1113,8 @@ Object.assign(tests, {
     ).params;
     const send = (dev: string, bytes: number[]) =>
       p.evaluate(
-        ([d, b]) =>
-          (window as any).__fakeMidi.get(d).onmidimessage({ data: new Uint8Array(b as number[]) }),
+        ([key, b]) =>
+          (window as any).__fakeMidi.get(key).onmidimessage({ data: new Uint8Array(b) }),
         [dev, bytes] as const,
       );
     const gate0 = (await state(p)).gateOns;
@@ -1170,18 +1186,21 @@ Object.assign(tests, {
     await p.waitForTimeout(1000);
     const row = () =>
       p.evaluate(() => {
-        const o = (window as any).__bd_probe.scene.OptionsPanel,
+        const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
           pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio,
-          u = (window as any).__bd_probe.v1App.Unit;
-        const d = o.Options.find((q: any) => q.Setting === 'deviceIndex'),
-          y = (o.Position.y + d.Position.y + d.Size.height / 2) / pr;
+          unit = (window as any).__bd_probe.v1App.Unit;
+        const d = optionsPanel.Options.find((Option: any) => Option.Setting === 'deviceIndex'),
+          y = (optionsPanel.Position.y + d.Position.y + d.Size.height / 2) / pr;
         return {
           type: d.Type,
-          device: o.SelectedBlock.Params.device || 'ALL',
-          left: [(o.Position.x + o.Margin + 10 * u) / pr, y],
-          right: [(o.Position.x + o.Margin + o.Range - 10 * u) / pr, y],
+          device: optionsPanel.SelectedBlock.Params.device || 'ALL',
+          left: [(optionsPanel.Position.x + optionsPanel.Margin + 10 * unit) / pr, y],
+          right: [
+            (optionsPanel.Position.x + optionsPanel.Margin + optionsPanel.Range - 10 * unit) / pr,
+            y,
+          ],
           textWidth: d.TextWidth,
-          room: o.Range - 80 * u,
+          room: optionsPanel.Range - 80 * unit,
         };
       });
     const seen: string[] = [];
@@ -1252,10 +1271,11 @@ Object.assign(tests, {
           },
           emitEvent: (id: string) => {
             if (id === 'bd_hello')
-              setTimeout(
-                () => listeners.bd_patch?.forEach((f) => f({ patch: JSON.stringify(p) })),
-                50,
-              );
+              setTimeout(() => {
+                listeners.bd_patch?.forEach((f) => {
+                  f({ patch: JSON.stringify(p) });
+                });
+              }, 50);
           },
         },
       };
@@ -1268,8 +1288,8 @@ Object.assign(tests, {
     });
     await pg.waitForTimeout(1500);
     const menu = await pg.evaluate(() =>
-      (window as any).__bd_probe.v1App.BlockCreator.MenuJson.categories.flatMap((c: any) =>
-        c.items.map((i: any) => i.name),
+      (window as any).__bd_probe.v1App.BlockCreator.MenuJson.categories.flatMap((category: any) =>
+        category.items.map((i: any) => i.name),
       ),
     );
     const names = await pg.evaluate(() =>
@@ -1282,15 +1302,18 @@ Object.assign(tests, {
     await pg.mouse.click(pt[0], pt[1]);
     await pg.waitForTimeout(1200);
     const panel = await pg.evaluate(() => {
-      const o = (window as any).__bd_probe.scene.OptionsPanel;
-      return { title: o.SelectedBlock?.OptionsForm?.name, rows: o.Options.map((x: any) => x.Name) };
+      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel;
+      return {
+        title: optionsPanel.SelectedBlock?.OptionsForm?.name,
+        rows: optionsPanel.Options.map((x: any) => x.Name),
+      };
     });
     await pg.screenshot({ path: `${OUT}/plugin-labels.png` });
     await ctx.close();
     const web = await open(browser, [blk(1, 'Microphone', 0, 0)], errors);
     const webMenu = await web.evaluate(() =>
-      (window as any).__bd_probe.v1App.BlockCreator.MenuJson.categories.flatMap((c: any) =>
-        c.items.map((i: any) => i.name),
+      (window as any).__bd_probe.v1App.BlockCreator.MenuJson.categories.flatMap((category: any) =>
+        category.items.map((i: any) => i.name),
       ),
     );
     await web.close();
@@ -1333,8 +1356,10 @@ Object.assign(tests, {
     );
     const names = () =>
       p.evaluate(() =>
-        (window as any).__bd_probe.scene.OptionsPanel.Options.map((o: any) =>
-          o.Type === 'switches' ? o.Switches.map((s: any) => s.Name).join('+') : o.Name,
+        (window as any).__bd_probe.scene.OptionsPanel.Options.map((Option: any) =>
+          Option.Type === 'switches'
+            ? Option.Switches.map((Switche: any) => Switche.Name).join('+')
+            : Option.Name,
         ),
       );
     const rows = async (type: string) => {
@@ -1481,7 +1506,11 @@ Object.assign(tests, {
       const listeners: Record<string, ((x: unknown) => void)[]> = {};
       const sent: { id: string; v: any }[] = [];
       (window as any).__sent = sent;
-      (window as any).__fire = (id: string, v: unknown) => listeners[id]?.forEach((f) => f(v));
+      (window as any).__fire = (id: string, v: unknown) => {
+        listeners[id]?.forEach((f) => {
+          f(v);
+        });
+      };
       (window as any).__JUCE__ = {
         backend: {
           addEventListener: (id: string, fn: (x: unknown) => void) => {
@@ -1490,10 +1519,11 @@ Object.assign(tests, {
           emitEvent: (id: string, v: unknown) => {
             sent.push({ id, v });
             if (id === 'bd_hello')
-              setTimeout(
-                () => listeners.bd_patch?.forEach((f) => f({ patch: JSON.stringify(p) })),
-                50,
-              );
+              setTimeout(() => {
+                listeners.bd_patch?.forEach((f) => {
+                  f({ patch: JSON.stringify(p) });
+                });
+              }, 50);
           },
         },
       };
@@ -1622,7 +1652,11 @@ Object.assign(tests, {
       const listeners: Record<string, ((x: unknown) => void)[]> = {};
       const sent: { id: string; v: any }[] = [];
       (window as any).__sent = sent;
-      (window as any).__fire = (id: string, v: unknown) => listeners[id]?.forEach((f) => f(v));
+      (window as any).__fire = (id: string, v: unknown) => {
+        listeners[id]?.forEach((f) => {
+          f(v);
+        });
+      };
       (window as any).__JUCE__ = {
         backend: {
           addEventListener: (id: string, fn: (x: unknown) => void) => {
@@ -1631,10 +1665,11 @@ Object.assign(tests, {
           emitEvent: (id: string, v: unknown) => {
             sent.push({ id, v });
             if (id === 'bd_hello')
-              setTimeout(
-                () => listeners.bd_patch?.forEach((f) => f({ patch: JSON.stringify(p) })),
-                50,
-              );
+              setTimeout(() => {
+                listeners.bd_patch?.forEach((f) => {
+                  f({ patch: JSON.stringify(p) });
+                });
+              }, 50);
           },
         },
       };
@@ -1652,12 +1687,12 @@ Object.assign(tests, {
     await pg.waitForTimeout(1200);
     // The first slider's track, right-clicked (css px from the panel's own geometry).
     const [sx, sy] = await pg.evaluate(() => {
-      const o = (window as any).__bd_probe.scene.OptionsPanel,
-        sl = o.Options.find((q: any) => q.Type === 'slider'),
+      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
+        sl = optionsPanel.Options.find((Option: any) => Option.Type === 'slider'),
         pr = devicePixelRatio;
       return [
-        (o.Position.x + o.Margin + o.Range * 0.5) / pr,
-        (o.Position.y + sl.Position.y + sl.Size.height * 0.5) / pr,
+        (optionsPanel.Position.x + optionsPanel.Margin + optionsPanel.Range * 0.5) / pr,
+        (optionsPanel.Position.y + sl.Position.y + sl.Size.height * 0.5) / pr,
       ];
     });
     const openMenu = async () => {
@@ -1712,13 +1747,16 @@ Object.assign(tests, {
     await pg.mouse.click(bx, by);
     await pg.waitForTimeout(1200);
     const spots = await pg.evaluate(() => {
-      const o = (window as any).__bd_probe.scene.OptionsPanel,
-        g = o.Options.find((q: any) => q.Type === 'parametric'),
+      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
+        g = optionsPanel.Options.find((Option: any) => Option.Type === 'parametric'),
         pr = devicePixelRatio;
-      const hx = o.Position.x + o.Margin + g.Handles[1].Position.x,
-        top = o.Position.y + g.Position.y;
+      const hx = optionsPanel.Position.x + optionsPanel.Margin + g.Handles[1].Position.x,
+        top = optionsPanel.Position.y + g.Position.y;
       return {
-        graph: [(o.Position.x + o.Margin + o.Range * 0.15) / pr, (top + g.Size.height * 0.3) / pr],
+        graph: [
+          (optionsPanel.Position.x + optionsPanel.Margin + optionsPanel.Range * 0.15) / pr,
+          (top + g.Size.height * 0.3) / pr,
+        ],
         handle: [hx / pr, (top + g.Size.height * 0.8 - g.Handles[1].Position.y) / pr],
         bar: [(hx + g.SubHandles[1].Position.x * 0.5) / pr, (top + g.Size.height * 0.9) / pr],
       };
@@ -1767,26 +1805,26 @@ Object.assign(tests, {
       timeout: 15000,
     });
     await pg.waitForTimeout(800);
-    const [d, f] = (await state(pg)).blocks.map((b: any) => b.id);
+    const [key, f] = (await state(pg)).blocks.map((b: any) => b.id);
     const panel = () =>
       pg.evaluate(() => {
-        const o = (window as any).__bd_probe.scene.OptionsPanel;
-        return o.Options.map((q: any) =>
-          q.Type === 'slider'
-            ? [q.Setting, +q.Value.toFixed(3)]
-            : q.Type === 'parametric'
-              ? ['gain', +q.Handles[1].YValue.toFixed(3)]
-              : [q.Type],
+        const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel;
+        return optionsPanel.Options.map((Option: any) =>
+          Option.Type === 'slider'
+            ? [Option.Setting, +Option.Value.toFixed(3)]
+            : Option.Type === 'parametric'
+              ? ['gain', +Option.Handles[1].YValue.toFixed(3)]
+              : [Option.Type],
         );
       });
-    const [bx, by] = await pg.evaluate((i) => (window as any).__bd_probe.blockPoint(i), d);
+    const [bx, by] = await pg.evaluate((i) => (window as any).__bd_probe.blockPoint(i), key);
     await pg.mouse.click(bx, by);
     await pg.waitForTimeout(1200);
     const before = await panel();
     await pg.evaluate(
       ([id]) =>
         (window as any).__fire('bd_paramValues', { values: [{ id, param: 'drive', value: 0.9 }] }),
-      [d],
+      [key],
     );
     await pg.waitForTimeout(200);
     const live = await panel();
@@ -1802,7 +1840,7 @@ Object.assign(tests, {
       i < 3 &&
       !(await pg.evaluate(() =>
         (window as any).__bd_probe.scene.OptionsPanel.Options.some(
-          (q: any) => q.Type === 'parametric',
+          (Option: any) => Option.Type === 'parametric',
         ),
       ));
       i++
@@ -1871,7 +1909,7 @@ Object.assign(tests, {
               if (id === 'bd_hello')
                 setTimeout(() => {
                   w.__patched = true;
-                  listeners.bd_patch?.forEach((f) =>
+                  listeners.bd_patch?.forEach((f) => {
                     f({
                       patch: JSON.stringify({
                         format: 'blokdust.patch',
@@ -1879,8 +1917,8 @@ Object.assign(tests, {
                         seed: 1,
                         blocks: [],
                       }),
-                    }),
-                  );
+                    });
+                  });
                 }, 700);
             },
           },
@@ -1910,8 +1948,8 @@ Object.assign(tests, {
   async 'select-ring-encloses-block'() {
     const misses = BLOCKS.flatMap((def) =>
       drawnPoints(def)
-        .filter((p) => !insidePolygon(p, selectionRing(def)))
-        .map((p) => `${def.id} (${p})`),
+        .filter((pt) => !insidePolygon(pt, selectionRing(def)))
+        .map((pt) => `${def.id} (${pt})`),
     );
     return [misses.length === 0, { misses }];
   },
@@ -1929,8 +1967,8 @@ Object.assign(tests, {
       await p.waitForTimeout(700);
     }
     const point = await p.evaluate(() => {
-      const s = (window as any).__bd_probe.scene.SettingsPanel;
-      return [s.MenuItems[1].Position.x / devicePixelRatio, 30];
+      const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+      return [settingsPanel.MenuItems[1].Position.x / devicePixelRatio, 30];
     });
     await p.mouse.click(point[0], point[1]);
     await p.waitForTimeout(1000);
@@ -1950,7 +1988,7 @@ Object.assign(tests, {
       proto.fillText = function (text: string, x: number, y: number, ...rest: any[]) {
         if (text.startsWith('Tell us')) intro = y; // SUGGESTION's line (CHG-0041)
         if (text === 'YOUR MESSAGE') message = y;
-        if (/PATCH AND DIAGNOSTICS$/.test(text)) drawing = { rule, intro, message };
+        if (text.endsWith('PATCH AND DIAGNOSTICS')) drawing = { rule, intro, message };
         else if (drawing && text === '') {
           (window as any).__supportDrawing = drawing;
           drawing = null;
@@ -1960,7 +1998,7 @@ Object.assign(tests, {
       proto.moveTo = function (x, y) {
         from = [x, y];
         if (drawing?.bar) drawing.glyphBottom = Math.max(drawing.glyphBottom ?? 0, y);
-        return original.moveTo.call(this, x, y);
+        original.moveTo.call(this, x, y);
       };
       proto.lineTo = function (x, y) {
         const email = document.getElementById('feedback-email')!.getBoundingClientRect(),
@@ -1977,11 +2015,11 @@ Object.assign(tests, {
           drawing.separator = { top: from[1], height: y - from[1] };
         if (drawing?.bar) drawing.glyphBottom = Math.max(drawing.glyphBottom ?? 0, y);
         from = [x, y];
-        return original.lineTo.call(this, x, y);
+        original.lineTo.call(this, x, y);
       };
       proto.fillRect = function (x, y, w, h) {
         if (drawing && !drawing.bar) drawing.bar = { x, y, w, h };
-        return original.fillRect.call(this, x, y, w, h);
+        original.fillRect.call(this, x, y, w, h);
       };
     });
     await p.mouse.move(10, 120);
@@ -1991,20 +2029,20 @@ Object.assign(tests, {
         msg = document.getElementById('feedback-message')!,
         send = document.getElementById('feedback-send')!;
       const d = (window as any).__supportDrawing,
-        u = (window as any).__bd_probe.v1App.Unit;
+        unit = (window as any).__bd_probe.v1App.Unit;
       return {
         d,
         sameType: getComputedStyle(email).font === getComputedStyle(msg).font,
         compactEmail: email.getBoundingClientRect().height < msg.getBoundingClientRect().height / 2,
         square: !!d && Math.abs(d.bar.w / d.separator.height - 1) < 0.05,
-        gap: d ? (d.bar.y - d.glyphBottom) / u : 0,
+        gap: d ? (d.bar.y - d.glyphBottom) / unit : 0,
         centred:
           !!d &&
           Math.abs(
             (d.separator.top + d.bar.y + d.bar.h) / 2 -
               (d.rule + send.getBoundingClientRect().top * devicePixelRatio) / 2,
           ) <=
-            2 * u,
+            2 * unit,
         intro: !!d && d.intro > 0 && d.intro < d.message,
         label: document.getElementById('feedback-include')!.getAttribute('aria-label'),
       };
@@ -2034,11 +2072,11 @@ Object.assign(tests, {
       await p.waitForTimeout(700);
     }
     const point = await p.evaluate(() => {
-      const s = (window as any).__bd_probe.scene.SettingsPanel,
-        t = s.MenuItems[1];
+      const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel,
+        t = settingsPanel.MenuItems[1];
       return [
         t.Position.x / devicePixelRatio,
-        (s.OffsetY + 30 * (window as any).__bd_probe.v1App.Unit) / devicePixelRatio,
+        (settingsPanel.OffsetY + 30 * (window as any).__bd_probe.v1App.Unit) / devicePixelRatio,
       ];
     });
     await p.mouse.click(point[0], point[1]);
@@ -2054,7 +2092,9 @@ Object.assign(tests, {
     await toggle.click();
     const off = await toggle.getAttribute('aria-checked');
     const tabs = await p.evaluate(() =>
-      (window as any).__bd_probe.scene.SettingsPanel.MenuItems.map((m: any) => m.Name),
+      (window as any).__bd_probe.scene.SettingsPanel.MenuItems.map(
+        (MenuItem: any) => MenuItem.Name,
+      ),
     );
     await p.close();
     return [
@@ -2084,7 +2124,7 @@ Object.assign(tests, {
     await p.waitForTimeout(1200);
     const names = await p.evaluate(() =>
       (window as any).__bd_probe.scene.SettingsPanel.Options.filter(
-        (o: any) => o.Type !== 'hidden',
+        (Option: any) => Option.Type !== 'hidden',
       ).map((o: any) => o.Name),
     );
     const tempo = () => p.evaluate(() => (window as any).__bd_probe.scene.host.tempo());
@@ -2199,7 +2239,7 @@ Object.assign(tests, {
     const onAbout = await texts();
     const footer = (t: string[]) => ({
       github: t.includes('View the code on GitHub'),
-      build: t.some((x) => /^Current Build/.test(x)),
+      build: t.some((x) => x.startsWith('Current Build')),
     });
     await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel());
     await p.waitForTimeout(800);
@@ -2209,11 +2249,11 @@ Object.assign(tests, {
     const sw = await p.evaluate(() => {
       const pp = (window as any).__bd_probe.scene.PatchesPanel,
         A = (window as any).__bd_probe.v1App,
-        u = A.Unit,
+        unit = A.Unit,
         g = pp.gallerySwitch(),
         v = pp.videoSwitch();
       return {
-        gap: (g.h * 0.55 - (g.h * 0.35 + 5 * u)) / u,
+        gap: (g.h * 0.55 - (g.h * 0.35 + 5 * unit)) / unit,
         sameRow: g.y === v.y,
         videoRight: v.x >= A.Width / 2,
       };
@@ -2238,14 +2278,14 @@ Object.assign(tests, {
       const pp = (window as any).__bd_probe.scene.PatchesPanel,
         a = pp.backArrow(),
         pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio,
-        u = (window as any).__bd_probe.v1App.Unit;
+        unit = (window as any).__bd_probe.v1App.Unit;
       return {
         x: a.x,
         y: a.y,
         mid: (window as any).__bd_probe.v1App.Width / 2,
-        right: (window as any).__bd_probe.v1App.Width / 2 + 210 * u,
+        right: (window as any).__bd_probe.v1App.Width / 2 + 210 * unit,
         name: pp.centreOf('randomise')[1] * pr,
-        u,
+        u: unit,
       };
     });
     await p.screenshot({ path: `${OUT}/review2-video-back.png` });
@@ -2289,8 +2329,8 @@ Object.assign(tests, {
       };
     });
     const linkAt = await p.evaluate(() => {
-      const s = (window as any).__bd_probe.scene.SettingsPanel;
-      s.OpenPanel();
+      const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+      settingsPanel.OpenPanel();
       return null;
     });
     await p.waitForTimeout(1200);
@@ -2321,14 +2361,14 @@ Object.assign(tests, {
       const t: string[] = (window as any).__texts;
       return {
         github: t.includes('View the code on GitHub'),
-        twitter: t.some((x) => /^@/.test(x)),
-        blurb: t.some((x) => /Luke/.test(x)),
+        twitter: t.some((x) => x.startsWith('@')),
+        blurb: t.some((x) => x.includes('Luke')),
         opened: (window as any).__opened,
       };
     });
     await p.screenshot({ path: `${OUT}/ipad-extension-no-links.png` });
     await p.close();
-    void linkAt;
+    linkAt;
     const ok =
       before.length === 1 &&
       after.length === 0 &&
@@ -2365,8 +2405,11 @@ Object.assign(tests, {
     await p.waitForTimeout(1200);
     const sp = () =>
       p.evaluate(() => {
-        const s = (window as any).__bd_probe.scene.SettingsPanel;
-        return { names: s.MenuItems.map((m: any) => m.Name), tab: s._OpenTab };
+        const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+        return {
+          names: settingsPanel.MenuItems.map((MenuItem: any) => MenuItem.Name),
+          tab: settingsPanel._OpenTab,
+        };
       });
     const tabs = await sp();
     const about = await p.evaluate(() => {
@@ -2405,13 +2448,13 @@ Object.assign(tests, {
     // (v1 still draws the Connect page, clipped away above the panel: its tab can't be opened, so it never shows.)
     const r = await p.evaluate(() => {
       const t: string[] = (window as any).__texts,
-        s = (window as any).__bd_probe.scene.SettingsPanel;
+        settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
       return {
         chrome: t.includes('Chrome Recommended'),
         connect: t.includes('FEEDBACK'),
-        connectAway: s.MenuItems[1].YOffset === -s.DrawTo.Height,
-        about: t.some((x) => /This rebuild was released in 2026/.test(x)),
-        toneJs: t.some((x) => /Tone\.js/.test(x)),
+        connectAway: settingsPanel.MenuItems[1].YOffset === -settingsPanel.DrawTo.Height,
+        about: t.some((x) => x.includes('This rebuild was released in 2026')),
+        toneJs: t.some((x) => x.includes('Tone.js')),
         source: t.includes('View the code on GitHub'),
         opened: (window as any).__opened,
       };
@@ -2431,7 +2474,8 @@ Object.assign(tests, {
       !idle.equals(hover) &&
       shipped &&
       // SPEC-SHARING-USAGE-ANALYTICS R12 (owner, 2026-11-16): no Privacy link until production serves the page.
-      JSON.stringify(links.map((l) => l.label)) === JSON.stringify(['View the code on GitHub']) &&
+      JSON.stringify(links.map((link) => link.label)) ===
+        JSON.stringify(['View the code on GitHub']) &&
       JSON.stringify(r.opened) === JSON.stringify(['https://github.com/BlokDust/BlokDust']);
     return [ok, { tabs, aboutTab, ...r, links, shipped, hoverUnderlines: !idle.equals(hover) }];
   },
@@ -2460,8 +2504,8 @@ Object.assign(tests, {
     await p.click('#start');
     await p.waitForTimeout(2000);
     await p.evaluate(() => {
-      const P = (window as any).__bd_probe.scene.PatchesPanel;
-      P.host.listPatches = async () =>
+      const patchesPanel = (window as any).__bd_probe.scene.PatchesPanel;
+      patchesPanel.host.listPatches = async () =>
         Array.from({ length: 30 }, (_, i) => ({
           name: `Patch ${i}`,
           detail: 'Saved 16 Nov 2026',
@@ -2473,7 +2517,7 @@ Object.assign(tests, {
         t.push(x);
         return (f as any).call(this, x, ...a);
       };
-      P.OpenPanel(1);
+      patchesPanel.OpenPanel(1);
     });
     await p.waitForTimeout(1200);
     const texts = () =>
@@ -2504,29 +2548,33 @@ Object.assign(tests, {
     );
     // The video view.
     await p.evaluate(() => {
-      const P = (window as any).__bd_probe.scene.PatchesPanel;
-      P.selectTab(0);
+      const patchesPanel = (window as any).__bd_probe.scene.PatchesPanel;
+      patchesPanel.selectTab(0);
     });
     await p.waitForTimeout(800);
     await p.evaluate(() => {
-      const P = (window as any).__bd_probe.scene.PatchesPanel;
-      P.host.links.current = () => ({ url: 'https://example.com/?c=x', owned: true, stale: false });
-      P.View = 'video';
-      P.VideoState = 'idle';
-      P.Update();
+      const patchesPanel = (window as any).__bd_probe.scene.PatchesPanel;
+      patchesPanel.host.links.current = () => ({
+        url: 'https://example.com/?c=x',
+        owned: true,
+        stale: false,
+      });
+      patchesPanel.View = 'video';
+      patchesPanel.VideoState = 'idle';
+      patchesPanel.Update();
     });
     await p.waitForTimeout(500);
     const video = await p.evaluate(() => {
-      const P = (window as any).__bd_probe.scene.PatchesPanel,
-        back = P.centreOf('videoBack'),
-        player = P.centreOf('player'),
-        link = P.centreOf('url');
+      const patchesPanel = (window as any).__bd_probe.scene.PatchesPanel,
+        back = patchesPanel.centreOf('videoBack'),
+        player = patchesPanel.centreOf('player'),
+        link = patchesPanel.centreOf('url');
       return {
         back,
         player,
         link,
-        title: (document.getElementById('patchTitle') as HTMLElement).style.display,
-        url: (document.getElementById('patchUrl') as HTMLElement).style.display,
+        title: document.getElementById('patchTitle')!.style.display,
+        url: document.getElementById('patchUrl')!.style.display,
       };
     });
     await p.screenshot({ path: `${OUT}/patches-phone-video.png` });
@@ -2610,7 +2658,7 @@ Object.assign(tests, {
       'CREATE ACCOUNT',
     ];
     const leaked = unclipped.filter(
-      (t) => pageWords.includes(t) || /^Download the standalone/.test(t),
+      (t) => pageWords.includes(t) || t.startsWith('Download the standalone'),
     );
     return [leaked.length === 0, { leaked }];
   },
@@ -2640,7 +2688,9 @@ Object.assign(tests, {
     }
     await p.waitForTimeout(1200);
     const names = await p.evaluate(() =>
-      (window as any).__bd_probe.scene.SettingsPanel.MenuItems.map((m: any) => m.Name),
+      (window as any).__bd_probe.scene.SettingsPanel.MenuItems.map(
+        (MenuItem: any) => MenuItem.Name,
+      ),
     );
     const tab = await p.evaluate(() => {
       const m = (window as any).__bd_probe.scene.SettingsPanel.MenuItems[3],
@@ -2750,7 +2800,11 @@ async function openPlugin(
       const listeners: Record<string, ((x: unknown) => void)[]> = {};
       const sent: { id: string; v: any }[] = [];
       (window as any).__sent = sent;
-      (window as any).__fire = (id: string, v: unknown) => listeners[id]?.forEach((f) => f(v));
+      (window as any).__fire = (id: string, v: unknown) => {
+        listeners[id]?.forEach((f) => {
+          f(v);
+        });
+      };
       (window as any).__JUCE__ = {
         backend: {
           addEventListener: (id: string, fn: (x: unknown) => void) => {
@@ -2759,18 +2813,16 @@ async function openPlugin(
           emitEvent: (id: string, v: unknown) => {
             sent.push({ id, v });
             if (id === 'bd_hello')
-              setTimeout(
-                () =>
-                  listeners.bd_patch?.forEach((f) =>
-                    f({
-                      patch: JSON.stringify(p),
-                      ...(ids ? { ids } : {}),
-                      ...(standalone ? { standalone } : {}),
-                      ...extra,
-                    }),
-                  ),
-                50,
-              );
+              setTimeout(() => {
+                listeners.bd_patch?.forEach((f) => {
+                  f({
+                    patch: JSON.stringify(p),
+                    ...(ids ? { ids } : {}),
+                    ...(standalone ? { standalone } : {}),
+                    ...extra,
+                  });
+                });
+              }, 50);
           },
         },
       };
@@ -2797,13 +2849,13 @@ const plugPatch = (
 /** The open panel's wave option box in css px (for pixel checks). */
 const waveBox = (p: Page) =>
   p.evaluate(() => {
-    const o = (window as any).__bd_probe.scene.OptionsPanel,
-      w = o.Options.find((q: any) => /^wave/.test(q.Type)),
+    const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
+      w = optionsPanel.Options.find((Option: any) => Option.Type.startsWith('wave')),
       pr = devicePixelRatio;
     return {
-      x: (o.Position.x + o.Margin) / pr,
-      y: (o.Position.y + w.Position.y) / pr,
-      width: o.Range / pr,
+      x: (optionsPanel.Position.x + optionsPanel.Margin) / pr,
+      y: (optionsPanel.Position.y + w.Position.y) / pr,
+      width: optionsPanel.Range / pr,
       height: w.Size.height / pr,
     };
   });
@@ -2834,10 +2886,10 @@ Object.assign(tests, {
     const cell = (i: number) =>
       pg.evaluate((k) => {
         const A = (window as any).__bd_probe.v1App,
-          u = A.Unit,
+          unit = A.Unit,
           pr = A.Metrics.PixelRatio,
-          w = 90 * u;
-        return [(A.Width / 2 - w / 2 + (w / 3) * (k + 0.5)) / pr, (A.Height - 30 * u) / pr];
+          w = 90 * unit;
+        return [(A.Width / 2 - w / 2 + (w / 3) * (k + 0.5)) / pr, (A.Height - 30 * unit) / pr];
       }, i);
     const label = async () => {
       await pg.evaluate(() => {
@@ -2867,7 +2919,7 @@ Object.assign(tests, {
           .map((e) =>
             e.id === 'bd_powerMode'
               ? `mode${e.v.mode}`
-              : `power${e.v.commands.find((c: any) => c.type === 10).value}`,
+              : `power${e.v.commands.find((command: any) => command.type === 10).value}`,
           ),
       );
     const hostCell = await pg.evaluate(() => (window as any).__bd_probe.scene.hostPower);
@@ -2897,7 +2949,7 @@ Object.assign(tests, {
     });
     await press(2);
     const hint = await pg.evaluate(() =>
-      ((window as any).__texts as string[]).filter((t) => /HOST/.test(t)).pop(),
+      ((window as any).__texts as string[]).filter((t) => t.includes('HOST')).pop(),
     );
     const againSent = await sent();
     await pg.waitForTimeout(2800);
@@ -2967,7 +3019,7 @@ Object.assign(tests, {
         { id: 'in', type: 'source.audio-in', x: 0, y: 0, params: {} },
         { id: 'b2', type: 'fx.bit-crusher', x: -2, y: -3, params: {} },
       ],
-    } as any);
+    });
     const b = await chromium.launch({
       args: [
         '--autoplay-policy=no-user-gesture-required',
@@ -3052,13 +3104,13 @@ Object.assign(tests, {
       await p.click('#start');
       await p.waitForTimeout(1500);
       await p.evaluate(() => {
-        const s = (window as any).__bd_probe.scene.SettingsPanel;
-        s._OpenTab = 1;
-        (s.MenuItems as any[]).forEach((m, k) => {
+        const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+        settingsPanel._OpenTab = 1;
+        (settingsPanel.MenuItems as any[]).forEach((m, k) => {
           m.Selected = k === 1 ? 1 : 0;
-          m.YOffset = k === 1 ? 0 : -s.DrawTo.Height;
+          m.YOffset = k === 1 ? 0 : -settingsPanel.DrawTo.Height;
         });
-        s.OpenPanel();
+        settingsPanel.OpenPanel();
       });
       await p.waitForTimeout(1200);
       if (choice !== 'Suggestion') {
@@ -3112,11 +3164,11 @@ Object.assign(tests, {
         OX = W / 2 + 0.37,
         OY = W / 2 + 0.61;
       const canvas = (scale: number) => {
-        const c = document.createElement('canvas');
-        c.width = c.height = W * scale;
-        const x = c.getContext('2d', { willReadFrequently: true })!;
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = W * scale;
+        const x = canvas.getContext('2d', { willReadFrequently: true })!;
         x.fillStyle = pal[0];
-        x.fillRect(0, 0, c.width, c.height);
+        x.fillRect(0, 0, canvas.width, canvas.height);
         return x;
       };
       const v1Draw = (x: CanvasRenderingContext2D, layers: any[], s: number) => {
@@ -3158,9 +3210,9 @@ Object.assign(tests, {
       const out: Record<string, { lone: number; drawn: number }> = {};
       for (const [id, def] of BLOCKS_BY_ID as Map<string, any>) {
         const layers = def.geometry.layers;
-        if (layers.some((l: any) => l.units === 'unit')) continue; // the stars: pixel layers, drawn as v1
-        const corners = layers.flatMap((l: any) =>
-          l.points.map(([px, py]: number[]) => [OX + px * G, OY + py * G]),
+        if (layers.some((layer: any) => layer.units === 'unit')) continue; // the stars: pixel layers, drawn as v1
+        const corners = layers.flatMap((layer: any) =>
+          layer.points.map(([px, py]: number[]) => [OX + px * G, OY + py * G]),
         );
         const ref = canvas(S);
         v1Draw(ref, layers, S);
@@ -3182,7 +3234,9 @@ Object.assign(tests, {
     });
     await p.close();
     // v1's way (faces drawn over a whole base) was up to 74 out; a hairline is anything well past a lone polygon's error.
-    const bad = Object.fromEntries(Object.entries(r).filter(([, v]) => v.drawn > v.lone + 12));
+    const bad = Object.fromEntries(
+      Object.entries(r).filter(([, value]) => value.drawn > value.lone + 12),
+    );
     return [
       Object.keys(r).length > 40 && Object.keys(bad).length === 0,
       { bad, worst: Math.max(...Object.values(r).map((v) => v.drawn)) },
@@ -3213,8 +3267,8 @@ Object.assign(tests, {
       const at = await p.evaluate(() => {
         const hd = (window as any).__bd_probe.scene.Header,
           c = hd.MenuItems[0],
-          u = (window as any).__bd_probe.v1App.Unit;
-        return [c.Position.x / devicePixelRatio, (hd.Height * 0.5 * u) / devicePixelRatio];
+          unit = (window as any).__bd_probe.v1App.Unit;
+        return [c.Position.x / devicePixelRatio, (hd.Height * 0.5 * unit) / devicePixelRatio];
       });
       await p.mouse.move(at[0], at[1]);
       await p.mouse.down();
@@ -3222,12 +3276,12 @@ Object.assign(tests, {
       await p.waitForTimeout(1200);
       const r = await p.evaluate(() => {
         const hd = (window as any).__bd_probe.scene.Header,
-          u = (window as any).__bd_probe.v1App.Unit,
+          unit = (window as any).__bd_probe.v1App.Unit,
           it = hd.MenuItems[0].Items[0];
         return {
           drop: hd.DropDown,
           full: hd.DropDownHeight,
-          centre: (hd.Height + hd.DropDown * 0.5) * u,
+          centre: (hd.Height + hd.DropDown * 0.5) * unit,
           itemY: it.Position.y,
         };
       });
@@ -3300,7 +3354,7 @@ Object.assign(tests, {
           { id: 't', type: 'source.tone', x: 0, y: 0, params: { fromTheFuture: 3, transpose: 7 } },
           { id: 'p', type: 'power.power', x: -3, y: 0 },
         ],
-      } as any);
+      });
     } catch (e) {
       error = (e as Error).message;
     }
@@ -3309,7 +3363,7 @@ Object.assign(tests, {
       loaded.ids.size === 2 &&
       loaded.warnings?.length === 1 &&
       /fromTheFuture/.test(loaded.warnings[0]) &&
-      loaded.commands.some((c: any) => c.type === 3 && c.value === 7);
+      loaded.commands.some((command: any) => command.type === 3 && command.value === 7);
     return [ok, { error, ids: loaded?.ids.size, warnings: loaded?.warnings }];
   },
 } as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
@@ -3374,13 +3428,13 @@ Object.assign(tests, {
       .flatMap((v: any) => v.commands)
       .filter((c: any) => c.type === 2);
     const movedInside =
-      moves.length > 0 && moves.every((c: any) => c.stage === 1 && c.id === innerTone);
+      moves.length > 0 && moves.every((move: any) => move.stage === 1 && move.id === innerTone);
     // a frame of the outer world is dropped while inside; one of this Stage's world shows
     const frame = (view: number, n: number) =>
       pg.evaluate(
-        ([v, k]) =>
+        ([key, k]) =>
           (window as any).__fire('bd_snapshot', {
-            view: v,
+            view: key,
             particles: Array.from({ length: k * 3 }, () => 1),
             connections: [],
             powered: [],
@@ -3400,7 +3454,9 @@ Object.assign(tests, {
     const out = await pg.evaluate(() => (window as any).__bd_probe.inside === null);
     const back = (await sent('bd_stageView')).map((v: any) => v.stage).slice(1);
     const macros = (await sent('bd_macros')).pop()?.macros ?? [];
-    const t = macros.find((m: any) => m.block === 's')?.blocks.find((b: any) => b.id === 't');
+    const t = macros
+      .find((macro: any) => macro.block === 's')
+      ?.blocks.find((b: any) => b.id === 't');
     await close();
     const ok =
       menu.includes('Stage') &&
@@ -3449,8 +3505,12 @@ Object.assign(tests, {
     await pg
       .waitForFunction(
         () => {
-          const o = (window as any).__bd_probe.scene.OptionsPanel;
-          return o.Scale === 1 && !o.Opening && o.SelectedBlock?.Id === 1;
+          const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel;
+          return (
+            optionsPanel.Scale === 1 &&
+            !optionsPanel.Opening &&
+            optionsPanel.SelectedBlock?.Id === 1
+          );
         },
         null,
         { timeout: 5000 },
@@ -3580,8 +3640,8 @@ Object.assign(tests, {
       await p.waitForTimeout(1200);
       cdn.delayMs = 8000; // a sound picked in the panel's search (v1 LoadTrack) takes a while to arrive
       await p.evaluate(() => {
-        const v = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock;
-        v.LoadTrack({
+        const selectedBlock = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock;
+        selectedBlock.LoadTrack({
           TitleShort: 'PAD',
           UserShort: 'SOMEONE',
           Permalink: '',
@@ -3626,26 +3686,26 @@ Object.assign(tests, {
     await p.waitForTimeout(1200);
     const slider = () =>
       p.evaluate(() => {
-        const o = (window as any).__bd_probe.scene.OptionsPanel,
-          w = o.Options.find((q: any) => q.Type === 'waveslider');
+        const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
+          w = optionsPanel.Options.find((Option: any) => Option.Type === 'waveslider');
         return {
           max: w?.Max,
           value: w?.Value,
           spread: w?.Spread,
           wave: w?.Waveform?.length ?? 0,
-          region: o.SelectedBlock?.Params.region,
+          region: optionsPanel.SelectedBlock?.Params.region,
         };
       });
     const start = await slider();
     // Drag the Spread slider's handle right by a quarter of its range (+1 s of the 0–4 range).
     const handle = await p.evaluate(() => {
-      const o = (window as any).__bd_probe.scene.OptionsPanel,
-        w = o.Options.find((q: any) => q.Name === 'Spread'),
+      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
+        w = optionsPanel.Options.find((Option: any) => Option.Name === 'Spread'),
         pr = devicePixelRatio;
       return {
-        x: (o.Position.x + o.Margin + w.Position.x) / pr,
-        y: (o.Position.y + w.Position.y + w.Size.height / 2) / pr,
-        range: o.Range / pr,
+        x: (optionsPanel.Position.x + optionsPanel.Margin + w.Position.x) / pr,
+        y: (optionsPanel.Position.y + w.Position.y + w.Size.height / 2) / pr,
+        range: optionsPanel.Range / pr,
       };
     });
     await p.mouse.move(handle.x, handle.y);
@@ -3919,7 +3979,7 @@ Object.assign(tests, {
     await p.waitForTimeout(800); // v1's LOAD NEW SAMPLE button
     const r = await p.evaluate(() => ({
       texts: (window as any).__texts
-        .filter((t: string) => /LOCATE|LOAD NEW|MISSING/.test(t))
+        .filter((__text: string) => /LOCATE|LOAD NEW|MISSING/.test(__text))
         .slice(0, 4),
       picked: (window as any).__picked,
       search: (window as any).__bd_probe.scene.SoundcloudPanel.Open,
@@ -3975,7 +4035,7 @@ Object.assign(tests, {
     }
     await p.close();
     const ok =
-      Object.entries(want).every(([n, k]) => (got[n] as any)?.blocks === k) &&
+      Object.entries(want).every(([key, k]) => (got[key] as any)?.blocks === k) &&
       !Object.keys(got).some((k) => k.endsWith('self-powered')) &&
       [...selfPlaying].every((n) => (got[n] as any)?.rms > 0.001) &&
       (got['Self Playing Scene'] as any)?.toggles?.length === 2 &&
@@ -4385,7 +4445,7 @@ Object.assign(tests, {
       !r.open &&
       r.title === 'Bass + Bells' &&
       r.blocks === 2 &&
-      !/share=/.test(r.search) &&
+      !r.search.includes('share=') &&
       r.search.includes('c=p') &&
       !!r.link &&
       r.link.endsWith(r.search) &&
@@ -4435,10 +4495,13 @@ Object.assign(tests, {
     await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.OpenPanel());
     await p.waitForTimeout(1200);
     const [ax, ay] = await p.evaluate(() => {
-      const s = (window as any).__bd_probe.scene.SettingsPanel,
+      const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel,
         A = (window as any).__bd_probe.v1App,
         pr = A.Metrics.PixelRatio;
-      return [s.MenuItems[2].Position.x / pr, (s.OffsetY + s.Height * A.Unit * 0.5) / pr]; // [1] is the divider
+      return [
+        settingsPanel.MenuItems[2].Position.x / pr,
+        (settingsPanel.OffsetY + settingsPanel.Height * A.Unit * 0.5) / pr,
+      ]; // [1] is the divider
     });
     await p.mouse.move(ax, ay);
     await p.mouse.click(ax, ay);
@@ -4470,15 +4533,15 @@ Object.assign(tests, {
       const pp = (window as any).__bd_probe.scene.PatchesPanel,
         app = (window as any).__bd_probe.v1App,
         [x, y] = pp.centreOf('file');
-      const c = document.querySelector('canvas') as HTMLCanvasElement,
+      const canvas = document.querySelector('canvas')!,
         pr = app.Metrics.PixelRatio;
       const probe = document.createElement('canvas');
-      probe.width = c.width;
-      probe.height = c.height;
-      const g = probe.getContext('2d')!;
-      g.drawImage(c, 0, 0);
+      probe.width = canvas.width;
+      probe.height = canvas.height;
+      const ctx = probe.getContext('2d')!;
+      ctx.drawImage(canvas, 0, 0);
       const px = Array.from(
-        g
+        ctx
           .getImageData(Math.round((x - 190) * pr), Math.round((y - 12) * pr), 1, 1)
           .data.slice(0, 3),
       );
@@ -4538,7 +4601,7 @@ Object.assign(tests, {
     const hover = await p.screenshot({ clip });
     await p.screenshot({ path: `${OUT}/upload-file-button.png` });
     const texts = await p.evaluate(() =>
-      (window as any).__texts.filter((t: string) => /FILE/.test(t)).slice(0, 3),
+      (window as any).__texts.filter((__text: string) => __text.includes('FILE')).slice(0, 3),
     );
     await p.close();
     const ok =
@@ -4656,8 +4719,8 @@ Object.assign(tests, {
     await patchesClick(p, 'copyLink', 300); // COPY LINK (owner, 2026-11-18): the message bar says so
     const copied = {
       line: await p.evaluate(() => {
-        const m = (window as any).__bd_probe.scene.MessagePanel;
-        return m.Open && /link copied/i.test(m._Value?.string ?? '');
+        const messagePanel = (window as any).__bd_probe.scene.MessagePanel;
+        return messagePanel.Open && /link copied/i.test(messagePanel._Value?.string ?? '');
       }),
       clip: await p.evaluate(() => navigator.clipboard.readText()),
     };
@@ -4689,7 +4752,7 @@ Object.assign(tests, {
     ];
     const labels = ['SAVE', 'SAVE AS', 'DOWNLOAD PATCH'];
     const ok =
-      labels.every((l) => before.includes(l)) &&
+      labels.every((label) => before.includes(label)) &&
       xs[1] < xs[0] &&
       xs[0] < xs[2] &&
       at[1][1] > at[0][1] + 50 &&
@@ -5062,7 +5125,7 @@ Object.assign(tests, {
     const gapsAt = await p.evaluate(() => {
       let t = 0;
       return (window as any).__gaps
-        .map((g: number) => [Math.round((t += g)), Math.round(g)])
+        .map((__gap: number) => [Math.round((t += __gap)), Math.round(__gap)])
         .filter((x: number[]) => x[1] > 25);
     });
     const during = await p.evaluate(() => ({
@@ -5139,7 +5202,7 @@ Object.assign(tests, {
         null,
         { timeout: 5000 },
       )
-      .then((h) => h.jsonValue() as Promise<number>)
+      .then((h) => h.jsonValue())
       .catch(() => -1);
     await p.waitForTimeout(500); // v1 holds the button still for 300 ms, then slides it away
     const stillDown = await p.evaluate(
@@ -5600,10 +5663,10 @@ Object.assign(tests, {
       await p.evaluate(() => (window as any).__bd_probe.scene.setWorldPower(false));
       const want = await p.evaluate(() => {
         const a = (window as any).__bd_probe.v1App,
-          w = document.createElement('canvas').getContext('2d')!;
-        w.fillStyle = a.Palette[13];
-        w.fillRect(0, 0, 1, 1);
-        return [...w.getImageData(0, 0, 1, 1).data.slice(0, 3)];
+          ctx = document.createElement('canvas').getContext('2d')!;
+        ctx.fillStyle = a.Palette[13];
+        ctx.fillRect(0, 0, 1, 1);
+        return [...ctx.getImageData(0, 0, 1, 1).data.slice(0, 3)];
       }); // the record button's red (owner, 2026-11-20)
       await p.mouse.move(640, 300);
       await p.waitForTimeout(500);
@@ -5745,10 +5808,7 @@ Object.assign(tests, {
     );
     await q.close();
     const r = { seen: [...seen], now, other, saved, reopened, dirty };
-    return [
-      seen.size === 2 && !!saved === now && reopened === now && other === false && dirty === false,
-      r,
-    ];
+    return [seen.size === 2 && !!saved === now && reopened === now && !other && dirty === false, r];
   },
 
   /** Owner (2026-11-11): a trackpad pinch zooms smoothly about the pointer, as a pinch on a touch screen does. Chrome
@@ -5799,11 +5859,11 @@ Object.assign(tests, {
       ([x, y]) => {
         const st = document.getElementById('stage')!;
         const ev = (type: string, scale: number) => {
-          const e = new Event(type, { bubbles: true, cancelable: true }) as any;
-          e.scale = scale;
-          e.clientX = x;
-          e.clientY = y;
-          st.dispatchEvent(e);
+          const value = new Event(type, { bubbles: true, cancelable: true }) as any;
+          value.scale = scale;
+          value.clientX = x;
+          value.clientY = y;
+          st.dispatchEvent(value);
         };
         ev('gesturestart', 1);
         ev('gesturechange', 1.2);
@@ -5898,23 +5958,23 @@ Object.assign(tests, {
     await p.waitForTimeout(1500);
     const panel = () =>
       p.evaluate(() => {
-        const o = (window as any).__bd_probe.scene.OptionsPanel,
+        const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
           pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio;
-        const g = o.Options.find((x: any) => x.Type === 'parametric'),
-          t = o.Options.find((x: any) => x.Type === 'buttons');
+        const g = optionsPanel.Options.find((x: any) => x.Type === 'parametric'),
+          t = optionsPanel.Options.find((x: any) => x.Type === 'buttons');
         const h = g?.Handles[1];
         return {
-          types: o.Options.map((x: any) => x.Type),
-          params: { ...o.SelectedBlock?.Params },
+          types: optionsPanel.Options.map((x: any) => x.Type),
+          params: { ...optionsPanel.SelectedBlock?.Params },
           buttons: t?.Buttons.map((b: any) => [
-            (o.Position.x + o.Margin + b.Position.x + b.Size.width / 2) / pr,
-            (o.Position.y + t.Position.y + t.Size.height / 2) / pr,
+            (optionsPanel.Position.x + optionsPanel.Margin + b.Position.x + b.Size.width / 2) / pr,
+            (optionsPanel.Position.y + t.Position.y + t.Size.height / 2) / pr,
           ]),
           handle: h && [
-            (o.Position.x + o.Margin + h.Position.x) / pr,
-            (o.Position.y + g.Position.y + g.Size.height * 0.8 - h.Position.y) / pr,
+            (optionsPanel.Position.x + optionsPanel.Margin + h.Position.x) / pr,
+            (optionsPanel.Position.y + g.Position.y + g.Size.height * 0.8 - h.Position.y) / pr,
           ],
-          graphLeft: (o.Position.x + o.Margin) / pr,
+          graphLeft: (optionsPanel.Position.x + optionsPanel.Margin) / pr,
           curve: g ? [g.LineGain[0], g.LineGain[g.Smoothness - 1]] : null,
           bar: g ? g.SubHandles[1].Draw.toString().length > 10 : null,
         };
@@ -6044,7 +6104,7 @@ Object.assign(tests, {
     const send = (type: 'touchStart' | 'touchMove' | 'touchEnd' | 'touchCancel') =>
       cdp.send('Input.dispatchTouchEvent', {
         type,
-        touchPoints: [...down.entries()].map(([id, q]) => ({ id, x: q.x, y: q.y })),
+        touchPoints: [...down.entries()].map(([id, value]) => ({ id, x: value.x, y: value.y })),
       });
     const start = async (id: number, x: number, y: number) => {
       down.set(id, { x, y });
@@ -6162,15 +6222,15 @@ Object.assign(tests, {
     await end(1);
     await p.waitForTimeout(900);
     const rows = await p.evaluate(() => {
-      const o = (window as any).__bd_probe.scene.OptionsPanel,
+      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
         pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio;
-      return o.Options.map((opt: any, i: number) => ({
+      return optionsPanel.Options.map((opt: any, i: number) => ({
         i,
         type: opt.Type,
         setting: opt.Setting,
-        y: (o.Position.y + opt.Position.y + opt.Size.height / 2) / pr,
-        x0: (o.Position.x + o.Margin) / pr,
-        w: o.Range / pr,
+        y: (optionsPanel.Position.y + opt.Position.y + opt.Size.height / 2) / pr,
+        x0: (optionsPanel.Position.x + optionsPanel.Margin) / pr,
+        w: optionsPanel.Range / pr,
         value: opt.Value,
       })).filter((r: any) => r.type === 'slider');
     });
@@ -6183,7 +6243,7 @@ Object.assign(tests, {
     ]);
     const sliders = await p.evaluate(() =>
       (window as any).__bd_probe.scene.OptionsPanel.Options.filter(
-        (o: any) => o.Type === 'slider',
+        (Option: any) => Option.Type === 'slider',
       ).map((o: any) => o.Position.x / (window as any).__bd_probe.scene.OptionsPanel.Range),
     );
     await p.screenshot({ path: `${OUT}/multitouch-sliders.png` });
@@ -6196,7 +6256,7 @@ Object.assign(tests, {
       {
         twoBlocks: { before, after, held },
         pinch: { v0, v1, v2, mid0, mid1, pinched },
-        sliders: { rows: rows.map((r: any) => r.setting), sliders },
+        sliders: { rows: rows.map((row: any) => row.setting), sliders },
       },
     ];
   },
@@ -6226,17 +6286,17 @@ Object.assign(tests, {
   async 'plugin-keys-capture'(errors: string[]) {
     const probe = (pg: Page) =>
       pg.evaluate(() => {
-        const e = new KeyboardEvent('keydown', {
+        const event = new KeyboardEvent('keydown', {
           code: 'KeyZ',
           key: 'z',
           bubbles: true,
           cancelable: true,
         });
-        document.body.dispatchEvent(e);
+        document.body.dispatchEvent(event);
         document.body.dispatchEvent(
           new KeyboardEvent('keyup', { code: 'KeyZ', key: 'z', bubbles: true, cancelable: true }),
         );
-        return e.defaultPrevented;
+        return event.defaultPrevented;
       });
     const a = await openPlugin(
       plugPatch([
@@ -6281,18 +6341,18 @@ Object.assign(tests, {
     ) =>
       pg.evaluate(
         ([c, k, m]) => {
-          const e = new KeyboardEvent('keydown', {
+          const event = new KeyboardEvent('keydown', {
             code: c,
             key: k,
             bubbles: true,
             cancelable: true,
             ...m,
           });
-          document.body.dispatchEvent(e);
+          document.body.dispatchEvent(event);
           document.body.dispatchEvent(
             new KeyboardEvent('keyup', { code: c, key: k, bubbles: true, cancelable: true }),
           );
-          return e.defaultPrevented;
+          return event.defaultPrevented;
         },
         [code, key, more] as const,
       );
@@ -6492,11 +6552,11 @@ Object.assign(tests, {
       await pg.mouse.click(pt[0], pt[1]);
       await pg.waitForTimeout(1000);
       const panel = await pg.evaluate(() => {
-        const o = (window as any).__bd_probe.scene.OptionsPanel;
+        const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel;
         return {
-          open: o.Scale > 0,
-          name: o.Name ?? o.SelectedBlock?.OptionsForm?.name,
-          rows: o.Options.map((q: any) => q.Name),
+          open: optionsPanel.Scale > 0,
+          name: optionsPanel.Name ?? optionsPanel.SelectedBlock?.OptionsForm?.name,
+          rows: optionsPanel.Options.map((Option: any) => Option.Name),
         };
       });
       await pg.evaluate(() =>
@@ -6664,15 +6724,15 @@ Object.assign(tests, {
     const r = await p.evaluate(
       ([x, y]) => {
         const fire = (el: Element, cx = 10, cy = 10) => {
-          const e = new MouseEvent('contextmenu', {
+          const event = new MouseEvent('contextmenu', {
             bubbles: true,
             cancelable: true,
             button: 2,
             clientX: cx,
             clientY: cy,
           });
-          el.dispatchEvent(e);
-          return e.defaultPrevented;
+          el.dispatchEvent(event);
+          return event.defaultPrevented;
         };
         const canvas = document.querySelector('canvas')!,
           a = document.createElement('a'),
@@ -6855,14 +6915,14 @@ Object.assign(tests, {
       a2 = await wave(5);
     // Owner (2026-11-17): the wave is made on release, not while dragging; the number stays on show.
     const row = await p.evaluate(() => {
-      const o = (window as any).__bd_probe.scene.OptionsPanel,
+      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
         pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio,
-        q = (o.Options as any[]).find((x) => x.Setting === 'sound');
+        q = (optionsPanel.Options as any[]).find((x) => x.Setting === 'sound');
       return {
-        x0: (o.Position.x + o.Margin) / pr,
-        w: o.Range / pr,
-        y: (o.Position.y + q.Position.y + q.Size.height / 2) / pr,
-        handle: (o.Position.x + o.Margin + q.Position.x) / pr,
+        x0: (optionsPanel.Position.x + optionsPanel.Margin) / pr,
+        w: optionsPanel.Range / pr,
+        y: (optionsPanel.Position.y + q.Position.y + q.Size.height / 2) / pr,
+        handle: (optionsPanel.Position.x + optionsPanel.Margin + q.Position.x) / pr,
       };
     });
     const before = await now();
@@ -6977,7 +7037,9 @@ Object.assign(tests, {
     await p.setViewportSize({ width: 390, height: 420 });
     await p.waitForTimeout(700); // the keyboard is up
     const typing = await size();
-    await p.evaluate(() => (document.activeElement as HTMLElement).blur());
+    await p.evaluate(() => {
+      (document.activeElement as HTMLElement).blur();
+    });
     await p.setViewportSize({ width: 390, height: 844 });
     await p.waitForTimeout(1200); // and gone
     const after = await size();
@@ -7006,30 +7068,30 @@ Object.assign(tests, {
     await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.OpenPanel());
     await p.waitForTimeout(1300);
     const r = await p.evaluate(() => {
-      const s = (window as any).__bd_probe.scene.SettingsPanel,
+      const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel,
         a = (window as any).__bd_probe.v1App,
         W = a.Width,
-        u = a.Unit;
-      const last = s.MenuItems[s.MenuItems.length - 1],
+        unit = a.Unit;
+      const last = settingsPanel.MenuItems[settingsPanel.MenuItems.length - 1],
         tabsRight = last.Position.x + last.Size.width / 2,
-        crossLeft = W * 0.5 + s.Range * 0 + a.SettingsMenuWidth(W) / 2 + 12.5 * u;
+        crossLeft = W * 0.5 + settingsPanel.Range * 0 + a.SettingsMenuWidth(W) / 2 + 12.5 * unit;
       return {
         W,
         tabsRight,
         crossLeft,
-        range: s.Range,
-        oldRange: (W / 7) * 5 - (a.SettingsMenuWidth(W) - s.Range),
+        range: settingsPanel.Range,
+        oldRange: (W / 7) * 5 - (a.SettingsMenuWidth(W) - settingsPanel.Range),
         row: a.SettingsRow,
         viewport: document.querySelector('meta[name=viewport]')?.getAttribute('content') ?? '',
       };
     });
     const tapTab = async (i: number) => {
       const at = await p.evaluate((k) => {
-        const s = (window as any).__bd_probe.scene.SettingsPanel,
+        const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel,
           a = (window as any).__bd_probe.v1App;
         return [
-          s.MenuItems[k].Position.x / devicePixelRatio,
-          (s.OffsetY + 30 * a.Unit) / devicePixelRatio,
+          settingsPanel.MenuItems[k].Position.x / devicePixelRatio,
+          (settingsPanel.OffsetY + 30 * a.Unit) / devicePixelRatio,
         ];
       }, i);
       await p.touchscreen.tap(at[0], at[1]);
@@ -7048,7 +7110,7 @@ Object.assign(tests, {
       r.tabsRight <= r.crossLeft &&
       r.range > r.oldRange &&
       r.row > 48 &&
-      /maximum-scale=1/.test(r.viewport) &&
+      r.viewport.includes('maximum-scale=1') &&
       people?.length === 3 &&
       people[1].icon[1] > people[0].icon[1] &&
       people[0].icon[0] === people[1].icon[0] &&
@@ -7073,14 +7135,18 @@ Object.assign(tests, {
             a = (window as any).__bd_probe.v1App,
             pr = a.Metrics.PixelRatio;
           const el = document.getElementById('patchTitle')!,
-            r = el.getBoundingClientRect(),
+            boundingClientRect = el.getBoundingClientRect(),
             tabs = (pp.OffsetY + 60 * a.Unit) / pr,
             cs = getComputedStyle(el);
           const clipped =
             cs.visibility === 'hidden' ||
             cs.display === 'none' ||
             (cs.clipPath !== 'none' && cs.clipPath !== '');
-          return { top: r.top, tabs, shownAbove: r.top < tabs - 1 && !clipped };
+          return {
+            top: boundingClientRect.top,
+            tabs,
+            shownAbove: boundingClientRect.top < tabs - 1 && !clipped,
+          };
         }),
       );
       await p.waitForTimeout(25);
@@ -7215,9 +7281,9 @@ Object.assign(tests, {
         pr = A.Metrics.PixelRatio;
       sp.OpenPanel();
       sp._OpenTab = 2;
-      sp.MenuItems.forEach((m: any, i: number) => {
-        m.Selected = i === 2 ? 1 : 0;
-        m.YOffset = i === 2 ? 0 : -sp.DrawTo.Height;
+      sp.MenuItems.forEach((MenuItem: any, i: number) => {
+        MenuItem.Selected = i === 2 ? 1 : 0;
+        MenuItem.YOffset = i === 2 ? 0 : -sp.DrawTo.Height;
       });
       const b = sp.downloadButtons(),
         half = 65 * A.Unit; // unused: kept for the log
@@ -7234,7 +7300,7 @@ Object.assign(tests, {
       const sites = ['whitevinyldesign.com', 'funputs.com', 'edsilv.com'].map(
         (t) => seen.filter((e) => e.t === t).at(-1)?.y ?? null,
       );
-      return { sites, twitter: seen.some((e) => /^@/.test(e.t)) };
+      return { sites, twitter: seen.some((e) => e.t.startsWith('@')) };
     });
     await p.screenshot({ path: `${OUT}/settings-about-websites.png` });
     // DOWNLOAD's three buttons span the column: centres at 1/6, 1/2 and 5/6 of it (less the 15-unit gaps).
@@ -7280,8 +7346,10 @@ Object.assign(tests, {
       for (const scheme of ['dark', 'light'] as const)
         picks.push({ scheme, ...(await visit(scheme)) });
     const pass = picks.every(
-      (r) =>
-        DARK.has(r.now) === (r.scheme === 'dark') && r.kept === String(r.now) && r.again === r.now,
+      (pick) =>
+        DARK.has(pick.now) === (pick.scheme === 'dark') &&
+        pick.kept === String(pick.now) &&
+        pick.again === pick.now,
     );
     return [pass, picks];
   },
@@ -7318,7 +7386,7 @@ Object.assign(tests, {
     await p.waitForTimeout(800); // the OPEN page drops in (CHG-0035)
     const r = await p.evaluate(() => {
       const pp = (window as any).__bd_probe.scene.PatchesPanel,
-        u = (window as any).__bd_probe.v1App.Unit,
+        unit = (window as any).__bd_probe.v1App.Unit,
         L = pp.openLayout(),
         rows = (L.bottom - L.top) / pp.rowH;
       pp.Tab = 2;
@@ -7326,16 +7394,17 @@ Object.assign(tests, {
         Lg = pp.galleryLayout(),
         grows = (G.bottom - G.top) / pp.rowH;
       pp.Tab = 1;
-      const n = pp.Items.length;
+      const lengthValue = pp.Items.length;
       // the first title under the rule as each title under the divider above it (divider: 28 units under a row's baseline)
       return {
         rows,
         grows,
-        firstGap: (pp.openRowY(0) + pp.OpenScroll - pp.rowGap - L.rule) / u,
-        rowGap: (28 * u - pp.rowGap) / u,
-        galleryTop: (G.top - Lg.rule) / u,
-        end: Math.max(0, n * pp.rowH + 10 * u - (L.bottom - L.top)) - pp.openMaxScroll(),
-        n,
+        firstGap: (pp.openRowY(0) + pp.OpenScroll - pp.rowGap - L.rule) / unit,
+        rowGap: (28 * unit - pp.rowGap) / unit,
+        galleryTop: (G.top - Lg.rule) / unit,
+        end:
+          Math.max(0, lengthValue * pp.rowH + 10 * unit - (L.bottom - L.top)) - pp.openMaxScroll(),
+        n: lengthValue,
       };
     });
     await p.screenshot({ path: `${OUT}/patch-lists-half-row.png` });
@@ -7423,7 +7492,7 @@ Object.assign(tests, {
     await p.waitForTimeout(1500);
     const r = await p.evaluate(() => ({
       open: (window as any).__bd_probe.scene.SoundcloudPanel.Open,
-      texts: [...new Set(((window as any).__texts as string[]).filter((t) => /^By /.test(t)))],
+      texts: [...new Set(((window as any).__texts as string[]).filter((t) => t.startsWith('By ')))],
     }));
     await p.screenshot({ path: `${OUT}/freesound-results-show-length.png` });
     await p.close();
@@ -7440,10 +7509,10 @@ Object.assign(tests, {
       await p.waitForTimeout(1000);
       const mode = () =>
         p.evaluate(() => {
-          const o = (window as any).__bd_probe.scene.OptionsPanel;
+          const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel;
           return {
-            loop: !!o.SelectedBlock.Params.loop,
-            mode: !!(o.Options as any[]).find((x) => x.Type === 'waveregion')?.Mode,
+            loop: !!optionsPanel.SelectedBlock.Params.loop,
+            mode: !!(optionsPanel.Options as any[]).find((x) => x.Type === 'waveregion')?.Mode,
           };
         });
       const seen = [await mode()];
@@ -7474,19 +7543,22 @@ Object.assign(tests, {
     const geo = () =>
       p.evaluate(() => {
         const P = (window as any).__bd_probe,
-          o = P.scene.OptionsPanel,
-          e = (o.Options as any[]).find((x) => x.Type === 'ADSR'),
-          h = e.Handles;
-        const x0 = o.Position.x + o.Margin,
-          y0 = o.Position.y + e.Position.y,
+          optionsPanel = P.scene.OptionsPanel,
+          e = (optionsPanel.Options as any[]).find((x) => x.Type === 'ADSR'),
+          handles = e.Handles;
+        const x0 = optionsPanel.Position.x + optionsPanel.Margin,
+          y0 = optionsPanel.Position.y + e.Position.y,
           ht = e.Size.height;
         return {
-          attack: h[0].XValue,
-          decay: h[1].XValue,
-          sustain: h[1].YValue,
-          range: h[0].XRange,
-          a: [x0 + h[0].Position.x, y0 + ht * 0.1],
-          d: [x0 + h[0].Position.x + h[1].Position.x, y0 + ht * 0.9 - h[1].Position.y],
+          attack: handles[0].XValue,
+          decay: handles[1].XValue,
+          sustain: handles[1].YValue,
+          range: handles[0].XRange,
+          a: [x0 + handles[0].Position.x, y0 + ht * 0.1],
+          d: [
+            x0 + handles[0].Position.x + handles[1].Position.x,
+            y0 + ht * 0.9 - handles[1].Position.y,
+          ],
           engine: P.state.patch.blocks.find((b: any) => b.type === 'fx.envelope').params,
         };
       });
@@ -7523,14 +7595,14 @@ Object.assign(tests, {
     await p.screenshot({ path: `${OUT}/envelope-short-attack.png` });
     // 4. attack and decay short, sustain high: the decay handle sits on the attack's; a press on it takes decay only
     await p.evaluate(() => {
-      const o = (window as any).__bd_probe.scene.OptionsPanel;
-      for (const [k, v] of [
+      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel;
+      for (const [k, value] of [
         ['attack', 0.01],
         ['decay', 0.01],
         ['sustain', 0.9],
       ])
-        o.SelectedBlock.SetParam(k, v);
-      o.Refresh();
+        optionsPanel.SelectedBlock.SetParam(k, value);
+      optionsPanel.Refresh();
     });
     await p.waitForTimeout(100);
     const g4 = await geo();
@@ -7539,7 +7611,7 @@ Object.assign(tests, {
     const held = await p.evaluate(() =>
       ((window as any).__bd_probe.scene.OptionsPanel.Options as any[])
         .find((x) => x.Type === 'ADSR')
-        .Handles.map((h: any) => h.Selected),
+        .Handles.map((Handle: any) => Handle.Selected),
     );
     await p.mouse.move(g4.d[0] + 30, g4.d[1], { steps: 6 });
     await p.mouse.up();
@@ -7580,11 +7652,11 @@ Object.assign(tests, {
         /* */
       }
     }); // last tab OPEN: Cmd+S still shows SAVE
-    await p.evaluate(() =>
-      window.addEventListener('keydown', (e) => {
-        (window as any).__prevented = e.defaultPrevented;
-      }),
-    );
+    await p.evaluate(() => {
+      window.addEventListener('keydown', (event) => {
+        (window as any).__prevented = event.defaultPrevented;
+      });
+    });
     await p.keyboard.press('ControlOrMeta+s');
     await p.waitForTimeout(1200);
     const r = await p.evaluate(() => {
@@ -7634,11 +7706,11 @@ Object.assign(tests, {
         undefined,
         standalone,
       );
-      await pg.evaluate(() =>
-        window.addEventListener('keydown', (e) => {
-          (window as any).__prevented = e.defaultPrevented;
-        }),
-      );
+      await pg.evaluate(() => {
+        window.addEventListener('keydown', (event) => {
+          (window as any).__prevented = event.defaultPrevented;
+        });
+      });
       await pg.keyboard.press('ControlOrMeta+s');
       await pg.waitForTimeout(1200);
       const r = await pg.evaluate(() => {
@@ -7702,8 +7774,8 @@ try {
       detail: unknown;
     try {
       [pass, detail] = await run(errors);
-    } catch (e) {
-      detail = String(e);
+    } catch (error) {
+      detail = String(error);
     }
     if (errors.length) {
       pass = false;

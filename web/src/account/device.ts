@@ -16,33 +16,39 @@ export type DevicePoll =
   | { status: 'approved'; key: string; user: { handle: string | null } };
 
 export async function startDevice(name: string): Promise<DeviceCode> {
-  const r = await fetch(apiUrl('device/start'), {
+  const response = await fetch(apiUrl('device/start'), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ name }),
   });
-  const j = (await r.json().catch(() => ({}))) as DeviceCode & { error?: string };
-  if (!r.ok) throw Object.assign(new Error(j.error ?? `HTTP ${r.status}`), { status: r.status });
+  const j = (await response.json().catch(() => ({}))) as DeviceCode & { error?: string };
+  if (!response.ok)
+    throw Object.assign(new Error(j.error ?? `HTTP ${response.status}`), {
+      status: response.status,
+    });
   return j;
 }
 /** The iPad app's native sign-in (SHARING-0011): POST to `/api/app/…` (no cookie; the answer carries the key). */
 export async function appPost<T>(path: string, body: unknown = {}): Promise<T> {
-  const r = await fetch(apiUrl(path), {
+  const response = await fetch(apiUrl(path), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
   });
-  const j = (await r.json().catch(() => ({}))) as T & { error?: string };
-  if (!r.ok) throw Object.assign(new Error(j.error ?? `HTTP ${r.status}`), { status: r.status });
+  const j = (await response.json().catch(() => ({}))) as T & { error?: string };
+  if (!response.ok)
+    throw Object.assign(new Error(j.error ?? `HTTP ${response.status}`), {
+      status: response.status,
+    });
   return j;
 }
 export async function pollDevice(deviceCode: string): Promise<DevicePoll> {
-  const r = await fetch(apiUrl('device/poll'), {
+  const response = await fetch(apiUrl('device/poll'), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ deviceCode }),
   });
-  const j = (await r.json().catch(() => null)) as DevicePoll | null;
+  const j = (await response.json().catch(() => null)) as DevicePoll | null;
   if (j && typeof j.status === 'string') return j;
-  throw Object.assign(new Error(`HTTP ${r.status}`), { status: r.status });
+  throw Object.assign(new Error(`HTTP ${response.status}`), { status: response.status });
 }

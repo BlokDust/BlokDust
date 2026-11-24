@@ -47,8 +47,8 @@ import { admin } from './admin.ts';
  */
 const PLUGIN_ORIGINS = new Set(['juce://juce.backend', 'https://juce.backend']);
 export const pluginOrigin = (req: Request): string | null => {
-  const o = req.headers.get('origin');
-  return o && PLUGIN_ORIGINS.has(o) ? o : null;
+  const header = req.headers.get('origin');
+  return header && PLUGIN_ORIGINS.has(header) ? header : null;
 };
 const corsFor = (origin: string) => ({ 'access-control-allow-origin': origin, vary: 'Origin' });
 
@@ -117,7 +117,7 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
     if (m !== 'GET' && m !== 'HEAD') throw new HttpError(405, 'method not allowed');
     return page(env, req, url, null);
   }
-  const embed = path.match(/^\/embed\/([^/]+)\/?$/);
+  const embed = /^\/embed\/([^/]+)\/?$/.exec(path);
   if (embed && m === 'GET') return page(env, req, url, embed[1]);
   if (path === '/oembed' && m === 'GET') return oembed(env, req, url);
   // Where a plugin sends people to approve its code (SHARING-0011): the app, which asks (Settings › ACCOUNT).
@@ -173,20 +173,20 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
   if (path.startsWith('/admin/')) return admin(env, req, path);
   if (path === '/api/patches' && m === 'POST') {
     await limit(env.SAVE_LIMIT, req, 'save');
-    const r = await createPatch(env, req);
-    if (r.ok) ctx.waitUntil(record(env, req, 'patch_shared', { kind: 'new' }));
-    return r;
+    const response = await createPatch(env, req);
+    if (response.ok) ctx.waitUntil(record(env, req, 'patch_shared', { kind: 'new' }));
+    return response;
   }
-  const thumb = path.match(/^\/api\/patches\/([^/]+)\/thumb\.png$/);
+  const thumb = /^\/api\/patches\/([^/]+)\/thumb\.png$/.exec(path);
   if (thumb && m === 'GET') return getThumb(env, thumb[1], url.searchParams.get('rev'));
-  const one = path.match(/^\/api\/patches\/([^/]+)$/);
+  const one = /^\/api\/patches\/([^/]+)$/.exec(path);
   if (one) {
     if (m === 'GET') return getPatch(env, req, one[1], ctx);
     if (m === 'PUT') {
       await limit(env.SAVE_LIMIT, req, 'save');
-      const r = await savePatch(env, req, one[1]);
-      if (r.ok) ctx.waitUntil(record(env, req, 'patch_shared', { kind: 'update' }));
-      return r;
+      const response = await savePatch(env, req, one[1]);
+      if (response.ok) ctx.waitUntil(record(env, req, 'patch_shared', { kind: 'update' }));
+      return response;
     }
     if (m === 'DELETE') return deletePatch(env, req, one[1]);
     throw new HttpError(405, 'method not allowed');
@@ -269,7 +269,7 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
     await limit(env.SEARCH_LIMIT, req, 'gallery');
     return galleryList(env, req, url);
   }
-  const gal = path.match(/^\/api\/gallery\/([^/]+)(\/like|\/report)?$/);
+  const gal = /^\/api\/gallery\/([^/]+)(\/like|\/report)?$/.exec(path);
   if (gal) {
     if (m !== 'GET' && !appKeyOf(req)) sameOrigin(env, req); // a plugin's key: no cookie, no CSRF (SHARING-0011)
     await limit(env.SAVE_LIMIT, req, 'gallery');
@@ -281,9 +281,9 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
   if (path.startsWith('/api/freesound/')) await limit(env.SEARCH_LIMIT, req, 'freesound');
   if (path === '/api/freesound/search' && m === 'GET') {
     try {
-      const r = await search(env, url, ctx);
+      const response = await search(env, url, ctx);
       ctx.waitUntil(
-        r
+        response
           .clone()
           .json()
           .then((b) =>
@@ -297,21 +297,21 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
           )
           .catch(() => {}),
       );
-      return r;
-    } catch (e) {
+      return response;
+    } catch (error) {
       ctx.waitUntil(
         record(
           env,
           req,
           'freesound_error',
           {},
-          { status: e instanceof HttpError ? e.status : 500 },
+          { status: error instanceof HttpError ? error.status : 500 },
         ),
       );
-      throw e;
+      throw error;
     }
   }
-  const fs = path.match(/^\/api\/freesound\/sounds\/([^/]+)$/);
+  const fs = /^\/api\/freesound\/sounds\/([^/]+)$/.exec(path);
   if (fs && m === 'GET') return sound(env, fs[1], ctx);
   if (path.startsWith('/api/')) throw new HttpError(404, 'no such endpoint');
 
@@ -326,10 +326,10 @@ export default {
     let response: Response;
     try {
       response = await route(req, env, ctx);
-    } catch (e) {
-      response = errorResponse(e);
+    } catch (error) {
+      response = errorResponse(error);
       if (new URL(req.url).pathname.endsWith('/api/support'))
-        for (const [k, v] of Object.entries(supportHeaders)) response.headers.set(k, v);
+        for (const [k, value] of Object.entries(supportHeaders)) response.headers.set(k, value);
     }
     // The plugins' page reads the answer (CHG-0039); a response can be immutable (an asset fetch): copy it then.
     const plugin = pluginOrigin(req);
@@ -339,7 +339,7 @@ export default {
       !response.headers.has('access-control-allow-origin')
     ) {
       response = new Response(response.body, response);
-      for (const [k, v] of Object.entries(corsFor(plugin))) response.headers.set(k, v);
+      for (const [k, value] of Object.entries(corsFor(plugin))) response.headers.set(k, value);
     }
     return response;
   },

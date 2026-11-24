@@ -31,8 +31,8 @@ export function tourTests({
       await p.waitForTimeout(1800);
       const r = await p.evaluate(() => {
         const b = (window as any).__bd_probe,
-          t = b.scene.Tutorial;
-        return { blocks: b.state.blocks.length, asked: !!(t.SplashOpen || t.Open) };
+          tutorial = b.scene.Tutorial;
+        return { blocks: b.state.blocks.length, asked: !!(tutorial.SplashOpen || tutorial.Open) };
       });
       await p.screenshot({ path: `${OUT}/first-visit-empty.png` });
       await ctx.close();
@@ -52,12 +52,12 @@ export function tourTests({
       await p.waitForTimeout(1800);
       const tut = () =>
         p.evaluate(() => {
-          const t = (window as any).__bd_probe.scene.Tutorial;
+          const tutorial = (window as any).__bd_probe.scene.Tutorial;
           return {
-            splash: t.SplashOpen,
-            open: t.Open,
-            scene: t.CurrentScene,
-            total: t.TotalScenes,
+            splash: tutorial.SplashOpen,
+            open: tutorial.Open,
+            scene: tutorial.CurrentScene,
+            total: tutorial.TotalScenes,
             hot: (window as any).__bd_probe.scene.TutorialHotspots.Points.length,
             blocks: (window as any).__bd_probe.state.blocks.length,
           };
@@ -68,9 +68,9 @@ export function tourTests({
       // TAKE THE TOUR: v1's hit box, left of the centre line under the message.
       const take = await p.evaluate(() => {
         const A = (window as any).__bd_probe.v1App,
-          u = A.Unit,
+          unit = A.Unit,
           pr = A.Metrics.PixelRatio;
-        return [(A.Width / 2 - 60 * u) / pr, (A.Height / 2 + 20 * u) / pr];
+        return [(A.Width / 2 - 60 * unit) / pr, (A.Height / 2 + 20 * unit) / pr];
       });
       await p.mouse.move(take[0], take[1]);
       await p.mouse.click(take[0], take[1]);
@@ -103,14 +103,14 @@ export function tourTests({
       await p.mouse.click(cx + 8, cy + 8);
       await p.waitForTimeout(1300);
       const slider = await p.evaluate(() => {
-        const o = (window as any).__bd_probe.scene.OptionsPanel,
+        const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
           A = (window as any).__bd_probe.v1App,
           pr = A.Metrics.PixelRatio,
-          s = (o.Options as any[]).findIndex((q) => q.Type === 'slider');
-        const q = o.Options[s];
+          s = (optionsPanel.Options as any[]).findIndex((q) => q.Type === 'slider');
+        const q = optionsPanel.Options[s];
         return [
-          (o.Position.x + o.Margin + o.Range * 0.3) / pr,
-          (o.Position.y + q.Position.y + q.Size.height / 2) / pr,
+          (optionsPanel.Position.x + optionsPanel.Margin + optionsPanel.Range * 0.3) / pr,
+          (optionsPanel.Position.y + q.Position.y + q.Size.height / 2) / pr,
         ];
       });
       await p.mouse.click(slider[0], slider[1]);
@@ -124,8 +124,8 @@ export function tourTests({
       await host('Power', -3, 4);
       steps.push(await until(8));
       const last = await p.evaluate(() => {
-        const t = (window as any).__bd_probe.scene.Tutorial;
-        return t.Text.Scenes[t.CurrentScene - 1].Intro;
+        const tutorial = (window as any).__bd_probe.scene.Tutorial;
+        return tutorial.Text.Scenes[tutorial.CurrentScene - 1].Intro;
       });
       await p.screenshot({ path: `${OUT}/tour-last.png` });
       const kept = await p.evaluate(() => localStorage.getItem('bd.skipTour'));
@@ -141,7 +141,7 @@ export function tourTests({
       await p.waitForTimeout(1800);
       const again = await tut();
       await ctx.close();
-      void chop;
+      chop;
       const pass =
         asked.splash &&
         !asked.open &&

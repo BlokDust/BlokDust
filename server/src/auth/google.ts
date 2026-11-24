@@ -61,7 +61,7 @@ export async function googleCallback(env: Env, req: Request, url: URL): Promise<
       code,
       verifier,
     );
-    claims = decodeIdToken(tokens.idToken()) as typeof claims;
+    claims = decodeIdToken(tokens.idToken());
   } catch {
     throw new HttpError(401, 'Google did not confirm the sign-in');
   }

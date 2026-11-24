@@ -23,21 +23,21 @@ export function sineWav(freq: number, seconds = 1.5, rate = 44100): Buffer {
       Math.round(Math.sin((2 * Math.PI * freq * i) / rate) * Math.exp((-2 * i) / n) * 0.6 * 32767),
       i * 2,
     );
-  const h = Buffer.alloc(44);
-  h.write('RIFF', 0);
-  h.writeUInt32LE(36 + data.length, 4);
-  h.write('WAVE', 8);
-  h.write('fmt ', 12);
-  h.writeUInt32LE(16, 16);
-  h.writeUInt16LE(1, 20);
-  h.writeUInt16LE(1, 22);
-  h.writeUInt32LE(rate, 24);
-  h.writeUInt32LE(rate * 2, 28);
-  h.writeUInt16LE(2, 32);
-  h.writeUInt16LE(16, 34);
-  h.write('data', 36);
-  h.writeUInt32LE(data.length, 40);
-  return Buffer.concat([h, data]);
+  const bytes = Buffer.alloc(44);
+  bytes.write('RIFF', 0);
+  bytes.writeUInt32LE(36 + data.length, 4);
+  bytes.write('WAVE', 8);
+  bytes.write('fmt ', 12);
+  bytes.writeUInt32LE(16, 16);
+  bytes.writeUInt16LE(1, 20);
+  bytes.writeUInt16LE(1, 22);
+  bytes.writeUInt32LE(rate, 24);
+  bytes.writeUInt32LE(rate * 2, 28);
+  bytes.writeUInt16LE(2, 32);
+  bytes.writeUInt16LE(16, 34);
+  bytes.write('data', 36);
+  bytes.writeUInt32LE(data.length, 40);
+  return Buffer.concat([bytes, data]);
 }
 
 export interface MockServices {
@@ -118,9 +118,9 @@ export async function startMockServices(): Promise<MockServices> {
       let body = '';
       req.on('data', (c) => (body += c));
       req.on('end', () => {
-        const f = new URLSearchParams(body),
-          code = f.get('code') ?? '';
-        if (code.endsWith('-bad') || !f.get('code_verifier'))
+        const uRLSearchParams = new URLSearchParams(body),
+          code = uRLSearchParams.get('code') ?? '';
+        if (code.endsWith('-bad') || !uRLSearchParams.get('code_verifier'))
           return send(400, { error: 'invalid_grant' });
         const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url');
         const id = `${b64({ alg: 'RS256' })}.${b64({ iss: 'https://accounts.google.com', aud: 'test-google-client', sub: `google-sub-${code}`, exp: Math.floor(Date.now() / 1000) + 600 })}.sig`;
@@ -148,11 +148,11 @@ export async function startMockServices(): Promise<MockServices> {
       req.on('end', () => {
         // The website's Services ID or the iPad app's id (SHARING-0011): the client secret is about whichever asks.
         // An app's code carries the nonce Apple would have put in its token: "<user>~<nonce>".
-        const f = new URLSearchParams(body),
-          client = f.get('client_id') ?? '',
-          [user, nonce] = (f.get('code') ?? '').split('~'),
+        const uRLSearchParams = new URLSearchParams(body),
+          client = uRLSearchParams.get('client_id') ?? '',
+          [user, nonce] = (uRLSearchParams.get('code') ?? '').split('~'),
           code = user,
-          [h, p, sig] = (f.get('client_secret') ?? '').split('.');
+          [h, p, sig] = (uRLSearchParams.get('client_secret') ?? '').split('.');
         let ok = false;
         try {
           const claims = JSON.parse(Buffer.from(p, 'base64url').toString()),
@@ -192,12 +192,12 @@ export async function startMockServices(): Promise<MockServices> {
       const results = q.includes('nothing') ? [] : MOCK_SOUNDS.map(sound);
       return send(200, { count: results.length, results });
     }
-    const one = u.pathname.match(/^\/apiv2\/sounds\/(\d+)\/$/);
+    const one = /^\/apiv2\/sounds\/(\d+)\/$/.exec(u.pathname);
     if (one) {
       const s = MOCK_SOUNDS.find((x) => x.id === Number(one[1]));
       return s ? send(200, sound(s)) : send(404, { detail: 'Not found' });
     }
-    const prev = u.pathname.match(/^\/previews\/(\d+)\.wav$/);
+    const prev = /^\/previews\/(\d+)\.wav$/.exec(u.pathname);
     if (prev) {
       const s = MOCK_SOUNDS.find((x) => x.id === Number(prev[1]));
       return s ? send(200, sineWav(s.freq), 'audio/wav') : send(404, '');
@@ -211,7 +211,7 @@ export async function startMockServices(): Promise<MockServices> {
       );
     send(404, { detail: 'Not found' });
   });
-  await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
   return {
     url: base,

@@ -4,7 +4,8 @@
 // show (a level meter, …), which read the engine's monitors.
 import { flatLayers } from '../render/flatLayers.ts';
 import { BLOCKS, BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
-import { App, PLUGIN_LABELS, Point } from './shim.ts';
+import type { Point } from './shim.ts';
+import { App, PLUGIN_LABELS } from './shim.ts';
 import { addSelector, isSelector } from './selectorOption.ts';
 import { touchpadForm } from './touchpadPanel.ts';
 import { noteName, rangeOf } from './noteBars.ts';
@@ -20,9 +21,9 @@ const MENU: Record<string, string[]> = {
 const NEW_DEFS: BlockDef[] = Object.values(MENU)
   .flat()
   .map((id) => BLOCKS_BY_ID.get(id))
-  .filter((d): d is BlockDef => !!d);
-const BY_NAME = new Map(NEW_DEFS.map((d) => [d.name.toLowerCase(), d]));
-const BY_MENU_ID = new Map(BLOCKS.map((d) => [d.menuId, d]));
+  .filter((definition): definition is BlockDef => !!definition);
+const BY_NAME = new Map(NEW_DEFS.map((definition) => [definition.name.toLowerCase(), definition]));
+const BY_MENU_ID = new Map(BLOCKS.map((definition) => [definition.menuId, definition]));
 
 /** Menu order by menu id (owner, 2026-11-17, CHG-0035). Ids not on this branch (Gate) are simply skipped. */
 export const MENU_ORDER: Record<string, string[]> = {
@@ -58,11 +59,7 @@ export const LABEL_MENU_ID = 'Label';
 
 /** Add the new blocks to v1's menu JSON (once, before the header is populated). */
 export function installNewBlockMenu(): void {
-  for (const cat of (
-    App.BlockCreator.MenuJson as {
-      categories: { name: string; items: { name: string; id: string; description: string }[] }[];
-    }
-  ).categories) {
+  for (const cat of App.BlockCreator.MenuJson.categories) {
     for (const id of MENU[cat.name] ?? []) {
       const def = BLOCKS_BY_ID.get(id);
       if (def && !cat.items.some((i) => i.id === def.menuId))
@@ -98,12 +95,8 @@ let fullMenu: Map<string, { name: string; id: string; description: string }[]> |
 /** Menu ids offered only inside a Stage block. */
 export const ONLY_INSIDE = new Set(['StageIn']);
 export function setMenuHidden(hidden: Set<string>): void {
-  const cats = (
-    App.BlockCreator.MenuJson as {
-      categories: { name: string; items: { name: string; id: string; description: string }[] }[];
-    }
-  ).categories;
-  fullMenu ??= new Map(cats.map((c) => [c.name, c.items.slice()]));
+  const cats = App.BlockCreator.MenuJson.categories;
+  fullMenu ??= new Map(cats.map((cat) => [cat.name, cat.items.slice()]));
   for (const c of cats)
     c.items.splice(
       0,
@@ -116,9 +109,9 @@ export function setMenuHidden(hidden: Set<string>): void {
 export function drawNewSprite(ctx: CanvasRenderingContext2D, pos: Point, name: string): boolean {
   if (name === 'label') {
     // a dot and a line of text, as it looks on the stage
-    const u = App.Unit,
-      d = 3 * u,
-      x = pos.x - 16 * u,
+    const unit = App.Unit,
+      d = 3 * unit,
+      x = pos.x - 16 * unit,
       y = pos.y + App.GridSize * 0.5;
     App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
     ctx.beginPath();
@@ -129,10 +122,10 @@ export function drawNewSprite(ctx: CanvasRenderingContext2D, pos: Point, name: s
     ctx.closePath();
     ctx.fill();
     ctx.save();
-    ctx.font = `400 ${Math.round(12 * u)}px Dosis`;
+    ctx.font = `400 ${Math.round(12 * unit)}px Dosis`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText('ABC', x + 8 * u, y);
+    ctx.fillText('ABC', x + 8 * unit, y);
     ctx.restore();
     return true;
   }
@@ -142,16 +135,16 @@ export function drawNewSprite(ctx: CanvasRenderingContext2D, pos: Point, name: s
     [ox, oy] = def.geometry.menuOffset ?? [0, 0];
   // Grid layers flattened as on the stage (render/flatLayers.ts: no hairline of a hidden face at the outer edge).
   const flat = flatLayers(def.geometry.layers, def.geometry.unitsPerGrid ?? 15);
-  def.geometry.layers.forEach((l, k) => {
+  def.geometry.layers.forEach((layer, k) => {
     // Pixel layers (the stars: Gate, as v1's Void in its menu) are in v1 units, as v1 BlockSprites.DrawPixel unscaled.
     // The Void's random star has no place in the menu (v1 put it at a fixed one), so anchored layers are left out.
-    if (l.units === 'unit' && l.anchor) return;
+    if (layer.units === 'unit' && layer.anchor) return;
     const at = (x: number, y: number): [number, number] =>
-      l.units === 'unit'
+      layer.units === 'unit'
         ? [pos.x + ox * grd + x * App.Unit, pos.y + oy * grd + y * App.Unit]
         : [pos.x + (ox + x) * grd, pos.y + (oy + y) * grd];
     ctx.beginPath();
-    for (const pts of l.units === 'unit' ? [l.points] : flat[k].paths) {
+    for (const pts of layer.units === 'unit' ? [layer.points] : flat[k].paths) {
       pts.forEach(([x, y], i) => {
         const [px, py] = at(x, y);
         if (i) ctx.lineTo(px, py);
@@ -159,7 +152,7 @@ export function drawNewSprite(ctx: CanvasRenderingContext2D, pos: Point, name: s
       });
       ctx.closePath();
     }
-    App.FillColor(ctx, App.Palette[l.palette]);
+    App.FillColor(ctx, App.Palette[layer.palette]);
     ctx.fill();
   });
   return true;
@@ -205,7 +198,7 @@ const slider = (
   value: number,
   min: number,
   max: number,
-  o: SliderOpts = {},
+  sliderOpts: SliderOpts = {},
 ) => ({
   type: 'slider',
   name,
@@ -214,10 +207,10 @@ const slider = (
     value,
     min,
     max,
-    quantised: !!o.quantised,
-    centered: !!o.centered,
-    ...(o.log ? { logarithmic: true } : {}),
-    ...(o.display ? { convertDisplay: o.display } : {}),
+    quantised: !!sliderOpts.quantised,
+    centered: !!sliderOpts.centered,
+    ...(sliderOpts.log ? { logarithmic: true } : {}),
+    ...(sliderOpts.display ? { convertDisplay: sliderOpts.display } : {}),
   },
 });
 /** A carousel row (selectorOption.ts): arrows either side of the choice, wrapping round. */
@@ -268,8 +261,8 @@ const LFO_STEPS = [
 ];
 const nearestOf = (steps: { beats: number }[], beats: number) => {
   let best = 0;
-  steps.forEach((s, i) => {
-    if (Math.abs(s.beats - beats) < Math.abs(steps[best].beats - beats)) best = i;
+  steps.forEach((step, i) => {
+    if (Math.abs(step.beats - beats) < Math.abs(steps[best].beats - beats)) best = i;
   });
   return best;
 };
@@ -394,7 +387,9 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
   'fx.lfo': (b) => {
     const list = lfoTargets(b),
       now = App.MainScene?.host?.targetOf?.(b.Id) ?? null;
-    let at = now ? list.findIndex((t) => t.id === now.id && t.param === now.param) : -1;
+    let at = now
+      ? list.findIndex((lfoTarget) => lfoTarget.id === now.id && lfoTarget.param === now.param)
+      : -1;
     if (now && at < 0) {
       // set, but its block is out of reach: kept, idle (AUDIO-0003)
       const far = (App.Blocks as any[]).find((x) => x.Id === now.id);
@@ -407,7 +402,7 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
     }
     (b as any).LfoTargets = list;
     return [
-      choice('Target', 'lfoTarget', at + 1, ['NONE', ...list.map((t) => t.label)]),
+      choice('Target', 'lfoTarget', at + 1, ['NONE', ...list.map((lfoTarget) => lfoTarget.label)]),
       {
         type: 'buttons',
         name: 'Shape',
@@ -622,7 +617,7 @@ function modulatable(block: any): { param: string; label: string }[] {
 function lfoTargets(b: FormBlock): LfoTarget[] {
   const host = App.MainScene?.host,
     out: LfoTarget[] = [];
-  for (const id of (host?.connectedIds?.(b.Id) ?? []) as number[]) {
+  for (const id of host?.connectedIds?.(b.Id) ?? []) {
     const block = (App.Blocks as any[]).find((x) => x.Id === id);
     if (!block) continue;
     for (const m of modulatable(block))
@@ -632,8 +627,11 @@ function lfoTargets(b: FormBlock): LfoTarget[] {
 }
 /** The LFO's Target carousel moved to entry `index` (0 = none). */
 export function setLfoTarget(b: any, index: number): void {
-  const t = ((b.LfoTargets ?? []) as LfoTarget[])[Math.round(index) - 1];
-  App.MainScene.host.setTarget(b.Id, t ? { id: t.id, param: t.param } : null);
+  const lfoTarget = ((b.LfoTargets ?? []) as LfoTarget[])[Math.round(index) - 1];
+  App.MainScene.host.setTarget(
+    b.Id,
+    lfoTarget ? { id: lfoTarget.id, param: lfoTarget.param } : null,
+  );
 }
 /**
  * While an LFO moves a param of the block whose panel is open, that param's slider follows it (the engine's monitors:
@@ -645,17 +643,20 @@ export function followLfos(panel: any): boolean {
   const block = panel.SelectedBlock;
   let any = false;
   if (block && panel.Scale === 1) {
-    for (const [id, m] of monitors) {
-      if (m[0] !== block.Id || (App.Blocks as any[]).find((x) => x.Id === id)?.def?.id !== 'fx.lfo')
+    for (const [id, value] of monitors) {
+      if (
+        value[0] !== block.Id ||
+        (App.Blocks as any[]).find((x) => x.Id === id)?.def?.id !== 'fx.lfo'
+      )
         continue;
-      const p = block.def.params[Math.round(m[1])];
+      const p = block.def.params[Math.round(value[1])];
       if (!p) continue;
       for (const o of (panel.Options ?? []) as any[]) {
         if (o.Type !== 'slider' || o.Selected || (CONVERT[o.Setting]?.param ?? o.Setting) !== p.key)
           continue;
         const conv = CONVERT[o.Setting],
           t = p.ui;
-        let ui = m[2];
+        let ui = value[2];
         if (conv) {
           if (!conv.from) continue;
           ui = conv.from(ui);

@@ -11,10 +11,10 @@ const root = resolve(here, '..', '..');
 const readJson = (p: string) => JSON.parse(readFileSync(p, 'utf8'));
 
 const palettes = readJson(join(root, 'blocks', 'v1-palettes.json'));
-const themes = palettes.themes.map((t: any) => ({
-  name: t.name,
-  colors: t.colors,
-  txt: t.roles.txt,
+const themes = palettes.themes.map((theme: any) => ({
+  name: theme.name,
+  colors: theme.colors,
+  txt: theme.roles.txt,
 }));
 
 const blocks: any[] = [];
@@ -59,9 +59,9 @@ if (process.argv[2] === 'scaffold') {
     console.error(`exists: ${out}`);
     process.exit(1);
   }
-  const pts = design.geometry.layers.flatMap((l: any) => l.points);
+  const pts = design.geometry.layers.flatMap((layer: any) => layer.points);
   const mid = (i: number) => {
-    const v = pts.map((p: number[]) => p[i]);
+    const v = pts.map((pt: number[]) => pt[i]);
     return (Math.min(...v) + Math.max(...v)) / 2;
   };
   const half = (v: number) => Math.round(v * 2) / 2 || 0;

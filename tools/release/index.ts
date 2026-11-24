@@ -43,7 +43,7 @@ function check() {
     if (side !== sha) problems.push(`${f.file}: .sha256 doesn't match the file`);
     return { ...f, path, sha, bytes: statSync(path).size };
   });
-  const pkg = files.find((f) => f.os === 'macos')!;
+  const pkg = files.find((file) => file.os === 'macos')!;
   if (
     existsSync(pkg.path) &&
     spawnSync('xcrun', ['stapler', 'validate', pkg.path], { encoding: 'utf8' }).status !== 0
@@ -62,15 +62,15 @@ async function publish(dryRun: boolean) {
   // exactly these bytes is done (an interrupted publish resumes); different bytes are refused.
   const done = new Set<string>();
   for (const f of files) {
-    const r = await fetch(`${BASE_URL}/${key(f.file)}?source=release-check`);
-    if (r.status === 404) continue;
-    const same = r.ok && sha256(Buffer.from(await r.arrayBuffer())) === f.sha;
+    const response = await fetch(`${BASE_URL}/${key(f.file)}?source=release-check`);
+    if (response.status === 404) continue;
+    const same = response.ok && sha256(Buffer.from(await response.arrayBuffer())) === f.sha;
     if (!same) {
       console.log(
         JSON.stringify({
           version: VERSION,
           problems: [
-            `${key(f.file)} already exists (HTTP ${r.status}) with other bytes: bump the version`,
+            `${key(f.file)} already exists (HTTP ${response.status}) with other bytes: bump the version`,
           ],
         }),
       );
@@ -94,7 +94,7 @@ async function publish(dryRun: boolean) {
       [f.path, f.file, f.type],
       [`${f.path}.sha256`, `${f.file}.sha256`, 'text/plain'],
     ]) {
-      const r = spawnSync(
+      const result = spawnSync(
         WRANGLER,
         [
           'r2',
@@ -109,15 +109,15 @@ async function publish(dryRun: boolean) {
         ],
         { encoding: 'utf8', cwd: process.cwd() },
       );
-      if (r.status !== 0) throw new Error(`upload ${name}: ${r.stderr}`);
+      if (result.status !== 0) throw new Error(`upload ${name}: ${result.stderr}`);
     }
   // What people will download is what was built.
   // A just-uploaded file can briefly answer 404 from the CDN: retry for up to a minute.
   for (const p of plan) {
     let ok = false;
     for (let i = 0; i < 12 && !ok; i++) {
-      const r = await fetch(`${p.url}?source=release-check&try=${i}`);
-      ok = r.ok && sha256(Buffer.from(await r.arrayBuffer())) === p.sha256;
+      const response = await fetch(`${p.url}?source=release-check&try=${i}`);
+      ok = response.ok && sha256(Buffer.from(await response.arrayBuffer())) === p.sha256;
       if (!ok) await new Promise((res) => setTimeout(res, 5000));
     }
     if (!ok) throw new Error(`${p.url} does not serve the built bytes`);

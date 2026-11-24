@@ -23,7 +23,7 @@ def(Array.prototype, 'remove', function (this: unknown[], item: unknown) {
   if (i > -1) this.splice(i, 1);
 });
 def(Array.prototype, 'contains', function (this: unknown[], v: unknown) {
-  return this.indexOf(v) !== -1;
+  return this.includes(v);
 });
 def(Array.prototype, 'last', function (this: unknown[]) {
   return this[this.length - 1];
@@ -101,7 +101,9 @@ export const Utils = {
       let t: any;
       return (...a: any[]) => {
         clearTimeout(t);
-        t = setTimeout(() => fn(...a), ms);
+        t = setTimeout(() => {
+          fn(...a);
+        }, ms);
       };
     },
   },
@@ -252,8 +254,8 @@ export const TWEEN = {
     for (const tw of [...tweens]) if (!tw.update(t)) tweens.delete(tw);
     return tweens.size > 0;
   },
-  remove(t: Tween) {
-    tweens.delete(t);
+  remove(tween: Tween) {
+    tweens.delete(tween);
   },
   removeAll() {
     tweens.clear();
@@ -270,15 +272,15 @@ export const TWEEN = {
 
 // ---- nullstone.Event (v1's event type; Splash raises AnimationFinished with it) ----
 export class NullstoneEvent<T> {
-  private handlers: { f: (s: unknown, e: T) => void; ctx: unknown }[] = [];
-  on(f: (s: unknown, e: T) => void, ctx?: unknown) {
+  private handlers: { f: (s: unknown, nonNullable: T) => void; ctx: unknown }[] = [];
+  on(f: (s: unknown, nonNullable: T) => void, ctx?: unknown) {
     this.handlers.push({ f, ctx });
   }
-  off(f: (s: unknown, e: T) => void) {
-    this.handlers = this.handlers.filter((h) => h.f !== f);
+  off(f: (s: unknown, nonNullable: T) => void) {
+    this.handlers = this.handlers.filter((handler) => handler.f !== f);
   }
-  raise(sender: unknown, e: T) {
-    for (const h of [...this.handlers]) h.f.call(h.ctx, sender, e);
+  raise(sender: unknown, nonNullable: T) {
+    for (const h of [...this.handlers]) h.f.call(h.ctx, sender, nonNullable);
   }
 }
 (window as any).nullstone = { Event: NullstoneEvent };
@@ -445,11 +447,11 @@ export function applyHostLabels(isPlugin: boolean): void {
       }
     }
   for (const cat of Object.values(App.L10n.Blocks as Record<string, any>))
-    for (const [k, v] of Object.entries(cat?.Blocks ?? {}) as [string, any][]) {
+    for (const [k, value] of Object.entries(cat?.Blocks ?? {}) as [string, any][]) {
       const l = PLUGIN_LABELS[k];
       if (l) {
-        v.name = l.name;
-        v.description = l.description;
+        value.name = l.name;
+        value.description = l.description;
       }
     }
 }

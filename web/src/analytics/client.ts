@@ -14,9 +14,9 @@ const OPT_OUT_KEY = 'blokdust2.analytics';
 /** The user's choice (R7): what they chose here; otherwise off when their browser asks sites not to track (GPC). */
 export function analyticsAllowed(): boolean {
   try {
-    const v = localStorage.getItem(OPT_OUT_KEY);
-    if (v === 'off') return false;
-    if (v === 'on') return true;
+    const item = localStorage.getItem(OPT_OUT_KEY);
+    if (item === 'off') return false;
+    if (item === 'on') return true;
   } catch {
     /* storage blocked: default */
   }
@@ -47,31 +47,38 @@ class Client {
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') this.flush(true);
     });
-    addEventListener('pagehide', () => this.flush(true));
+    addEventListener('pagehide', () => {
+      this.flush(true);
+    });
   }
   track(e: EventName, s?: Record<string, string>, n?: Record<string, number>): void {
     if (this.stopped || !(e in EVENTS)) return;
     this.queue.push({ e, ...(s ? { s } : {}), ...(n ? { n } : {}) });
     if (this.queue.length >= 20) this.flush(false);
-    else this.timer ??= setTimeout(() => this.flush(false), 60_000);
+    else
+      this.timer ??= setTimeout(() => {
+        this.flush(false);
+      }, 60_000);
   }
   /** Counted per key and sent as one event per key on flush (block_added by type): R2's low volume. */
   count(e: EventName, key: string, by = 1): void {
     if (this.stopped) return;
     const k = `${e}\u0000${key}`;
     this.counts.set(k, (this.counts.get(k) ?? 0) + by);
-    this.timer ??= setTimeout(() => this.flush(false), 60_000);
+    this.timer ??= setTimeout(() => {
+      this.flush(false);
+    }, 60_000);
   }
   flush(leaving: boolean): void {
     clearTimeout(this.timer);
     this.timer = undefined;
     if (this.stopped) return;
-    for (const [k, n] of this.counts) {
+    for (const [k, value] of this.counts) {
       const [e, key] = k.split('\u0000') as [EventName, string];
       const prop = Object.keys(
         EVENTS[e] && 'strings' in EVENTS[e] ? (EVENTS[e] as { strings: object }).strings : {},
       )[0];
-      if (prop) this.queue.push({ e, s: { [prop]: key }, n: { count: n } });
+      if (prop) this.queue.push({ e, s: { [prop]: key }, n: { count: value } });
     }
     this.counts.clear();
     while (this.queue.length) {

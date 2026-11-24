@@ -28,8 +28,10 @@ async function diff(
   const { PNG } = await import('pngjs');
   const pixelmatch = (await import('pixelmatch')).default;
   const refs = JSON.parse(readFileSync(join(REF, 'manifest.json'), 'utf8')).results.filter(
-    (r: any) =>
-      r.blocks > 0 && dprs.includes(r.dpr) && (!only || only.some((o) => r.name.includes(o))),
+    (result: any) =>
+      result.blocks > 0 &&
+      dprs.includes(result.dpr) &&
+      (!only || only.some((o) => result.name.includes(o))),
   );
   mkdirSync(OUT, { recursive: true });
   const results: any[] = [];
@@ -59,20 +61,20 @@ async function diff(
     const w = x1 - x0,
       h = y1 - y0;
     const crop = (img: any) => {
-      const o = Buffer.alloc(w * h * 4);
+      const bytes = Buffer.alloc(w * h * 4);
       for (let y = 0; y < h; y++)
         img.data.copy(
-          o,
+          bytes,
           y * w * 4,
           ((y0 + y) * img.width + x0) * 4,
           ((y0 + y) * img.width + x1) * 4,
         );
-      return o;
+      return bytes;
     };
     const a = crop(shot),
       b = crop(ref);
-    const d = new PNG({ width: w, height: h });
-    const diffPx = pixelmatch(a, b, d.data, w, h, {
+    const pNG = new PNG({ width: w, height: h });
+    const diffPx = pixelmatch(a, b, pNG.data, w, h, {
       threshold: t.pixelThreshold,
       includeAA: !t.antialiasAware,
     });
@@ -93,7 +95,7 @@ async function diff(
       pass = ratio <= t.maxDiffPixelRatio && errors.length === 0;
     if (!pass || saveAll) {
       writeFileSync(join(OUT, `${r.name}.${renderer}.v2.png`), PNG.sync.write(shot));
-      writeFileSync(join(OUT, `${r.name}.${renderer}.diff.png`), PNG.sync.write(d));
+      writeFileSync(join(OUT, `${r.name}.${renderer}.diff.png`), PNG.sync.write(pNG));
     }
     results.push({
       name: r.name,
@@ -111,10 +113,10 @@ async function diff(
 const summarize = (renderer: string, results: any[]) => ({
   renderer,
   checked: results.length,
-  passed: results.filter((r) => r.pass).length,
-  identical: results.filter((r) => r.exactRatio === 0).length,
+  passed: results.filter((result) => result.pass).length,
+  identical: results.filter((result) => result.exactRatio === 0).length,
   meanRatio: +(results.reduce((s, r) => s + r.ratio, 0) / Math.max(1, results.length)).toFixed(5),
-  maxDelta: Math.max(0, ...results.map((r) => r.maxDelta)),
+  maxDelta: Math.max(0, ...results.map((result) => result.maxDelta)),
   worst: results.slice().sort((a, b) => b.ratio - a.ratio || b.maxDelta - a.maxDelta)[0] ?? null,
 });
 
@@ -140,7 +142,7 @@ try {
         `fail: ${r.name} ratio=${r.ratio} exact=${r.exactRatio}${r.errors.length ? ' errors=' + r.errors.join(';') : ''}`,
       );
     console.log(JSON.stringify(summarize(renderer, results)));
-    failed = results.some((r) => !r.pass);
+    failed = results.some((result) => !result.pass);
   } else if (cmd === 'bakeoff') {
     const rows: any[] = [];
     for (const renderer of ['baked', 'canvas', 'msaa', 'ss2']) {
@@ -163,8 +165,8 @@ try {
       `| Renderer | Pass | Pixel-identical | Mean diff | Max channel Δ | Worst | Median frame | p95 frame |\n|---|---|---|---|---|---|---|---|\n` +
       rows
         .map(
-          (r) =>
-            `| ${r.renderer} | ${r.passed}/${r.checked} | ${r.identical}/${r.checked} | ${(r.meanRatio * 100).toFixed(3)}% | ${r.maxDelta} | ${r.worst ? `${(r.worst.ratio * 100).toFixed(2)}% (${r.worst.name})` : '-'} | ${r.medianMs} ms | ${r.p95Ms} ms |`,
+          (row) =>
+            `| ${row.renderer} | ${row.passed}/${row.checked} | ${row.identical}/${row.checked} | ${(row.meanRatio * 100).toFixed(3)}% | ${row.maxDelta} | ${row.worst ? `${(row.worst.ratio * 100).toFixed(2)}% (${row.worst.name})` : '-'} | ${row.medianMs} ms | ${row.p95Ms} ms |`,
         )
         .join('\n') +
       '\n';

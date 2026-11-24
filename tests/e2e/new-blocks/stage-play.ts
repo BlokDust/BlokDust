@@ -17,7 +17,7 @@ export const stagePlayTests: Tests = {
           ],
         },
       ],
-    } as any);
+    });
     await p.evaluate((i) => (window as any).__bd_stage.enter(i), await idOf(p, 's'));
     await p.waitForTimeout(500);
     const win = (await p.evaluate(() => (window as any).__bd_probe.inside)) as {
@@ -36,7 +36,7 @@ export const stagePlayTests: Tests = {
       macros: [
         { block: 's', view: { x: 30, y: 0, zoom: 1 }, blocks: [blk('t', 'source.tone', -2, 0)] },
       ],
-    } as any);
+    });
     await p2.evaluate((i) => (window as any).__bd_stage.enter(i), await idOf(p2, 's'));
     await p2.waitForTimeout(500);
     const kept = await p2.evaluate(() => {
@@ -48,8 +48,8 @@ export const stagePlayTests: Tests = {
     const visible =
       pts.length === 3 &&
       pts.every(([x, y]) => x > win.x && x < win.x + win.w && y > win.y && y < win.y + win.h);
-    const xs = pts.map((q) => q[0]),
-      ys = pts.map((q) => q[1]);
+    const xs = pts.map((pt) => pt[0]),
+      ys = pts.map((pt) => pt[1]);
     const centred =
       Math.abs((Math.min(...xs) + Math.max(...xs)) / 2 - (win.x + win.w / 2)) < 2 &&
       Math.abs((Math.min(...ys) + Math.max(...ys)) / 2 - (win.y + win.h / 2)) < 2;
@@ -66,7 +66,7 @@ export const stagePlayTests: Tests = {
           blocks: [blk('t', 'source.tone', 0, 0), blk('k', 'input.computer-keyboard', 3, 0)],
         },
       ],
-    } as any);
+    });
     const quiet1 = (await state(p1)).rms < 0.0005;
     await p1.keyboard.down('KeyQ');
     await p1.waitForTimeout(500);
@@ -84,7 +84,7 @@ export const stagePlayTests: Tests = {
             blocks: [blk('t', 'source.tone', 0, 0), blk('in', 'input.stage-in', 3, 0)],
           },
         ],
-      } as any,
+      },
     );
     const quiet2 = (await state(p2)).rms < 0.0005;
     await p2.keyboard.down('KeyE');
@@ -140,16 +140,16 @@ export const stagePlayTests: Tests = {
     });
     await openPanel(p, 'st');
     const row = await p.evaluate(() => {
-      const o = (window as any).__bd_probe.scene.OptionsPanel,
+      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
         pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio;
-      const r = (o.Options as any[]).find((x) => x.Setting === 'openStage');
+      const r = (optionsPanel.Options as any[]).find((x) => x.Setting === 'openStage');
       if (!r) return null;
-      const y = (o.Position.y + r.Position.y + r.Size.height / 2) / pr;
+      const y = (optionsPanel.Position.y + r.Position.y + r.Size.height / 2) / pr;
       return {
-        rows: (o.Options as any[]).map((x) => x.Type),
+        rows: (optionsPanel.Options as any[]).map((x) => x.Type),
         type: r.Type,
         text: r._Text,
-        at: [(o.Position.x + o.Margin + o.Range * 0.5) / pr, y],
+        at: [(optionsPanel.Position.x + optionsPanel.Margin + optionsPanel.Range * 0.5) / pr, y],
       };
     });
     if (!row) {
@@ -189,14 +189,12 @@ export const stagePlayTests: Tests = {
         blk('s', 'source.stage', 4, 0),
       ],
     };
-    await p.evaluate(
-      (m) =>
-        localStorage.setItem(
-          'blokdust.myPatches',
-          JSON.stringify([{ title: 'Two Blocks', saved: Date.UTC(2026, 10, 1), patch: m }]),
-        ),
-      mine,
-    );
+    await p.evaluate((m) => {
+      localStorage.setItem(
+        'blokdust.myPatches',
+        JSON.stringify([{ title: 'Two Blocks', saved: Date.UTC(2026, 10, 1), patch: m }]),
+      );
+    }, mine);
     await p.evaluate((i) => (window as any).__bd_stage.enter(i), await idOf(p, 'st'));
     await p.waitForTimeout(800);
     const click = async (name: string, wait = 800) => {

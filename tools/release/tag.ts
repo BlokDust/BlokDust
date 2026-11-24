@@ -9,8 +9,12 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 
 const sh = (cmd: string, args: string[]) => {
-  const r = spawnSync(cmd, args, { encoding: 'utf8' });
-  return { ok: r.status === 0, out: (r.stdout ?? '').trim(), err: (r.stderr ?? '').trim() };
+  const result = spawnSync(cmd, args, { encoding: 'utf8' });
+  return {
+    ok: result.status === 0,
+    out: (result.stdout ?? '').trim(),
+    err: (result.stderr ?? '').trim(),
+  };
 };
 const git = (...args: string[]) => sh('git', args);
 const versionOf = (file: string) =>

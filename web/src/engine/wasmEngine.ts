@@ -245,34 +245,34 @@ export class WasmEngine {
     return ok;
   }
 
-  push(c: Command): boolean {
+  push(command: Command): boolean {
     // A Stage block's inner world (CHG-0021) is made and attached the first time a command names it.
-    if (c.stage)
+    if (command.stage)
       return (
         this.x.bd_push_stage(
           this.h,
-          c.stage,
-          c.type,
-          c.id,
-          c.blockType ?? 0,
-          c.x ?? 0,
-          c.y ?? 0,
-          c.param ?? 0,
-          c.value ?? 0,
-          c.atSample ?? -1,
+          command.stage,
+          command.type,
+          command.id,
+          command.blockType ?? 0,
+          command.x ?? 0,
+          command.y ?? 0,
+          command.param ?? 0,
+          command.value ?? 0,
+          command.atSample ?? -1,
         ) === 1
       );
     return (
       this.x.bd_push(
         this.h,
-        c.type,
-        c.id,
-        c.blockType ?? 0,
-        c.x ?? 0,
-        c.y ?? 0,
-        c.param ?? 0,
-        c.value ?? 0,
-        c.atSample ?? -1,
+        command.type,
+        command.id,
+        command.blockType ?? 0,
+        command.x ?? 0,
+        command.y ?? 0,
+        command.param ?? 0,
+        command.value ?? 0,
+        command.atSample ?? -1,
       ) === 1
     );
   }
@@ -391,10 +391,16 @@ export function hashStereo(hl: bigint, hr: bigint): bigint {
 }
 export function hashEvents(events: EngineEvent[], h = FNV_OFFSET): bigint {
   const buf = new DataView(new ArrayBuffer(40));
-  for (const e of events) {
-    [e.sample, e.tick, e.type, e.block, e.other].forEach((v, k) =>
-      buf.setBigInt64(k * 8, BigInt(v), true),
-    );
+  for (const engineEvent of events) {
+    [
+      engineEvent.sample,
+      engineEvent.tick,
+      engineEvent.type,
+      engineEvent.block,
+      engineEvent.other,
+    ].forEach((v, k) => {
+      buf.setBigInt64(k * 8, BigInt(v), true);
+    });
     h = fnv1a(new Uint8Array(buf.buffer), h);
   }
   return h;

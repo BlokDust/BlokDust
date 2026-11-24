@@ -252,11 +252,11 @@ export class Stage {
   }
 
   /** Particles packed [x, y, size]* in grid units. */
-  setParticles(p: Float32Array): void {
+  setParticles(samples: Float32Array): void {
     if (this.renderer === 'canvas') {
       // drawn with the static layer (v1 order: …, LaserBeams, Particles, ToolTip, …)
-      if (p.length || this.particleData.length) this.linesDirty = true;
-      this.particleData = p;
+      if (samples.length || this.particleData.length) this.linesDirty = true;
+      this.particleData = samples;
       return;
     }
     const g = this.particles,
@@ -264,9 +264,9 @@ export class Stage {
       d = m.dpr;
     g.clear();
     const color = this.theme.colors[this.theme.roles.power];
-    for (let i = 0; i < p.length; i += 3) {
-      const [px, py] = gridToPx(m, p[i], p[i + 1]);
-      const s = p[i + 2] * m.scaledUnit;
+    for (let i = 0; i < samples.length; i += 3) {
+      const [px, py] = gridToPx(m, samples[i], samples[i + 1]);
+      const s = samples[i + 2] * m.scaledUnit;
       g.poly([
         (px - s) / d,
         py / d,
@@ -278,7 +278,7 @@ export class Stage {
         (py + s) / d,
       ]);
     }
-    if (p.length) g.fill(color);
+    if (samples.length) g.fill(color);
   }
 
   /** Force the static layer to redraw (e.g. after fonts load or the canvas is first shown). */
@@ -449,34 +449,36 @@ export class Stage {
     const key = `${this.renderer}|${this.theme.index}|${m.scaledGridSize}|${ox}|${oy}`;
     if (key === b.key) return;
     b.key = key;
-    const g = new Graphics();
+    const graphics = new Graphics();
     const upg = b.def.geometry.unitsPerGrid ?? 15;
     const ss = this.renderer === 'ss2' ? 2 : 1;
-    for (const l of b.def.geometry.layers) {
-      const pts = layerPoints(l, upg, b.block.starPos).flatMap(([x, y]) => [
+    for (const geometryLayer of b.def.geometry.layers) {
+      const pts = layerPoints(geometryLayer, upg, b.block.starPos).flatMap(([x, y]) => [
         ((ox + x * m.scaledGridSize) / d) * ss,
         ((oy + y * m.scaledGridSize) / d) * ss,
       ]);
-      g.poly(pts).fill(this.theme.colors[l.palette]);
+      graphics.poly(pts).fill(this.theme.colors[geometryLayer.palette]);
     }
     const old = b.sprite.texture;
     if (this.renderer === 'msaa') {
       b.sprite.texture = Texture.EMPTY;
-      b.sprite.removeChildren().forEach((c) => c.destroy());
+      b.sprite.removeChildren().forEach((containerChild) => {
+        containerChild.destroy();
+      });
       b.sprite.position.set(0, 0);
       b.sprite.scale.set(1);
-      b.sprite.addChild(g);
+      b.sprite.addChild(graphics);
     } else {
-      const bounds = g.getLocalBounds();
+      const bounds = graphics.getLocalBounds();
       const rt = RenderTexture.create({
         width: Math.ceil(bounds.width) + 4,
         height: Math.ceil(bounds.height) + 4,
         resolution: d,
         antialias: true,
       });
-      g.position.set(-Math.floor(bounds.x) + 2, -Math.floor(bounds.y) + 2);
-      this.app.renderer.render({ container: g, target: rt });
-      g.destroy();
+      graphics.position.set(-Math.floor(bounds.x) + 2, -Math.floor(bounds.y) + 2);
+      this.app.renderer.render({ container: graphics, target: rt });
+      graphics.destroy();
       b.sprite.texture = rt;
       b.sprite.scale.set(1 / ss);
       b.sprite.position.set((Math.floor(bounds.x) - 2) / ss, (Math.floor(bounds.y) - 2) / ss);
@@ -511,7 +513,9 @@ export class Stage {
         offsetPolygon(
           selectionRing(e.def).map(([x, y]) => gridToPx(m, e.block.x + x, e.block.y + y)),
           4 * m.scaledUnit,
-        ).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+        ).forEach(([x, y], i) => {
+          i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        });
         ctx.closePath();
       }
       if (this.selectBox) {
@@ -535,7 +539,9 @@ export class Stage {
       offsetPolygon(
         selectionRing(e.def).map(([x, y]) => gridToPx(m, e.block.x + x, e.block.y + y)),
         6 * m.scaledUnit,
-      ).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+      ).forEach(([x, y], i) => {
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      });
       ctx.closePath();
       ctx.stroke();
       ctx.restore();
@@ -578,12 +584,12 @@ export class Stage {
  * edges meet), so the gap is the same everywhere. A very sharp corner is capped at 3·d from the original vertex.
  */
 export function offsetPolygon(pts: [number, number][], d: number): [number, number][] {
-  const n = pts.length;
-  if (n < 3) return pts;
+  const lengthValue = pts.length;
+  if (lengthValue < 3) return pts;
   let area = 0;
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < lengthValue; i++) {
     const [x0, y0] = pts[i],
-      [x1, y1] = pts[(i + 1) % n];
+      [x1, y1] = pts[(i + 1) % lengthValue];
     area += x0 * y1 - x1 * y0;
   }
   const sign = area > 0 ? 1 : -1; // outward normal side for this winding (screen y points down)
@@ -594,9 +600,9 @@ export function offsetPolygon(pts: [number, number][], d: number): [number, numb
     return [(sign * dy) / l, (-sign * dx) / l];
   };
   // Drop repeated points (zero-length edges have no normal).
-  const p = pts.filter((q, i) => {
-    const r = pts[(i + n - 1) % n];
-    return Math.hypot(q[0] - r[0], q[1] - r[1]) > 1e-6;
+  const p = pts.filter((pt, i) => {
+    const r = pts[(i + lengthValue - 1) % lengthValue];
+    return Math.hypot(pt[0] - r[0], pt[1] - r[1]) > 1e-6;
   });
   const m = p.length;
   return p.map((v, i) => {

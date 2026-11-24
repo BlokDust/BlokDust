@@ -62,8 +62,8 @@ export function saveLocal(patch: Patch): void {
 }
 export function loadLocal(): Patch | null {
   try {
-    const s = localStorage.getItem(AUTOSAVE_KEY);
-    const p = s ? JSON.parse(s) : null;
+    const item = localStorage.getItem(AUTOSAVE_KEY);
+    const p = item ? JSON.parse(item) : null;
     return p?.format === 'blokdust.patch' ? (p as Patch) : null;
   } catch {
     return null;
@@ -78,17 +78,17 @@ export interface Session {
 }
 export function loadSession(): Session {
   try {
-    const s = JSON.parse(localStorage.getItem(SESSION_KEY) ?? 'null') as Session | null;
-    return s && typeof s === 'object'
-      ? { id: typeof s.id === 'string' ? s.id : null, dirty: !!s.dirty }
+    const session = JSON.parse(localStorage.getItem(SESSION_KEY) ?? 'null') as Session | null;
+    return session && typeof session === 'object'
+      ? { id: typeof session.id === 'string' ? session.id : null, dirty: !!session.dirty }
       : { id: null, dirty: false };
   } catch {
     return { id: null, dirty: false };
   }
 }
-export function saveSession(s: Session): void {
+export function saveSession(session: Session): void {
   try {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
   } catch {
     /* best effort */
   }

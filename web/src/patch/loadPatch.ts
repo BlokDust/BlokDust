@@ -95,7 +95,7 @@ export const EXPRESSION = { bend: 0, pressure: 1, slide: 2 } as const;
 const numeric = (v: unknown): number | null =>
   typeof v === 'number' ? v : typeof v === 'boolean' ? (v ? 1 : 0) : null;
 const paramIndex = (type: number, key: string) =>
-  BLOCKS[type].params.findIndex((p) => p.key === key);
+  BLOCKS[type].params.findIndex((param) => param.key === key);
 
 function addBlock(b: PatchBlock, out: Loaded, at: number) {
   const t = typeIndex.get(b.type);
@@ -185,82 +185,92 @@ export function loadPatch(patch: Patch, script: ScriptOp[] = []): Loaded {
   if (typeof patch.tempo === 'number')
     out.commands.push({ type: CommandType.Tempo, id: 0, value: patch.tempo, x: -1, atSample: -1 });
   for (const b of patch.blocks) addBlock(b, out, -1);
-  for (const c of targetCommands(patch.blocks, out.ids)) out.commands.push({ ...c, atSample: -1 });
-  for (const r of relinks(patch, out.ids)) out.commands.push({ ...r, atSample: -1 });
+  for (const command of targetCommands(patch.blocks, out.ids))
+    out.commands.push({ ...command, atSample: -1 });
+  for (const command of relinks(patch, out.ids)) out.commands.push({ ...command, atSample: -1 });
   // Stage blocks' inner patches (R7; the C++ loader's `stages`): their commands carry the Stage block's engine id, and
   // come after the outer patch's, so the block exists when its inner world is made (WasmEngine.push).
   const inner: Command[] = [],
     filled = new Set<number>();
-  for (const m of Array.isArray(patch.macros) ? patch.macros : []) {
-    const stage = m && typeof m.block === 'string' ? out.ids.get(m.block) : undefined;
+  for (const macro of Array.isArray(patch.macros) ? patch.macros : []) {
+    const stage = macro && typeof macro.block === 'string' ? out.ids.get(macro.block) : undefined;
     // One inner world per Stage, the first entry's (as the C++ loader; security review, PR 13).
-    if (stage === undefined || !Array.isArray(m.blocks) || filled.has(stage)) continue;
+    if (stage === undefined || !Array.isArray(macro.blocks) || filled.has(stage)) continue;
     filled.add(stage);
-    for (const c of loadPatch({ blocks: m.blocks, connectionOrder: m.connectionOrder }).commands)
-      inner.push({ ...c, stage });
+    for (const command of loadPatch({
+      blocks: macro.blocks,
+      connectionOrder: macro.connectionOrder,
+    }).commands)
+      inner.push({ ...command, stage });
   }
-  for (const s of script) {
-    const at = s.atSample ?? -1;
-    if (s.op === 'add') {
-      addBlock(s.block, out, at);
+  for (const scriptOp of script) {
+    const at = scriptOp.atSample ?? -1;
+    if (scriptOp.op === 'add') {
+      addBlock(scriptOp.block, out, at);
       continue;
     }
-    if (s.op === 'tempo') {
+    if (scriptOp.op === 'tempo') {
       out.commands.push({
         type: CommandType.Tempo,
         id: 0,
-        value: s.bpm,
-        x: s.beat ?? -1,
+        value: scriptOp.bpm,
+        x: scriptOp.beat ?? -1,
         atSample: at,
       });
       continue;
     }
-    if (s.op === 'noteOn' || s.op === 'noteOff' || s.op === 'expression') {
-      const t = typeIndex.get(s.controller ?? 'input.midi-controller');
+    if (scriptOp.op === 'noteOn' || scriptOp.op === 'noteOff' || scriptOp.op === 'expression') {
+      const t = typeIndex.get(scriptOp.controller ?? 'input.midi-controller');
       if (t === undefined) throw new Error('bad controller type');
-      const x = s.channel ?? 0; // MIDI channel 0–15 (MPE: the note's own channel, PLUGIN-0004)
-      if (s.op === 'expression') {
-        const y = EXPRESSION[s.dim];
-        if (y === undefined) throw new Error(`bad expression dim ${s.dim}`);
+      const x = scriptOp.channel ?? 0; // MIDI channel 0–15 (MPE: the note's own channel, PLUGIN-0004)
+      if (scriptOp.op === 'expression') {
+        const y = EXPRESSION[scriptOp.dim];
+        if (y === undefined) throw new Error(`bad expression dim ${scriptOp.dim}`);
         out.commands.push({
           type: CommandType.NoteExpression,
           id: 0,
           blockType: t,
-          param: s.note,
+          param: scriptOp.note,
           x,
           y,
-          value: s.value,
+          value: scriptOp.value,
           atSample: at,
         });
       } else
         out.commands.push({
-          type: s.op === 'noteOn' ? CommandType.NoteOn : CommandType.NoteOff,
+          type: scriptOp.op === 'noteOn' ? CommandType.NoteOn : CommandType.NoteOff,
           id: 0,
           blockType: t,
-          param: s.note,
+          param: scriptOp.note,
           x,
-          value: s.op === 'noteOn' ? (s.velocity ?? 1) : 0,
+          value: scriptOp.op === 'noteOn' ? (scriptOp.velocity ?? 1) : 0,
           atSample: at,
         });
       continue;
     }
-    const id = out.ids.get(s.block);
-    if (id === undefined) throw new Error(`script refers to unknown block ${s.block}`);
-    if (s.op === 'move')
-      out.commands.push({ type: CommandType.MoveBlock, id, x: s.x, y: s.y, atSample: at });
-    else if (s.op === 'remove')
+    const id = out.ids.get(scriptOp.block);
+    if (id === undefined) throw new Error(`script refers to unknown block ${scriptOp.block}`);
+    if (scriptOp.op === 'move')
+      out.commands.push({
+        type: CommandType.MoveBlock,
+        id,
+        x: scriptOp.x,
+        y: scriptOp.y,
+        atSample: at,
+      });
+    else if (scriptOp.op === 'remove')
       out.commands.push({ type: CommandType.RemoveBlock, id, atSample: at });
     else {
-      const p = paramIndex(out.types.get(id)!, s.param),
-        n = numeric(s.value);
-      if (p < 0 || n === null) throw new Error(`bad set op for ${s.block}`);
+      const p = paramIndex(out.types.get(id)!, scriptOp.param),
+        n = numeric(scriptOp.value);
+      if (p < 0 || n === null) throw new Error(`bad set op for ${scriptOp.block}`);
       out.commands.push({ type: CommandType.SetParam, id, param: p, value: n, atSample: at });
     }
   }
   // Same ordering rule as the C++ loader: stable by due sample (immediate first).
-  const due = (c: Command) => Math.max(c.atSample ?? -1, -1);
+  const due = (command: Command) => Math.max(command.atSample ?? -1, -1);
   out.commands = out.commands
-    .map((c, i) => ({ c, i }))
+    .map((command, i) => ({ c: command, i }))
     .sort((a, b) => due(a.c) - due(b.c) || a.i - b.i)
     .map((x) => x.c);
   out.commands.push(...inner);

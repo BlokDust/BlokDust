@@ -69,18 +69,18 @@ export function filterResponseDb(
 
 /** The Filter's options form: v1's Parametric (one live node) and a Buttons row (mode "filter", drawn here). */
 export function filterForm(b: { OptionsForm: any; Params: Record<string, any> }): void {
-  const p = b.Params,
+  const params = b.Params,
     node = {
       x_setting: 'frequency',
-      x_value: Number(p.frequency),
+      x_value: Number(params.frequency),
       x_min: 20,
       x_max: 20000,
       y_setting: 'gain',
-      y_value: Number(p.gain),
+      y_value: Number(params.gain),
       y_min: GAIN.min,
       y_max: GAIN.max,
       q_setting: 'Q',
-      q_value: Number(p.Q ?? 1),
+      q_value: Number(params.Q ?? 1),
       q_min: WIDTH.min,
       q_max: WIDTH.max,
     };
@@ -97,7 +97,7 @@ export function filterForm(b: { OptionsForm: any; Params: Record<string, any> })
         type: 'buttons',
         name: 'Type',
         setting: 'type',
-        props: { value: Number(p.type ?? 0), mode: 'filter' },
+        props: { value: Number(params.type ?? 0), mode: 'filter' },
         buttons: FILTER_TYPES.map((name) => ({ name })),
       },
     ],
@@ -130,11 +130,11 @@ export function installFilterPanel(panel: any): void {
     for (const j of [0, 2, 3]) g.Handles[j].Position = new Point(PARKED, g.Handles[j].Position.y);
     g.PlotGraph = function (this: any) {
       const h = this.Size.height,
-        n = this.Smoothness,
+        smoothness = this.Smoothness,
         live = this.Handles[1],
         width = this.SubHandles[1];
-      for (let j = 0; j < n; j++) {
-        const hz = 20 * Math.pow(1000, (j + 1) / n);
+      for (let j = 0; j < smoothness; j++) {
+        const hz = 20 * Math.pow(1000, (j + 1) / smoothness);
         const db = filterResponseDb(type(), live.XValue, live.YValue, width.Value, hz);
         this.LineGain[j] = Math.max(
           -0.35 * h,

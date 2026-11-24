@@ -142,8 +142,8 @@ export async function registerVerify(env: Env, req: Request): Promise<Response> 
       expectedOrigin: r.origins,
       expectedRPID: r.id,
     });
-  } catch (e) {
-    throw new HttpError(400, `passkey not accepted: ${(e as Error).message}`);
+  } catch (error) {
+    throw new HttpError(400, `passkey not accepted: ${(error as Error).message}`);
   }
   if (!v.verified) throw new HttpError(400, 'passkey not accepted');
   const c = v.registrationInfo.credential,
@@ -165,9 +165,9 @@ export async function registerVerify(env: Env, req: Request): Promise<Response> 
         ...(await countNewAccount(env, req)),
       ]);
     }
-  } catch (e) {
-    if (String(e).includes('UNIQUE')) throw new HttpError(409, 'That name is taken.');
-    throw e;
+  } catch (error) {
+    if (String(error).includes('UNIQUE')) throw new HttpError(409, 'That name is taken.');
+    throw error;
   }
   const headers = new Headers({ 'cache-control': 'no-store' });
   headers.append('set-cookie', clearChallenge(req));
@@ -236,8 +236,8 @@ export async function verifyAssertion(
         transports: cred.transports ? cred.transports.split(',') : undefined,
       },
     });
-  } catch (e) {
-    throw new HttpError(401, `passkey not accepted: ${(e as Error).message}`);
+  } catch (error) {
+    throw new HttpError(401, `passkey not accepted: ${(error as Error).message}`);
   }
   if (!v.verified) throw new HttpError(401, 'passkey not accepted');
   await env.DB.prepare('UPDATE credentials SET counter = ?, last_used = ? WHERE id = ?')

@@ -19,9 +19,9 @@ const db = (x: number) => (x > 1e-9 ? 10 * Math.log10(x) : -90);
 
 function fft(re: Float64Array, im: Float64Array) {
   // in-place radix-2
-  const n = re.length;
-  for (let i = 1, j = 0; i < n; i++) {
-    let bit = n >> 1;
+  const lengthValue = re.length;
+  for (let i = 1, j = 0; i < lengthValue; i++) {
+    let bit = lengthValue >> 1;
     for (; j & bit; bit >>= 1) j ^= bit;
     j ^= bit;
     if (i < j) {
@@ -29,11 +29,11 @@ function fft(re: Float64Array, im: Float64Array) {
       [im[i], im[j]] = [im[j], im[i]];
     }
   }
-  for (let len = 2; len <= n; len <<= 1) {
+  for (let len = 2; len <= lengthValue; len <<= 1) {
     const a = (-2 * Math.PI) / len,
       wr = Math.cos(a),
       wi = Math.sin(a);
-    for (let i = 0; i < n; i += len) {
+    for (let i = 0; i < lengthValue; i += len) {
       let cr = 1,
         ci = 0;
       for (let k = 0; k < len / 2; k++) {
@@ -55,7 +55,7 @@ function fft(re: Float64Array, im: Float64Array) {
 
 /** Average power spectrum (Hann, N-point frames, 50% overlap). */
 function powerSpectrum(x: Float32Array, n: number): Float64Array {
-  const p = new Float64Array(n / 2 + 1);
+  const float64Array = new Float64Array(n / 2 + 1);
   let frames = 0;
   const re = new Float64Array(n),
     im = new Float64Array(n);
@@ -65,23 +65,23 @@ function powerSpectrum(x: Float32Array, n: number): Float64Array {
       im[i] = 0;
     }
     fft(re, im);
-    for (let k = 0; k <= n / 2; k++) p[k] += re[k] * re[k] + im[k] * im[k];
+    for (let k = 0; k <= n / 2; k++) float64Array[k] += re[k] * re[k] + im[k] * im[k];
   }
-  if (frames) for (let k = 0; k < p.length; k++) p[k] /= frames;
-  return p;
+  if (frames) for (let k = 0; k < float64Array.length; k++) float64Array[k] /= frames;
+  return float64Array;
 }
 
 export function describe(a: Audio, skipSeconds = 0.05): Descriptors {
   const sr = a.sampleRate,
     skip = Math.round(skipSeconds * sr);
-  const L = a.channels[0],
+  const samples = a.channels[0],
     R = a.channels[1] ?? a.channels[0];
-  const n = L.length - skip;
+  const n = samples.length - skip;
   const mid = new Float32Array(n),
     side = new Float32Array(n);
   for (let i = 0; i < n; i++) {
-    mid[i] = (L[skip + i] + R[skip + i]) / 2;
-    side[i] = (L[skip + i] - R[skip + i]) / 2;
+    mid[i] = (samples[skip + i] + R[skip + i]) / 2;
+    side[i] = (samples[skip + i] - R[skip + i]) / 2;
   }
   let e = 0,
     es = 0,
@@ -89,7 +89,7 @@ export function describe(a: Audio, skipSeconds = 0.05): Descriptors {
   for (let i = 0; i < n; i++) {
     e += mid[i] * mid[i];
     es += side[i] * side[i];
-    peak = Math.max(peak, Math.abs(L[skip + i]), Math.abs(R[skip + i]));
+    peak = Math.max(peak, Math.abs(samples[skip + i]), Math.abs(R[skip + i]));
   }
 
   const N = 8192,
@@ -192,18 +192,18 @@ const cents = (a: number, b: number) => 1200 * Math.log2(a / b);
 export function compare(
   v2: Descriptors,
   v1: Descriptors,
-  t: Thresholds,
+  thresholds: Thresholds,
   spread?: Partial<Record<keyof Thresholds, number>>,
 ) {
-  const s = (k: keyof Thresholds) => t[k] + (spread?.[k] ?? 0);
+  const s = (k: keyof Thresholds) => thresholds[k] + (spread?.[k] ?? 0);
   const bandIdx = v1.bandsDb
     .map((b, i) => [b, i] as const)
-    .filter(([b]) => b > -t.bandFloorDb)
+    .filter(([b]) => b > -thresholds.bandFloorDb)
     .map(([, i]) => i);
   const bandDelta = Math.max(0, ...bandIdx.map((i) => Math.abs(v2.bandsDb[i] - v1.bandsDb[i])));
   const envIdx = v1.envelopeDb
     .map((v, i) => [v, i] as const)
-    .filter(([v]) => v > v1.rmsDb - t.envelopeFloorDb)
+    .filter(([v]) => v > v1.rmsDb - thresholds.envelopeFloorDb)
     .map(([, i]) => i);
   const envDelta = Math.max(
     0,
@@ -222,7 +222,10 @@ export function compare(
   const fails = (Object.keys(m) as (keyof typeof m)[]).filter((k) => !(m[k] <= s(k)));
   return {
     metrics: Object.fromEntries(
-      Object.entries(m).map(([k, v]) => [k, Number.isFinite(v) ? +v.toFixed(3) : v]),
+      Object.entries(m).map(([k, value]) => [
+        k,
+        Number.isFinite(value) ? +value.toFixed(3) : value,
+      ]),
     ),
     fails,
     pass: fails.length === 0,
@@ -230,16 +233,24 @@ export function compare(
 }
 
 /** Run-to-run spread of v1 itself, in the same units as the thresholds (max pairwise distance). */
-export function spreadOf(runs: Descriptors[], t: Thresholds) {
+export function spreadOf(runs: Descriptors[], thresholds: Thresholds) {
   const out: Partial<Record<keyof Thresholds, number>> = {};
-  const zero = { ...t, rmsDb: 0, centroidPct: 0, f0Cents: 0, bandDb: 0, envelopeDb: 0, sideDb: 0 };
+  const zero = {
+    ...thresholds,
+    rmsDb: 0,
+    centroidPct: 0,
+    f0Cents: 0,
+    bandDb: 0,
+    envelopeDb: 0,
+    sideDb: 0,
+  };
   for (let i = 0; i < runs.length; i++)
     for (let j = 0; j < runs.length; j++)
       if (i !== j) {
         const { metrics } = compare(runs[i], runs[j], zero);
-        for (const [k, v] of Object.entries(metrics))
-          if (Number.isFinite(v as number))
-            out[k as keyof Thresholds] = Math.max(out[k as keyof Thresholds] ?? 0, v as number);
+        for (const [k, value] of Object.entries(metrics))
+          if (Number.isFinite(value))
+            out[k as keyof Thresholds] = Math.max(out[k as keyof Thresholds] ?? 0, value);
       }
   return out;
 }

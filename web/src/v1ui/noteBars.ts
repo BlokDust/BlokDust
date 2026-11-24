@@ -63,16 +63,16 @@ const barText = (k: Kind, n: number, v: number) =>
 /** The bars' geometry inside the row, in panel px. */
 function layout(panel: any, row: any, units: number) {
   const x = panel.Margin,
-    w = panel.Range,
+    range = panel.Range,
     y = row.Position.y,
     h = row.Size.height;
-  const cell = w / 12,
+  const cell = range / 12,
     gap = 3 * units,
     top = y + h * 0.1,
     labels = 2 * Math.round(units * 10) + 8 * units;
   return {
     x,
-    w,
+    w: range,
     y,
     h,
     cell,
@@ -206,12 +206,12 @@ export function drawRange(
 ): void {
   const block = panel.SelectedBlock,
     x = panel.Margin,
-    w = panel.Range,
+    range = panel.Range,
     y = this.Position.y,
     h = this.Size.height,
     mid = y + h * 0.5;
   const [lo, hi] = rangeOf(block),
-    at = (m: number) => x + ((m - RANGE_MIN) / (RANGE_MAX - RANGE_MIN)) * w;
+    at = (m: number) => x + ((m - RANGE_MIN) / (RANGE_MAX - RANGE_MIN)) * range;
   const colours = panel.SliderColours,
     col = colours[i % colours.length],
     dataType = Math.round(units * 10);
@@ -220,10 +220,10 @@ export function drawRange(
   if (i !== panel.Options.length - 1) {
     ctx.beginPath();
     ctx.moveTo(x - units, y + h);
-    ctx.lineTo(x + w + units, y + h);
+    ctx.lineTo(x + range + units, y + h);
     ctx.stroke();
   }
-  panel.diagonalFill(x - units, y + units, w + 2 * units, h - 2 * units, 9);
+  panel.diagonalFill(x - units, y + units, range + 2 * units, h - 2 * units, 9);
   App.FillColor(ctx, col);
   ctx.fillRect(at(lo), y, Math.max(0, at(hi) - at(lo)), h);
   const d = h * 0.2;
@@ -274,8 +274,11 @@ function rowAt(panel: any, setting: string, my: number): any {
 function setFromY(panel: any, row: any, n: number, my: number): void {
   const block = panel.SelectedBlock,
     k = kindOf(block)!,
-    s = row.Shown;
-  let f = Math.max(0, Math.min(1, (panel.Position.y + s.bottom - my) / (s.bottom - s.top)));
+    shown = row.Shown;
+  let f = Math.max(
+    0,
+    Math.min(1, (panel.Position.y + shown.bottom - my) / (shown.bottom - shown.top)),
+  );
   if (k === 'chords') f = Math.round(f * (CHORD_QUALITIES.length - 1));
   else f = Math.round(f * 100) / 100;
   if (f !== barValue(block, n)) setBar(block, n, f);
@@ -305,7 +308,7 @@ function setRangeFromX(panel: any, row: any, mx: number): void {
       block.Params[key] = v;
       App.MainScene.setParam(block, key, v);
     }
-  void row;
+  row;
   panel._DrawReady = true;
 }
 
@@ -329,7 +332,7 @@ export function installNoteBars(panel: any): void {
       }
       const range = rowAt(panel, 'noteRange', my);
       if (range) {
-        const s = range.Shown,
+        const shown = range.Shown,
           px = mx - panel.Position.x;
         rangeGrab = {
           from: Math.round(
@@ -338,13 +341,13 @@ export function installNoteBars(panel: any): void {
           ),
         };
         rangeHeld =
-          s.low === s.high
-            ? px < s.lowX - 2 * App.Unit
+          shown.low === shown.high
+            ? px < shown.lowX - 2 * App.Unit
               ? 'low'
-              : px > s.highX + 2 * App.Unit
+              : px > shown.highX + 2 * App.Unit
                 ? 'high'
                 : null
-            : Math.abs(px - s.lowX) <= Math.abs(px - s.highX)
+            : Math.abs(px - shown.lowX) <= Math.abs(px - shown.highX)
               ? 'low'
               : 'high';
         panel.Hover = true;
