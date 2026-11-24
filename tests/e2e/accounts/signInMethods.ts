@@ -13,9 +13,9 @@ import {
   corners,
   googleAccount,
   api,
-  locationOf,
   type AccountTests,
 } from './harness.ts';
+import { locationOf } from '../located.ts';
 import type { AppSettingsPanel } from '../pageGlobals.shared.ts';
 
 export const signInMethodTests: AccountTests = {

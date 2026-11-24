@@ -20,10 +20,15 @@ import {
   idOf,
   local,
   closeShare,
+  handoff,
+  editTokenOf,
+  transposeTone,
+  hasTranspose,
 } from './harness.ts';
+import type { PatchesPanelState } from '../pageGlobals.shared.ts';
 
 export const shareLinkTests: SharingTests = {
-  /** CHG-0013 (owner, 2026-11-13): the plugin's CREATE SHARE LINK opens `?c=p…&t=…&share=1` here; the page makes the
+  /** CHG-0013: the plugin's CREATE SHARE LINK opens `?c=p…&t=…&share=1` here; the page makes the
    * link at once and the address bar shows the short server link, which opens the same patch. */
   async 'share-from-app'(browser) {
     const { deflateRawSync } = await import('node:zlib');
@@ -48,12 +53,9 @@ export const shareLinkTests: SharingTests = {
     );
     check(
       '… with the Patches panel closed',
-      !(await a.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Open)),
+      !(await a.evaluate(() => window.__bd_probe.scene.PatchesPanel.Open)),
     );
-    const edit = await a.evaluate(
-      (i) => JSON.parse(localStorage.getItem('blokdust2.editTokens') ?? '{}')[i],
-      id,
-    );
+    const edit = await editTokenOf(a, id);
     if (id && edit) created.push({ id, token: edit });
     const got = await api('GET', `patches/${id}`);
     check(
@@ -64,19 +66,24 @@ export const shareLinkTests: SharingTests = {
       got.json?.title,
     );
   },
+  /** Acceptance: Share → open in a fresh browser → identical render hash; Overwrite / Create new
+   * as v1. */
   async 'share-and-load'(browser) {
     const a = await open(browser, `${base}/?demo`);
     await a.waitForTimeout(1000);
-    // The demo's Toggles flip as it plays, and a link keeps them as they are (CHG-0013): the power switch holds them
-    // still, so the patch shared is the one rendered here.
-    await a.evaluate(() => (window as any).__bd_probe.scene.setWorldPower(false));
+    // The demo's Toggles flip as it plays, and a link keeps them as they are (CHG-0013): the power
+    // switch holds them still, so the patch shared is the one rendered here.
+    await a.evaluate(() => {
+      window.__bd_probe.scene.setWorldPower(false);
+    });
     await a.waitForTimeout(500);
     const hashA = await renderHash(a);
-    // The share card uses the sharer's colour theme (SPEC-SHARING-BACKEND R9): share from a non-default one.
+    // The share card uses the sharer's colour theme (SPEC-SHARING-BACKEND R9): share from a
+    // non-default one.
     const themeBg = await a.evaluate(() => {
-      const s = (window as any).__bd_probe;
-      s.scene.host.setTheme(3);
-      return s.scene.host.themes()[3].colors[0] as string;
+      const host = window.__bd_probe.scene.host;
+      host.setTheme(3);
+      return host.themes()[3].colors[0];
     });
     const url = await shareVia(a, 'generate');
     const id = idOf(url);
@@ -90,16 +97,13 @@ export const shareLinkTests: SharingTests = {
       a.url().includes(`c=${id}`),
       a.url(),
     );
-    const token = await a.evaluate(
-      (i) => JSON.parse(localStorage.getItem('blokdust2.editTokens') ?? '{}')[i],
-      id,
-    );
+    const token = await editTokenOf(a, id);
     if (id && token) created.push({ id, token });
     // As opened, before START (playing, its Toggles flip too).
     const b = await (await browser.newContext(VIEW)).newPage();
     if (!remote)
-      await b.context().route('https://cdn.freesound.org/**', (r) =>
-        r.fulfill({
+      await b.context().route('https://cdn.freesound.org/**', (route) =>
+        route.fulfill({
           status: 200,
           contentType: 'audio/wav',
           headers: { 'access-control-allow-origin': '*' },
@@ -107,7 +111,7 @@ export const shareLinkTests: SharingTests = {
         }),
       );
     await b.goto(local(url));
-    await b.waitForFunction(() => (window as any).__bd_probe?.state.patch);
+    await b.waitForFunction(() => '__bd_probe' in window && window.__bd_probe.state.patch);
     const [pa, pb] = [await probe(a), await probe(b)];
     check(
       'a fresh browser opens the same patch',
@@ -117,7 +121,7 @@ export const shareLinkTests: SharingTests = {
     );
     const hashB = await renderHash(b);
     await b.click('#start');
-    await b.waitForFunction(() => (window as any).__bd_probe.state.started, null, {
+    await b.waitForFunction(() => window.__bd_probe.state.started, null, {
       timeout: 20000,
     });
     await b.waitForFunction(() => !document.getElementById('start'), null, { timeout: 20000 });
@@ -128,62 +132,56 @@ export const shareLinkTests: SharingTests = {
     );
     check(
       "the recipient can't overwrite (no edit token: v1 first-session panel)",
-      await b.evaluate(() => !(window as any).__bd_probe.v1App.SessionId),
+      await b.evaluate(() => !window.__bd_probe.v1App.SessionId),
     );
 
-    // Overwrite: change a param in A (the demo's first tone is already at 7, so 5), save over the same id.
+    // Overwrite: change a param in A (the demo's first tone is already at 7, so 5), save over the
+    // same id.
     await closeShare(a);
-    await a.evaluate(() => {
-      const s = (window as any).__bd_probe;
-      const t = s.state.blocks.find((x: any) => x.type === 'source.tone');
-      s.scene.host.setParam(t.id, 'transpose', 5);
-    });
+    await transposeTone(a, 5);
     const url2 = await shareVia(a, 'overwrite');
     check('overwrite keeps the id', idOf(url2) === id, url2);
-    const g = await api('GET', `patches/${id}`);
+    const loaded = await api('GET', `patches/${id}`);
     check(
       '… and stores a new revision with the change',
-      g.json?.rev === 2 && g.json?.patch?.blocks?.some((x: any) => x.params?.transpose === 5),
-      g.json?.rev,
+      loaded.json?.rev === 2 && hasTranspose(loaded.json, 5),
+      loaded.json?.rev,
     );
     await b.reload();
-    await b.waitForFunction(() => (window as any).__bd_probe);
-    check(
-      "the recipient's link shows the overwrite",
-      (await probe(b)).patch.blocks.some((x: any) => x.params?.transpose === 5),
-    );
+    await b.waitForFunction(() => window.__bd_probe);
+    check("the recipient's link shows the overwrite", hasTranspose(await probe(b), 5));
 
-    // Create new (offered once the patch has changed since the link): a new id whose parent is the first.
+    // Create new (offered once the patch has changed since the link): a new id whose parent is the
+    // first.
     await closeShare(a);
-    await a.evaluate(() => {
-      const s = (window as any).__bd_probe;
-      const t = s.state.blocks.find((x: any) => x.type === 'source.tone');
-      s.scene.host.setParam(t.id, 'transpose', 9);
-    });
+    await transposeTone(a, 9);
     const saveAsBefore = await a.evaluate(() => {
-      const pp = (window as any).__bd_probe.scene.PatchesPanel;
-      pp.OpenPanel();
-      const [x, y] = pp.centreOf('saveAs');
-      const pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio;
-      pp.HitTests({ x: x * pr, y: y * pr });
-      const r = pp.roll.saveAs && pp.shareState().saveAs;
-      pp.ClosePanel();
-      return r;
+      const panel = window.__bd_probe.scene.PatchesPanel;
+      panel.OpenPanel();
+      const at = panel.centreOf('saveAs');
+      if (!at) return false;
+      const pixelRatio = window.__bd_probe.v1App.Metrics.PixelRatio;
+      panel.HitTests({ x: at[0] * pixelRatio, y: at[1] * pixelRatio });
+      const offered =
+        (panel as unknown as PatchesPanelState).roll.saveAs && panel.shareState().saveAs;
+      panel.ClosePanel();
+      return offered;
     });
     check(
       'SAVE AS is offered once the patch has changed since its link (owner, 2026-11-10)',
-      saveAsBefore === true,
+      saveAsBefore,
     );
     const url3 = await shareVia(a, 'createNew');
     const id3 = idOf(url3);
     check('create new → a new id', !!id3 && id3 !== id, url3);
-    // The same patch again can't be saved as yet another link: SAVE AS is gone until something changes.
+    // The same patch again can't be saved as yet another link: SAVE AS is gone until something
+    // changes.
     const again = await a.evaluate(() => {
-      const pp = (window as any).__bd_probe.scene.PatchesPanel,
-        [x, y] = pp.centreOf('saveAs'),
-        pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio;
-      pp.HitTests({ x: x * pr, y: y * pr });
-      return { offered: pp.shareState().saveAs, save: pp.shareState().save };
+      const panel = window.__bd_probe.scene.PatchesPanel,
+        at = panel.centreOf('saveAs'),
+        pixelRatio = window.__bd_probe.v1App.Metrics.PixelRatio;
+      if (at) panel.HitTests({ x: at[0] * pixelRatio, y: at[1] * pixelRatio });
+      return { offered: panel.shareState().saveAs, save: panel.shareState().save };
     });
     await press(a, 'saveAs');
     await a.waitForTimeout(1500);
@@ -192,15 +190,12 @@ export const shareLinkTests: SharingTests = {
     );
     check(
       '… and then SAVE AS goes until the patch changes again (no repeat links)',
-      again.offered === false && again.save === null && url3b === url3,
+      !again.offered && again.save === null && url3b === url3,
       { again, same: url3b === url3 },
     );
     const g3 = await api('GET', `patches/${id3}`);
     check('… with parent = the original', g3.json?.parent === id, g3.json?.parent);
-    const t3 = await a.evaluate(
-      (i) => JSON.parse(localStorage.getItem('blokdust2.editTokens') ?? '{}')[i],
-      id3,
-    );
+    const t3 = await editTokenOf(a, id3);
     if (id3 && t3) created.push({ id: id3, token: t3 });
 
     // The recipient remixes: their first save is a new id with the shared one as parent.
@@ -212,39 +207,30 @@ export const shareLinkTests: SharingTests = {
       idOf(url4) !== id && g4.json?.parent === id,
       { id: idOf(url4), parent: g4.json?.parent },
     );
-    const t4 = await b.evaluate(
-      (i) => JSON.parse(localStorage.getItem('blokdust2.editTokens') ?? '{}')[i],
-      idOf(url4),
-    );
+    const t4 = await editTokenOf(b, idOf(url4));
     if (t4) created.push({ id: idOf(url4), token: t4 });
 
-    // Unsaved edits survive a reload of the creator's own link (autosave wins over the saved version).
+    // Unsaved edits survive a reload of the creator's own link (autosave wins over the saved
+    // version).
     await closeShare(a);
     await a.goto(`${base}/?c=${id}`);
-    await a.waitForFunction(() => (window as any).__bd_probe);
-    await a.evaluate(() => {
-      const s = (window as any).__bd_probe;
-      const t = s.state.blocks.find((x: any) => x.type === 'source.tone');
-      s.scene.host.setParam(t.id, 'transpose', -5);
-    });
+    await a.waitForFunction(() => window.__bd_probe);
+    await transposeTone(a, -5);
     await a.waitForTimeout(800);
     await a.reload();
-    await a.waitForFunction(() => (window as any).__bd_probe);
-    check(
-      "reloading the creator's link keeps unsaved edits",
-      (await probe(a)).patch.blocks.some((x: any) => x.params?.transpose === -5),
-    );
+    await a.waitForFunction(() => window.__bd_probe);
+    check("reloading the creator's link keeps unsaved edits", hasTranspose(await probe(a), -5));
     check(
       '… and keeps the right to overwrite',
-      await a.evaluate(() => !!(window as any).__bd_probe.v1App.SessionId),
+      await a.evaluate(() => !!window.__bd_probe.v1App.SessionId),
     );
     await a.context().close();
     await b.context().close();
 
     // Link previews for that id.
     const html = await (await fetch(`${base}/?c=${id}`)).text();
-    const meta = (p: string) =>
-      new RegExp(`<meta (?:property|name)="${p}" content="([^"]*)"`).exec(html)?.[1] ?? null;
+    const meta = (property: string) =>
+      new RegExp(`<meta (?:property|name)="${property}" content="([^"]*)"`).exec(html)?.[1] ?? null;
     check(
       'share page: Open Graph + twitter tags',
       !!meta('og:title') &&
@@ -261,50 +247,52 @@ export const shareLinkTests: SharingTests = {
       { title: meta('og:title'), saved, description: meta('og:description') },
     );
     check('share page: oEmbed discovery link', html.includes('type="application/json+oembed"'));
-    const img = await fetch(local(meta('og:image')!.replace(/&amp;/g, '&')));
+    const img = await fetch(local((meta('og:image') ?? '').replace(/&amp;/g, '&')));
     const png = new Uint8Array(await img.arrayBuffer());
     const dv = new DataView(png.buffer);
     writeFileSync(`${OUT}/thumbnail.png`, png);
-    const dims = png.length > 24 ? [dv.getUint32(16), dv.getUint32(20)] : null;
+    const dims: [number, number] | null =
+      png.length > 24 ? [dv.getUint32(16), dv.getUint32(20)] : null;
     check(
       'og:image is the saved PNG thumbnail (1200×630)',
-      img.headers.get('content-type') === 'image/png' && dims?.[0] === 1200 && dims?.[1] === 630,
+      img.headers.get('content-type') === 'image/png' && dims?.[0] === 1200 && dims[1] === 630,
       { status: img.status, bytes: png.length, dims, url: meta('og:image') },
     );
-    // Pixel (0,0) of a PNG is its first row's first bytes whatever the row filter (every predictor is 0 there).
+    // Pixel (0,0) of a PNG is its first row's first bytes whatever the row filter (every predictor
+    // is 0 there).
     let off = 8;
     const idat: Uint8Array[] = [];
     while (off < png.length) {
       const uint32 = dv.getUint32(off),
-        t = String.fromCharCode(...png.subarray(off + 4, off + 8));
-      if (t === 'IDAT') idat.push(png.subarray(off + 8, off + 8 + uint32));
+        chunkType = String.fromCharCode(...png.subarray(off + 4, off + 8));
+      if (chunkType === 'IDAT') idat.push(png.subarray(off + 8, off + 8 + uint32));
       off += 12 + uint32;
     }
     const raw = inflateSync(Buffer.concat(idat));
     const corner =
-      '#' + [raw[1], raw[2], raw[3]].map((v) => v.toString(16).padStart(2, '0')).join('');
+      '#' + [raw[1], raw[2], raw[3]].map((byte) => byte.toString(16).padStart(2, '0')).join('');
     check(
       "og:image is drawn in the sharer's colour theme (theme 3's background)",
-      [raw[1], raw[2], raw[3]].join() === themeBg.match(/\d+/g)!.slice(0, 3).join(),
+      [raw[1], raw[2], raw[3]].join() === (themeBg.match(/\d+/g) ?? []).slice(0, 3).join(),
       { corner, themeBg },
     );
-    const oe = await (
+    const oembed = (await (
       await fetch(`${base}/oembed?url=${encodeURIComponent(`${base}/?c=${id}`)}&maxwidth=480`)
-    ).json();
+    ).json()) as { type: string; version: string; width: number; height: number; html: string };
     check(
       '/oembed: rich JSON with an iframe to /embed/<id>, maxwidth respected',
-      oe.type === 'rich' &&
-        oe.version === '1.0' &&
-        oe.width === 480 &&
-        oe.height === 300 &&
-        new RegExp(`/embed/${id}"`).test(oe.html),
-      oe,
+      oembed.type === 'rich' &&
+        oembed.version === '1.0' &&
+        oembed.width === 480 &&
+        oembed.height === 300 &&
+        new RegExp(`/embed/${id}"`).test(oembed.html),
+      oembed,
     );
     check(
       '/oembed: other sites → 404',
       (await fetch(`${base}/oembed?url=${encodeURIComponent('https://example.com/?c=' + id)}`))
         .status === 404,
     );
-    (globalThis as any).__sharedId = id;
+    handoff.sharedId = id;
   },
 };

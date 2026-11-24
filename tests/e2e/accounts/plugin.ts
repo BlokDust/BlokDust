@@ -13,10 +13,10 @@ import {
   settled,
   googleAccount,
   api,
-  locationOf,
   saveLink,
   type AccountTests,
 } from './harness.ts';
+import { locationOf } from '../located.ts';
 import type { SentMessage } from '../pageGlobals.shared.ts';
 import type { AppSettingsPanel } from '../pageGlobals.shared.ts';
 import type { ApiAnswer } from './answers.ts';

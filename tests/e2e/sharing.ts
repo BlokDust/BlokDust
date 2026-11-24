@@ -1,8 +1,5 @@
-// pnpm test:sharing — CHG-0003 acceptance (SPEC-SHARING-BACKEND), black-box through the real app and the Worker:
-//   local (default): `wrangler dev` on web/dist with a local D1, Cloudflare's test Turnstile key, and mocked Freesound +
-//   siteverify (tests/e2e/mock-services.ts), so every run is the same.
-//   --remote <url>: the same flow against a deployed Worker (`pnpm bd server smoke`): real Turnstile and Freesound;
-//   checks that need the mocks are skipped there, and patches it creates are deleted at the end.
+// pnpm test:sharing [--base] [--remote <url>] — CHG-0003 (SPEC-SHARING-BACKEND) on a local Worker
+// with mocked Turnstile and Freesound, or on a deployed one (`bd server smoke`, mocks skipped).
 import { chromium } from 'playwright';
 import { startLocal, type LocalServer } from '../../tools/server/lib.ts';
 import { startMockServices } from './mock-services.ts';
@@ -71,8 +68,8 @@ async function main() {
   } finally {
     await browser.close();
     real?.close();
-    for (const c of created)
-      await api('DELETE', `patches/${c.id}`, undefined, c.token).catch(() => {});
+    for (const patch of created)
+      await api('DELETE', `patches/${patch.id}`, undefined, patch.token).catch(() => {});
     if (server) await server.stop();
     mocks?.close();
   }
@@ -82,7 +79,7 @@ async function main() {
       base,
       checks: results.length,
       passed: results.length - failed.length,
-      failed: failed.map((f) => f.name),
+      failed: failed.map((result) => result.name),
     }),
   );
   process.exitCode = failed.length ? 1 : 0;

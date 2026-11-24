@@ -1,12 +1,12 @@
-// Hosting under a base path, on a canonical host, and from the former path (SHARING-0004–0006), run by
-// tests/e2e/sharing.ts.
+// Hosting under a base path, on a canonical host, and from the former path (SHARING-0004–0006), run
+// by tests/e2e/sharing.ts.
 import { startLocal } from '../../../tools/server/lib.ts';
 import { type SharingTests, remote, based, base, check } from './harness.ts';
+import { locationOf } from '../located.ts';
 
 export const hostingTests: SharingTests = {
-  /** CHG-0005 task 10: under a base path (`--base`, or a deployed /blokdust): the build's files are there, the bare
-   * base redirects to base/, links from before the move (root `/?c=`, `/embed/`) redirect into it, and the API also
-   * answers at the root (plugin builds that call it there). */
+  /** CHG-0005 task 10: under a base path the build is there, the bare base redirects to base/, old
+   * root links redirect into it, and the API also answers at the root (old plugins). */
   async 'base-path'() {
     const url = new URL(base),
       b = url.pathname.replace(/\/+$/, '');
@@ -28,7 +28,7 @@ export const hostingTests: SharingTests = {
     const bare = await get(b);
     check(
       'bare base → base/',
-      bare.status === 301 && new URL(bare.headers.get('location')!, url).pathname === `${b}/`,
+      bare.status === 301 && new URL(locationOf(bare), url).pathname === `${b}/`,
       bare.headers.get('location'),
     );
     const old = await get('/?c=A000000000&t=x');
@@ -51,8 +51,8 @@ export const hostingTests: SharingTests = {
     check('nothing else outside the base', (await get('/nope.js')).status === 404);
   },
 
-  /** SHARING-0004/0005: a Worker whose public address is on another host, under a base path
-   * sends its pages there; the API stays answerable where it is. Local `--base` runs only (a second Worker). */
+  /** SHARING-0004/0005: a Worker whose public address is another host sends its pages there and
+   * answers the API where it is. Local `--base` runs only (a second Worker). */
   async 'canonical-host'() {
     if (remote || !based) return;
     const localServer = await startLocal({
@@ -93,10 +93,8 @@ export const hostingTests: SharingTests = {
     }
   },
 
-  /** SHARING-0006: the public site is at a root (blokdust.funputs.com). The former base path /blokdust, where
-   * funputs.com/blokdust lands, sends its pages there with a 302 (a landing page may replace it later) and answers the
-   * API in place. Other hosts (production's workers.dev) send their pages to the public site. Local: a second Worker
-   * with production's settings; remote (smoke): the legacy path on the deployed host. */
+  /** SHARING-0006: the site is at a root; the old /blokdust sends pages there (302) and answers
+   * the API in place, as other hosts do. Local: a second Worker; remote: the deployed host. */
   async 'legacy-path'() {
     if (based) return;
     const loc = async (url: string, method = 'GET') => {
@@ -105,7 +103,8 @@ export const hostingTests: SharingTests = {
     };
     if (remote) {
       const url = new URL(base);
-      if (url.pathname.replace(/\/+$/, '')) return; // a deployment under a prefix has no legacy path
+      // a deployment under a prefix has no legacy path
+      if (url.pathname.replace(/\/+$/, '')) return;
       const page = await loc(`${url.origin}/blokdust/?c=A000000000&t=x`);
       check(
         '/blokdust/ → 302 to the same page at the root',
@@ -136,7 +135,7 @@ export const hostingTests: SharingTests = {
           '/blokdust/embed/A000000000',
           '/?c=A000000000',
           '/embed/A000000000',
-        ].map((p) => loc(localServer.url + p)),
+        ].map((path) => loc(localServer.url + path)),
       );
       check(
         'legacy pages → 302 to the same page on the public site',

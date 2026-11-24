@@ -1,5 +1,5 @@
-// Samples: Freesound search, dropped files and missing files in shared patches (SPEC-SHARING-BACKEND),
-// run by tests/e2e/sharing.ts.
+// Samples: Freesound search, dropped files and missing files in shared patches
+// (SPEC-SHARING-BACKEND), run by tests/e2e/sharing.ts.
 import { type Page } from 'playwright';
 import { sineWav } from '../mock-services.ts';
 import {
@@ -7,7 +7,6 @@ import {
   remote,
   created,
   base,
-  mocks,
   check,
   probe,
   renderHash,
@@ -19,41 +18,46 @@ import {
   local,
   closeShare,
   searchLimitedAt,
+  editTokenOf,
+  mockServices,
 } from './harness.ts';
+import { located } from '../located.ts';
+import type { SelectedBlockView } from '../pageGlobals.shared.ts';
+import type { FileRef, FreesoundRef } from '../../../web/src/patch/samples.ts';
 
 /** css px of a point in v1 device px (the v1 UI works in device px). */
 const v1Css = (page: Page, fn: string) =>
-  page.evaluate(
+  page.evaluate<[number, number]>(
     `(() => { const s = window.__bd_probe, A = s.v1App, u = A.Unit, pr = A.Metrics?.PixelRatio ?? devicePixelRatio; const r = (${fn})(s, A, u); return [r[0] / pr, r[1] / pr]; })()`,
-  ) as Promise<[number, number]>;
-const sampleState = (p: Page) =>
-  p.evaluate(
-    () =>
-      (window as any).__bd_probe.samples as {
-        id: number;
-        track: string;
-        loaded: boolean;
-        frames: number;
-      }[],
+  );
+/** The Sample blocks on the stage: their track, and whether its audio is loaded. */
+const sampleState = (page: Page) =>
+  page.evaluate(() =>
+    window.__bd_probe.samples.map((sample) => ({
+      ...sample,
+      track: typeof sample.track === 'string' ? sample.track : '',
+    })),
   );
 
-/** Open the options panel of the block at grid (gx, gy) with a real click, then its sample row's search button. */
+/** Open the options panel of the block at grid (gx, gy) with a real click, then its sample row's
+ * search button. */
 async function openSamplePanel(page: Page, gx: number, gy: number): Promise<void> {
   const id = await page.evaluate(
-    ([a, b]) =>
-      (window as any).__bd_probe.state.blocks.find((block: any) => block.x === a && block.y === b)
-        ?.id,
+    ([a, b]) => window.__bd_probe.state.blocks.find((block) => block.x === a && block.y === b)?.id,
     [gx, gy],
   );
-  const [x, y] = await page.evaluate((i) => (window as any).__bd_probe.blockPoint(i), id);
-  await page.mouse.click(x, y);
-  await page.waitForFunction(
-    () => (window as any).__bd_probe.scene.OptionsPanel.Scale === 1,
-    null,
-    { timeout: 5000 },
+  if (id === undefined) throw new Error(`no block at ${gx}, ${gy}`);
+  const [x, y] = located(
+    await page.evaluate((blockId) => window.__bd_probe.blockPoint(blockId), id),
+    `block ${id}`,
   );
+  await page.mouse.click(x, y);
+  await page.waitForFunction(() => window.__bd_probe.scene.OptionsPanel.Scale === 1, null, {
+    timeout: 5000,
+  });
   await page.waitForTimeout(400);
-  // v1 OptionsPanel hit rect for a "sample" option: HandleRoll[0] = x from Margin + 65% of Range, full row height.
+  // v1 OptionsPanel hit rect for a "sample" option: HandleRoll[0] = x from Margin + 65% of Range,
+  // full row height.
   const [sx, sy] = await v1Css(
     page,
     `(s) => { const o = s.scene.OptionsPanel, opt = o.Options.find(q => q.Type === 'sample');
@@ -62,12 +66,13 @@ async function openSamplePanel(page: Page, gx: number, gy: number): Promise<void
   await page.mouse.move(sx, sy);
   await page.waitForTimeout(100);
   await page.mouse.click(sx, sy);
-  await page.waitForFunction(() => (window as any).__bd_probe.scene.SoundcloudPanel.Open, null, {
+  await page.waitForFunction(() => window.__bd_probe.scene.SoundcloudPanel.Open, null, {
     timeout: 5000,
   });
   await page.waitForTimeout(700);
 }
-/** Drop a file on the stage at grid (gx, gy) as the browser would (DragEvent with a DataTransfer). */
+/** Drop a file on the stage at grid (gx, gy) as the browser would (a DragEvent with a
+ * DataTransfer). */
 async function dropFile(
   page: Page,
   gx: number,
@@ -75,20 +80,18 @@ async function dropFile(
   name: string,
   bytes: Buffer,
 ): Promise<void> {
-  const [x, y] = await page.evaluate(
-    ([a, b]) => (window as any).__bd_probe.toCss(a, b),
-    [gx, gy + 0.3],
-  );
+  const [x, y] = await page.evaluate(([a, b]) => window.__bd_probe.toCss(a, b), [gx, gy + 0.3]);
   await page.evaluate(
-    ([b64, n, cx, cy]) => {
-      const bin = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    ([b64, fileName, cx, cy]) => {
+      const bin = Uint8Array.from(atob(b64), (char) => char.charCodeAt(0));
       const dt = new DataTransfer();
-      dt.items.add(new File([bin], n, { type: 'audio/wav' }));
-      const canvas = document.querySelector('#stage canvas:last-of-type')!,
-        boundingClientRect = canvas.getBoundingClientRect();
+      dt.items.add(new File([bin], fileName, { type: 'audio/wav' }));
+      const canvas = document.querySelector('#stage canvas:last-of-type');
+      if (!canvas) throw new Error('no stage canvas');
+      const boundingClientRect = canvas.getBoundingClientRect();
       const at = {
-        clientX: boundingClientRect.left + (cx as number),
-        clientY: boundingClientRect.top + (cy as number),
+        clientX: boundingClientRect.left + cx,
+        clientY: boundingClientRect.top + cy,
         bubbles: true,
         cancelable: true,
         dataTransfer: dt,
@@ -117,32 +120,32 @@ export const sampleTests: SharingTests = {
     };
     const a = await open(browser, `${base}/?v1=${encodeURIComponent(JSON.stringify(comp))}`);
     await a
-      .waitForFunction(() => (window as any).__bd_probe.samples.some((x: any) => x.loaded), null, {
+      .waitForFunction(() => window.__bd_probe.samples.some((x) => x.loaded), null, {
         timeout: 30000,
       })
       .catch(() => {});
     const dflt = (await sampleState(a))[0];
     check(
       "a new Sample starts with v2's default CC0 Freesound sound (v1's default file is gone)",
-      dflt?.track === 'freesound:223835' && dflt.loaded,
+      dflt.track === 'freesound:223835' && dflt.loaded,
       dflt,
     );
     await a.waitForTimeout(1000);
     await openSamplePanel(a, 0, 2);
     const block = () =>
       a.evaluate(() => {
-        const s = (window as any).__bd_probe;
-        const b = s.scene.OptionsPanel.SelectedBlock;
+        const selected = window.__bd_probe.scene.OptionsPanel
+          .SelectedBlock as SelectedBlockView | null;
         return {
-          results: b?.SearchResults.length ?? 0,
-          searching: b?.Searching,
-          query: b?.SearchString,
+          results: selected?.SearchResults.length ?? 0,
+          searching: selected?.Searching,
+          query: selected?.SearchString,
         };
       });
     await a
       .waitForFunction(
         () => {
-          const b = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock;
+          const b = window.__bd_probe.scene.OptionsPanel.SelectedBlock as SelectedBlockView | null;
           return b && !b.Searching && b.SearchResults.length > 0;
         },
         null,
@@ -150,7 +153,8 @@ export const sampleTests: SharingTests = {
       )
       .catch(() => {});
     const first = await block();
-    // v1's random two-word query can match nothing on real Freesound; the mock always answers (typed search below needs results).
+    // v1's random two-word query can match nothing on real Freesound; the mock always answers
+    // (typed search below needs results).
     check(
       "sample panel opens with v1's random search, results from Freesound",
       (remote !== null || first.results > 0) && !!first.query && !first.searching,
@@ -158,12 +162,13 @@ export const sampleTests: SharingTests = {
     );
     await a.screenshot({ path: `${OUT}/sample-search.png` });
 
-    // Type a search (Enter submits, as v1's EnterCheck), without reloading the page or playing notes.
+    // Type a search (Enter submits, as v1's EnterCheck), without reloading the page or playing
+    // notes.
     const notesBefore = (await probe(a)).gateOns;
     const [ix, iy] = await a.evaluate(() => {
-      const boundingClientRect = document
-        .getElementById('soundCloudSearchInput')!
-        .getBoundingClientRect();
+      const input = document.getElementById('soundCloudSearchInput');
+      if (!input) throw new Error('no search field');
+      const boundingClientRect = input.getBoundingClientRect();
       return [
         boundingClientRect.left + boundingClientRect.width / 2,
         boundingClientRect.top + boundingClientRect.height / 2,
@@ -177,7 +182,7 @@ export const sampleTests: SharingTests = {
     await a
       .waitForFunction(
         () => {
-          const b = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock;
+          const b = window.__bd_probe.scene.OptionsPanel.SelectedBlock as SelectedBlockView | null;
           return b && !b.Searching && b.SearchResults.length > 0;
         },
         null,
@@ -189,19 +194,19 @@ export const sampleTests: SharingTests = {
       'typed search + Enter searches (no page reload)',
       /^bells?$/i.test(typed.query ?? '') &&
         typed.results > 0 &&
-        (await a.evaluate(() => !!(window as any).__bd_probe)),
+        (await a.evaluate(() => !!window.__bd_probe)),
       typed,
     );
     check('typing in the search box plays no notes', (await probe(a)).gateOns === notesBefore);
     if (!remote) {
-      const sr = mocks!.requests.filter((request) =>
+      const sr = mockServices().requests.filter((request) =>
         request.path.startsWith('/apiv2/search/text/'),
       );
       check(
         'the Worker searched Freesound with its own key (never the browser)',
         sr.length > 0 &&
-          sr.every((r) => r.auth === 'Token test-freesound-key') &&
-          sr.some((r) => r.path.includes('query=bells')),
+          sr.every((request) => request.auth === 'Token test-freesound-key') &&
+          sr.some((request) => request.path.includes('query=bells')),
         sr.length,
       );
     }
@@ -217,9 +222,12 @@ export const sampleTests: SharingTests = {
     await a
       .waitForFunction(
         () =>
-          (window as any).__bd_probe.samples.some(
-            (x: any) =>
-              x.loaded && x.track.startsWith('freesound:') && x.track !== 'freesound:223835',
+          window.__bd_probe.samples.some(
+            (x) =>
+              x.loaded &&
+              typeof x.track === 'string' &&
+              x.track.startsWith('freesound:') &&
+              x.track !== 'freesound:223835',
           ),
         null,
         { timeout: 30000 },
@@ -228,10 +236,10 @@ export const sampleTests: SharingTests = {
     const st = await sampleState(a),
       pa = await probe(a);
     const track = st[0]?.track ?? '';
-    const ref = pa.patch.refs?.[track];
+    const ref = pa.patch.refs?.[track] as FreesoundRef | undefined;
     check(
       'choosing a result loads it into the Sample',
-      !!st[0]?.loaded && /^freesound:\d+$/.test(track) && track !== 'freesound:223835',
+      st.at(0)?.loaded === true && /^freesound:\d+$/.test(track) && track !== 'freesound:223835',
       st,
     );
     check(
@@ -246,8 +254,9 @@ export const sampleTests: SharingTests = {
     check(
       'options panel credits the sound (v1 "By <user>")',
       await a.evaluate(() => {
-        const selectedBlock = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock;
-        return !!selectedBlock?.Params.user && !!selectedBlock?.Params.permalink;
+        const selectedBlock = window.__bd_probe.scene.OptionsPanel
+          .SelectedBlock as SelectedBlockView | null;
+        return !!selectedBlock?.Params.user && !!selectedBlock.Params.permalink;
       }),
     );
     const hashA = await renderHash(a);
@@ -258,19 +267,16 @@ export const sampleTests: SharingTests = {
     await a.waitForTimeout(600);
     const url = await shareVia(a, 'generate');
     const id = idOf(url);
-    const tok = await a.evaluate(
-      (i) => JSON.parse(localStorage.getItem('blokdust2.editTokens') ?? '{}')[i],
-      id,
-    );
+    const tok = await editTokenOf(a, id);
     if (id && tok) created.push({ id, token: tok });
     check(
       'share panel: no warning for a Freesound sample',
-      await a.evaluate(() => !(window as any).__bd_probe.scene.host.links.warning()),
+      await a.evaluate(() => !window.__bd_probe.scene.host.links?.warning()),
     );
     const b = await open(browser, local(url));
     await b
       .waitForFunction(
-        (t) => (window as any).__bd_probe.samples.some((x: any) => x.loaded && x.track === t),
+        (wanted) => window.__bd_probe.samples.some((x) => x.loaded && x.track === wanted),
         track,
         { timeout: 30000 },
       )
@@ -288,16 +294,13 @@ export const sampleTests: SharingTests = {
     await dropFile(a, 0, 2, 'my-loop.wav', sineWav(330));
     await a
       .waitForFunction(
-        () =>
-          (window as any).__bd_probe.samples.some(
-            (x: any) => x.track === 'file:my-loop.wav' && x.loaded,
-          ),
+        () => window.__bd_probe.samples.some((x) => x.track === 'file:my-loop.wav' && x.loaded),
         null,
         { timeout: 10000 },
       )
       .catch(() => {});
     const pf = await probe(a);
-    const fref = pf.patch.refs?.['file:my-loop.wav'];
+    const fref = pf.patch.refs?.['file:my-loop.wav'] as FileRef | undefined;
     check(
       'dropping a file on a Sample loads it there',
       (await sampleState(a)).some((x) => x.track === 'file:my-loop.wav' && x.loaded),
@@ -320,30 +323,27 @@ export const sampleTests: SharingTests = {
     check(
       'share panel warns: a local file is not in the link',
       await a.evaluate(() =>
-        /own audio samples/.test((window as any).__bd_probe.scene.host.links.warning() ?? ''),
+        (window.__bd_probe.scene.host.links?.warning() ?? '').includes('own audio samples'),
       ),
     );
     await shareVia(a, 'overwrite').catch(() => '');
-    const c = await open(browser, local(url));
-    await c.waitForTimeout(2500);
-    const cs = await sampleState(c);
+    const recipient = await open(browser, local(url));
+    await recipient.waitForTimeout(2500);
+    const cs = await sampleState(recipient);
     check(
       'a recipient sees the file as missing (not loaded, reference kept)',
       cs.length === 1 && !cs[0].loaded && cs[0].track === 'file:my-loop.wav',
       cs,
     );
-    await openSamplePanelIfMissingLabel(c);
-    await c.context().close();
+    await openSamplePanelIfMissingLabel(recipient);
+    await recipient.context().close();
 
     // A file dropped on empty stage makes a new Sample there (v1's planned behaviour).
     const before = (await probe(a)).blocks.length;
     await dropFile(a, 6, -3, 'second.wav', sineWav(550));
     await a
       .waitForFunction(
-        () =>
-          (window as any).__bd_probe.samples.some(
-            (x: any) => x.track === 'file:second.wav' && x.loaded,
-          ),
+        () => window.__bd_probe.samples.some((x) => x.track === 'file:second.wav' && x.loaded),
         null,
         { timeout: 10000 },
       )
@@ -353,11 +353,11 @@ export const sampleTests: SharingTests = {
       'dropping a file on empty stage creates a Sample holding it',
       after.blocks.length === before + 1 &&
         after.patch.blocks.some(
-          (x: any) =>
+          (x) =>
             x.type === 'source.sample' &&
             x.x === 6 &&
             x.y === -3 &&
-            x.params.track === 'file:second.wav',
+            x.params?.track === 'file:second.wav',
         ),
     );
     await a.context().close();
@@ -365,23 +365,28 @@ export const sampleTests: SharingTests = {
 };
 
 /** The recipient's options panel names the missing file (SPEC-SHARING-BACKEND R13). */
-async function openSamplePanelIfMissingLabel(c: Page): Promise<void> {
-  const [x, y] = await c.evaluate(() => {
-    const s = (window as any).__bd_probe;
-    const b = s.state.blocks.find((block: any) => block.type === 'source.sample');
-    return s.blockPoint(b.id);
-  });
-  await c.mouse.click(x, y);
-  await c
-    .waitForFunction(() => (window as any).__bd_probe.scene.OptionsPanel.Scale === 1, null, {
+async function openSamplePanelIfMissingLabel(page: Page): Promise<void> {
+  const [x, y] = located(
+    await page.evaluate(() => {
+      const probe = window.__bd_probe;
+      const sample = probe.state.blocks.find((block) => block.type === 'source.sample');
+      return sample ? probe.blockPoint(sample.id) : null;
+    }),
+    'the Sample block',
+  );
+  await page.mouse.click(x, y);
+  await page
+    .waitForFunction(() => window.__bd_probe.scene.OptionsPanel.Scale === 1, null, {
       timeout: 5000,
     })
     .catch(() => {});
-  await c.waitForTimeout(500);
-  const label = await c.evaluate(
-    () => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock?.Params.trackName ?? '',
+  await page.waitForTimeout(500);
+  const label = await page.evaluate(
+    () =>
+      (window.__bd_probe.scene.OptionsPanel.SelectedBlock as SelectedBlockView | null)?.Params
+        .trackName ?? '',
   );
-  await c.screenshot({ path: `${OUT}/sample-missing.png` });
+  await page.screenshot({ path: `${OUT}/sample-missing.png` });
   check(
     '… and its options panel says MISSING with the file name',
     label.startsWith('MISSING · MY-LOOP.WAV'),

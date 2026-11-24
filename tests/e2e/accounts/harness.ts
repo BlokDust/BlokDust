@@ -271,9 +271,3 @@ export function sharedDevice(key: 'a' | 'b'): Device {
   if (!kept) throw new Error(`device ${key} is made by an earlier test`);
   return kept;
 }
-/** Where a redirect points. */
-export function locationOf(response: Response): string {
-  const location = response.headers.get('location');
-  if (location === null) throw new Error(`no redirect (${response.status})`);
-  return location;
-}

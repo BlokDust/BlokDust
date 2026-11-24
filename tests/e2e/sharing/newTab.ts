@@ -1,4 +1,5 @@
-// A share link opened in a new tab of the same browser shows the same scene, run by tests/e2e/sharing.ts.
+// A share link opened in a new tab of the same browser shows the same scene, run by
+// tests/e2e/sharing.ts.
 import { sineWav } from '../mock-services.ts';
 import {
   type SharingTests,
@@ -11,16 +12,19 @@ import {
   shareVia,
   idOf,
   local,
+  editTokenOf,
 } from './harness.ts';
+import { located } from '../located.ts';
+import type { PatchBlock } from '../../../web/src/patch/loadPatch.ts';
 
 export const newTabTests: SharingTests = {
-  /** Owner review 2026-11-07, bug 5 (not reproduced yet): add blocks from the menus, rearrange, Generate share link, open
-   * the link in a new tab of the same browser → the same scene (not the default stage). */
+  /** Owner review 2026-11-07, bug 5: blocks added from the menus and moved, then Generate: the link
+   * opens that scene in a new tab of the same browser (not the default stage). */
   'share-new-tab': async (browser) => {
     const ctx = await browser.newContext(VIEW);
     if (!remote)
-      await ctx.route('https://cdn.freesound.org/**', (r) =>
-        r.fulfill({
+      await ctx.route('https://cdn.freesound.org/**', (route) =>
+        route.fulfill({
           status: 200,
           contentType: 'audio/wav',
           headers: { 'access-control-allow-origin': '*' },
@@ -29,9 +33,9 @@ export const newTabTests: SharingTests = {
       );
     const a = await ctx.newPage();
     await a.goto(`${base}/`);
-    await a.waitForFunction(() => (window as any).__bd_probe);
+    await a.waitForFunction(() => window.__bd_probe);
     await a.click('#start');
-    await a.waitForFunction(() => (window as any).__bd_probe.state.started);
+    await a.waitForFunction(() => window.__bd_probe.state.started);
     await a.waitForFunction(() => !document.getElementById('start'), null, { timeout: 20000 });
     await a.waitForTimeout(2000);
     const dragOut = async (
@@ -54,7 +58,10 @@ export const newTabTests: SharingTests = {
     await dragOut([421, 45], [182, 180], [700, 600]); // SOURCE → Tone
     await dragOut([692, 45], [365, 180], [630, 600]); // POWER → Power (second item of a paged menu)
     const first = (await probe(a)).blocks[0];
-    const p0 = await a.evaluate((i) => (window as any).__bd_probe.blockPoint(i), first.id);
+    const p0 = located(
+      await a.evaluate((id) => window.__bd_probe.blockPoint(id), first.id),
+      'the first block',
+    );
     await a.mouse.move(p0[0], p0[1]);
     await a.mouse.down();
     await a.mouse.move(p0[0] + 150, p0[1] + 80, { steps: 8 });
@@ -62,17 +69,15 @@ export const newTabTests: SharingTests = {
     await a.waitForTimeout(800);
     const scene = (await probe(a)).patch.blocks;
     const url = await shareVia(a, 'generate');
-    const tok = await a.evaluate(
-      (i) => JSON.parse(localStorage.getItem('blokdust2.editTokens') ?? '{}')[i],
-      idOf(url),
-    );
+    const tok = await editTokenOf(a, idOf(url));
     if (tok) created.push({ id: idOf(url), token: tok });
     const b = await ctx.newPage();
     await b.goto(local(url));
-    await b.waitForFunction(() => (window as any).__bd_probe);
+    await b.waitForFunction(() => window.__bd_probe);
     await b.waitForTimeout(1000);
     const opened = (await probe(b)).patch.blocks;
-    const key = (bl: any[]) => JSON.stringify(bl.map((x) => [x.type, x.x, x.y]));
+    const key = (blocks: PatchBlock[]) =>
+      JSON.stringify(blocks.map((block) => [block.type, block.x, block.y]));
     check(
       'edited scene (2 blocks added from menus, 1 moved) → Generate → new tab opens that scene',
       scene.length === before0 + 2 && key(opened) === key(scene),

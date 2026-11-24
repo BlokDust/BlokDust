@@ -13,25 +13,27 @@ import {
   shareVia,
   idOf,
   closeShare,
+  editTokenOf,
+  madePatch,
+  hasTranspose,
 } from './harness.ts';
+import { located } from '../located.ts';
+import type { MessageBarState } from '../pageGlobals.shared.ts';
 
 export const savingTests: SharingTests = {
-  /** Acceptance: Share → open in a fresh browser → identical render hash; Overwrite / Create new as v1. */
-  /** CHG-0033 (owner, 2026-11-17), R18–R20: Cmd/Ctrl+S and the corner's UNSAVED/SAVE save over your own link (same
-   * id and title, no gallery field, no panel) and v1's message bar says SAVED; the corner names the patch and marks
-   * unsaved changes, which survive a reload; a failed save says so and changes nothing. */
-  /** Owner (2026-11-18): a link to no patch opened this browser's last stage (a made-up id) or an empty one, with no
-   * word. Now the message bar says why and the stage starts blank; the bad link leaves the address bar; this browser's
-   * autosave is kept. Deleted patches answer 410 (SPEC-SHARING-BACKEND R4b). */
+  /** A link to no patch: the message bar says why, the stage starts blank, the link leaves the
+   * address bar and the autosave is kept; deleted patches answer 410 (SPEC-SHARING-BACKEND R4b). */
   async 'missing-links'(browser) {
     if (remote) return;
-    const made = await api('POST', 'patches', {
-      patch: PATCH,
-      turnstile: 'XXXX.DUMMY.TOKEN.XXXX',
-      title: 'Soon gone',
-    });
-    const del = await api('DELETE', `patches/${made.json.id}`, undefined, made.json.editToken);
-    const gone = await api('GET', `patches/${made.json.id}`);
+    const made = madePatch(
+      await api('POST', 'patches', {
+        patch: PATCH,
+        turnstile: 'XXXX.DUMMY.TOKEN.XXXX',
+        title: 'Soon gone',
+      }),
+    );
+    const del = await api('DELETE', `patches/${made.id}`, undefined, made.token);
+    const gone = await api('GET', `patches/${made.id}`);
     check(
       'a deleted patch answers 410; one that never was, 404',
       del.status === 204 &&
@@ -41,40 +43,44 @@ export const savingTests: SharingTests = {
     );
     const page = await open(browser, `${base}/?demo`);
     // This browser's last stage (its autosave), as a visit without a link would restore it.
-    const autosave = await page.evaluate((p) => {
-      localStorage.setItem('blokdust2.autosave', JSON.stringify(p));
+    const autosave = await page.evaluate((patch) => {
+      localStorage.setItem('blokdust2.autosave', JSON.stringify(patch));
       return localStorage.getItem('blokdust2.autosave');
     }, PATCH);
     const cases: [string, RegExp][] = [
       ['madeUpId', /doesn.t lead to a patch/i],
       ['A000000000', /doesn.t lead to a patch/i],
-      [made.json.id, /has been deleted/i],
+      [made.id, /has been deleted/i],
     ];
     const seen: unknown[] = [];
     let ok = !!autosave;
     for (const [id, want] of cases) {
       await page.goto(`${base}/?c=${id}&t=Whatever`);
-      await page.waitForFunction(() => (window as any).__bd_probe);
+      await page.waitForFunction(() => window.__bd_probe);
       if (await page.$('#start')) await page.click('#start');
-      await page.waitForFunction(() => (window as any).__bd_probe.state.started, null, {
+      await page.waitForFunction(() => window.__bd_probe.state.started, null, {
         timeout: 20000,
       });
       await page
-        .waitForFunction(() => (window as any).__bd_probe.scene.MessagePanel.Open, null, {
+        .waitForFunction(() => window.__bd_probe.scene.MessagePanel.Open, null, {
           timeout: 8000,
         })
         .catch(() => {});
-      const r = await page.evaluate(() => {
-        const w = window as any;
+      const shown = await page.evaluate(() => {
+        const scene = window.__bd_probe.scene;
         return {
-          text: String(w.__bd_probe.scene.MessagePanel._Value?.string ?? ''),
-          blocks: w.__bd_probe.scene.host.hasBlocks(),
+          text: (scene.MessagePanel as unknown as MessageBarState)._Value?.string ?? '',
+          blocks: scene.host.hasBlocks(),
           url: location.search,
           autosave: localStorage.getItem('blokdust2.autosave'),
         };
       });
-      seen.push({ id, ...r, autosave: r.autosave === autosave });
-      ok &&= want.test(r.text) && !r.blocks && !r.url.includes('c=') && r.autosave === autosave;
+      seen.push({ id, ...shown, autosave: shown.autosave === autosave });
+      ok &&=
+        want.test(shown.text) &&
+        !shown.blocks &&
+        !shown.url.includes('c=') &&
+        shown.autosave === autosave;
     }
     await page.context().close();
     check(
@@ -84,40 +90,45 @@ export const savingTests: SharingTests = {
     );
   },
 
+  /** CHG-0033, R18–R20: Cmd/Ctrl+S and the corner's SAVE save over your own link; the corner marks
+   * unsaved changes, which survive a reload; a failed save says so and changes nothing. */
   async 'quick-save'(browser) {
     const a = await open(browser, `${base}/?demo`);
-    await a.evaluate(() => (window as any).__bd_probe.scene.setWorldPower(false));
+    await a.evaluate(() => {
+      window.__bd_probe.scene.setWorldPower(false);
+    });
     const corner = () =>
       a.evaluate(
         () =>
-          (window as any).__bd_probe.corners as {
+          window.__bd_probe.corners as {
             own: { title: string; dirty: boolean; saving: boolean; hover: boolean } | null;
             saveAt: [number, number] | null;
           },
       );
     const msg = () =>
       a.evaluate(() => {
-        const messagePanel = (window as any).__bd_probe.scene.MessagePanel;
+        const messagePanel = window.__bd_probe.scene.MessagePanel as unknown as MessageBarState;
         return {
           open: messagePanel.Open,
           shown: messagePanel._Alpha > 0,
           text: messagePanel._Value?.string,
         };
       });
-    const puts: { url: string; body: any }[] = [];
-    a.on('request', (r) => {
-      if (r.url().includes('/api/patches') && r.method() !== 'GET')
+    const puts: { url: string; body: { title?: string; gallery?: unknown } }[] = [];
+    a.on('request', (request) => {
+      if (request.url().includes('/api/patches') && request.method() !== 'GET')
         puts.push({
-          url: `${r.method()} ${r.url().replace(/^.*\/api\//, '')}`,
-          body: JSON.parse(r.postData() ?? '{}'),
+          url: `${request.method()} ${request.url().replace(/^.*\/api\//, '')}`,
+          body: JSON.parse(request.postData() ?? '{}') as { title?: string },
         });
     });
-    const transpose = (v: number) =>
-      a.evaluate((n) => {
-        const s = (window as any).__bd_probe;
-        const t = s.state.blocks.find((x: any) => x.type === 'source.tone');
-        s.scene.host.setParam(t.id, 'transpose', n);
-      }, v);
+    const transpose = (semitones: number) =>
+      a.evaluate((value) => {
+        const probe = window.__bd_probe;
+        const tone = probe.state.blocks.find((block) => block.type === 'source.tone');
+        if (!tone) throw new Error('no Tone on the stage');
+        probe.scene.host.setParam(tone.id, 'transpose', value);
+      }, semitones);
     const key = async () => {
       await a.keyboard.press('ControlOrMeta+s');
     };
@@ -125,8 +136,8 @@ export const savingTests: SharingTests = {
       a
         .waitForFunction(
           () => {
-            const o = (window as any).__bd_probe.corners.own;
-            return o && !o.saving && !o.dirty;
+            const own = window.__bd_probe.corners.own;
+            return own && !own.saving && !own.dirty;
           },
           null,
           { timeout: 30000 },
@@ -139,28 +150,23 @@ export const savingTests: SharingTests = {
     check(
       'R18: no link of your own: Cmd/Ctrl+S opens Patches › SAVE, saves nothing',
       (await a.evaluate(() => {
-        const pp = (window as any).__bd_probe.scene.PatchesPanel;
-        return pp.Open && pp.Tab === 0;
+        const panel = window.__bd_probe.scene.PatchesPanel;
+        return panel.Open && panel.Tab === 0;
       })) &&
         puts.length === 0 &&
         (await corner()).own === null,
     );
-    const title = await a.evaluate(() =>
-      (window as any).__bd_probe.scene.PatchesPanel.Title.trim(),
-    );
+    const title = await a.evaluate(() => window.__bd_probe.scene.PatchesPanel.Title.trim());
     const url = await shareVia(a, 'generate'),
       id = idOf(url);
-    const token = await a.evaluate(
-      (i) => JSON.parse(localStorage.getItem('blokdust2.editTokens') ?? '{}')[i],
-      id,
-    );
+    const token = await editTokenOf(a, id);
     if (id && token) created.push({ id, token });
     await closeShare(a);
     const c0 = await corner();
     await a.screenshot({ path: `${OUT}/quick-save-clean.png` });
     check(
       'R19: your saved link: the corner names it, nothing unsaved',
-      c0.own?.title === title && !c0.own?.dirty && !c0.saveAt,
+      c0.own?.title === title && !c0.own.dirty && !c0.saveAt,
       c0,
     );
 
@@ -171,7 +177,8 @@ export const savingTests: SharingTests = {
     await a.waitForTimeout(200);
     await a.screenshot({ path: `${OUT}/quick-save-unsaved.png` });
     check('R19: a change marks it UNSAVED', !!c1.own?.dirty && !!c1.saveAt, c1);
-    await a.mouse.move(c1.saveAt![0], c1.saveAt![1]);
+    const saveAt = located(c1.saveAt, 'the corner SAVE');
+    await a.mouse.move(saveAt[0], saveAt[1]);
     await a.waitForTimeout(300);
     const hover = await corner();
     await a.screenshot({ path: `${OUT}/quick-save-hover.png` });
@@ -193,10 +200,10 @@ export const savingTests: SharingTests = {
         !('gallery' in puts[0].body) &&
         puts[0].body.title === title &&
         g1.json?.rev === 2 &&
-        g1.json?.title === title &&
-        g1.json?.patch?.blocks?.some((x: any) => x.params?.transpose === 5) &&
+        g1.json.title === title &&
+        hasTranspose(g1.json, 5) &&
         idOf(a.url()) === id &&
-        !(await a.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Open)),
+        !(await a.evaluate(() => window.__bd_probe.scene.PatchesPanel.Open)),
       { puts: puts.map((put) => put.url), rev: g1.json?.rev, title: g1.json?.title, at: a.url() },
     );
     check(
@@ -220,26 +227,30 @@ export const savingTests: SharingTests = {
     await transpose(3);
     await a.waitForTimeout(800);
     const c2 = await corner();
-    await a.mouse.move(c2.saveAt![0], c2.saveAt![1]);
-    await a.mouse.click(c2.saveAt![0], c2.saveAt![1]);
+    const cornerSave = located(c2.saveAt, 'the corner SAVE');
+    await a.mouse.move(cornerSave[0], cornerSave[1]);
+    await a.mouse.click(cornerSave[0], cornerSave[1]);
     await settled();
     const g2 = await api('GET', `patches/${id}`);
     check(
       'R19: pressing SAVE in the corner saves over the link',
-      g2.json?.rev === 3 && g2.json?.patch?.blocks?.some((x: any) => x.params?.transpose === 3),
+      g2.json?.rev === 3 && hasTranspose(g2.json, 3),
       g2.json?.rev,
     );
 
-    // A failed save says so, keeps the link and the unsaved mark (R18: never a new self-contained link).
+    // A failed save says so, keeps the link and the unsaved mark (R18: never a new self-contained
+    // link).
     await transpose(4);
     await a.waitForTimeout(800);
-    await a.route('**/api/patches/**', (r) =>
-      r.request().method() === 'PUT' ? r.fulfill({ status: 500, body: '{}' }) : r.continue(),
+    await a.route('**/api/patches/**', (route) =>
+      route.request().method() === 'PUT'
+        ? route.fulfill({ status: 500, body: '{}' })
+        : route.continue(),
     );
     await a.waitForTimeout(3500);
     await key();
     await a
-      .waitForFunction(() => !(window as any).__bd_probe.corners.own?.saving, null, {
+      .waitForFunction(() => !window.__bd_probe.corners.own?.saving, null, {
         timeout: 30000,
       })
       .catch(() => {});
@@ -258,17 +269,17 @@ export const savingTests: SharingTests = {
 
     // R20: unsaved edits survive a reload and still show as UNSAVED.
     await a.reload();
-    await a.waitForFunction(() => (window as any).__bd_probe);
+    await a.waitForFunction(() => window.__bd_probe);
     await a.click('#start');
-    await a.waitForFunction(() => (window as any).__bd_probe.state.started, null, {
+    await a.waitForFunction(() => window.__bd_probe.state.started, null, {
       timeout: 20000,
     });
     await a.waitForTimeout(1500);
     const c4 = await corner(),
-      kept = (await probe(a)).patch.blocks.some((x: any) => x.params?.transpose === 4);
+      kept = hasTranspose(await probe(a), 4);
     check(
       'R20: after a reload the unsaved edit is back and marked UNSAVED',
-      kept && c4.own?.title === title && !!c4.own?.dirty,
+      kept && c4.own?.title === title && c4.own.dirty,
       { kept, own: c4.own },
     );
     await a.context().close();
