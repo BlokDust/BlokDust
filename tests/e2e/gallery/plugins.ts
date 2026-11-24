@@ -1,29 +1,41 @@
 // The plugins have GALLERY from their server, which answers only their origin (CHG-0039), run by
 // tests/e2e/gallery.ts.
-import { check, base, browser, type Device, P, GALLERY, press, tab, idle } from './harness.ts';
+import {
+  check,
+  base,
+  browser,
+  type Device,
+  panelState,
+  GALLERY,
+  press,
+  tab,
+  idle,
+} from './harness.ts';
+import type { SentMessage } from '../pageGlobals.shared.ts';
+import type { Patch } from '../../../web/src/patch/loadPatch.ts';
 
 export async function pluginGallery(): Promise<void> {
-  // ---- CHG-0039 (owner, 2026-11-19): the plugins have GALLERY, from their server; a patch opened there goes to the
-  // processor (the DAW project keeps it). The server answers the plugins' origin only, never with credentials. ----
+  // ---- CHG-0039: the plugins have GALLERY from their server; a patch opened there goes to the
+  // processor (the DAW keeps it). The server answers their origin only, never with credentials ----
   {
     const pctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
     await pctx.addInitScript(
       ([site]) => {
-        const listeners: Record<string, ((x: unknown) => void)[]> = {},
-          sent: { id: string; v: any }[] = [];
-        (window as any).__sent = sent;
-        (window as any).__bd_pluginSite = site;
-        (window as any).__JUCE__ = {
+        const listeners: Partial<Record<string, ((payload: unknown) => void)[]>> = {},
+          sent: SentMessage[] = [];
+        window.__sent = sent;
+        window.__bd_pluginSite = site;
+        window.__JUCE__ = {
           backend: {
-            addEventListener: (id: string, fn: (x: unknown) => void) => {
-              (listeners[id] ??= []).push(fn);
+            addEventListener: (id: string, listener: (payload: unknown) => void) => {
+              (listeners[id] ??= []).push(listener);
             },
-            emitEvent: (id: string, v: unknown) => {
-              sent.push({ id, v });
+            emitEvent: (id: string, payload: unknown) => {
+              sent.push({ id, v: payload });
               if (id === 'bd_hello')
                 setTimeout(() => {
-                  listeners.bd_patch?.forEach((f) => {
-                    f({
+                  listeners.bd_patch?.forEach((listener) => {
+                    listener({
                       patch: JSON.stringify({
                         format: 'blokdust.patch',
                         version: 2,
@@ -41,37 +53,38 @@ export async function pluginGallery(): Promise<void> {
       [`${base}/`] as const,
     );
     const plug: Device = { ctx: pctx, page: await pctx.newPage() };
-    plug.page.on('pageerror', (e) => {
-      console.error(`  page error: ${e.message}`);
+    plug.page.on('pageerror', (error) => {
+      console.error(`  page error: ${error.message}`);
     });
     await plug.page.goto(`${base}/index.html`);
-    await plug.page.waitForFunction(() => (window as any).__bd_probe?.state.started, null, {
-      timeout: 20000,
-    });
+    await plug.page.waitForFunction(
+      () => '__bd_probe' in window && window.__bd_probe.state.started,
+      null,
+      {
+        timeout: 20000,
+      },
+    );
     await plug.page.waitForTimeout(1200);
     await tab(plug, GALLERY);
     await idle(plug);
     await press(plug, 'sort_examples', 300);
     await idle(plug);
-    const listed = (await P(plug)).items.map((item: { title: string }) => item.title);
+    const listed = (await panelState(plug)).items.map((item) => item.title);
     await press(plug, 'gopen0', 600);
-    if (
-      (await plug.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View)) ===
-      'confirm'
-    )
+    if ((await plug.page.evaluate(() => window.__bd_probe.scene.PatchesPanel.View)) === 'confirm')
       await press(plug, 'openAnyway', 600);
     await plug.page
       .waitForFunction(
-        () => ((window as any).__sent as { id: string }[]).some((e) => e.id === 'bd_patchApply'),
+        () => (window.__sent ?? []).some((message) => message.id === 'bd_patchApply'),
         null,
         { timeout: 15000 },
       )
       .catch(() => {});
     const applied = await plug.page.evaluate(() => {
-      const e = ((window as any).__sent as { id: string; v: any }[]).find(
-        (x) => x.id === 'bd_patchApply',
-      );
-      return e ? { mode: e.v.mode, blocks: JSON.parse(e.v.patch).blocks.length } : null;
+      const message = (window.__sent ?? []).find((each) => each.id === 'bd_patchApply');
+      if (!message) return null;
+      const apply = message.v as { mode: string; patch: string };
+      return { mode: apply.mode, blocks: (JSON.parse(apply.patch) as Patch).blocks.length };
     });
     check(
       'CHG-0039: the plugins have GALLERY (from their server); OPEN hands the patch to the processor',
@@ -100,7 +113,7 @@ export async function pluginGallery(): Promise<void> {
       method: 'OPTIONS',
       headers: { origin: 'https://evil.example', 'access-control-request-method': 'DELETE' },
     });
-    const h = (response: Response) => ({
+    const corsOf = (response: Response) => ({
       status: response.status,
       acao: response.headers.get('access-control-allow-origin'),
       creds: response.headers.get('access-control-allow-credentials'),
@@ -109,15 +122,21 @@ export async function pluginGallery(): Promise<void> {
     check(
       "CHG-0039: the API allows the plugins' origins (juce://, https://juce.backend), with a key header, never credentials; no other origin",
       pre.status === 204 &&
-        h(pre).acao === 'juce://juce.backend' &&
-        (h(pre).headers ?? '').includes('authorization') &&
-        !h(pre).creds &&
-        h(get).acao === 'juce://juce.backend' &&
-        !h(get).creds &&
-        h(win).acao === 'https://juce.backend' &&
-        !h(evil).acao &&
-        !h(evilPre).acao,
-      { pre: h(pre), get: h(get), win: h(win), evil: h(evil), evilPre: h(evilPre) },
+        corsOf(pre).acao === 'juce://juce.backend' &&
+        (corsOf(pre).headers ?? '').includes('authorization') &&
+        !corsOf(pre).creds &&
+        corsOf(get).acao === 'juce://juce.backend' &&
+        !corsOf(get).creds &&
+        corsOf(win).acao === 'https://juce.backend' &&
+        !corsOf(evil).acao &&
+        !corsOf(evilPre).acao,
+      {
+        pre: corsOf(pre),
+        get: corsOf(get),
+        win: corsOf(win),
+        evil: corsOf(evil),
+        evilPre: corsOf(evilPre),
+      },
     );
   }
 }

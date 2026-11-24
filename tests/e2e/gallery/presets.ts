@@ -1,16 +1,30 @@
 // The presets are @blokdust's EXAMPLES; OPEN lists only the user's own patches (R16), run by
 // tests/e2e/gallery.ts.
-import { OUT, check, P, type Cast, GALLERY, press, tab, idle, search, api, bd } from './harness.ts';
+import {
+  OUT,
+  check,
+  panelState,
+  type Cast,
+  GALLERY,
+  press,
+  tab,
+  idle,
+  search,
+  bd,
+  galleryItems,
+} from './harness.ts';
+import type { MessageBarState } from '../pageGlobals.shared.ts';
 
 export async function presetExamples({ anon, carol }: Pick<Cast, 'anon' | 'carol'>): Promise<void> {
-  // ---- R16 (owner review 3): the presets are @blokdust's EXAMPLES; OPEN lists only the user's own patches ----
+  // ---- R16 (owner review 3): the presets are @blokdust's EXAMPLES; OPEN lists only the user's own
+  // patches ----
   const seeded = bd('presets'),
     again2 = bd('presets');
   await tab(carol, GALLERY);
   await search(carol, '');
   await press(carol, 'sort_examples', 300);
   await idle(carol);
-  const examples = await P(carol);
+  const examples = await panelState(carol);
   await carol.page.mouse.move(5, 5);
   await carol.page.waitForTimeout(300);
   await carol.page.screenshot({ path: `${OUT}/gallery-examples.png` });
@@ -24,27 +38,25 @@ export async function presetExamples({ anon, carol }: Pick<Cast, 'anon' | 'carol
   ];
   check(
     "R16: bd gallery presets publishes the six presets (2.0.2 added Self Playing Scene) as @blokdust's EXAMPLES, in order, once",
-    seeded.added.length === 6 &&
-      again2.added.length === 0 &&
+    seeded.added?.length === 6 &&
+      again2.added?.length === 0 &&
       examples.sort === 'examples' &&
-      examples.items.map((item: { title: string }) => item.title).join() === want.join() &&
-      examples.items.every((item: { by: string }) => item.by === 'blokdust'),
+      examples.items.map((item) => item.title).join() === want.join() &&
+      examples.items.every((item) => item.by === 'blokdust'),
     {
       seeded,
       again: again2,
-      examples: examples.items.map(
-        (item: { title: string; by: string }) => `${item.title} @${item.by}`,
-      ),
+      examples: examples.items.map((item) => `${item.title} @${item.by}`),
     },
   );
   // TUTORIALS has no button while there are none (CHG-0035); the API still lists them.
-  const tutorialsEmpty = (await api(anon, 'GET', 'gallery?sort=tutorials')).json.items.length;
-  bd('kind', seeded.added[4].id, 'tutorial');
-  const tutorials = (
-    (await api(anon, 'GET', 'gallery?sort=tutorials')).json.items as { title: string }[]
-  ).map((r) => r.title);
+  const tutorialsEmpty = (await galleryItems(anon, 'sort=tutorials')).length;
+  const fifth = seeded.added?.[4]?.id;
+  if (!fifth) throw new Error('bd gallery presets added no fifth example');
+  bd('kind', fifth, 'tutorial');
+  const tutorials = (await galleryItems(anon, 'sort=tutorials')).map((row) => row.title);
   const sorts = await carol.page.evaluate(() =>
-    (window as any).__bd_probe.scene.PatchesPanel.sortButtons().map((b: any) => b.label),
+    window.__bd_probe.scene.PatchesPanel.sortButtons().map((button) => button.label),
   );
   check(
     'R16: bd gallery kind moves one to TUTORIALS (API); the sorts read POPULAR · ALL TIME TOP · NEW · EXAMPLES',
@@ -55,50 +67,43 @@ export async function presetExamples({ anon, carol }: Pick<Cast, 'anon' | 'carol
   );
   await press(carol, 'sort_examples', 300);
   await idle(carol);
-  // Owner review 3: while the patch is fetched the panel stays up with the spinner (the old stage can't be touched), then
-  // closes; if it can't be fetched, the message bar says so (owner, 2026-11-18: no server → check your connection).
+  // While the patch is fetched the panel stays up with the spinner, then closes; if it can't be
+  // fetched, the message bar says so (no server: check your connection).
   const opening = () =>
     carol.page.evaluate(() => {
-      const pp = (window as any).__bd_probe.scene.PatchesPanel;
-      const messagePanel = (window as any).__bd_probe.scene.MessagePanel;
+      const panel = window.__bd_probe.scene.PatchesPanel;
+      const messagePanel = window.__bd_probe.scene.MessagePanel as unknown as MessageBarState;
       return {
-        opening: pp.Opening,
-        open: pp.Open,
-        error: messagePanel.Open ? String(messagePanel._Value?.string ?? '') : '',
-        blocks: (window as any).__bd_probe.state.patch.blocks.length,
+        opening: panel.Opening,
+        open: panel.Open,
+        error: messagePanel.Open ? (messagePanel._Value?.string ?? '') : '',
+        blocks: window.__bd_probe.state.patch.blocks.length,
       };
     });
   const blocksBefore = (await opening()).blocks;
-  await carol.page.route('**/api/patches/*', (r) =>
-    r.request().method() === 'GET' ? r.abort() : r.continue(),
+  await carol.page.route('**/api/patches/*', (route) =>
+    route.request().method() === 'GET' ? route.abort() : route.continue(),
   );
   await press(carol, 'gopen3', 1200);
-  if (
-    (await carol.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View)) ===
-    'confirm'
-  )
+  if ((await carol.page.evaluate(() => window.__bd_probe.scene.PatchesPanel.View)) === 'confirm')
     await press(carol, 'openAnyway', 1200);
   const failed = await opening();
   await carol.page.unroute('**/api/patches/*');
-  await carol.page.route('**/api/patches/*', async (r) => {
-    if (r.request().method() === 'GET') await new Promise((res) => setTimeout(res, 2000));
-    await r.continue();
+  await carol.page.route('**/api/patches/*', async (route) => {
+    if (route.request().method() === 'GET')
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    await route.continue();
   });
   await press(carol, 'gopen3', 600);
-  if (
-    (await carol.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View)) ===
-    'confirm'
-  )
+  if ((await carol.page.evaluate(() => window.__bd_probe.scene.PatchesPanel.View)) === 'confirm')
     await press(carol, 'openAnyway', 600);
   const during = await opening();
   await carol.page.mouse.move(5, 5);
   await carol.page.waitForTimeout(100);
   await carol.page.screenshot({ path: `${OUT}/opening-spinner.png` });
-  await carol.page.waitForFunction(
-    () => !(window as any).__bd_probe.scene.PatchesPanel.Opening,
-    null,
-    { timeout: 15000 },
-  );
+  await carol.page.waitForFunction(() => !window.__bd_probe.scene.PatchesPanel.Opening, null, {
+    timeout: 15000,
+  });
   await carol.page.waitForTimeout(1500);
   await carol.page.unroute('**/api/patches/*');
   const landed = await opening();
@@ -117,26 +122,24 @@ export async function presetExamples({ anon, carol }: Pick<Cast, 'anon' | 'carol
     { blocksBefore, failed, during, landed },
   );
   const rotating = await carol.page.evaluate(() => ({
-    n: (window as any).__bd_probe.state.patch.blocks.length,
-    credit: (window as any).__bd_probe.corners.credit,
+    n: window.__bd_probe.state.patch.blocks.length,
+    credit: window.__bd_probe.corners.credit,
   }));
   check(
     'R16: an example opens with all its blocks, credited to @blokdust',
     rotating.n === 10 &&
       rotating.credit?.by === 'blokdust' &&
-      rotating.credit?.title === 'Rotating Sequencer',
+      rotating.credit.title === 'Rotating Sequencer',
     rotating,
   );
-  // Bug (owner review 3): after an INSERT the patch has changes, so OPEN asks first; on the GALLERY tab the question
-  // wasn't drawn and its buttons didn't answer, so OPEN seemed to do nothing.
+  // Bug (owner review 3): after an INSERT the patch has changes, so OPEN asks first; on the GALLERY
+  // tab the question wasn't drawn and its buttons didn't answer, so OPEN seemed to do nothing.
   await tab(carol, GALLERY);
   await idle(carol);
   await press(carol, 'gins0', 300);
-  await carol.page.waitForFunction(
-    () => !(window as any).__bd_probe.scene.PatchesPanel.Opening,
-    null,
-    { timeout: 15000 },
-  );
+  await carol.page.waitForFunction(() => !window.__bd_probe.scene.PatchesPanel.Opening, null, {
+    timeout: 15000,
+  });
   await carol.page.mouse.move(300, 650, { steps: 4 });
   await carol.page.mouse.click(300, 650);
   await carol.page.waitForTimeout(800);
@@ -145,27 +148,25 @@ export async function presetExamples({ anon, carol }: Pick<Cast, 'anon' | 'carol
   await press(carol, 'gopen1', 600);
   const askedText = await carol.page.evaluate(() => {
     const seen: string[] = [];
-    const f = CanvasRenderingContext2D.prototype.fillText;
-    CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) {
-      seen.push(t);
-      return (f as any).call(this, t, ...a);
+    const prototype = CanvasRenderingContext2D.prototype;
+    const original = Object.getOwnPropertyDescriptor(prototype, 'fillText');
+    prototype.fillText = function (text: string, x: number, y: number, maxWidth?: number) {
+      seen.push(text);
+      const draw = original?.value as CanvasRenderingContext2D['fillText'] | undefined;
+      draw?.call(this, text, x, y, maxWidth);
     };
-    (window as any).__bd_probe.scene.PatchesPanel.Draw();
-    CanvasRenderingContext2D.prototype.fillText = f;
+    window.__bd_probe.scene.PatchesPanel.Draw();
+    if (original) Object.defineProperty(prototype, 'fillText', original);
     return seen.join(' | ');
   });
-  const askedView = await carol.page.evaluate(
-    () => (window as any).__bd_probe.scene.PatchesPanel.View,
-  );
+  const askedView = await carol.page.evaluate(() => window.__bd_probe.scene.PatchesPanel.View);
   await carol.page.mouse.move(5, 5);
   await carol.page.waitForTimeout(200);
   await carol.page.screenshot({ path: `${OUT}/gallery-open-asks.png` });
   await press(carol, 'openAnyway', 300);
-  await carol.page.waitForFunction(
-    () => !(window as any).__bd_probe.scene.PatchesPanel.Opening,
-    null,
-    { timeout: 15000 },
-  );
+  await carol.page.waitForFunction(() => !window.__bd_probe.scene.PatchesPanel.Opening, null, {
+    timeout: 15000,
+  });
   await carol.page.waitForTimeout(1500);
   const afterAsk = await opening();
   check(

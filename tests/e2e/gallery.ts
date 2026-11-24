@@ -1,5 +1,5 @@
-// pnpm test:gallery — CHG-0024 acceptance (SPEC-SHARING-GALLERY), black-box through the real app and the Worker
-// (local `wrangler dev`, mocked siteverify, Chrome's virtual passkey authenticator for the accounts).
+// pnpm test:gallery — CHG-0024 (SPEC-SHARING-GALLERY) through the real app and a local Worker,
+// with mocked siteverify and Chrome's virtual passkey authenticator for the accounts.
 import { writeFileSync } from 'node:fs';
 import { OUT, browser, check, mocks, results, server } from './gallery/harness.ts';
 import { publishAndLike } from './gallery/publish.ts';
@@ -33,7 +33,7 @@ console.log(
   JSON.stringify({
     ok,
     passed: results.filter((result) => result.ok).length,
-    failed: results.filter((result) => !result.ok).map((r) => r.name),
+    failed: results.filter((result) => !result.ok).map((result) => result.name),
   }),
 );
 process.exit(ok ? 0 : 1);

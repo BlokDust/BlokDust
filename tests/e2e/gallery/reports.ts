@@ -1,9 +1,10 @@
-// Reports hide a patch and the site owner reviews them with bd gallery (R9, R10), run by tests/e2e/gallery.ts.
+// Reports hide a patch and the site owner reviews them with bd gallery (R9, R10), run by
+// tests/e2e/gallery.ts.
 import {
   OUT,
   check,
   device,
-  P,
+  panelState,
   type Cast,
   GALLERY,
   press,
@@ -11,42 +12,47 @@ import {
   search,
   api,
   bd,
+  galleryItems,
 } from './harness.ts';
+import type { MessageBarState, SettingsTabState } from '../pageGlobals.shared.ts';
+import { located } from '../located.ts';
 
 export async function reportAndReview({
   aliceId,
   anon,
   bob,
 }: Pick<Cast, 'aliceId' | 'anon' | 'bob'>): Promise<Pick<Cast, 'carol' | 'dave' | 'fay' | 'gus'>> {
-  // ---- R9, R10: Settings › FEEDBACK › REPORT A PATCH reports the patch on the stage (CHG-0041: the right-click on the
-  // credit is gone); five reports hide it; the site owner reviews with bd gallery ----
+  // ---- R9, R10: Settings › FEEDBACK › REPORT A PATCH reports the patch on the stage (CHG-0041);
+  // five reports hide it; the site owner reviews them with bd gallery ----
   const carol = await device('carol_g'),
     dave = await device('dave_g');
   for (const device of [bob, carol, dave]) {
     await tab(device, GALLERY);
     await search(device, '');
-    const i = (await P(device)).items.findIndex((item: { id: string }) => item.id === aliceId);
+    const i = (await panelState(device)).items.findIndex((item) => item.id === aliceId);
     await press(device, `gopen${i}`, 2500);
     if (device === bob) {
-      // Blocks on screen, not just in the patch (a right-click's press used to begin a pan that never ended).
+      // Blocks on screen, not just in the patch (a right-click's press used to begin a pan that
+      // never ended).
       const onScreen = () =>
         device.page.evaluate(() => {
-          const s = (window as any).__bd_probe;
-          return s.state.blocks.filter((b: any) => {
-            const p = s.blockPoint(b.id);
-            return p && p[0] > 0 && p[0] < innerWidth && p[1] > 90 && p[1] < innerHeight - 90;
+          const probe = window.__bd_probe;
+          return probe.state.blocks.filter((block) => {
+            const at = probe.blockPoint(block.id);
+            return at && at[0] > 0 && at[0] < innerWidth && at[1] > 90 && at[1] < innerHeight - 90;
           }).length;
         });
-      const c = await device.page.evaluate(() => (window as any).__bd_probe.corners);
+      const creditAt = located(
+        await device.page.evaluate(() => window.__bd_probe.corners.creditAt),
+        'the credit',
+      );
       const before = await onScreen();
-      await device.page.mouse.click(c.creditAt[0], c.creditAt[1], { button: 'right' });
+      await device.page.mouse.click(creditAt[0], creditAt[1], { button: 'right' });
       await device.page.waitForTimeout(900);
       await device.page.mouse.move(400, 500, { steps: 6 });
       await device.page.waitForTimeout(300);
       const after = await onScreen(),
-        opened = await device.page.evaluate(
-          () => (window as any).__bd_probe.scene.PatchesPanel.Open,
-        );
+        opened = await device.page.evaluate(() => window.__bd_probe.scene.PatchesPanel.Open);
       check(
         'CHG-0041: a right-click on the credit does nothing (no report; the stage stays put)',
         before > 0 && after === before && !opened,
@@ -54,11 +60,11 @@ export async function reportAndReview({
       );
     }
     await device.page.evaluate(() => {
-      const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
-      settingsPanel._OpenTab = 1;
-      (settingsPanel.MenuItems as any[]).forEach((m, k) => {
-        m.Selected = k === 1 ? 1 : 0;
-        m.YOffset = k === 1 ? 0 : -settingsPanel.DrawTo.Height;
+      const settingsPanel = window.__bd_probe.scene.SettingsPanel;
+      (settingsPanel as unknown as SettingsTabState)._OpenTab = 1;
+      settingsPanel.MenuItems.forEach((item, index) => {
+        item.Selected = index === 1 ? 1 : 0;
+        item.YOffset = index === 1 ? 0 : -(settingsPanel.DrawTo as { Height: number }).Height;
       });
       settingsPanel.OpenPanel();
     });
@@ -67,7 +73,7 @@ export async function reportAndReview({
     await device.page.waitForTimeout(300);
     if (device === bob) {
       const intro = await device.page.evaluate(
-        () => document.getElementById('feedback-intro')!.textContent,
+        () => document.getElementById('feedback-intro')?.textContent,
       );
       await device.page.mouse.move(5, 5);
       await device.page.waitForTimeout(300);
@@ -89,7 +95,7 @@ export async function reportAndReview({
       .catch(() => {});
     if (device === bob) {
       const bar = await device.page.evaluate(() => {
-        const messagePanel = (window as any).__bd_probe.scene.MessagePanel;
+        const messagePanel = window.__bd_probe.scene.MessagePanel as unknown as MessageBarState;
         return { open: messagePanel.Open, text: messagePanel._Value?.string };
       });
       check(
@@ -98,14 +104,16 @@ export async function reportAndReview({
         bar,
       );
     }
-    await device.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel());
+    await device.page.evaluate(() => {
+      window.__bd_probe.scene.SettingsPanel.ClosePanel();
+    });
     await device.page.waitForTimeout(600);
   }
-  const atThree = await api(anon, 'GET', 'gallery?sort=new');
+  const atThree = await galleryItems(anon, 'sort=new');
   check(
     'R9 (security review, PR 13): three reports no longer hide it',
-    atThree.json.items.some((item: { id: string }) => item.id === aliceId),
-    atThree.json.items.map((item: { title: string }) => item.title),
+    atThree.some((item) => item.id === aliceId),
+    atThree.map((item) => item.title),
   );
   const fay = await device('fay_g'),
     gus = await device('gus_g');
@@ -113,31 +121,29 @@ export async function reportAndReview({
     await api(fay, 'POST', `gallery/${aliceId}/report`, { reason: '' }),
     await api(gus, 'POST', `gallery/${aliceId}/report`, { reason: '' }),
   ];
-  const after = await api(anon, 'GET', 'gallery?sort=new');
+  const after = await galleryItems(anon, 'sort=new');
   check(
     'R9: reported by five people, it is hidden',
     lastReports.every((lastReport) => lastReport.status === 200) &&
-      !after.json.items.some((item: { id: string }) => item.id === aliceId),
-    after.json.items.map((item: { title: string }) => item.title),
+      !after.some((item) => item.id === aliceId),
+    after.map((item) => item.title),
   );
   const listed = bd('reports');
   check(
     'R10: bd gallery reports lists it with its reports',
-    listed.reported.some(
-      (r: { id: string; reports: number; hidden: number }) =>
-        r.id === aliceId && r.reports === 5 && r.hidden === 1,
+    (listed.reported ?? []).some(
+      (row) => row.id === aliceId && row.reports === 5 && row.hidden === 1,
     ),
     listed,
   );
   bd('keep', aliceId);
-  const kept = await api(anon, 'GET', 'gallery?sort=new');
+  const kept = await galleryItems(anon, 'sort=new');
   bd('hide', aliceId);
-  const hidden = await api(anon, 'GET', 'gallery?sort=new');
+  const hidden = await galleryItems(anon, 'sort=new');
   bd('keep', aliceId);
   check(
     'R10: keep shows it again; hide takes it out',
-    kept.json.items.some((item: { id: string }) => item.id === aliceId) &&
-      !hidden.json.items.some((item: { id: string }) => item.id === aliceId),
+    kept.some((item) => item.id === aliceId) && !hidden.some((item) => item.id === aliceId),
   );
   return { carol, dave, fay, gus };
 }
