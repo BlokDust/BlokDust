@@ -3,11 +3,11 @@
 
 namespace blokdust {
 
-bool Engine::polyOf(const Block& c) const noexcept BLOKDUST_NONBLOCKING {
-  if (c.type == BlockType::InputStageIn)
+bool Engine::polyOf(const Block& block) const noexcept BLOKDUST_NONBLOCKING {
+  if (block.type == BlockType::InputStageIn)
     return outsideKeys_.poly;
-  return c.params[P::InputComputerKeyboard::isPolyphonic] != 0.0 ||
-         c.params[P::InputComputerKeyboard::polyphonic] != 0.0;
+  return block.params[P::InputComputerKeyboard::isPolyphonic] != 0.0 ||
+         block.params[P::InputComputerKeyboard::polyphonic] != 0.0;
 }
 /// The outside controller's settings for Stage In; a change re-sets the voices of what it plays (as
 /// a switch would).
@@ -19,10 +19,10 @@ void Engine::setOutsideKeys(const OutsideKeys& k) noexcept BLOKDUST_NONBLOCKING 
       refreshVoices(order_[i]);
 }
 /// A controller's Glide (seconds), Stage In's from outside.
-double Engine::glideOf(const Block& c) const noexcept {
-  return c.type == BlockType::InputStageIn
+double Engine::glideOf(const Block& block) const noexcept {
+  return block.type == BlockType::InputStageIn
              ? outsideKeys_.glide
-             : std::max(0.0, c.params[P::InputComputerKeyboard::glide]);
+             : std::max(0.0, block.params[P::InputComputerKeyboard::glide]);
 }
 
 /// v1 Controller.NoteOn/NoteOff: the controller messages every connected source with its id, the
@@ -40,36 +40,36 @@ bool Engine::acceptsChannel(const Block& ctrl, int channel) noexcept {
 /// it, like a Toggle, until every key is let go. Keys never aim it (owner, 2026-11-20): it keeps
 /// its own Angle. Every key pressed fires an Emitter, legato too (CHG-0009); keys pressed together
 /// fire it once.
-void Engine::keyAim(Block& b, int note, bool down) noexcept {
+void Engine::keyAim(Block& block, int note, bool down) noexcept {
   if (note < 0 || note >= 128)
     return;
   const auto key = static_cast<std::uint8_t>(note);
   int n = 0;
-  for (int i = 0; i < b.keyCount; ++i)
-    if (b.keysHeld[static_cast<std::size_t>(i)] != key)
-      b.keysHeld[static_cast<std::size_t>(n++)] = b.keysHeld[static_cast<std::size_t>(i)];
-  b.keyCount = n;
+  for (int i = 0; i < block.keyCount; ++i)
+    if (block.keysHeld[static_cast<std::size_t>(i)] != key)
+      block.keysHeld[static_cast<std::size_t>(n++)] = block.keysHeld[static_cast<std::size_t>(i)];
+  block.keyCount = n;
   if (down) {
-    if (b.keyCount == static_cast<int>(b.keysHeld.size())) {  // full: the oldest goes
-      std::copy(b.keysHeld.begin() + 1, b.keysHeld.end(), b.keysHeld.begin());
-      --b.keyCount;
+    if (block.keyCount == static_cast<int>(block.keysHeld.size())) {  // full: the oldest goes
+      std::copy(block.keysHeld.begin() + 1, block.keysHeld.end(), block.keysHeld.begin());
+      --block.keyCount;
     }
-    b.keysHeld[static_cast<std::size_t>(b.keyCount++)] = key;
-    if (b.type == BlockType::PowerEmitter)
-      b.keyPressed = true;
+    block.keysHeld[static_cast<std::size_t>(block.keyCount++)] = key;
+    if (block.type == BlockType::PowerEmitter)
+      block.keyPressed = true;
   }
-  b.keyPower = b.keyCount > 0 ? 1 : 0;
+  block.keyPower = block.keyCount > 0 ? 1 : 0;
 }
 
 /// Does controller `ctrl` take note command `c`? The block it names; or every controller of its
 /// type (the computer's keys, MIDI in); or, sent in from outside this Stage, every controller but
 /// the type that heard it already.
-bool Engine::controllerHears(const Block& ctrl, const Command& c) const noexcept {
+bool Engine::controllerHears(const Block& ctrl, const Command& command) const noexcept {
   if (ctrl.kind() != BlockKind::Controller)
     return false;
-  if (c.outside)
-    return ctrl.type != c.blockType;
-  return c.id != kInvalidBlock ? ctrl.id == c.id : ctrl.type == c.blockType;
+  if (command.outside)
+    return ctrl.type != command.blockType;
+  return command.id != kInvalidBlock ? ctrl.id == command.id : ctrl.type == command.blockType;
 }
 
 /// A note played on a controller touching Stage block `stage` goes in (CHG-0021, UI-0012): to the
@@ -77,7 +77,7 @@ bool Engine::controllerHears(const Block& ctrl, const Command& c) const noexcept
 /// Keys held are remembered, so the note ends on the key it started on whatever the octave does
 /// meanwhile.
 void Engine::forwardToStage(const Block& stage, const Block& ctrl,
-                            const Command& c) noexcept BLOKDUST_NONBLOCKING {
+                            const Command& command) noexcept BLOKDUST_NONBLOCKING {
   if (stage.poolIndex < 0)
     return;
   const auto pi = static_cast<std::size_t>(stage.poolIndex);
@@ -86,30 +86,31 @@ void Engine::forwardToStage(const Block& stage, const Block& ctrl,
     return;
   auto& held = stageNotes_[pi];
   int& count = stageNoteCount_[pi];
-  const auto ch = static_cast<std::uint8_t>(std::clamp(static_cast<int>(c.x), 0, 15));
+  const auto ch = static_cast<std::uint8_t>(std::clamp(static_cast<int>(command.x), 0, 15));
   int at = -1;
   for (int i = 0; i < count; ++i)
     if (held[static_cast<std::size_t>(i)].ctrl == ctrl.id &&
-        held[static_cast<std::size_t>(i)].key == c.param &&
+        held[static_cast<std::size_t>(i)].key == command.param &&
         held[static_cast<std::size_t>(i)].channel == ch)
       at = i;
-  Command f = c;
+  Command f = command;
   f.outside = true;
   f.id = kInvalidBlock;
-  f.blockType = c.id == kInvalidBlock && !c.outside
-                    ? c.blockType
+  f.blockType = command.id == kInvalidBlock && !command.outside
+                    ? command.blockType
                     : BlockType::SourceStage;  // no controller is a Stage
   f.atSample = -1;
-  if (c.type == Command::Type::NoteOn) {
-    const int sent =
-        std::clamp(static_cast<int>(c.param) + 12 * static_cast<int>(std::lround(ctrl.params[0])),
-                   0, 127);  // param 0 = transpose
+  if (command.type == Command::Type::NoteOn) {
+    const int sent = std::clamp(
+        static_cast<int>(command.param) + 12 * static_cast<int>(std::lround(ctrl.params[0])), 0,
+        127);  // param 0 = transpose
     if (at < 0) {
       if (count == kStageNotes)
         return;  // full: the note stays out
       at = count++;
     }
-    held[static_cast<std::size_t>(at)] = {ctrl.id, c.param, ch, static_cast<std::uint8_t>(sent)};
+    held[static_cast<std::size_t>(at)] = {ctrl.id, command.param, ch,
+                                          static_cast<std::uint8_t>(sent)};
     f.param = static_cast<std::uint8_t>(sent);
     inner->setOutsideKeys({glideOf(ctrl), polyOf(ctrl),
                            keysSetPitch(ctrl)});  // its Stage In plays as this one is set
@@ -119,7 +120,7 @@ void Engine::forwardToStage(const Block& stage, const Block& ctrl,
   if (at < 0)
     return;
   f.param = held[static_cast<std::size_t>(at)].sent;
-  if (c.type == Command::Type::NoteOff)
+  if (command.type == Command::Type::NoteOff)
     held[static_cast<std::size_t>(at)] = held[static_cast<std::size_t>(--count)];
   inner->applyNow(f);
 }
@@ -151,17 +152,17 @@ void Engine::releaseStageNotes() noexcept BLOKDUST_NONBLOCKING {
   }
 }
 
-void Engine::applyNote(const Command& c) noexcept BLOKDUST_NONBLOCKING {
-  const int ch = std::clamp(static_cast<int>(c.x), 0, 15);
+void Engine::applyNote(const Command& command) noexcept BLOKDUST_NONBLOCKING {
+  const int ch = std::clamp(static_cast<int>(command.x), 0, 15);
   // The computer's keys and MIDI in reach every world: a Keyboard inside a Stage plays from outside
   // it (owner, 2026-11-14).
-  if (c.id == kInvalidBlock && !c.outside)
+  if (command.id == kInvalidBlock && !command.outside)
     for (Engine* inner : stages_)
       if (inner)
-        inner->applyNow(c);
+        inner->applyNow(command);
   for (int k = 0; k < orderCount_; ++k) {
     const Block& ctrl = blocks_[order_[k]];
-    if (!controllerHears(ctrl, c))
+    if (!controllerHears(ctrl, command))
       continue;
     if (!acceptsChannel(ctrl, ch))
       continue;
@@ -169,11 +170,12 @@ void Engine::applyNote(const Command& c) noexcept BLOKDUST_NONBLOCKING {
     for (int i = 0; i < orderCount_; ++i) {
       const int s = order_[i];
       if (row[s] && blocks_[s].type == BlockType::SourceStage) {
-        forwardToStage(blocks_[static_cast<std::size_t>(s)], ctrl, c);
+        forwardToStage(blocks_[static_cast<std::size_t>(s)], ctrl, command);
         continue;
       }
       if (row[s] && blocks_[s].kind() == BlockKind::PowerSource) {
-        keyAim(blocks_[static_cast<std::size_t>(s)], c.param, c.type == Command::Type::NoteOn);
+        keyAim(blocks_[static_cast<std::size_t>(s)], command.param,
+               command.type == Command::Type::NoteOn);
         continue;
       }
       if (!row[s] || blocks_[s].kind() != BlockKind::AudioSource ||
@@ -181,25 +183,25 @@ void Engine::applyNote(const Command& c) noexcept BLOKDUST_NONBLOCKING {
         continue;
       if (blocks_[s]
               .arranged) {  // CHG-0017: the key joins or leaves the notes this source is given
-        arrangedKey(s, ctrl, c.param, ch, c.type == Command::Type::NoteOn);
-        if (c.type != Command::Type::NoteOn)
+        arrangedKey(s, ctrl, command.param, ch, command.type == Command::Type::NoteOn);
+        if (command.type != Command::Type::NoteOn)
           continue;
       } else {
-        if (c.type != Command::Type::NoteOn) {
-          voiceOff(s, ctrl.id, c.param, ch);
+        if (command.type != Command::Type::NoteOn) {
+          voiceOff(s, ctrl.id, command.param, ch);
           continue;
         }
-        voiceOn(s, ctrl.id, c.param, polyOf(ctrl), glideOf(ctrl), true, ch);
+        voiceOn(s, ctrl.id, command.param, polyOf(ctrl), glideOf(ctrl), true, ch);
       }
       // MIDI Input velocity (owner review 3): the note sounds at 0.2 + 0.8 × velocity² (1 at full
       // velocity, never silent), MPE or not. MPE pressure → volume (PLUGIN-0004) swells it from
       // there to full, so the strike is heard before the controller's first pressure message. (The
       // Computer Keyboard keeps v1's fixed level.)
       if (ctrl.type == BlockType::InputMidiController) {
-        const double v = std::clamp(c.value, 0.0, 1.0), level = 0.2 + 0.8 * v * v;
+        const double v = std::clamp(command.value, 0.0, 1.0), level = 0.2 + 0.8 * v * v;
         for (auto& vo : blocks_[static_cast<std::size_t>(s)].voices)
-          if (vo.active && vo.controller == ctrl.id && vo.key == c.param && vo.channel == ch &&
-              vo.trigTick == tick_)
+          if (vo.active && vo.controller == ctrl.id && vo.key == command.param &&
+              vo.channel == ch && vo.trigTick == tick_)
             vo.pressureFloor = vo.exprGain = vo.gainNow = level;
       }
     }
@@ -210,16 +212,16 @@ void Engine::applyNote(const Command& c) noexcept BLOKDUST_NONBLOCKING {
 /// controller follow it. Bend re-pitches (semitones); pressure sets the voice's volume and slide
 /// its timbre, as the MIDI Input maps them (owner defaults: pressure → volume, slide → Tone
 /// brightness / Sample start).
-void Engine::applyExpression(const Command& c) noexcept BLOKDUST_NONBLOCKING {
-  const int ch = std::clamp(static_cast<int>(c.x), 0, 15);
-  const auto dim = static_cast<Command::Expression>(std::clamp(static_cast<int>(c.y), 0, 2));
-  if (c.id == kInvalidBlock && !c.outside)
+void Engine::applyExpression(const Command& command) noexcept BLOKDUST_NONBLOCKING {
+  const int ch = std::clamp(static_cast<int>(command.x), 0, 15);
+  const auto dim = static_cast<Command::Expression>(std::clamp(static_cast<int>(command.y), 0, 2));
+  if (command.id == kInvalidBlock && !command.outside)
     for (Engine* inner : stages_)
       if (inner)
-        inner->applyNow(c);  // as applyNote
+        inner->applyNow(command);  // as applyNote
   for (int k = 0; k < orderCount_; ++k) {
     const Block& ctrl = blocks_[order_[k]];
-    if (!controllerHears(ctrl, c))
+    if (!controllerHears(ctrl, command))
       continue;
     if (!acceptsChannel(ctrl, ch))
       continue;
@@ -230,20 +232,20 @@ void Engine::applyExpression(const Command& c) noexcept BLOKDUST_NONBLOCKING {
     for (int i = 0; i < orderCount_; ++i) {
       const int s = order_[i];
       if (row[s] && blocks_[s].type == BlockType::SourceStage) {
-        forwardToStage(blocks_[static_cast<std::size_t>(s)], ctrl, c);
+        forwardToStage(blocks_[static_cast<std::size_t>(s)], ctrl, command);
         continue;
       }
       if (!row[s] || blocks_[s].kind() != BlockKind::AudioSource)
         continue;
-      Block& b = blocks_[static_cast<std::size_t>(s)];
-      if (b.arranged && dim == Command::Expression::Bend) {
+      Block& block = blocks_[static_cast<std::size_t>(s)];
+      if (block.arranged && dim == Command::Expression::Bend) {
         // An arranged source (AUDIO-0002): the held key itself moves, so Chord, Arpeggiator and
         // Random Note work from where it slid to (a Touchpad slide, an MPE bend; owner 2026-11-14).
         bool held = false;
-        for (int j = 0; j < b.arrKeyCount; ++j) {
-          auto& h = b.arrKeys[static_cast<std::size_t>(j)];
-          if (h.key == c.param && h.controller == ctrl.id && h.channel == ch) {
-            h.bend = std::clamp(c.value, -96.0, 96.0);
+        for (int j = 0; j < block.arrKeyCount; ++j) {
+          auto& h = block.arrKeys[static_cast<std::size_t>(j)];
+          if (h.key == command.param && h.controller == ctrl.id && h.channel == ch) {
+            h.bend = std::clamp(command.value, -96.0, 96.0);
             held = true;
           }
         }
@@ -252,31 +254,31 @@ void Engine::applyExpression(const Command& c) noexcept BLOKDUST_NONBLOCKING {
         continue;
       }
       for (int v = 0; v < kVoices; ++v) {
-        Voice& vo = b.voices[static_cast<std::size_t>(v)];
-        if (!vo.active || vo.controller != ctrl.id || vo.key != c.param || vo.channel != ch)
+        Voice& vo = block.voices[static_cast<std::size_t>(v)];
+        if (!vo.active || vo.controller != ctrl.id || vo.key != command.param || vo.channel != ch)
           continue;
         if (dim == Command::Expression::Bend) {
-          vo.bend = std::clamp(c.value, -96.0, 96.0);
+          vo.bend = std::clamp(command.value, -96.0, 96.0);
           setPitch(s, v, 0.0);
         } else if (dim == Command::Expression::Pressure)
-          vo.exprGain = pressureOn ? vo.pressureFloor +
-                                         (1.0 - vo.pressureFloor) * std::clamp(c.value, 0.0, 1.0)
+          vo.exprGain = pressureOn ? vo.pressureFloor + (1.0 - vo.pressureFloor) *
+                                                            std::clamp(command.value, 0.0, 1.0)
                                    : vo.pressureFloor;
         else if (slideOn) {
-          const double x = std::clamp(c.value, 0.0, 1.0);
-          if (isOscillator(b.type)) {
+          const double x = std::clamp(command.value, 0.0, 1.0);
+          if (isOscillator(block.type)) {
             // Brightness: a one-pole low-pass from 78 Hz (slide 0) to 20 kHz (slide 1), 8 octaves.
             const double fc = 20000.0 * dmath::exp2((x - 1.0) * 8.0);
             vo.lpA = std::min(1.0, 1.0 - dmath::exp(-2.0 * 3.141592653589793 * fc / sampleRate_));
-          } else if (b.type == BlockType::SourceGranular) {
+          } else if (block.type == BlockType::SourceGranular) {
             vo.slide = x;  // grain position across the file
-          } else if (isSampler(b.type) && vo.trigTick == tick_ && b.sampleFrames) {
+          } else if (isSampler(block.type) && vo.trigTick == tick_ && block.sampleFrames) {
             // Sample start: a slide sent with the note picks where in the region it starts.
-            const double st = b.params[P::SourceSample::startPosition],
-                         en = b.params[P::SourceSample::endPosition] > 0
-                                  ? b.params[P::SourceSample::endPosition]
-                                  : b.sampleFrames / b.sampleRate;
-            vo.playhead = (st + x * std::max(0.0, en - st)) * b.sampleRate;
+            const double st = block.params[P::SourceSample::startPosition],
+                         en = block.params[P::SourceSample::endPosition] > 0
+                                  ? block.params[P::SourceSample::endPosition]
+                                  : block.sampleFrames / block.sampleRate;
+            vo.playhead = (st + x * std::max(0.0, en - st)) * block.sampleRate;
           }
         }
       }
@@ -391,22 +393,22 @@ void Engine::voiceOn(int slot, BlockId controller, int key, bool poly, double gl
 /// unless it is the mono voice of a powered source (then power takes it back at the default note).
 void Engine::voiceOff(int slot, BlockId controller, int key,
                       int channel) noexcept BLOKDUST_NONBLOCKING {
-  Block& b = blocks_[static_cast<std::size_t>(slot)];
+  Block& block = blocks_[static_cast<std::size_t>(slot)];
   int n = 0;
-  for (int i = 0; i < b.monoHeldCount; ++i) {
-    const auto& h = b.monoHeld[static_cast<std::size_t>(i)];
+  for (int i = 0; i < block.monoHeldCount; ++i) {
+    const auto& h = block.monoHeld[static_cast<std::size_t>(i)];
     if (h.key != key || h.controller != controller || h.channel != channel)
-      b.monoHeld[static_cast<std::size_t>(n++)] = h;
+      block.monoHeld[static_cast<std::size_t>(n++)] = h;
   }
-  b.monoHeldCount = n;
+  block.monoHeldCount = n;
   for (int v = 0; v < kVoices; ++v) {
-    Voice& vo = b.voices[static_cast<std::size_t>(v)];
+    Voice& vo = block.voices[static_cast<std::size_t>(v)];
     if (!vo.active || vo.key != key || vo.controller != controller || vo.channel != channel)
       continue;
-    if (v == b.monoVoice) {
+    if (v == block.monoVoice) {
       // Mono: back to the newest key still held, gliding (owner review 3; v1 released here).
-      if (b.monoHeldCount > 0) {
-        const auto h = b.monoHeld[static_cast<std::size_t>(b.monoHeldCount - 1)];
+      if (block.monoHeldCount > 0) {
+        const auto h = block.monoHeld[static_cast<std::size_t>(block.monoHeldCount - 1)];
         const int c = slotOf(h.controller);
         vo.key = h.key;
         vo.controller = h.controller;
@@ -415,27 +417,27 @@ void Engine::voiceOff(int slot, BlockId controller, int key,
         setPitch(slot, v, c >= 0 ? glideOf(blocks_[static_cast<std::size_t>(c)]) : 0.0);
         continue;
       }
-      if (b.sourcePower() > 0 && controller != 0) {
+      if (block.sourcePower() > 0 && controller != 0) {
         vo.controller = 0;
         vo.key = -1;
         setPitch(slot, v, 0.0);
         continue;
       }
-      b.monoVoice = -1;
-      b.lastMonoOff = sample_;
+      block.monoVoice = -1;
+      block.lastMonoOff = sample_;
     }
     releaseVoice(slot, v);
   }
-  updateNotePower(b);
+  updateNotePower(block);
 }
 
 void Engine::releaseVoice(int slot, int v) noexcept BLOKDUST_NONBLOCKING {
-  Block& b = blocks_[static_cast<std::size_t>(slot)];
-  Voice& vo = b.voices[static_cast<std::size_t>(v)];
+  Block& block = blocks_[static_cast<std::size_t>(slot)];
+  Voice& vo = block.voices[static_cast<std::size_t>(v)];
   vo.active = false;
-  vo.freedAt = ++b.voiceClock;
+  vo.freedAt = ++block.voiceClock;
   vo.env.gateOff();
-  log(Event::Type::GateOff, b.id);
+  log(Event::Type::GateOff, block.id);
 }
 
 }  // namespace blokdust

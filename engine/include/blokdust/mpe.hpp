@@ -133,9 +133,9 @@ class MpeParser {
     int rpnMsb = 127, rpnLsb = 127;
   };
 
-  Command stamp(Command c) const noexcept {
-    c.id = target_;
-    return c;
+  Command stamp(Command command) const noexcept {
+    command.id = target_;
+    return command;
   }
   Command expr(int note, int ch, Command::Expression d, double v, std::int64_t at) const noexcept {
     return stamp(Command::noteExpression(type_, static_cast<std::uint8_t>(note), ch, d, v, at));
@@ -226,22 +226,22 @@ class MpeParser {
 class MidiRouter {
  public:
   static constexpr int kMax = 8;
-  void sync(const Engine& e) noexcept {
+  void sync(const Engine& engine) noexcept {
     int n = 0;
     std::array<Slot, kMax> next{};
-    for (const Block& b : e.blocks()) {
-      if (!b.alive || b.type != BlockType::InputMidiController || n == kMax)
+    for (const Block& block : engine.blocks()) {
+      if (!block.alive || block.type != BlockType::InputMidiController || n == kMax)
         continue;
       Slot s{};
       for (int i = 0; i < count_; ++i)
-        if (slots_[static_cast<std::size_t>(i)].id == b.id)
+        if (slots_[static_cast<std::size_t>(i)].id == block.id)
           s = slots_[static_cast<std::size_t>(i)];  // keep its state
-      if (s.id != b.id) {
-        s.id = b.id;
-        s.parser = MpeParser(b.id);
+      if (s.id != block.id) {
+        s.id = block.id;
+        s.parser = MpeParser(block.id);
       }
-      s.parser.setSettings({b.params[gen::param::InputMidiController::mpe] != 0.0,
-                            b.params[gen::param::InputMidiController::bendRange], 2.0});
+      s.parser.setSettings({block.params[gen::param::InputMidiController::mpe] != 0.0,
+                            block.params[gen::param::InputMidiController::bendRange], 2.0});
       next[static_cast<std::size_t>(n++)] = s;
     }
     slots_ = next;

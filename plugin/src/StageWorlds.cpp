@@ -15,8 +15,8 @@ Engine* StageWorlds::find(BlockId stage) const {
 }
 
 Engine* StageWorlds::world(Engine& root, BlockId stage, EngineConfig cfg, const Suspend& suspend) {
-  if (auto* e = find(stage))
-    return e;
+  if (auto* engine = find(stage))
+    return engine;
   cfg.child = true;
   cfg.parent = &root;
   auto made = std::make_unique<Engine>(cfg);  // allocated here, on the message thread

@@ -18,13 +18,13 @@ constexpr int kChords[kChordCount][4] = {{0, 0, 0, 0}, {0, 2, 7, 0},  {0, 3, 7, 
 constexpr int kRandomLow = 24, kRandomHigh = 107;
 /// A source's own tuning in whole semitones (its Note or playback rate), so a Chord picks by the
 /// note heard.
-int tuningOf(const Block& b) noexcept {
-  if (b.type == BlockType::SourceTone)
-    return static_cast<int>(std::lround(b.params[P::SourceTone::transpose]));
-  if (b.type == BlockType::SourceWavetable)
-    return static_cast<int>(std::lround(b.params[P::SourceWavetable::transpose]));
-  if (b.type == BlockType::SourceSample || b.type == BlockType::SourceGranular)
-    return static_cast<int>(std::lround(b.params[P::SourceSample::playbackRate]));
+int tuningOf(const Block& block) noexcept {
+  if (block.type == BlockType::SourceTone)
+    return static_cast<int>(std::lround(block.params[P::SourceTone::transpose]));
+  if (block.type == BlockType::SourceWavetable)
+    return static_cast<int>(std::lround(block.params[P::SourceWavetable::transpose]));
+  if (block.type == BlockType::SourceSample || block.type == BlockType::SourceGranular)
+    return static_cast<int>(std::lround(block.params[P::SourceSample::playbackRate]));
   return 0;
 }
 /// Random Note's pick (R10h): every note in its range, weighted by its note's bar after Key;
@@ -115,26 +115,26 @@ bool Engine::wantsArranged(int slot) const noexcept BLOKDUST_NONBLOCKING {
 /// key is a trigger.
 void Engine::arrangedKey(int slot, const Block& ctrl, int key, int channel,
                          bool on) noexcept BLOKDUST_NONBLOCKING {
-  Block& b = blocks_[static_cast<std::size_t>(slot)];
+  Block& block = blocks_[static_cast<std::size_t>(slot)];
   int n = 0;
-  for (int i = 0; i < b.arrKeyCount; ++i) {
-    const auto& h = b.arrKeys[static_cast<std::size_t>(i)];
+  for (int i = 0; i < block.arrKeyCount; ++i) {
+    const auto& h = block.arrKeys[static_cast<std::size_t>(i)];
     if (h.key != key || h.controller != ctrl.id || h.channel != channel)
-      b.arrKeys[static_cast<std::size_t>(n++)] = h;
+      block.arrKeys[static_cast<std::size_t>(n++)] = h;
   }
   const bool pitchOnly = keysSetPitch(ctrl);
   if (on) {
-    if (n == static_cast<int>(b.arrKeys.size())) {
-      std::copy(b.arrKeys.begin() + 1, b.arrKeys.end(), b.arrKeys.begin());
+    if (n == static_cast<int>(block.arrKeys.size())) {
+      std::copy(block.arrKeys.begin() + 1, block.arrKeys.end(), block.arrKeys.begin());
       --n;
     }
-    b.arrKeys[static_cast<std::size_t>(n++)] = {static_cast<std::int16_t>(key),
-                                                static_cast<std::int16_t>(channel), ctrl.id,
-                                                pitchOnly, polyOf(ctrl)};
+    block.arrKeys[static_cast<std::size_t>(n++)] = {static_cast<std::int16_t>(key),
+                                                    static_cast<std::int16_t>(channel), ctrl.id,
+                                                    pitchOnly, polyOf(ctrl)};
   }
-  b.arrKeyCount = n;
+  block.arrKeyCount = n;
   arrange(slot, on && !pitchOnly, true);
-  updateNotePower(b);
+  updateNotePower(block);
 }
 
 /// Work out the notes an arranged source should be sounding and make its voices match (AUDIO-0002).
@@ -144,31 +144,31 @@ void Engine::arrangedKey(int slot, const Block& ctrl, int key, int channel,
 /// (CHG-0040), Chord plays each note's chord, and an Arpeggiator plays one at a time. `trigger`:
 /// power arrived, a hit, or (`keyPress`) a sounding key was pressed.
 void Engine::arrange(int slot, bool trigger, bool keyPress) noexcept BLOKDUST_NONBLOCKING {
-  Block& b = blocks_[static_cast<std::size_t>(slot)];
+  Block& block = blocks_[static_cast<std::size_t>(slot)];
   using Note = Block::ArrNote;
   bool soundingKey = false;
-  for (int i = 0; i < b.arrKeyCount; ++i)
-    soundingKey = soundingKey || !b.arrKeys[static_cast<std::size_t>(i)].pitchOnly;
-  const bool gate = b.powerOn || soundingKey;
-  const bool started = gate && !b.arrGate;
-  b.arrGate = gate;
+  for (int i = 0; i < block.arrKeyCount; ++i)
+    soundingKey = soundingKey || !block.arrKeys[static_cast<std::size_t>(i)].pitchOnly;
+  const bool gate = block.powerOn || soundingKey;
+  const bool started = gate && !block.arrGate;
+  block.arrGate = gate;
   if (!gate) {
     for (int v = 0; v < kVoices; ++v)
-      if (b.voices[static_cast<std::size_t>(v)].active)
+      if (block.voices[static_cast<std::size_t>(v)].active)
         releaseVoice(slot, v);
-    b.randomValid = false;
+    block.randomValid = false;
     return;
   }
   const NoteFx fx = noteFxFor(slot);
   std::array<Note, 64> notes;
   int n = 0;
-  for (int i = 0; i < b.arrKeyCount; ++i) {
-    const auto& h = b.arrKeys[static_cast<std::size_t>(i)];
+  for (int i = 0; i < block.arrKeyCount; ++i) {
+    const auto& h = block.arrKeys[static_cast<std::size_t>(i)];
     if (!h.pitchOnly && !h.poly) {  // a sounding mono keyboard: only its newest key
       bool newer = false;
-      for (int j = i + 1; j < b.arrKeyCount; ++j)
-        newer = newer || (b.arrKeys[static_cast<std::size_t>(j)].controller == h.controller &&
-                          !b.arrKeys[static_cast<std::size_t>(j)].pitchOnly);
+      for (int j = i + 1; j < block.arrKeyCount; ++j)
+        newer = newer || (block.arrKeys[static_cast<std::size_t>(j)].controller == h.controller &&
+                          !block.arrKeys[static_cast<std::size_t>(j)].pitchOnly);
       if (newer)
         continue;
     }
@@ -186,7 +186,7 @@ void Engine::arrange(int slot, bool trigger, bool keyPress) noexcept BLOKDUST_NO
       const bool all = trigger && !keyPress;
       for (int i = 0; i < n; ++i) {
         Note& x = notes[static_cast<std::size_t>(i)];
-        auto& h = b.arrKeys[static_cast<std::size_t>(x.src)];
+        auto& h = block.arrKeys[static_cast<std::size_t>(x.src)];
         if (all || h.rnd < 0) {
           h.rnd = static_cast<std::int16_t>(pickRandom(rn, h.key));
           noteShown(rn, h.rnd);
@@ -194,13 +194,13 @@ void Engine::arrange(int slot, bool trigger, bool keyPress) noexcept BLOKDUST_NO
         x.offset = static_cast<double>(h.rnd - h.key);
       }
     } else {
-      if (trigger || !b.randomValid) {
+      if (trigger || !block.randomValid) {
         const int m = pickRandom(rn, -1);
-        b.randomNote = m < 0 ? Note{} : Note{0, static_cast<std::int16_t>(m), 0, 0.0};
-        b.randomValid = true;
+        block.randomNote = m < 0 ? Note{} : Note{0, static_cast<std::int16_t>(m), 0, 0.0};
+        block.randomValid = true;
         noteShown(rn, m < 0 ? 60 : m);
       }
-      notes[0] = b.randomNote;
+      notes[0] = block.randomNote;
     }
   }
   if (fx.chord >= 0) {
@@ -211,14 +211,14 @@ void Engine::arrange(int slot, bool trigger, bool keyPress) noexcept BLOKDUST_NO
     namespace C = P::FxChord;
     Block& ch = blocks_[static_cast<std::size_t>(fx.chord)];
     const int key = ((static_cast<int>(std::lround(ch.params[C::key])) % 12) + 12) % 12,
-              tuning = tuningOf(b);
+              tuning = tuningOf(block);
     const bool smooth = ch.params[C::smooth] != 0.0;
     std::array<Note, 64> out;
     int m = 0;
     for (int i = 0; i < n; ++i) {
       const Note& x = notes[static_cast<std::size_t>(i)];
       Block::Voicing& vc =
-          x.src >= 0 ? b.arrKeys[static_cast<std::size_t>(x.src)].voicing : b.ownVoicing;
+          x.src >= 0 ? block.arrKeys[static_cast<std::size_t>(x.src)].voicing : block.ownVoicing;
       const int root = static_cast<int>(std::lround((x.key >= 0 ? x.key : 60) + x.offset));
       const int pc = (((root + tuning) % 12) + 12) % 12;
       const int q = std::clamp(
@@ -232,14 +232,14 @@ void Engine::arrange(int slot, bool trigger, bool keyPress) noexcept BLOKDUST_NO
         vc.count = static_cast<std::int8_t>(kChordSize[q]);
         for (int k = 0; k < kChordSize[q]; ++k) {
           int best = kChords[q][k];
-          if (smooth && k > 0 && b.lastChordCount > 0) {
+          if (smooth && k > 0 && block.lastChordCount > 0) {
             double bestD = 1e9;
             for (int c = kChords[q][k] - 24; c <= kChords[q][k] + 12; c += 12) {
               if (c < -12 || c > 12)
                 continue;
               double d = 1e9;
-              for (int j = 0; j < b.lastChordCount; ++j)
-                d = std::min(d, std::abs(root + c - b.lastChord[static_cast<std::size_t>(j)]));
+              for (int j = 0; j < block.lastChordCount; ++j)
+                d = std::min(d, std::abs(root + c - block.lastChord[static_cast<std::size_t>(j)]));
               if (d < bestD ||
                   (d == bestD && std::abs(c - kChords[q][k]) < std::abs(best - kChords[q][k]))) {
                 bestD = d;
@@ -251,9 +251,10 @@ void Engine::arrange(int slot, bool trigger, bool keyPress) noexcept BLOKDUST_NO
         }
         noteShown(ch, root + tuning);
         if (vc.count > 1) {  // a chord (not a lone note) is what the next one leads from
-          b.lastChordCount = vc.count;
+          block.lastChordCount = vc.count;
           for (int k = 0; k < vc.count; ++k)
-            b.lastChord[static_cast<std::size_t>(k)] = root + vc.off[static_cast<std::size_t>(k)];
+            block.lastChord[static_cast<std::size_t>(k)] =
+                root + vc.off[static_cast<std::size_t>(k)];
         }
       }
       for (int k = 0; k < vc.count && m < static_cast<int>(out.size()); ++k) {
@@ -276,14 +277,14 @@ void Engine::arrange(int slot, bool trigger, bool keyPress) noexcept BLOKDUST_NO
     // is.
     const bool advance = perHit ? trigger : arpTick_;
     if (started && !perHit) {
-      b.arpStep = 0;
-      b.arpTicks = -1; /* this tick's stepArps makes it 0 */
-      b.arpRand = ar.grainRng.next();
-      b.arpSlot = static_cast<std::int64_t>(
+      block.arpStep = 0;
+      block.arpTicks = -1; /* this tick's stepArps makes it 0 */
+      block.arpRand = ar.grainRng.next();
+      block.arpSlot = static_cast<std::int64_t>(
           std::floor(beat_ / std::max(1.0 / 64.0, ar.params[P::FxArpeggiator::division]) + 1e-9));
     } else if (advance) {
-      ++b.arpStep;
-      b.arpRand = ar.grainRng.next();
+      ++block.arpStep;
+      block.arpRand = ar.grainRng.next();
     }
     std::sort(notes.begin(), notes.begin() + n,
               [&](const Note& x, const Note& y) { return pitchOf(x) < pitchOf(y); });
@@ -298,7 +299,7 @@ void Engine::arrange(int slot, bool trigger, bool keyPress) noexcept BLOKDUST_NO
       }
     const int pattern =
         std::clamp(static_cast<int>(std::lround(ar.params[P::FxArpeggiator::pattern])), 0, 3);
-    const int step = std::max(0, b.arpStep);
+    const int step = std::max(0, block.arpStep);
     int at = step % n;
     if (pattern == 1)
       at = n - 1 - at;
@@ -306,15 +307,15 @@ void Engine::arrange(int slot, bool trigger, bool keyPress) noexcept BLOKDUST_NO
       const int p = step % (2 * n - 2);
       at = p < n ? p : 2 * n - 2 - p;
     } else if (pattern == 3)
-      at = static_cast<int>(b.arpRand % static_cast<std::uint32_t>(n));
+      at = static_cast<int>(block.arpRand % static_cast<std::uint32_t>(n));
     notes[0] = notes[static_cast<std::size_t>(at)];
     n = 1;
     if (advance)
       for (int v = 0; v < kVoices; ++v)
-        if (b.voices[static_cast<std::size_t>(v)].active)
+        if (block.voices[static_cast<std::size_t>(v)].active)
           releaseVoice(slot, v);  // each step is struck again
   }
-  n = std::min(n, b.voiceCount);
+  n = std::min(n, block.voiceCount);
   // Voices no longer wanted let go; notes not yet sounding start. Notes that stay keep sounding as
   // they are.
   const auto same = [](const Voice& vo, const Note& x) {
@@ -322,7 +323,7 @@ void Engine::arrange(int slot, bool trigger, bool keyPress) noexcept BLOKDUST_NO
            vo.offset == x.offset;
   };
   for (int v = 0; v < kVoices; ++v) {
-    const Voice& vo = b.voices[static_cast<std::size_t>(v)];
+    const Voice& vo = block.voices[static_cast<std::size_t>(v)];
     if (!vo.active)
       continue;
     bool wanted = false;
@@ -332,26 +333,26 @@ void Engine::arrange(int slot, bool trigger, bool keyPress) noexcept BLOKDUST_NO
       releaseVoice(slot, v);
   }
   // v1's rule for the envelope: a source held by a Power block alone plays the default one (R10b).
-  const bool envFromChain = soundingKey || b.staticPower == 0;
+  const bool envFromChain = soundingKey || block.staticPower == 0;
   for (int i = 0; i < n; ++i) {
     const Note& x = notes[static_cast<std::size_t>(i)];
     bool sounding = false;
     for (int v = 0; v < kVoices && !sounding; ++v)
-      sounding = b.voices[static_cast<std::size_t>(v)].active &&
-                 same(b.voices[static_cast<std::size_t>(v)], x);
+      sounding = block.voices[static_cast<std::size_t>(v)].active &&
+                 same(block.voices[static_cast<std::size_t>(v)], x);
     if (!sounding)
       voiceOn(slot, x.controller, x.key, true, 0.0, envFromChain, x.channel, x.offset);
     // A held key slid (a bend): its notes follow it, sounding or just struck (no new attack for a
     // slide).
     for (int v = 0; v < kVoices; ++v) {
-      Voice& vo = b.voices[static_cast<std::size_t>(v)];
+      Voice& vo = block.voices[static_cast<std::size_t>(v)];
       if (vo.active && same(vo, x) && vo.bend != x.bend) {
         vo.bend = x.bend;
         setPitch(slot, v, 0.0);
       }
     }
   }
-  updateNotePower(b);
+  updateNotePower(block);
 }
 
 }  // namespace blokdust

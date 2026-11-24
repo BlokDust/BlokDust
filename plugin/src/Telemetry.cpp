@@ -110,12 +110,13 @@ juce::String today() {
 
 /** Keep only what the Worker accepts in a token (server/src/events.ts): letters, digits and a few
  * separators, ≤ 48. */
-juce::String token(juce::String s) {
-  s = s.retainCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ._:+()/-")
-          .trim();
-  while (s.isNotEmpty() && !juce::CharacterFunctions::isLetterOrDigit(s[0]))
-    s = s.substring(1);
-  return s.substring(0, 48);
+juce::String token(juce::String text) {
+  text = text.retainCharacters(
+                 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ._:+()/-")
+             .trim();
+  while (text.isNotEmpty() && !juce::CharacterFunctions::isLetterOrDigit(text[0]))
+    text = text.substring(1);
+  return text.substring(0, 48);
 }
 
 juce::String surfaceOf(juce::AudioProcessor::WrapperType w) {

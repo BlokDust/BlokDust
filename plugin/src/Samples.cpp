@@ -49,17 +49,17 @@ std::shared_ptr<LoadedSample> SampleLoader::decode(std::unique_ptr<juce::InputSt
 void SampleLoader::loadFile(const juce::File& file, SampleResult done) {
   pool_.addJob([this, file, done]() mutable {
     std::string err;
-    auto s = decode(file.createInputStream(), err);
-    if (s) {
-      s->track = "file:" + file.getFileName().toStdString();
-      s->ref = {{"provider", "file"},
-                {"name", file.getFileName().toStdString()},
-                {"path", file.getFullPathName().toStdString()},
-                {"durationSec", std::round(s->duration * 1000.0) / 1000.0}};
+    auto sample = decode(file.createInputStream(), err);
+    if (sample) {
+      sample->track = "file:" + file.getFileName().toStdString();
+      sample->ref = {{"provider", "file"},
+                     {"name", file.getFileName().toStdString()},
+                     {"path", file.getFullPathName().toStdString()},
+                     {"durationSec", std::round(sample->duration * 1000.0) / 1000.0}};
       for (auto& [k, v] : fingerprint(file).items())
-        s->ref[k] = v;
+        sample->ref[k] = v;
     }
-    onMessageThread(std::move(done), s, err.empty() && !s ? "decode failed" : err);
+    onMessageThread(std::move(done), sample, err.empty() && !sample ? "decode failed" : err);
   });
 }
 
@@ -75,16 +75,16 @@ void SampleLoader::loadUrl(const std::string& url, nlohmann::json ref, std::int6
     std::string err;
     if (auto in = juce::URL(juce::String(url)).createInputStream(opts))
       in->readIntoMemoryBlock(bytes);
-    std::shared_ptr<LoadedSample> s;
+    std::shared_ptr<LoadedSample> sample;
     if (bytes.getSize() == 0)
       err = "download failed";
     else
-      s = decode(std::make_unique<juce::MemoryInputStream>(bytes, true), err);
-    if (s) {
-      s->ref = sampleRef;
-      s->track = "freesound:" + std::to_string(sampleRef.value("id", 0));
+      sample = decode(std::make_unique<juce::MemoryInputStream>(bytes, true), err);
+    if (sample) {
+      sample->ref = sampleRef;
+      sample->track = "freesound:" + std::to_string(sampleRef.value("id", 0));
     }
-    onMessageThread(std::move(onDone), s, err);
+    onMessageThread(std::move(onDone), sample, err);
   });
 }
 

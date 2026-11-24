@@ -3,11 +3,7 @@
     "bugprone-incorrect-roundings": 1
   },
   "engine/include/blokdust/connections.hpp": {
-    "readability-identifier-length": 14
-  },
-  "engine/include/blokdust/convolver.hpp": {
-    "readability-identifier-length": 2,
-    "readability-identifier-naming": 2
+    "readability-identifier-length": 11
   },
   "engine/include/blokdust/dmath.hpp": {
     "cppcoreguidelines-init-variables": 2,
@@ -17,18 +13,18 @@
   "engine/include/blokdust/dsp.hpp": {
     "cppcoreguidelines-init-variables": 1,
     "performance-enum-size": 1,
-    "readability-identifier-length": 10,
+    "readability-identifier-length": 8,
     "readability-identifier-naming": 4
   },
   "engine/include/blokdust/effects.hpp": {
     "cppcoreguidelines-init-variables": 1,
-    "readability-identifier-length": 73,
-    "readability-identifier-naming": 19,
+    "readability-identifier-length": 48,
+    "readability-identifier-naming": 1,
     "readability-simplify-boolean-expr": 1
   },
   "engine/include/blokdust/engine.hpp": {
     "bugprone-implicit-widening-of-multiplication-result": 1,
-    "readability-identifier-length": 60
+    "readability-identifier-length": 15
   },
   "engine/include/blokdust/geometry.hpp": {
     "readability-identifier-length": 2
@@ -37,7 +33,7 @@
     "readability-identifier-length": 6
   },
   "engine/include/blokdust/mpe.hpp": {
-    "readability-identifier-length": 16
+    "readability-identifier-length": 13
   },
   "engine/include/blokdust/spsc_queue.hpp": {
     "readability-identifier-length": 1
@@ -59,55 +55,54 @@
     "readability-identifier-length": 22
   },
   "engine/src/connections.cpp": {
-    "readability-identifier-length": 13
+    "readability-identifier-length": 11
   },
   "engine/src/convolver.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 18,
     "bugprone-misplaced-widening-cast": 10,
     "bugprone-throwing-static-initialization": 1,
-    "readability-identifier-length": 23,
-    "readability-identifier-naming": 2
+    "readability-identifier-length": 21
   },
   "engine/src/engine.cpp": {
-    "readability-identifier-length": 22
+    "readability-identifier-length": 15
   },
   "engine/src/engine_arrange.cpp": {
     "bugprone-assignment-in-if-condition": 1,
     "bugprone-signed-char-misuse": 1,
-    "readability-identifier-length": 18,
+    "readability-identifier-length": 15,
     "readability-identifier-naming": 2
   },
   "engine/src/engine_commands.cpp": {
-    "readability-identifier-length": 19
+    "readability-identifier-length": 14
   },
   "engine/src/engine_granular.cpp": {
     "bugprone-branch-clone": 1,
-    "readability-identifier-length": 10
+    "readability-identifier-length": 7
   },
   "engine/src/engine_hits.cpp": {
-    "readability-identifier-length": 24
+    "readability-identifier-length": 7
   },
   "engine/src/engine_internal.hpp": {
     "readability-identifier-length": 2,
     "readability-identifier-naming": 1
   },
   "engine/src/engine_notes.cpp": {
-    "readability-identifier-length": 23
+    "readability-identifier-length": 13
   },
   "engine/src/engine_render.cpp": {
-    "readability-identifier-length": 29,
-    "readability-identifier-naming": 4
+    "readability-identifier-length": 24,
+    "readability-identifier-naming": 2
   },
   "engine/src/engine_tick.cpp": {
     "cppcoreguidelines-pro-type-member-init": 3,
-    "readability-identifier-length": 26,
+    "readability-identifier-length": 18,
     "readability-simplify-boolean-expr": 1
   },
   "engine/src/engine_voices.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 1,
     "cppcoreguidelines-init-variables": 1,
     "cppcoreguidelines-pro-type-member-init": 1,
-    "readability-identifier-length": 25
+    "readability-identifier-length": 17
   },
   "engine/src/tablebank.cpp": {
     "performance-enum-size": 1,
@@ -118,71 +113,71 @@
     "readability-identifier-length": 13
   },
   "engine/tests/helpers.hpp": {
-    "readability-identifier-length": 8,
+    "readability-identifier-length": 4,
     "readability-identifier-naming": 1
   },
   "engine/tests/test_audio.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 3,
-    "readability-identifier-length": 13
+    "readability-identifier-length": 6
   },
   "engine/tests/test_audio_graph.cpp": {
     "bugprone-integer-division": 1,
-    "readability-identifier-length": 17
+    "readability-identifier-length": 8
   },
   "engine/tests/test_catalogue.cpp": {
     "readability-identifier-length": 3
   },
   "engine/tests/test_chance.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 3,
-    "readability-identifier-length": 12
+    "readability-identifier-length": 5
   },
   "engine/tests/test_compressor.cpp": {
-    "readability-identifier-length": 13
+    "readability-identifier-length": 7
   },
   "engine/tests/test_connections.cpp": {
     "performance-inefficient-vector-operation": 2,
-    "readability-identifier-length": 16
+    "readability-identifier-length": 3
   },
   "engine/tests/test_controllers.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 4,
-    "readability-identifier-length": 35
+    "readability-identifier-length": 13
   },
   "engine/tests/test_counter.cpp": {
-    "readability-identifier-length": 14
+    "readability-identifier-length": 4
   },
   "engine/tests/test_determinism.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 2,
-    "readability-identifier-length": 8
+    "readability-identifier-length": 5
   },
   "engine/tests/test_emitter_hit.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 5,
-    "readability-identifier-length": 6
+    "readability-identifier-length": 2
   },
   "engine/tests/test_ftz.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 3,
-    "readability-identifier-length": 2
+    "readability-identifier-length": 1
   },
   "engine/tests/test_gate.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 2,
-    "readability-identifier-length": 9
+    "readability-identifier-length": 2
   },
   "engine/tests/test_granular.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 3,
     "bugprone-throwing-static-initialization": 1,
     "performance-unnecessary-value-param": 1,
-    "readability-identifier-length": 14
+    "readability-identifier-length": 9
   },
   "engine/tests/test_lasers.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 6,
     "readability-container-size-empty": 1,
-    "readability-identifier-length": 17
+    "readability-identifier-length": 3
   },
   "engine/tests/test_lfo.cpp": {
-    "readability-identifier-length": 17
+    "readability-identifier-length": 9
   },
   "engine/tests/test_mpe.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 1,
-    "readability-identifier-length": 33,
+    "readability-identifier-length": 30,
     "readability-identifier-naming": 1
   },
   "engine/tests/test_mpe_parser.cpp": {
@@ -191,7 +186,7 @@
   "engine/tests/test_note_effects.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 1,
     "performance-unnecessary-value-param": 1,
-    "readability-identifier-length": 42,
+    "readability-identifier-length": 24,
     "readability-identifier-naming": 4
   },
   "engine/tests/test_patch_loader.cpp": {
@@ -199,50 +194,47 @@
   },
   "engine/tests/test_prism.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 3,
-    "readability-identifier-length": 13
+    "readability-identifier-length": 5
   },
   "engine/tests/test_pulse_delay.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 14,
     "readability-container-size-empty": 2,
-    "readability-identifier-length": 12
+    "readability-identifier-length": 3
   },
   "engine/tests/test_queue.cpp": {
     "readability-identifier-length": 1
   },
   "engine/tests/test_review_fixes.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 1,
-    "readability-identifier-length": 14
+    "readability-identifier-length": 9
   },
   "engine/tests/test_simulation.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 9,
     "readability-container-size-empty": 6,
-    "readability-identifier-length": 16
+    "readability-identifier-length": 2
   },
   "engine/tests/test_sound_laser.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 1,
     "performance-unnecessary-value-param": 1,
-    "readability-identifier-length": 13
+    "readability-identifier-length": 4
   },
   "engine/tests/test_stage.cpp": {
     "bugprone-implicit-widening-of-multiplication-result": 3,
-    "readability-identifier-length": 20
+    "readability-identifier-length": 18
   },
   "engine/tests/test_tempo.cpp": {
     "performance-unnecessary-value-param": 3,
-    "readability-identifier-length": 17,
+    "readability-identifier-length": 10,
     "readability-identifier-naming": 1
   },
   "engine/tests/test_wavetable_block.cpp": {
     "bugprone-float-loop-counter": 1,
-    "readability-identifier-length": 21
-  },
-  "engine/tests/test_world_power.cpp": {
-    "readability-identifier-length": 2
+    "readability-identifier-length": 18
   },
   "engine/tools/render/main.cpp": {
     "bugprone-exception-escape": 1,
     "bugprone-narrowing-conversions": 1,
-    "readability-identifier-length": 23,
+    "readability-identifier-length": 21,
     "readability-identifier-naming": 2
   },
   "plugin/src/AccountStore.cpp": {
@@ -251,7 +243,7 @@
     "readability-simplify-boolean-expr": 1
   },
   "plugin/src/EditorSend.cpp": {
-    "readability-identifier-length": 2
+    "readability-identifier-length": 1
   },
   "plugin/src/PatchFiles.cpp": {
     "bugprone-empty-catch": 1,
@@ -262,7 +254,7 @@
     "readability-identifier-length": 1
   },
   "plugin/src/PluginEditor.cpp": {
-    "readability-identifier-length": 47
+    "readability-identifier-length": 44
   },
   "plugin/src/PluginEditor.h": {
     "readability-identifier-length": 2
@@ -277,7 +269,7 @@
     "cppcoreguidelines-init-variables": 8,
     "performance-no-automatic-move": 1,
     "performance-unnecessary-value-param": 5,
-    "readability-identifier-length": 75
+    "readability-identifier-length": 64
   },
   "plugin/src/PluginProcessor.h": {
     "readability-identifier-length": 8
@@ -287,17 +279,17 @@
     "bugprone-implicit-widening-of-multiplication-result": 1,
     "performance-no-automatic-move": 1,
     "performance-unnecessary-value-param": 1,
-    "readability-identifier-length": 9,
+    "readability-identifier-length": 7,
     "readability-identifier-naming": 1
   },
   "plugin/src/SnapshotBuffer.h": {
     "bugprone-implicit-widening-of-multiplication-result": 5
   },
   "plugin/src/StageWorlds.cpp": {
-    "readability-identifier-length": 5
+    "readability-identifier-length": 4
   },
   "plugin/src/Telemetry.cpp": {
-    "readability-identifier-length": 13
+    "readability-identifier-length": 12
   },
   "plugin/src/WebViewDrops.h": {
     "readability-identifier-length": 3
@@ -309,6 +301,6 @@
   "plugin/tests/host_render.cpp": {
     "bugprone-exception-escape": 1,
     "bugprone-incorrect-roundings": 1,
-    "readability-identifier-length": 23
+    "readability-identifier-length": 21
   }
 }

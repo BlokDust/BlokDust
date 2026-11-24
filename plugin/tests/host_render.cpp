@@ -133,12 +133,12 @@ static int selftestStages() {
   const BlockId st = loaded.ids.at("st");
   // the page's commands inside the Stage: a Tone and a Power, ids 1 and 2 of the inner world (the
   // outer has 1 and 2 too)
-  Engine* w = worlds.world(root, st, cfg, suspend);
-  checks["madeOnFirstUse"] = w != nullptr && worlds.size() == 1 && suspends == 1 &&
-                             worlds.world(root, st, cfg, suspend) == w && suspends == 1;
+  Engine* engine = worlds.world(root, st, cfg, suspend);
+  checks["madeOnFirstUse"] = engine != nullptr && worlds.size() == 1 && suspends == 1 &&
+                             worlds.world(root, st, cfg, suspend) == engine && suspends == 1;
   checks["notAStage"] = worlds.world(root, loaded.ids.at("p"), cfg, suspend) == nullptr;
-  w->push(Command::add(1, BlockType::SourceTone, 0, 0));
-  w->push(Command::add(2, BlockType::PowerPower, -3, 0));
+  engine->push(Command::add(1, BlockType::SourceTone, 0, 0));
+  engine->push(Command::add(2, BlockType::PowerPower, -3, 0));
   worlds.keys(st)[1] = "t";
   worlds.keys(st)[2] = "pw";
   std::vector<float> l(48000), r(48000);
@@ -149,7 +149,7 @@ static int selftestStages() {
   int outer = 0, inner = 0;
   for (const auto& b : root.blocks())
     outer += b.alive ? 1 : 0;
-  for (const auto& b : w->blocks())
+  for (const auto& b : engine->blocks())
     inner += b.alive ? 1 : 0;
   checks["innerSounds"] = peak > 0.001f;
   checks["outerUntouched"] = outer == 2 && inner == 2;
@@ -228,38 +228,38 @@ int main(int argc, char** argv) {
                         // async work (sample loading) on the message thread  // --tempo: a playing
                         // host transport from beat 0 (CHG-0004 3.5)
   for (int i = 3; i < argc; ++i) {
-    const juce::String a = argv[i];
-    if (a == "--no-state")
+    const juce::String text = argv[i];
+    if (text == "--no-state")
       noState = true;
-    else if (a == "--sidechain")
+    else if (text == "--sidechain")
       sidechain = true;
-    else if (a == "--wav" && i + 1 < argc)
+    else if (text == "--wav" && i + 1 < argc)
       wavOut = argv[++i];
-    else if (a == "--reload")
+    else if (text == "--reload")
       reload = true;
-    else if (a == "--idle")
+    else if (text == "--idle")
       idle = true;
-    else if (a == "--stopped" && i + 1 < argc) {
+    else if (text == "--stopped" && i + 1 < argc) {
       const juce::String r = argv[++i];
       stopFrom = r.upToFirstOccurrenceOf(":", false, false).getLargeIntValue();
       playAgainAt = r.fromFirstOccurrenceOf(":", false, false).getLargeIntValue();
-    } else if (a == "--peak" && i + 1 < argc) {
+    } else if (text == "--peak" && i + 1 < argc) {
       const juce::String r = argv[++i];
       peakFrom = r.upToFirstOccurrenceOf(":", false, false).getLargeIntValue();
       peakTo = r.fromFirstOccurrenceOf(":", false, false).getLargeIntValue();
-    } else if (a == "--bypass-until" && i + 1 < argc)
+    } else if (text == "--bypass-until" && i + 1 < argc)
       bypassUntil = juce::String(argv[++i]).getLargeIntValue();
-    else if (a == "--tail-from" && i + 1 < argc)
+    else if (text == "--tail-from" && i + 1 < argc)
       tailFrom = juce::String(argv[++i]).getLargeIntValue();
-    else if (a == "--settle" && i + 1 < argc)
+    else if (text == "--settle" && i + 1 < argc)
       settleMs = juce::String(argv[++i]).getIntValue();
-    else if (a == "--tempo" && i + 1 < argc)
+    else if (text == "--tempo" && i + 1 < argc)
       hostBpm = juce::String(argv[++i]).getDoubleValue();
-    else if (a == "--editor" && i + 1 < argc)
+    else if (text == "--editor" && i + 1 < argc)
       editorDiag = argv[++i];
-    else if (a == "--state" && i + 1 < argc)
+    else if (text == "--state" && i + 1 < argc)
       stateFile = argv[++i];
-    else if (a == "--midi" && i + 1 < argc) {
+    else if (text == "--midi" && i + 1 < argc) {
       for (const auto& e : juce::StringArray::fromTokens(argv[++i], ",", "")) {
         const auto kind = e.upToFirstOccurrenceOf(":", false, false);
         const auto noteVel =
@@ -274,7 +274,7 @@ int main(int argc, char** argv) {
         midiEvents.push_back({at, kind == "on" ? juce::MidiMessage::noteOn(1, note, vel)
                                                : juce::MidiMessage::noteOff(1, note)});
       }
-    } else if (a == "--midi-raw" &&
+    } else if (text == "--midi-raw" &&
                i + 1 < argc) {  // "at:status,d1,d2;…" (MPE streams, PLUGIN-0004)
       for (const auto& e : juce::StringArray::fromTokens(argv[++i], ";", "")) {
         const long at = e.upToFirstOccurrenceOf(":", false, false).getLargeIntValue();
@@ -284,7 +284,7 @@ int main(int argc, char** argv) {
           midiEvents.push_back(
               {at, juce::MidiMessage(b[0].getIntValue(), b[1].getIntValue(), b[2].getIntValue())});
       }
-    } else if (a == "--param" && i + 1 < argc) {
+    } else if (text == "--param" && i + 1 < argc) {
       const juce::String p = argv[++i];
       params.emplace_back(p.upToFirstOccurrenceOf("=", false, false).getIntValue(),
                           p.fromFirstOccurrenceOf("=", false, false).getFloatValue());

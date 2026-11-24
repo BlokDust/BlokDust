@@ -17,16 +17,16 @@ namespace {
 /// A MIDI Input next to a source (connected by proximity), poly, no glide; notes come from `play`.
 template <class F>
 std::vector<float> run(BlockType source, F play, double seconds = 0.5, bool mpe = true) {
-  auto e = makeEngine(48000, 1, false);
-  e->push(Command::add(1, MIDI, -3, 0));
-  e->push(Command::setParam(1, P::InputMidiController::isPolyphonic, 1));
-  e->push(Command::setParam(1, P::InputMidiController::glide, 0));
-  e->push(Command::setParam(1, P::InputMidiController::mpe, mpe ? 1 : 0));
-  e->push(Command::add(2, source, 0, 0));
+  auto engine = makeEngine(48000, 1, false);
+  engine->push(Command::add(1, MIDI, -3, 0));
+  engine->push(Command::setParam(1, P::InputMidiController::isPolyphonic, 1));
+  engine->push(Command::setParam(1, P::InputMidiController::glide, 0));
+  engine->push(Command::setParam(1, P::InputMidiController::mpe, mpe ? 1 : 0));
+  engine->push(Command::add(2, source, 0, 0));
   if (source == BlockType::SourceTone)
-    e->push(Command::setParam(2, P::SourceTone::waveform, 3));  // saw: harmonics
-  play(*e);
-  return render(*e, static_cast<std::int64_t>(seconds * 48000));
+    engine->push(Command::setParam(2, P::SourceTone::waveform, 3));  // saw: harmonics
+  play(*engine);
+  return render(*engine, static_cast<std::int64_t>(seconds * 48000));
 }
 double rmsOf(const std::vector<float>& x, std::size_t from = 0) {
   double s = 0;
@@ -164,16 +164,16 @@ TEST_CASE("MPE: a slide sent with the note picks a Sample's start point") {
   for (std::size_t i = 0; i < ramp.size(); ++i)
     ramp[i] = static_cast<float>(i) / 48000.0f;
   auto start = [&](double slide) {
-    auto e = makeEngine(48000, 1, false);
-    e->push(Command::add(1, MIDI, -3, 0));
-    e->push(Command::setParam(1, P::InputMidiController::mpe, 1));
-    e->push(Command::add(2, BlockType::SourceSample, 0, 0));
-    render(*e, 128);
-    REQUIRE(e->attachSample(
+    auto engine = makeEngine(48000, 1, false);
+    engine->push(Command::add(1, MIDI, -3, 0));
+    engine->push(Command::setParam(1, P::InputMidiController::mpe, 1));
+    engine->push(Command::add(2, BlockType::SourceSample, 0, 0));
+    render(*engine, 128);
+    REQUIRE(engine->attachSample(
         2, SampleBuffer{ramp.data(), nullptr, static_cast<std::uint32_t>(ramp.size()), 48000.0}));
-    e->push(Command::noteOn(MIDI, 60, 1.0, -1, 1));
-    e->push(Command::noteExpression(MIDI, 60, 1, X::Slide, slide));
-    const auto out = render(*e, 4800);
+    engine->push(Command::noteOn(MIDI, 60, 1.0, -1, 1));
+    engine->push(Command::noteExpression(MIDI, 60, 1, X::Slide, slide));
+    const auto out = render(*engine, 4800);
     const auto first = std::find_if(out.begin(), out.end(), [](float v) { return v != 0.0f; });
     return first == out.end() ? 0.0f : *first;
   };
@@ -241,30 +241,30 @@ TEST_CASE(
   // A controller cycles notes through channels 2–16 and lets each go with pressure 0. Each
   // channel's last pressure must not carry into its next note: otherwise every new note starts
   // silent once all channels have been used.
-  auto e = makeEngine(48000, 1, false);
-  e->push(Command::add(1, MIDI, -3, 0));
-  e->push(Command::setParam(1, P::InputMidiController::isPolyphonic, 1));
-  e->push(Command::setParam(1, P::InputMidiController::glide, 0));
-  e->push(Command::setParam(1, P::InputMidiController::mpe, 1));
-  e->push(Command::add(2, BlockType::SourceTone, 0, 0));
-  render(*e, 128);
+  auto engine = makeEngine(48000, 1, false);
+  engine->push(Command::add(1, MIDI, -3, 0));
+  engine->push(Command::setParam(1, P::InputMidiController::isPolyphonic, 1));
+  engine->push(Command::setParam(1, P::InputMidiController::glide, 0));
+  engine->push(Command::setParam(1, P::InputMidiController::mpe, 1));
+  engine->push(Command::add(2, BlockType::SourceTone, 0, 0));
+  render(*engine, 128);
   MidiRouter router;
-  router.sync(*e);
+  router.sync(*engine);
   auto send = [&](std::uint8_t s, std::uint8_t a, std::uint8_t b) {
-    router.message(s, a, b, -1, [&](const Command& c) { e->push(c); });
+    router.message(s, a, b, -1, [&](const Command& c) { engine->push(c); });
   };
   for (int n = 0; n < 45; ++n) {
     const auto ch = static_cast<std::uint8_t>(1 + n % 15);
     send(0x90 | ch, static_cast<std::uint8_t>(48 + n % 24), 100);
     for (int p : {30, 90, 40, 0}) {
       send(0xD0 | ch, static_cast<std::uint8_t>(p), 0);
-      render(*e, 480);
+      render(*engine, 480);
     }
     send(0x80 | ch, static_cast<std::uint8_t>(48 + n % 24), 0);
   }
-  const auto tail = render(*e, 48000);  // every note released and faded
+  const auto tail = render(*engine, 48000);  // every note released and faded
   CHECK(rmsOf(tail, 43200) < 1e-4);
   send(0x93, 60, 100);  // a new note on a used channel, before any pressure arrives
-  const auto out = render(*e, 4800);
+  const auto out = render(*engine, 4800);
   CHECK(rmsOf(out, 2400) > 0.01);
 }

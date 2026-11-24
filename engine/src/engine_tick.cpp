@@ -4,26 +4,26 @@
 
 namespace blokdust {
 
-bool Engine::advanceCounter(Block& c) noexcept BLOKDUST_NONBLOCKING {
+bool Engine::advanceCounter(Block& block) noexcept BLOKDUST_NONBLOCKING {
   const int steps =
-      std::clamp(static_cast<int>(std::lround(c.params[P::PowerCounter::steps])), 1, 16);
+      std::clamp(static_cast<int>(std::lround(block.params[P::PowerCounter::steps])), 1, 16);
   const int hits =
-      std::clamp(static_cast<int>(std::lround(c.params[P::PowerCounter::hits])), 0, steps);
+      std::clamp(static_cast<int>(std::lround(block.params[P::PowerCounter::hits])), 0, steps);
   const int rotate =
-      std::clamp(static_cast<int>(std::lround(c.params[P::PowerCounter::rotate])), 0, 15);
-  const int at = (c.counterStep % steps + rotate) % steps;
-  const long mask = std::lround(c.params[P::PowerCounter::pattern]);
-  const bool active = mask >= 0 ? ((mask >> (c.counterStep % steps)) & 1) != 0
+      std::clamp(static_cast<int>(std::lround(block.params[P::PowerCounter::rotate])), 0, 15);
+  const int at = (block.counterStep % steps + rotate) % steps;
+  const long mask = std::lround(block.params[P::PowerCounter::pattern]);
+  const bool active = mask >= 0 ? ((mask >> (block.counterStep % steps)) & 1) != 0
                                 : (at * hits) % steps < hits;  // steps set by hand win
-  c.counterStep = (c.counterStep % steps + 1) % steps;
-  c.counterFired = active;
+  block.counterStep = (block.counterStep % steps + 1) % steps;
+  block.counterFired = active;
   return active;
 }
 
 /// A Chance rolls for one hit (R2d): its own random stream (seeded by block id, as Granular's
 /// grains, so the patch seed stays visual-only).
-bool Engine::chanceRoll(Block& c) noexcept BLOKDUST_NONBLOCKING {
-  return static_cast<double>(c.grainRng.nextFloat()) < c.params[P::PowerChance::chance];
+bool Engine::chanceRoll(Block& block) noexcept BLOKDUST_NONBLOCKING {
+  return static_cast<double>(block.grainRng.nextFloat()) < block.params[P::PowerChance::chance];
 }
 
 /// One laser's beams (SPEC-SIMULATION R7, R7a). A beam runs to the nearest thing that stops it: a
@@ -40,8 +40,8 @@ void Engine::traceBeam(int laserSlot, double angleDeg, double len, std::bitset<k
   };
   std::array<Seg, kMaxBeamSegments> stack;
   int sp = 0, cast = 0;
-  Block& l = blocks_[static_cast<std::size_t>(laserSlot)];
-  stack[static_cast<std::size_t>(sp++)] = Seg{l.x, l.y, angleDeg, len, 0, {}};
+  Block& block = blocks_[static_cast<std::size_t>(laserSlot)];
+  stack[static_cast<std::size_t>(sp++)] = Seg{block.x, block.y, angleDeg, len, 0, {}};
   while (sp > 0) {
     const Seg seg = stack[static_cast<std::size_t>(--sp)];
     const bool first = cast++ == 0;
@@ -102,7 +102,7 @@ void Engine::traceBeam(int laserSlot, double angleDeg, double len, std::bitset<k
         hits[static_cast<std::size_t>(s)] = true;
     }
     if (beamCount_ < kMaxBeams)
-      beams_[static_cast<std::size_t>(beamCount_++)] = Beam{l.id, seg.x0, seg.y0, ex, ey};
+      beams_[static_cast<std::size_t>(beamCount_++)] = Beam{block.id, seg.x0, seg.y0, ex, ey};
     if (prism < 0)
       continue;
     const Block& p = blocks_[static_cast<std::size_t>(prism)];
@@ -126,16 +126,18 @@ void Engine::traceBeam(int laserSlot, double angleDeg, double len, std::bitset<k
 }
 
 /// A synced emitter's slot on the beat grid at `beat`: it emits when this changes (CHG-0004 3.5).
-std::int64_t Engine::beatSlotAt(const Block& e, double beat) noexcept {
-  const double div = std::max(1.0 / 64.0, e.params[P::PowerEmitter::division]);
+std::int64_t Engine::beatSlotAt(const Block& block, double beat) noexcept {
+  const double div = std::max(1.0 / 64.0, block.params[P::PowerEmitter::division]);
   // Offset (CHG-0014): the whole grid is late by a fraction of a division. 0 leaves the beat
   // untouched (v1 timing).
-  if (const double offset = std::clamp(e.params[P::PowerEmitter::offset], 0.0, 1.0); offset > 0.0)
+  if (const double offset = std::clamp(block.params[P::PowerEmitter::offset], 0.0, 1.0);
+      offset > 0.0)
     beat -= offset * div;
   auto slot = static_cast<std::int64_t>(std::floor(beat / div + 1e-9));
   // Swing (owner): the second of each pair of slots fires late, by up to a third of a division
   // (triplet shuffle).
-  if (const double swing = std::clamp(e.params[P::PowerEmitter::swing], 0.0, 1.0); swing > 0.0) {
+  if (const double swing = std::clamp(block.params[P::PowerEmitter::swing], 0.0, 1.0);
+      swing > 0.0) {
     const auto pair = static_cast<std::int64_t>(std::floor(beat / (2.0 * div) + 1e-9));
     const double within = beat - static_cast<double>(pair) * 2.0 * div;
     slot = pair * 2 + (within + 1e-9 >= div * (1.0 + swing / 3.0) ? 1 : 0);
@@ -151,16 +153,17 @@ std::int64_t Engine::beatSlotAt(const Block& e, double beat) noexcept {
 void Engine::resyncToTransport(double beat) noexcept BLOKDUST_NONBLOCKING {
   particleCount_ = 0;
   for (int k = 0; k < orderCount_; ++k) {
-    Block& b = blocks_[order_[k]];
-    b.pulsePower = 0;
-    b.pulseDelayCount = 0;
-    b.counterStep = 0;
-    b.counterFired = false;
-    b.laserTurning = false;  // a Laser with Restart starts the take from its Angle (R9a)
-    if (b.type != BlockType::PowerEmitter)
+    Block& block = blocks_[order_[k]];
+    block.pulsePower = 0;
+    block.pulseDelayCount = 0;
+    block.counterStep = 0;
+    block.counterFired = false;
+    block.laserTurning = false;  // a Laser with Restart starts the take from its Angle (R9a)
+    if (block.type != BlockType::PowerEmitter)
       continue;
-    b.beatSlot = beatSlotAt(b, beat - 1e-6);  // just before: a start on a grid slot fires at once
-    b.emitCounter = 0;                        // as when added (v1 ParticleEmitter.Init)
+    block.beatSlot =
+        beatSlotAt(block, beat - 1e-6);  // just before: a start on a grid slot fires at once
+    block.emitCounter = 0;               // as when added (v1 ParticleEmitter.Init)
   }
   recomputeStaticPower();  // Counters and Chances are off again (R2c, R2d)
   updateGates();
@@ -178,16 +181,16 @@ void Engine::runTick() noexcept BLOKDUST_NONBLOCKING {
   runModulators();
   // 0b. keys held on an Emitter/Laser whose keyboard moved away power it no more
   for (int k = 0; k < orderCount_; ++k) {
-    Block& b = blocks_[order_[k]];
-    if (b.keyPower == 0)
+    Block& block = blocks_[order_[k]];
+    if (block.keyPower == 0)
       continue;
     bool kept = false;
     const auto row = graph_.row(order_[k]);
     for (int j = 0; j < orderCount_ && !kept; ++j)
       kept = row[order_[j]] && blocks_[order_[j]].kind() == BlockKind::Controller;
     if (!kept) {
-      b.keyCount = 0;
-      b.keyPower = 0;
+      block.keyCount = 0;
+      block.keyPower = 0;
     }
   }
   // 1. expire pulses that end at this tick
@@ -329,8 +332,8 @@ void Engine::runTick() noexcept BLOKDUST_NONBLOCKING {
   std::array<SplitHit, 256> splits;  // Prisms entered this tick, filled before read
   int splitCount = 0;
   for (int i = 0; i < particleCount_; ++i) {
-    Particle p = particles_[i];
-    if (--p.life < 1) {
+    Particle particle = particles_[i];
+    if (--particle.life < 1) {
       continue;
     }
     bool consumed = false;
@@ -339,12 +342,13 @@ void Engine::runTick() noexcept BLOKDUST_NONBLOCKING {
       if (b.type == BlockType::PowerEmitter) {
         // Only a particle that came in from outside: not its own emitter's, nor one born inside
         // overlapping emitters (which would pass it back and forth every tick).
-        if (p.fresh)
+        if (particle.fresh)
           continue;
         const auto& inf = b.info();
-        if (!pointInPolygon(p.x, p.y, inf.outline, inf.outlineCount, b.x, b.y))
+        if (!pointInPolygon(particle.x, particle.y, inf.outline, inf.outlineCount, b.x, b.y))
           continue;
-        if (pointInPolygon(p.x - p.vx, p.y - p.vy, inf.outline, inf.outlineCount, b.x, b.y))
+        if (pointInPolygon(particle.x - particle.vx, particle.y - particle.vy, inf.outline,
+                           inf.outlineCount, b.x, b.y))
           continue;
         consumed = true;
         log(Event::Type::Hit, b.id);
@@ -355,18 +359,20 @@ void Engine::runTick() noexcept BLOKDUST_NONBLOCKING {
       if (kind == BlockKind::Path) {
         // R5d (CHG-0015): a Prism turns a particle into its streams as it enters (as an emitter
         // catches one, R5b), sent off after this pass.
-        if (p.fresh)
+        if (particle.fresh)
           continue;
         const auto& inf = b.info();
-        if (!pointInPolygon(p.x, p.y, inf.outline, inf.outlineCount, b.x, b.y))
+        if (!pointInPolygon(particle.x, particle.y, inf.outline, inf.outlineCount, b.x, b.y))
           continue;
-        if (pointInPolygon(p.x - p.vx, p.y - p.vy, inf.outline, inf.outlineCount, b.x, b.y))
+        if (pointInPolygon(particle.x - particle.vx, particle.y - particle.vy, inf.outline,
+                           inf.outlineCount, b.x, b.y))
           continue;
         consumed = true;
         log(Event::Type::Split, b.id);
         if (splitCount < static_cast<int>(splits.size()))
           splits[static_cast<std::size_t>(splitCount++)] = {
-              order_[k], std::sqrt(p.vx * p.vx + p.vy * p.vy), p.life};
+              order_[k], std::sqrt(particle.vx * particle.vx + particle.vy * particle.vy),
+              particle.life};
         continue;
       }
       const bool absorbs = kind == BlockKind::Void ||
@@ -376,7 +382,7 @@ void Engine::runTick() noexcept BLOKDUST_NONBLOCKING {
       if (!absorbs && !reacts)
         continue;
       const auto& inf = b.info();
-      if (!pointInPolygon(p.x, p.y, inf.outline, inf.outlineCount, b.x, b.y))
+      if (!pointInPolygon(particle.x, particle.y, inf.outline, inf.outlineCount, b.x, b.y))
         continue;
       consumed = true;
       if (absorbs)
@@ -391,10 +397,10 @@ void Engine::runTick() noexcept BLOKDUST_NONBLOCKING {
     }
     if (consumed)
       continue;
-    p.x += p.vx;
-    p.y += p.vy;
-    p.fresh = false;
-    particles_[kept++] = p;
+    particle.x += particle.vx;
+    particle.y += particle.vy;
+    particle.fresh = false;
+    particles_[kept++] = particle;
   }
   particleCount_ = kept;
   for (int i = 0; i < caughtCount; ++i)
@@ -447,28 +453,29 @@ void Engine::runTick() noexcept BLOKDUST_NONBLOCKING {
 /// it over.
 void Engine::updateGates() noexcept BLOKDUST_NONBLOCKING {
   for (int k = 0; k < orderCount_; ++k) {
-    Block& b = blocks_[order_[k]];
-    if (b.kind() != BlockKind::AudioSource)
+    Block& block = blocks_[order_[k]];
+    if (block.kind() != BlockKind::AudioSource)
       continue;
-    const bool want = b.sourcePower() > 0;
-    if (b.restrike) {
-      b.restrike = false;
-      if (want && b.powerOn) {
+    const bool want = block.sourcePower() > 0;
+    if (block.restrike) {
+      block.restrike = false;
+      if (want && block.powerOn) {
         restrike(order_[k]);
         continue;
       }
     }
-    if (want == b.powerOn)
+    if (want == block.powerOn)
       continue;
-    b.powerOn = want;
-    if (b.type == BlockType::SourceStage) {  // CHG-0021: power is the inner world's power switch
-      log(want ? Event::Type::GateOn : Event::Type::GateOff, b.id);
+    block.powerOn = want;
+    if (block.type ==
+        BlockType::SourceStage) {  // CHG-0021: power is the inner world's power switch
+      log(want ? Event::Type::GateOn : Event::Type::GateOff, block.id);
       if (Engine* inner =
-              b.poolIndex >= 0 ? stages_[static_cast<std::size_t>(b.poolIndex)] : nullptr)
-        inner->applyNow(Command::worldPower(want, -1, keepsParticles(b)));
+              block.poolIndex >= 0 ? stages_[static_cast<std::size_t>(block.poolIndex)] : nullptr)
+        inner->applyNow(Command::worldPower(want, -1, keepsParticles(block)));
       continue;
     }
-    if (b.arranged) {
+    if (block.arranged) {
       arrange(order_[k], want);
       continue;
     }  // CHG-0017: power plays the notes the source is given
@@ -476,7 +483,7 @@ void Engine::updateGates() noexcept BLOKDUST_NONBLOCKING {
     // (Power triggers before the chain's Envelope block applies its settings); particle, pulse,
     // laser, press and key triggers use it.
     if (want)
-      voiceOn(order_[k], 0, -1, false, 0.0, b.staticPower == 0);
+      voiceOn(order_[k], 0, -1, false, 0.0, block.staticPower == 0);
     else
       voiceOff(order_[k], 0, -1);
   }

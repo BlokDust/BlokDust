@@ -318,22 +318,22 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                             juce::FileBrowserComponent::warnAboutOverwriting,
                         [this, title, req](const juce::FileChooser& fc) {
                           const auto chosen = fc.getResult();
-                          const auto f =
+                          const auto file =
                               chosen == juce::File{}
                                   ? juce::File{}
                                   : patchfiles::saveTo(chosen, title,
                                                        nlohmann::json::parse(proc_.patchJson()));
                           auto r = nlohmann::json{{"req", req},
-                                                  {"ok", f.existsAsFile()},
-                                                  {"path", f.getFullPathName().toStdString()}};
+                                                  {"ok", file.existsAsFile()},
+                                                  {"path", file.getFullPathName().toStdString()}};
                           web_.emitEventIfBrowserIsVisible(
                               "bd_patchSaved", juce::JSON::parse(juce::String(r.dump())));
                         });
                   })
               .withEventListener("bd_patchRead",
                                  [this](const juce::var& v) {
-                                   const juce::File f(v.getProperty("path", "").toString());
-                                   sendPatchFile(f, "open",
+                                   const juce::File file(v.getProperty("path", "").toString());
+                                   sendPatchFile(file, "open",
                                                  static_cast<int>(v.getProperty("req", 0)));
                                  })
               // FROM YOUR COMPUTER: one picker; the page then asks Open or Insert.
@@ -378,10 +378,11 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
               // has no Trash: deleted). Only files in the patches folder.
               .withEventListener("bd_patchDelete",
                                  [this](const juce::var& v) {
-                                   const juce::File f(v.getProperty("path", "").toString());
-                                   const bool ok =
-                                       f.existsAsFile() && f.isAChildOf(patchfiles::folder()) &&
-                                       f.hasFileExtension("blokdust") && patchfiles::remove(f);
+                                   const juce::File file(v.getProperty("path", "").toString());
+                                   const bool ok = file.existsAsFile() &&
+                                                   file.isAChildOf(patchfiles::folder()) &&
+                                                   file.hasFileExtension("blokdust") &&
+                                                   patchfiles::remove(file);
                                    auto r = nlohmann::json{
                                        {"req", static_cast<int>(v.getProperty("req", 0))},
                                        {"ok", ok}};

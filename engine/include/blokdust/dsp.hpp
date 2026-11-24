@@ -205,14 +205,14 @@ class MasterCompressor {
     write_ = preDelay_;
   }
   /// One stereo frame in place.
-  void process(float& l, float& r) noexcept {
+  void process(float& left, float& right) noexcept {
     if (division_ == 0)
       updateEnvelopeRate();
     division_ = (division_ + 1) & 31;
-    delayL_[static_cast<std::size_t>(write_)] = l;
-    delayR_[static_cast<std::size_t>(write_)] = r;
+    delayL_[static_cast<std::size_t>(write_)] = left;
+    delayR_[static_cast<std::size_t>(write_)] = right;
     const double absInput =
-        std::max(std::abs(static_cast<double>(l)), std::abs(static_cast<double>(r)));
+        std::max(std::abs(static_cast<double>(left)), std::abs(static_cast<double>(right)));
     const double shaped = saturate(absInput, k_);
     const double attenuation = absInput <= 0.0001 ? 1.0 : shaped / absInput;
     const double dbAttenuation = std::max(2.0, -linearToDb(attenuation));
@@ -229,8 +229,8 @@ class MasterCompressor {
     if (std::abs(compressorGain_) < 1e-30)
       compressorGain_ = 0.0;
     const double total = postGain_ * dmath::sin(dmath::kPi / 2.0 * compressorGain_);
-    l = static_cast<float>(delayL_[static_cast<std::size_t>(read_)] * total);
-    r = static_cast<float>(delayR_[static_cast<std::size_t>(read_)] * total);
+    left = static_cast<float>(delayL_[static_cast<std::size_t>(read_)] * total);
+    right = static_cast<float>(delayR_[static_cast<std::size_t>(read_)] * total);
     read_ = (read_ + 1) & (kMaxPreDelay - 1);
     write_ = (write_ + 1) & (kMaxPreDelay - 1);
   }

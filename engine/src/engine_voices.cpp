@@ -67,13 +67,13 @@ double lfoShape(int shape, double x) noexcept {
 /// A param changed under the engine's own hand (an LFO): what SetParam does after storing the
 /// value.
 void Engine::paramChanged(int slot, std::uint8_t param) noexcept {
-  Block& b = blocks_[static_cast<std::size_t>(slot)];
-  if (b.type == BlockType::PowerLaser && param == P::PowerLaser::angle)
-    b.laserAngle0 = b.params[param];
-  b.lastParam = param;
-  configureDsp(b);
-  b.lastParam = 255;
-  if (b.type == BlockType::PowerToggle)
+  Block& block = blocks_[static_cast<std::size_t>(slot)];
+  if (block.type == BlockType::PowerLaser && param == P::PowerLaser::angle)
+    block.laserAngle0 = block.params[param];
+  block.lastParam = param;
+  configureDsp(block);
+  block.lastParam = 255;
+  if (block.type == BlockType::PowerToggle)
     recomputeStaticPower();
 }
 
@@ -90,22 +90,23 @@ void Engine::runModulators() noexcept BLOKDUST_NONBLOCKING {
   std::array<Target, 64> targets;
   int n = 0;
   for (int k = 0; k < orderCount_; ++k) {
-    Block& l = blocks_[order_[k]];
-    if (l.type != BlockType::FxLfo)
+    Block& block = blocks_[order_[k]];
+    if (block.type != BlockType::FxLfo)
       continue;
-    const auto& p = l.params;
+    const auto& p = block.params;
     // Its place in the cycle: the beat when synced, its own clock when not.
-    const double phase =
-        p[P::FxLfo::sync] != 0.0 ? beat_ / std::max(1.0 / 16.0, p[P::FxLfo::division]) : l.lfoPhase;
+    const double phase = p[P::FxLfo::sync] != 0.0
+                             ? beat_ / std::max(1.0 / 16.0, p[P::FxLfo::division])
+                             : block.lfoPhase;
     if (p[P::FxLfo::sync] == 0.0) {
-      l.lfoPhase += std::clamp(p[P::FxLfo::rate], 0.001, 100.0) / kTickRate;
-      l.lfoPhase -= std::floor(l.lfoPhase);
+      block.lfoPhase += std::clamp(p[P::FxLfo::rate], 0.001, 100.0) / kTickRate;
+      block.lfoPhase -= std::floor(block.lfoPhase);
     }
     const double value =
         lfoShape(std::clamp(static_cast<int>(std::lround(p[P::FxLfo::shape])), 0, 3),
                  phase + p[P::FxLfo::phase]) *
         std::clamp(p[P::FxLfo::depth], 0.0, 1.0);
-    l.mon[0] = 0.0f;
+    block.mon[0] = 0.0f;
     const int ts = slotOf(static_cast<BlockId>(std::max(0.0, p[P::FxLfo::targetBlock])));
     if (ts < 0 || ts == order_[k] || !graph_.connected(order_[k], ts))
       continue;  // idle until its target is connected
@@ -115,8 +116,8 @@ void Engine::runModulators() noexcept BLOKDUST_NONBLOCKING {
     if (param < 0 || param >= t.info().paramCount || param >= 32 ||
         !toSlider(t.info().params[param], 0.0, unused))
       continue;
-    l.mon[0] = static_cast<float>(t.id);
-    l.mon[1] = static_cast<float>(param);
+    block.mon[0] = static_cast<float>(t.id);
+    block.mon[1] = static_cast<float>(param);
     int at = 0;
     while (at < n && (targets[static_cast<std::size_t>(at)].slot != ts ||
                       targets[static_cast<std::size_t>(at)].param != param))
@@ -184,8 +185,8 @@ void Engine::runModulators() noexcept BLOKDUST_NONBLOCKING {
 /// Timed Arpeggiators move on: every `division` beats when synced, `speed` times a second when not.
 void Engine::stepArps() noexcept BLOKDUST_NONBLOCKING {
   for (int k = 0; k < orderCount_; ++k) {
-    Block& b = blocks_[order_[k]];
-    if (!b.arranged || !b.arrGate)
+    Block& block = blocks_[order_[k]];
+    if (!block.arranged || !block.arrGate)
       continue;
     const NoteFx fx = noteFxFor(order_[k]);
     if (fx.arp < 0)
@@ -197,14 +198,14 @@ void Engine::stepArps() noexcept BLOKDUST_NONBLOCKING {
     if (ar.params[P::FxArpeggiator::sync] != 0.0) {
       const auto slot = static_cast<std::int64_t>(
           std::floor(beat_ / std::max(1.0 / 64.0, ar.params[P::FxArpeggiator::division]) + 1e-9));
-      step = slot != b.arpSlot;
-      b.arpSlot = slot;
+      step = slot != block.arpSlot;
+      block.arpSlot = slot;
     } else {
       const int every =
           std::max(1, static_cast<int>(std::lround(
                           kTickRate / std::clamp(ar.params[P::FxArpeggiator::speed], 0.25, 60.0))));
-      if (++b.arpTicks >= every) {
-        b.arpTicks = 0;
+      if (++block.arpTicks >= every) {
+        block.arpTicks = 0;
         step = true;
       }
     }
@@ -216,11 +217,11 @@ void Engine::stepArps() noexcept BLOKDUST_NONBLOCKING {
   }
 }
 
-void Engine::updateNotePower(Block& b) noexcept BLOKDUST_NONBLOCKING {
-  b.notePower = 0;
-  for (const auto& vo : b.voices)
+void Engine::updateNotePower(Block& block) noexcept BLOKDUST_NONBLOCKING {
+  block.notePower = 0;
+  for (const auto& vo : block.voices)
     if (vo.active && vo.controller != 0)
-      b.notePower = 1;
+      block.notePower = 1;
 }
 
 /// v1 Controller.GetPitchMods summed over connected controllers: transposition (12 × octaves).
@@ -237,15 +238,15 @@ double Engine::controllerMods(int slot) const noexcept {
 /// v1 Source.SetPitch: frequency (oscillators) or playback rate (samplers), linearly ramped over
 /// `glide` seconds.
 void Engine::setPitch(int slot, int v, double glide) noexcept BLOKDUST_NONBLOCKING {
-  Block& b = blocks_[static_cast<std::size_t>(slot)];
-  Voice& vo = b.voices[static_cast<std::size_t>(v)];
-  const auto& p = b.params;
+  Block& block = blocks_[static_cast<std::size_t>(slot)];
+  Voice& vo = block.voices[static_cast<std::size_t>(v)];
+  const auto& p = block.params;
   double target = 0.0;
-  if (isOscillator(b.type)) {
+  if (isOscillator(block.type)) {
     static_assert(P::SourceTone::transpose + 1 == P::SourceTone::fine &&
                       P::SourceWavetable::transpose + 1 == P::SourceWavetable::fine,
                   "Note, Fine");
-    const int note = b.type == BlockType::SourceTone
+    const int note = block.type == BlockType::SourceTone
                          ? static_cast<int>(P::SourceTone::transpose)
                          : static_cast<int>(P::SourceWavetable::transpose);
     const double semis = p[static_cast<std::size_t>(note)] + p[static_cast<std::size_t>(note) + 1];
@@ -258,13 +259,13 @@ void Engine::setPitch(int slot, int v, double glide) noexcept BLOKDUST_NONBLOCKI
     if (vo.offset != 0.0)
       target *=
           dmath::exp2(vo.offset / 12.0);  // CHG-0017: a Chord's interval, an Arpeggiator's octave
-  } else if (isSampler(b.type) ||
-             b.type == BlockType::SourceGranular) {  // Granular's playbackRate/detune line up
+  } else if (isSampler(block.type) ||
+             block.type == BlockType::SourceGranular) {  // Granular's playbackRate/detune line up
     // playbackRate = 2^((note − DefaultNote + playbackRate + detune) / 12) × buffer/engine rate
     // (AudioBufferSourceNode).
     const double semis = p[P::SourceSample::playbackRate] + p[P::SourceSample::detune] +
                          (vo.key >= 0 ? vo.key + controllerMods(slot) + vo.bend - 60.0 : 0.0);
-    target = dmath::exp2((semis + vo.offset) / 12.0) * (b.sampleRate / sampleRate_);
+    target = dmath::exp2((semis + vo.offset) / 12.0) * (block.sampleRate / sampleRate_);
   } else
     return;
   const int n = static_cast<int>(std::lround(glide * sampleRate_));
@@ -275,14 +276,14 @@ void Engine::setPitch(int slot, int v, double glide) noexcept BLOKDUST_NONBLOCKI
   } else {
     vo.pitch = target;
     vo.glideLeft = 0;
-    applyPitch(b, vo);
+    applyPitch(block, vo);
   }
 }
 
-void Engine::applyPitch(Block& b, Voice& vo) noexcept BLOKDUST_NONBLOCKING {
-  if (b.type == BlockType::SourceTone)
+void Engine::applyPitch(Block& block, Voice& vo) noexcept BLOKDUST_NONBLOCKING {
+  if (block.type == BlockType::SourceTone)
     vo.osc.setFrequency(vo.pitch, *wavetables_);
-  else if (b.type == BlockType::SourceWavetable)
+  else if (block.type == BlockType::SourceWavetable)
     vo.tosc.setFrequency(vo.pitch, *tables_, sampleRate_);
 }
 
@@ -290,8 +291,8 @@ void Engine::applyPitch(Block& b, Voice& vo) noexcept BLOKDUST_NONBLOCKING {
 /// polyphony (v1 CreateVoices / RemoveExtraVoices), voices of disconnected controllers are released
 /// (DeactivateDisconnectedVoices), and active voices are re-pitched (NoteUpdate).
 void Engine::refreshVoices(int slot) noexcept BLOKDUST_NONBLOCKING {
-  Block& b = blocks_[static_cast<std::size_t>(slot)];
-  if (b.kind() != BlockKind::AudioSource)
+  Block& block = blocks_[static_cast<std::size_t>(slot)];
+  if (block.kind() != BlockKind::AudioSource)
     return;
   const auto& row = graph_.row(slot);
   bool poly = false;
@@ -300,69 +301,71 @@ void Engine::refreshVoices(int slot) noexcept BLOKDUST_NONBLOCKING {
         polyOf(blocks_[order_[k]]))
       poly = true;
   // CHG-0017: arranged or not. Changing over starts clean: every voice let go, held keys forgotten.
-  if (const bool arr = wantsArranged(slot); arr != b.arranged) {
+  if (const bool arr = wantsArranged(slot); arr != block.arranged) {
     for (int v = 0; v < kVoices; ++v)
-      if (b.voices[static_cast<std::size_t>(v)].active)
+      if (block.voices[static_cast<std::size_t>(v)].active)
         releaseVoice(slot, v);
-    b.monoVoice = b.lastMonoVoice = -1;
-    b.monoHeldCount = 0;
-    b.arrKeyCount = 0;
-    b.randomValid = false;
-    b.arrGate = false;
-    b.ownVoicing = {};
-    b.lastChordCount = 0;
-    b.powerOn = false;  // power takes the source again on the next gate update
-    b.arranged = arr;
+    block.monoVoice = block.lastMonoVoice = -1;
+    block.monoHeldCount = 0;
+    block.arrKeyCount = 0;
+    block.randomValid = false;
+    block.arrGate = false;
+    block.ownVoicing = {};
+    block.lastChordCount = 0;
+    block.powerOn = false;  // power takes the source again on the next gate update
+    block.arranged = arr;
   }
-  if (b.arranged) {
-    b.voiceCount = b.type == BlockType::SourceGranular ? 1 : kVoices;
+  if (block.arranged) {
+    block.voiceCount = block.type == BlockType::SourceGranular ? 1 : kVoices;
     int n = 0;
-    for (int i = 0; i < b.arrKeyCount; ++i) {  // keys of controllers no longer connected are gone;
-                                               // the rest follow their controller's switches
-      auto h = b.arrKeys[static_cast<std::size_t>(i)];
+    for (int i = 0; i < block.arrKeyCount;
+         ++i) {  // keys of controllers no longer connected are gone;
+                 // the rest follow their controller's switches
+      auto h = block.arrKeys[static_cast<std::size_t>(i)];
       const int c = slotOf(h.controller);
       if (c < 0 || !row[static_cast<std::size_t>(c)])
         continue;
       h.pitchOnly = keysSetPitch(blocks_[static_cast<std::size_t>(c)]);
       h.poly = polyOf(blocks_[static_cast<std::size_t>(c)]);
-      b.arrKeys[static_cast<std::size_t>(n++)] = h;
+      block.arrKeys[static_cast<std::size_t>(n++)] = h;
     }
-    b.arrKeyCount = n;
+    block.arrKeyCount = n;
     arrange(slot, false);
     for (int v = 0; v < kVoices; ++v)
-      if (b.voices[static_cast<std::size_t>(v)].active)
+      if (block.voices[static_cast<std::size_t>(v)].active)
         setPitch(slot, v, 0.0);
-    updateNotePower(b);
+    updateNotePower(block);
     return;
   }
-  const int want = poly && b.type != BlockType::SourceGranular ? kVoices : 1;
-  if (want != b.voiceCount) {
-    if (want < b.voiceCount) {  // RemoveExtraVoices: everything released, back to one free voice
+  const int want = poly && block.type != BlockType::SourceGranular ? kVoices : 1;
+  if (want != block.voiceCount) {
+    if (want <
+        block.voiceCount) {  // RemoveExtraVoices: everything released, back to one free voice
       for (int v = 0; v < kVoices; ++v)
-        if (b.voices[static_cast<std::size_t>(v)].active)
+        if (block.voices[static_cast<std::size_t>(v)].active)
           releaseVoice(slot, v);
-      b.monoVoice = b.lastMonoVoice = -1;
-      b.monoHeldCount = 0;
-      if (b.powerOn)
-        b.powerOn = false;  // power re-takes the voice on the next gate update
+      block.monoVoice = block.lastMonoVoice = -1;
+      block.monoHeldCount = 0;
+      if (block.powerOn)
+        block.powerOn = false;  // power re-takes the voice on the next gate update
     }
-    b.voiceCount = want;
+    block.voiceCount = want;
   }
   {  // held mono keys of controllers no longer connected are gone
     int n = 0;
-    for (int i = 0; i < b.monoHeldCount; ++i) {
-      const auto h = b.monoHeld[static_cast<std::size_t>(i)];
+    for (int i = 0; i < block.monoHeldCount; ++i) {
+      const auto h = block.monoHeld[static_cast<std::size_t>(i)];
       bool connected = false;
       for (int k = 0; k < orderCount_; ++k)
         if (row[order_[k]] && blocks_[order_[k]].id == h.controller)
           connected = true;
       if (connected)
-        b.monoHeld[static_cast<std::size_t>(n++)] = h;
+        block.monoHeld[static_cast<std::size_t>(n++)] = h;
     }
-    b.monoHeldCount = n;
+    block.monoHeldCount = n;
   }
   for (int v = 0; v < kVoices; ++v) {
-    Voice& vo = b.voices[static_cast<std::size_t>(v)];
+    Voice& vo = block.voices[static_cast<std::size_t>(v)];
     if (!vo.active || vo.controller == 0)
       continue;
     bool connected = false;
@@ -371,21 +374,21 @@ void Engine::refreshVoices(int slot) noexcept BLOKDUST_NONBLOCKING {
         connected = true;
     if (connected)
       continue;
-    if (v == b.monoVoice) {
-      if (b.sourcePower() > 0) {
+    if (v == block.monoVoice) {
+      if (block.sourcePower() > 0) {
         vo.controller = 0;
         vo.key = -1;
         setPitch(slot, v, 0.0);
         continue;
       }
-      b.monoVoice = -1;
+      block.monoVoice = -1;
     }
     releaseVoice(slot, v);
   }
   for (int v = 0; v < kVoices; ++v)
-    if (b.voices[static_cast<std::size_t>(v)].active)
+    if (block.voices[static_cast<std::size_t>(v)].active)
       setPitch(slot, v, 0.0);
-  updateNotePower(b);
+  updateNotePower(block);
 }
 
 int Engine::connections(std::uint32_t* pairs, int maxPairs) const noexcept BLOKDUST_NONBLOCKING {
@@ -433,13 +436,13 @@ void Engine::recomputeStaticPower() noexcept BLOKDUST_NONBLOCKING {
   if (!worldPower_)
     return;
   for (int k = 0; k < orderCount_; ++k) {
-    const Block& p = blocks_[order_[k]];
+    const Block& block = blocks_[order_[k]];
     const bool powers =
-        (p.type == BlockType::PowerPower && p.gapUntil == 0 &&
-         !p.beamCut) ||  // not while a hit cuts it
-        (p.type == BlockType::PowerToggle && p.params[P::PowerToggle::logic] != 0.0) ||
-        ((p.type == BlockType::PowerCounter || p.type == BlockType::PowerChance) &&
-         p.counterFired);  // R2c, R2d
+        (block.type == BlockType::PowerPower && block.gapUntil == 0 &&
+         !block.beamCut) ||  // not while a hit cuts it
+        (block.type == BlockType::PowerToggle && block.params[P::PowerToggle::logic] != 0.0) ||
+        ((block.type == BlockType::PowerCounter || block.type == BlockType::PowerChance) &&
+         block.counterFired);  // R2c, R2d
     if (!powers)
       continue;
     const auto& row = graph_.row(order_[k]);

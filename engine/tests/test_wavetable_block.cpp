@@ -37,13 +37,13 @@ double dB(double a, double ref) {
 std::vector<float> playA4(BlockType type,
                           std::initializer_list<std::pair<std::uint8_t, double>> params,
                           double seconds = 1.0) {
-  auto e = makeEngine(kSr, 1, false);
-  e->push(Command::add(1, BlockType::InputMidiController, 0, 0));
-  e->push(Command::add(2, type, 3, 0));
+  auto engine = makeEngine(kSr, 1, false);
+  engine->push(Command::add(1, BlockType::InputMidiController, 0, 0));
+  engine->push(Command::add(2, type, 3, 0));
   for (auto [k, v] : params)
-    e->push(Command::setParam(2, k, v));
-  e->push(Command::noteOn(BlockType::InputMidiController, 69, 1.0, 480));
-  return render(*e, static_cast<std::int64_t>(seconds * kSr));
+    engine->push(Command::setParam(2, k, v));
+  engine->push(Command::noteOn(BlockType::InputMidiController, 69, 1.0, 480));
+  return render(*engine, static_cast<std::int64_t>(seconds * kSr));
 }
 
 std::vector<float> oscillate(const TableBank& bank, int table, double position, double hz, int n) {
@@ -184,12 +184,12 @@ TEST_CASE(
       w = std::max(w, double(std::abs(v[i] - v[i - 1])));
     return w;
   };
-  auto e = makeEngine(kSr, 1, false);
-  e->push(Command::add(1, BlockType::PowerPower, -3, 0));
-  e->push(Command::add(2, BlockType::SourceWavetable, 0, 0));
-  e->push(Command::setParam(2, P::SourceWavetable::table, 4));
-  e->push(Command::setParam(2, P::SourceWavetable::position, 1.0, kSr / 2));
-  const auto out = render(*e, kSr);
+  auto engine = makeEngine(kSr, 1, false);
+  engine->push(Command::add(1, BlockType::PowerPower, -3, 0));
+  engine->push(Command::add(2, BlockType::SourceWavetable, 0, 0));
+  engine->push(Command::setParam(2, P::SourceWavetable::table, 4));
+  engine->push(Command::setParam(2, P::SourceWavetable::position, 1.0, kSr / 2));
+  const auto out = render(*engine, kSr);
   const double before = steadyStep(out, kSr / 4, kSr / 2 - 64),
                during = steadyStep(out, kSr / 2 - 64, kSr / 2 + 2400),
                after = steadyStep(out, kSr / 2 + 4800, kSr);
@@ -198,14 +198,14 @@ TEST_CASE(
 
 TEST_CASE("SPEC-AUDIO-WAVETABLE R6: output does not depend on how the host cuts the buffer") {
   auto make = [] {
-    auto e = makeEngine(kSr, 5, true);
-    e->push(Command::add(1, BlockType::PowerPower, -3, 0));
-    e->push(Command::add(2, BlockType::SourceWavetable, 0, 0));
-    e->push(Command::setParam(2, P::SourceWavetable::table, 2));
-    e->push(Command::setParam(2, P::SourceWavetable::position, 0.3));
-    e->push(Command::setParam(2, P::SourceWavetable::position, 0.9, 20000));
-    e->push(Command::add(3, BlockType::FxVibrato, 3, 0));
-    return e;
+    auto engine = makeEngine(kSr, 5, true);
+    engine->push(Command::add(1, BlockType::PowerPower, -3, 0));
+    engine->push(Command::add(2, BlockType::SourceWavetable, 0, 0));
+    engine->push(Command::setParam(2, P::SourceWavetable::table, 2));
+    engine->push(Command::setParam(2, P::SourceWavetable::position, 0.3));
+    engine->push(Command::setParam(2, P::SourceWavetable::position, 0.9, 20000));
+    engine->push(Command::add(3, BlockType::FxVibrato, 3, 0));
+    return engine;
   };
   auto a = make(), b = make();
   CHECK(hashAudio(render(*a, kSr, 128)) == hashAudio(render(*b, kSr, 37)));

@@ -31,26 +31,26 @@ struct FlushToZero {
 };
 
 std::uint64_t renderFilteredRingout(bool ftz) {
-  auto e = makeEngine();
+  auto engine = makeEngine();
   // A boosted filter on a tone that is pulsed and then left to decay for a long time: filter state
   // rings down towards zero, which is exactly where denormals would appear.
-  e->push(Command::add(1, BlockType::PowerEmitter, -10, 0));
-  e->push(Command::setParam(1, P::PowerEmitter::angle, 0));
-  e->push(Command::setParam(1, P::PowerEmitter::selfPoweredMode, 1));
+  engine->push(Command::add(1, BlockType::PowerEmitter, -10, 0));
+  engine->push(Command::setParam(1, P::PowerEmitter::angle, 0));
+  engine->push(Command::setParam(1, P::PowerEmitter::selfPoweredMode, 1));
   // default rate fires at tick 319; switch the emitter off right after so exactly one particle hits
   // the tone
-  e->push(Command::setParam(1, P::PowerEmitter::selfPoweredMode, 0, 320 * 200));
-  e->push(Command::add(2, BlockType::SourceTone, 0, -0.5));
-  e->push(Command::add(3, BlockType::FxFilter, 3, 0));
-  e->push(Command::setParam(3, P::FxFilter::gain, 30));
-  e->push(Command::setParam(3, P::FxFilter::frequency, 40));
+  engine->push(Command::setParam(1, P::PowerEmitter::selfPoweredMode, 0, 320 * 200));
+  engine->push(Command::add(2, BlockType::SourceTone, 0, -0.5));
+  engine->push(Command::add(3, BlockType::FxFilter, 3, 0));
+  engine->push(Command::setParam(3, P::FxFilter::gain, 30));
+  engine->push(Command::setParam(3, P::FxFilter::frequency, 40));
   std::vector<float> out;
   if (ftz) {
     FlushToZero guard;
-    out = render(*e, 48000 * 30);
+    out = render(*engine, 48000 * 30);
   } else
-    out = render(*e, 48000 * 30);
-  REQUIRE(eventsOf(*e, Event::Type::GateOn).size() ==
+    out = render(*engine, 48000 * 30);
+  REQUIRE(eventsOf(*engine, Event::Type::GateOn).size() ==
           1);  // the filter really received a note, then rang down
   return hashAudio(out);
 }

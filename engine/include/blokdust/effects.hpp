@@ -155,12 +155,12 @@ class Biquad {
   }
   void reset() noexcept { x1_ = x2_ = y1_ = y2_ = 0.0; }
   /// Same coefficients as `o`, own state (one AudioParam driving every channel of a node).
-  void copyCoefs(const Biquad& o) noexcept {
-    b0_ = o.b0_;
-    b1_ = o.b1_;
-    b2_ = o.b2_;
-    a1_ = o.a1_;
-    a2_ = o.a2_;
+  void copyCoefs(const Biquad& filter) noexcept {
+    b0_ = filter.b0_;
+    b1_ = filter.b1_;
+    b2_ = filter.b2_;
+    a1_ = filter.a1_;
+    a2_ = filter.a2_;
   }
 
  private:
@@ -293,10 +293,10 @@ inline double waveShape(double x, int n, Curve&& curve) noexcept {
 struct VolumeFx {
   double gain = 1.0;
   void set(double db) noexcept { gain = toneDbToGain(db); }
-  void process(float* l, float* r, int n) const noexcept {
+  void process(float* left, float* right, int n) const noexcept {
     for (int i = 0; i < n; ++i) {
-      l[i] = static_cast<float>(l[i] * gain);
-      r[i] = static_cast<float>(r[i] * gain);
+      left[i] = static_cast<float>(left[i] * gain);
+      right[i] = static_cast<float>(right[i] * gain);
     }
   }
 };
@@ -310,11 +310,11 @@ struct BiquadChainFx {
     l[i].set(t, hz, q, gainDb, sr);
     r[i].set(t, hz, q, gainDb, sr);
   }
-  void process(float* L, float* R, int n) noexcept {
+  void process(float* left, float* right, int n) noexcept {
     for (int i = 0; i < n; ++i)
       for (int k = 0; k < N; ++k) {
-        L[i] = l[k].process(L[i]);
-        R[i] = r[k].process(R[i]);
+        left[i] = l[k].process(left[i]);
+        right[i] = r[k].process(right[i]);
       }
   }
   void reset() noexcept {
@@ -344,10 +344,10 @@ struct DistortionFx {
                  : (3.0 + kk) * v * 20.0 * (dmath::kPi / 180.0) / (dmath::kPi + kk * std::abs(v));
     });
   }
-  void process(float* l, float* r, int n) const noexcept {
+  void process(float* left, float* right, int n) const noexcept {
     for (int i = 0; i < n; ++i) {
-      l[i] = static_cast<float>(mix.dry * l[i] + mix.wet * shape(l[i]));
-      r[i] = static_cast<float>(mix.dry * r[i] + mix.wet * shape(r[i]));
+      left[i] = static_cast<float>(mix.dry * left[i] + mix.wet * shape(left[i]));
+      right[i] = static_cast<float>(mix.dry * right[i] + mix.wet * shape(right[i]));
     }
   }
 };
@@ -368,10 +368,10 @@ struct BitCrusherFx {
     });
     return m * s;
   }
-  void process(float* l, float* r, int n) const noexcept {
+  void process(float* left, float* right, int n) const noexcept {
     for (int i = 0; i < n; ++i) {
-      l[i] = static_cast<float>(mix.dry * l[i] + mix.wet * crush(l[i]));
-      r[i] = static_cast<float>(mix.dry * r[i] + mix.wet * crush(r[i]));
+      left[i] = static_cast<float>(mix.dry * left[i] + mix.wet * crush(left[i]));
+      right[i] = static_cast<float>(mix.dry * right[i] + mix.wet * crush(right[i]));
     }
   }
 };
@@ -400,20 +400,21 @@ struct PhaserFx {
       lfoR.setRange(base, max);
     }
   }
-  void process(float* L, float* R, int n, const WavetableBank& bank) noexcept BLOKDUST_NONBLOCKING {
+  void process(float* left, float* right, int n,
+               const WavetableBank& bank) noexcept BLOKDUST_NONBLOCKING {
     for (int i = 0; i < n; ++i) {
       const double fl = lfoL.next(bank), fr = lfoR.next(bank);
       for (auto& b : l)
         b.set(Biquad::Type::Allpass, fl, q, 0, sr);
       for (auto& b : r)
         b.set(Biquad::Type::Allpass, fr, q, 0, sr);
-      float wl = L[i], wr = R[i];
+      float wl = left[i], wr = right[i];
       for (auto& b : l)
         wl = b.process(wl);
       for (auto& b : r)
         wr = b.process(wr);
-      L[i] = static_cast<float>(mix.dry * L[i] + mix.wet * wl);
-      R[i] = static_cast<float>(mix.dry * R[i] + mix.wet * wr);
+      left[i] = static_cast<float>(mix.dry * left[i] + mix.wet * wl);
+      right[i] = static_cast<float>(mix.dry * right[i] + mix.wet * wr);
     }
   }
 };
@@ -446,24 +447,25 @@ struct ChorusFx {
       lfoR.setRange(mn, mx);
     }
   }
-  void process(float* L, float* R, int n, const WavetableBank& bank) noexcept BLOKDUST_NONBLOCKING {
+  void process(float* left, float* right, int n,
+               const WavetableBank& bank) noexcept BLOKDUST_NONBLOCKING {
     if (!dl.attached())
       return;
     for (int i = 0; i < n; ++i) {
       // Chromium pull order: the left return is in progress when the right side needs it (stale by
       // one quantum); the right return is then fresh for the left side.
       const double tl = lfoL.next(bank) * sr, tr = lfoR.next(bank) * sr;
-      const float sendR = R[i] + static_cast<float>(feedback * lToRPrev_);
+      const float sendR = right[i] + static_cast<float>(feedback * lToRPrev_);
       const float delR = dr.read(std::max(1.0, tr));
       dr.write(sendR);
       const float retR = sendR + delR;
-      const float sendL = L[i] + static_cast<float>(feedback * retR);
+      const float sendL = left[i] + static_cast<float>(feedback * retR);
       const float delL = dl.read(std::max(1.0, tl));
       dl.write(sendL);
       const float retL = sendL + delL;
       lToRPrev_ = lToR.process(retL);
-      L[i] = static_cast<float>(mix.dry * L[i] + mix.wet * retL);
-      R[i] = static_cast<float>(mix.dry * R[i] + mix.wet * retR);
+      left[i] = static_cast<float>(mix.dry * left[i] + mix.wet * retL);
+      right[i] = static_cast<float>(mix.dry * right[i] + mix.wet * retR);
     }
   }
 };
@@ -499,7 +501,7 @@ struct FreeverbFx {
     for (auto& f : lp)
       f.set(Biquad::Type::Lowpass, cutoff, 0.0, 0, sr);
   }
-  void process(float* L, float* R, int n) noexcept {
+  void process(float* left, float* right, int n) noexcept {
     if (!comb[0].attached())
       return;
     for (int i = 0; i < n; ++i) {
@@ -507,15 +509,16 @@ struct FreeverbFx {
       for (int c = 0; c < 8; ++c) {
         const float d = comb[c].read(kTunings[c] * sr);
         const float y = lp[c].process(d);
-        comb[c].write((c < 4 ? L[i] : R[i]) + static_cast<float>(room * loopQ[c].process(y)));
+        comb[c].write((c < 4 ? left[i] : right[i]) +
+                      static_cast<float>(room * loopQ[c].process(y)));
         (c < 4 ? sumL : sumR) += y;
       }
       for (auto& a : apL)
         sumL = a.process(sumL);
       for (auto& a : apR)
         sumR = a.process(sumR);
-      L[i] = static_cast<float>(mix.dry * L[i] + mix.wet * sumL);
-      R[i] = static_cast<float>(mix.dry * R[i] + mix.wet * sumR);
+      left[i] = static_cast<float>(mix.dry * left[i] + mix.wet * sumL);
+      right[i] = static_cast<float>(mix.dry * right[i] + mix.wet * sumR);
     }
   }
 };
@@ -540,7 +543,7 @@ struct PingPongFx {
       delay = delaySeconds;
     glide = 1.0 - dmath::exp(-1.0 / (0.05 * sampleRate));
   }
-  void process(float* L, float* R, int n) noexcept {
+  void process(float* left, float* right, int n) noexcept {
     if (!dl.attached())
       return;
     for (int i = 0; i < n; ++i) {
@@ -548,11 +551,11 @@ struct PingPongFx {
       const double d = delay * sr;
       const float outL = dl.read(d), outR = dr.read(d), p = pre.read(d);
       const float fbL = qLR.process(outL);
-      dl.write(L[i] + static_cast<float>(feedback * outR));
-      pre.write(R[i]);
+      dl.write(left[i] + static_cast<float>(feedback * outR));
+      pre.write(right[i]);
       dr.write(p + static_cast<float>(feedback * fbL));
-      L[i] = static_cast<float>(mix.dry * L[i] + mix.wet * outL);
-      R[i] = static_cast<float>(mix.dry * R[i] + mix.wet * outR);
+      left[i] = static_cast<float>(mix.dry * left[i] + mix.wet * outL);
+      right[i] = static_cast<float>(mix.dry * right[i] + mix.wet * outR);
     }
   }
 };
@@ -585,7 +588,7 @@ struct AutoWahFx {
     base = baseFrequency;
     top = std::min(baseFrequency * dmath::exp2(octaves), sr / 2.0);
   }
-  void process(float* L, float* R, int n) noexcept {
+  void process(float* left, float* right, int n) noexcept {
     const auto followerMap = [this](int k) {
       return (k * 2.0 / 1023.0) - 1.0 <= 0.0 ? attackHz : releaseHz;
     };
@@ -593,8 +596,8 @@ struct AutoWahFx {
       return std::sqrt(std::abs(k * 2.0 / 8191.0 - 1.0));
     };  // Tone.Pow(0.5), 8192 pts
     for (int i = 0; i < n; ++i) {
-      const double al = std::abs(std::clamp(L[i] * boost, -1.0, 1.0)),
-                   ar = std::abs(std::clamp(R[i] * boost, -1.0, 1.0));
+      const double al = std::abs(std::clamp(left[i] * boost, -1.0, 1.0)),
+                   ar = std::abs(std::clamp(right[i] * boost, -1.0, 1.0));
       const double fl = waveShape((al - heldL.buf[heldL.i]) * 10000.0, 1024, followerMap);
       const double fr = waveShape((ar - heldR.buf[heldR.i]) * 10000.0, 1024, followerMap);
       folL.set(Biquad::Type::Lowpass, (fl + fr) * 0.5, -100.0, 0.0, sr);
@@ -613,15 +616,15 @@ struct AutoWahFx {
         lpR[k].copyCoefs(lpL[0]);
       pkL.set(Biquad::Type::Peaking, sweep, 1.0, 30.0, sr);
       pkR.copyCoefs(pkL);
-      float wl = L[i], wr = R[i];
+      float wl = left[i], wr = right[i];
       for (int k = 0; k < 3; ++k) {
         wl = lpL[k].process(wl);
         wr = lpR[k].process(wr);
       }
       wl = pkL.process(wl);
       wr = pkR.process(wr);
-      L[i] = static_cast<float>(mix.dry * L[i] + mix.wet * wl);
-      R[i] = static_cast<float>(mix.dry * R[i] + mix.wet * wr);
+      left[i] = static_cast<float>(mix.dry * left[i] + mix.wet * wl);
+      right[i] = static_cast<float>(mix.dry * right[i] + mix.wet * wr);
     }
   }
 };
@@ -651,7 +654,7 @@ struct ChompFx {
     l.set(Biquad::Type::Peaking, hz, q, gainDb, sr);
     r.copyCoefs(l);
   }
-  void process(float* L, float* R, int n) noexcept {
+  void process(float* left, float* right, int n) noexcept {
     for (int i = 0; i < n; ++i, ++t) {
       if ((t & 127) == 0 && t >= next) {
         hz = 100.0 + std::round(rng.nextFloat() * 10000.0);
@@ -659,8 +662,8 @@ struct ChompFx {
         r.copyCoefs(l);
         next = t + interval;
       }
-      L[i] = l.process(L[i]);
-      R[i] = r.process(R[i]);
+      left[i] = l.process(left[i]);
+      right[i] = r.process(right[i]);
     }
   }
 };
@@ -681,12 +684,13 @@ struct ChopperFx {
     lfoL.set(rate, w, 90.0 - spread / 2.0, -1.0, 1.0, sr);
     lfoR.set(rate, w, 90.0 + spread / 2.0, -1.0, 1.0, sr);
   }
-  void process(float* L, float* R, int n, const WavetableBank& bank) noexcept BLOKDUST_NONBLOCKING {
+  void process(float* left, float* right, int n,
+               const WavetableBank& bank) noexcept BLOKDUST_NONBLOCKING {
     for (int i = 0; i < n; ++i) {
       const double gl = 1.0 - (depth * lfoL.next(bank) + 1.0) * 0.5,
                    gr = 1.0 - (depth * lfoR.next(bank) + 1.0) * 0.5;
-      L[i] = static_cast<float>(mix.dry * L[i] + mix.wet * L[i] * gl);
-      R[i] = static_cast<float>(mix.dry * R[i] + mix.wet * R[i] * gr);
+      left[i] = static_cast<float>(mix.dry * left[i] + mix.wet * left[i] * gl);
+      right[i] = static_cast<float>(mix.dry * right[i] + mix.wet * right[i] * gr);
     }
   }
 };
@@ -721,7 +725,8 @@ struct PitchShiftFx {
       lfoB.setRange(mn, mx);
     }
   }
-  void process(float* L, float* R, int n, const WavetableBank& bank) noexcept BLOKDUST_NONBLOCKING {
+  void process(float* left, float* right, int n,
+               const WavetableBank& bank) noexcept BLOKDUST_NONBLOCKING {
     if (!aL.attached())
       return;
     const auto eq = [](double x) {
@@ -732,14 +737,14 @@ struct PitchShiftFx {
       const double da = lfoA.next(bank) * sr + 1.0, db = lfoB.next(bank) * sr + 1.0,
                    f = fade.next(bank);
       const double ga = eq(1.0 - f), gb = eq(f);
-      aL.write(L[i]);
-      bL.write(L[i]);
-      aR.write(R[i]);
-      bR.write(R[i]);
+      aL.write(left[i]);
+      bL.write(left[i]);
+      aR.write(right[i]);
+      bR.write(right[i]);
       const double wl = ga * aL.read(da) + gb * bL.read(db),
                    wr = ga * aR.read(da) + gb * bR.read(db);
-      L[i] = static_cast<float>(mix.dry * L[i] + mix.wet * wl);
-      R[i] = static_cast<float>(mix.dry * R[i] + mix.wet * wr);
+      left[i] = static_cast<float>(mix.dry * left[i] + mix.wet * wl);
+      right[i] = static_cast<float>(mix.dry * right[i] + mix.wet * wr);
     }
   }
 };

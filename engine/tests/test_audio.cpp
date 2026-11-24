@@ -16,32 +16,32 @@ int zeroCrossings(const std::vector<float>& v, std::size_t from, std::size_t to)
 }
 /// A powered sine Tone (Power block next to it), optionally with a Filter in the chain.
 std::unique_ptr<Engine> poweredSine(double transpose = 0, bool filter = false, double gainDb = 0) {
-  auto e = makeEngine(48000, 1, /*compressor*/ false);  // these tests measure raw DSP levels
-  e->push(Command::add(1, BlockType::SourceTone, 0, 0));
-  e->push(Command::setParam(1, P::SourceTone::waveform, 0));
-  e->push(Command::setParam(1, P::SourceTone::transpose, transpose));
-  e->push(Command::add(2, BlockType::PowerPower, -3, 0));
+  auto engine = makeEngine(48000, 1, /*compressor*/ false);  // these tests measure raw DSP levels
+  engine->push(Command::add(1, BlockType::SourceTone, 0, 0));
+  engine->push(Command::setParam(1, P::SourceTone::waveform, 0));
+  engine->push(Command::setParam(1, P::SourceTone::transpose, transpose));
+  engine->push(Command::add(2, BlockType::PowerPower, -3, 0));
   if (filter) {
-    e->push(Command::add(3, BlockType::FxFilter, 3, 0));
-    e->push(Command::setParam(3, P::FxFilter::frequency, 261.6));
-    e->push(Command::setParam(3, P::FxFilter::gain, gainDb));
+    engine->push(Command::add(3, BlockType::FxFilter, 3, 0));
+    engine->push(Command::setParam(3, P::FxFilter::frequency, 261.6));
+    engine->push(Command::setParam(3, P::FxFilter::gain, gainDb));
   }
-  return e;
+  return engine;
 }
 }  // namespace
 
 TEST_CASE("an unpowered patch is exactly silent") {
-  auto e = makeEngine();
-  e->push(Command::add(1, BlockType::SourceTone, 0, 0));
-  e->push(Command::add(2, BlockType::FxFilter, 3, 0));
-  const auto out = render(*e, 48000);
+  auto engine = makeEngine();
+  engine->push(Command::add(1, BlockType::SourceTone, 0, 0));
+  engine->push(Command::add(2, BlockType::FxFilter, 3, 0));
+  const auto out = render(*engine, 48000);
   for (float s : out)
     REQUIRE(s == 0.0f);
 }
 
 TEST_CASE("a powered Tone sounds at v1's base note (261.6 Hz * 2^(transpose/12))") {
-  auto e = poweredSine();
-  const auto out = render(*e, 48000 * 2);
+  auto engine = poweredSine();
+  const auto out = render(*engine, 48000 * 2);
   CHECK(rms(out, 48000, 96000) > 0.02);
   // a sine at 261.6 Hz crosses zero 523.2 times per second
   CHECK(std::abs(zeroCrossings(out, 48000, 96000) - 523) <= 2);
@@ -52,8 +52,8 @@ TEST_CASE("a powered Tone sounds at v1's base note (261.6 Hz * 2^(transpose/12))
 }
 
 TEST_CASE("v1 envelope: attack then decay to sustain (0.5) while powered") {
-  auto e = poweredSine();
-  const auto out = render(*e, 48000 * 2);
+  auto engine = poweredSine();
+  const auto out = render(*engine, 48000 * 2);
   const double early = rms(out, 0, 480);          // first 10 ms: attack ramp
   const double peak = rms(out, 480, 2400);        // just after attack
   const double sustain = rms(out, 48000, 96000);  // well after the 0.5 s decay
@@ -77,30 +77,30 @@ TEST_CASE("Filter at 0 dB is transparent; +20 dB at the tone frequency boosts ~1
 }
 
 TEST_CASE("a Filter only affects sources in its own chain") {
-  auto e = poweredSine(0, true, 20.0);
+  auto engine = poweredSine(0, true, 20.0);
   auto ref = poweredSine(0, true, 20.0);
   // a second, far-away powered tone in its own chain adds a separate, unfiltered signal
-  e->push(Command::add(10, BlockType::SourceTone, 100, 100));
-  e->push(Command::setParam(10, P::SourceTone::waveform, 0));
-  e->push(Command::add(11, BlockType::PowerPower, 103, 100));
+  engine->push(Command::add(10, BlockType::SourceTone, 100, 100));
+  engine->push(Command::setParam(10, P::SourceTone::waveform, 0));
+  engine->push(Command::add(11, BlockType::PowerPower, 103, 100));
   auto solo = makeEngine(48000, 1, false);
   solo->push(Command::add(10, BlockType::SourceTone, 100, 100));
   solo->push(Command::setParam(10, P::SourceTone::waveform, 0));
   solo->push(Command::add(11, BlockType::PowerPower, 103, 100));
-  const auto mixed = render(*e, 24000), a = render(*ref, 24000), b = render(*solo, 24000);
+  const auto mixed = render(*engine, 24000), a = render(*ref, 24000), b = render(*solo, 24000);
   double maxDiff = 0;
   for (std::size_t i = 0; i < mixed.size(); ++i)
     maxDiff = std::max(maxDiff, double(std::abs(mixed[i] - (a[i] + b[i]))));
   CHECK(maxDiff < 1e-6);
-  e->push(Command::remove(10));
-  CHECK(e->chains().chainCount == 2);
+  engine->push(Command::remove(10));
+  CHECK(engine->chains().chainCount == 2);
 }
 
 TEST_CASE("every waveform renders finite, bounded audio") {
   for (int w = 0; w < 4; ++w) {
-    auto e = poweredSine();
-    e->push(Command::setParam(1, P::SourceTone::waveform, w));
-    const auto out = render(*e, 24000);
+    auto engine = poweredSine();
+    engine->push(Command::setParam(1, P::SourceTone::waveform, w));
+    const auto out = render(*engine, 24000);
     for (float s : out) {
       REQUIRE(std::isfinite(s));
       REQUIRE(std::abs(s) <= 1.0f);
@@ -113,11 +113,11 @@ namespace {
 /// Steady-state level of the 261.6 Hz sine through a Filter of `type` at `hz`, relative to the dry
 /// sine.
 double filterRatio(int type, double hz, double gainDb = 0, double q = 1) {
-  auto e = poweredSine(0, true, gainDb);
-  e->push(Command::setParam(3, P::FxFilter::type, type));
-  e->push(Command::setParam(3, P::FxFilter::frequency, hz));
-  e->push(Command::setParam(3, P::FxFilter::Q, q));
-  const auto wet = render(*e, 48000), dry = render(*poweredSine(), 48000);
+  auto engine = poweredSine(0, true, gainDb);
+  engine->push(Command::setParam(3, P::FxFilter::type, type));
+  engine->push(Command::setParam(3, P::FxFilter::frequency, hz));
+  engine->push(Command::setParam(3, P::FxFilter::Q, q));
+  const auto wet = render(*engine, 48000), dry = render(*poweredSine(), 48000);
   return rms(wet, 24000, 48000) / rms(dry, 24000, 48000);
 }
 }  // namespace

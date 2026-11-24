@@ -184,14 +184,14 @@ struct Played {
   }
 };
 Command on(BlockType t, int note, BlockId id = kInvalidBlock) {
-  auto c = Command::noteOn(t, static_cast<std::uint8_t>(note));
-  c.id = id;
-  return c;
+  auto command = Command::noteOn(t, static_cast<std::uint8_t>(note));
+  command.id = id;
+  return command;
 }
 Command off(BlockType t, int note, BlockId id = kInvalidBlock) {
-  auto c = Command::noteOff(t, static_cast<std::uint8_t>(note));
-  c.id = id;
-  return c;
+  auto command = Command::noteOff(t, static_cast<std::uint8_t>(note));
+  command.id = id;
+  return command;
 }
 }  // namespace
 

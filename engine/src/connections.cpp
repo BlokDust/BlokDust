@@ -2,23 +2,23 @@
 
 namespace blokdust {
 
-bool ConnectionGraph::shouldConnect(const Block& a, const Block& b) noexcept {
-  if (!a.alive || !b.alive || &a == &b)
+bool ConnectionGraph::shouldConnect(const Block& block, const Block& b) noexcept {
+  if (!block.alive || !b.alive || &block == &b)
     return false;
   // A modulator (LFO, CHG-0018) connects to any block within its catchment, whatever its kind.
-  if (a.kind() == BlockKind::Modulator || b.kind() == BlockKind::Modulator) {
-    const double c = (a.kind() == BlockKind::Modulator ? a : b).info().catchment;
-    const double dx = a.x - b.x, dy = a.y - b.y;
+  if (block.kind() == BlockKind::Modulator || b.kind() == BlockKind::Modulator) {
+    const double c = (block.kind() == BlockKind::Modulator ? block : b).info().catchment;
+    const double dx = block.x - b.x, dy = block.y - b.y;
     return dx * dx + dy * dy <= c * c;
   }
   const Block* src = nullptr;
   const Block* eff = nullptr;
-  if (kindsMayConnect(a.kind(), b.kind())) {
-    src = &a;
+  if (kindsMayConnect(block.kind(), b.kind())) {
+    src = &block;
     eff = &b;
-  } else if (kindsMayConnect(b.kind(), a.kind())) {
+  } else if (kindsMayConnect(b.kind(), block.kind())) {
     src = &b;
-    eff = &a;
+    eff = &block;
   } else
     return false;
   const double c = eff->info().catchment;
@@ -76,7 +76,7 @@ bool ConnectionGraph::updateSlot(const std::array<Block, kMaxBlocks>& blocks,
   return changed;
 }
 
-void Chains::rebuild(const std::array<Block, kMaxBlocks>& blocks, const ConnectionGraph& g,
+void Chains::rebuild(const std::array<Block, kMaxBlocks>& blocks, const ConnectionGraph& graph,
                      const std::array<std::uint16_t, kMaxBlocks>& order,
                      int orderCount) noexcept BLOKDUST_NONBLOCKING {
   std::bitset<kMaxBlocks> chained;
@@ -104,9 +104,9 @@ void Chains::rebuild(const std::array<Block, kMaxBlocks>& blocks, const Connecti
       std::uint32_t first = 0;
       for (int i = 0; i < orderCount; ++i) {
         const int c = order[i];
-        if (!g.connected(cur, c) || chained[c] || isPowerEffectLike(blocks[c].kind()))
+        if (!graph.connected(cur, c) || chained[c] || isPowerEffectLike(blocks[c].kind()))
           continue;
-        const std::uint32_t s = g.since(cur, c);
+        const std::uint32_t s = graph.since(cur, c);
         if (child < 0 || s < first) {
           child = c;
           first = s;

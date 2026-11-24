@@ -7,187 +7,189 @@ namespace blokdust {
 // simulation (SPEC-SIMULATION-POWER-AND-PARTICLES)
 // ---------------------------------------------------------------------------------------------------------------
 
-void Engine::pulse(Block& b, int ticks) noexcept {
-  if (b.pulsePower >= kMaxPulsesPerBlock)
+void Engine::pulse(Block& block, int ticks) noexcept {
+  if (block.pulsePower >= kMaxPulsesPerBlock)
     return;
-  b.pulseEndTick[b.pulsePower++] = tick_ + static_cast<std::uint32_t>(std::max(1, ticks));
+  block.pulseEndTick[block.pulsePower++] = tick_ + static_cast<std::uint32_t>(std::max(1, ticks));
 }
 
-void Engine::emit(Block& e) noexcept BLOKDUST_NONBLOCKING {
-  emit(e, e.params[P::PowerEmitter::angle]);
+void Engine::emit(Block& block) noexcept BLOKDUST_NONBLOCKING {
+  emit(block, block.params[P::PowerEmitter::angle]);
 }
 
-void Engine::emit(Block& e, double angleDeg) noexcept BLOKDUST_NONBLOCKING {
+void Engine::emit(Block& block, double angleDeg) noexcept BLOKDUST_NONBLOCKING {
   if (particleCount_ >= kMaxParticles)
     return;
   const double angle = angleDeg * kDegToRad;
-  const double speed = e.params[P::PowerEmitter::speed];              // v1 units per frame
-  const double range = e.params[P::PowerEmitter::range];              // v1 units
+  const double speed = block.params[P::PowerEmitter::speed];          // v1 units per frame
+  const double range = block.params[P::PowerEmitter::range];          // v1 units
   const double perTick = speed / kV1UnitsPerGrid / kTicksPerV1Frame;  // grid units per tick
-  Particle& p = particles_[particleCount_++];
-  p.x = e.x;
-  p.y = e.y;
-  p.vx = dmath::cos(angle) * perTick;
-  p.vy = dmath::sin(angle) * perTick;
-  p.life = static_cast<int>(std::lround(range / speed)) * kTicksPerV1Frame;
-  p.size = 2.0f + rng_.nextFloat();
-  p.fresh = true;
-  log(Event::Type::Emit, e.id);
+  Particle& particle = particles_[particleCount_++];
+  particle.x = block.x;
+  particle.y = block.y;
+  particle.vx = dmath::cos(angle) * perTick;
+  particle.vy = dmath::sin(angle) * perTick;
+  particle.life = static_cast<int>(std::lround(range / speed)) * kTicksPerV1Frame;
+  particle.size = 2.0f + rng_.nextFloat();
+  particle.fresh = true;
+  log(Event::Type::Emit, block.id);
 }
 
-void Engine::particleHit(Block& b) noexcept BLOKDUST_NONBLOCKING {
-  if (b.kind() == BlockKind::Logic) {
-    logicHit(b);
+void Engine::particleHit(Block& block) noexcept BLOKDUST_NONBLOCKING {
+  if (block.kind() == BlockKind::Logic) {
+    logicHit(block);
     return;
   }
   // SIMULATION-0008 (owner, 2026-11-14; v1 only lengthened the note): a hit on a source that only
   // earlier hits are holding strikes it again, so fast particles play every note (a new Random Note
   // pick each time). SIMULATION-0008/0012: a hit on what earlier hits hold strikes or fires it
   // again.
-  strikeAgain(b);
-  pulse(b, kPulseTicks);  // sources (incl. lasers) get a momentary pulse of power
+  strikeAgain(block);
+  pulse(block, kPulseTicks);  // sources (incl. lasers) get a momentary pulse of power
 }
 
 /// Strike a pulse-held source again (SIMULATION-0008): the power voice's envelope starts over (a
 /// sampler from its start); an arranged source lets its notes go and plays them as a new trigger.
 void Engine::restrike(int slot) noexcept BLOKDUST_NONBLOCKING {
-  Block& b = blocks_[static_cast<std::size_t>(slot)];
-  if (b.type == BlockType::SourceStage)
+  Block& block = blocks_[static_cast<std::size_t>(slot)];
+  if (block.type == BlockType::SourceStage)
     return;
-  if (b.arranged) {
+  if (block.arranged) {
     for (int v = 0; v < kVoices; ++v)
-      if (b.voices[static_cast<std::size_t>(v)].active)
+      if (block.voices[static_cast<std::size_t>(v)].active)
         releaseVoice(slot, v);
     arrange(slot, true);
     return;
   }
-  if (b.monoVoice < 0)
+  if (block.monoVoice < 0)
     return;
-  Voice& vo = b.voices[static_cast<std::size_t>(b.monoVoice)];
+  Voice& vo = block.voices[static_cast<std::size_t>(block.monoVoice)];
   if (!vo.active || vo.controller != 0)
     return;  // a key has the voice: power only keeps it
-  b.envFromChain = true;
+  block.envFromChain = true;
   vo.env.configure(envelopeFor(slot), sampleRate_);
   vo.env.gateOn();
   vo.trigTick = tick_;
-  if (isSampler(b.type)) {
-    vo.playhead = b.params[P::SourceSample::startPosition] * b.sampleRate;
-    vo.samplePlaying = b.sampleFrames > 0;
+  if (isSampler(block.type)) {
+    vo.playhead = block.params[P::SourceSample::startPosition] * block.sampleRate;
+    vo.samplePlaying = block.sampleFrames > 0;
   }
-  log(Event::Type::GateOn, b.id);
+  log(Event::Type::GateOn, block.id);
 }
 
 /// Only hits (particles' pulses, beams) hold this Emitter or Laser running: no Power, Toggle,
 /// press, key or Self Powered (SIMULATION-0012).
-bool Engine::heldOnlyByHits(const Block& b) noexcept {
-  if (b.staticPower != 0 || b.pressPower != 0 || b.keyPower != 0)
+bool Engine::heldOnlyByHits(const Block& block) noexcept {
+  if (block.staticPower != 0 || block.pressPower != 0 || block.keyPower != 0)
     return false;
-  if (b.type == BlockType::PowerLaser)
-    return b.params[P::PowerLaser::selfPoweredMode] == 0.0;
-  if (b.type == BlockType::PowerEmitter)
-    return b.params[P::PowerEmitter::selfPoweredMode] == 0.0;
+  if (block.type == BlockType::PowerLaser)
+    return block.params[P::PowerLaser::selfPoweredMode] == 0.0;
+  if (block.type == BlockType::PowerEmitter)
+    return block.params[P::PowerEmitter::selfPoweredMode] == 0.0;
   return false;
 }
 
 /// A pulse arrives (a particle, a Pulse or a Counter firing) at a block earlier hits are holding
 /// (SIMULATION-0008, SIMULATION-0012): a source is struck again; an Emitter or Laser fires again.
 /// Call before adding the pulse.
-void Engine::strikeAgain(Block& b) noexcept {
-  if (b.kind() == BlockKind::AudioSource) {
-    if (b.powerOn && b.staticPower == 0 && b.laserPower == 0 && b.pressPower == 0)
-      b.restrike = true;
-  } else if (b.power() > 0 && heldOnlyByHits(b))
-    b.restrike = true;
+void Engine::strikeAgain(Block& block) noexcept {
+  if (block.kind() == BlockKind::AudioSource) {
+    if (block.powerOn && block.staticPower == 0 && block.laserPower == 0 && block.pressPower == 0)
+      block.restrike = true;
+  } else if (block.power() > 0 && heldOnlyByHits(block))
+    block.restrike = true;
 }
 
 /// A beam fired again reaches a block it was already on (SIMULATION-0012): a source held only by
 /// hits plays again (as SIMULATION-0008); an Emitter or Laser held only by hits fires again.
-void Engine::beamStrike(Block& b) noexcept {
-  if (b.kind() == BlockKind::AudioSource) {
-    if (b.powerOn && b.staticPower == 0 && b.pressPower == 0)
-      b.restrike = true;
-  } else if (heldOnlyByHits(b))
-    b.restrike = true;
+void Engine::beamStrike(Block& block) noexcept {
+  if (block.kind() == BlockKind::AudioSource) {
+    if (block.powerOn && block.staticPower == 0 && block.pressPower == 0)
+      block.restrike = true;
+  } else if (heldOnlyByHits(block))
+    block.restrike = true;
 }
 
 /// A Gate is open (R5c, SIMULATION-0011) while a power block powers it; `invert` swaps that. Never
 /// switched by hits.
-bool Engine::gateOpen(const Block& g) const noexcept BLOKDUST_NONBLOCKING {
-  const bool powered = worldPower_ && g.staticPower + g.pulsePower > 0;
-  return powered != (g.params[P::PowerGate::invert] != 0.0);
+bool Engine::gateOpen(const Block& block) const noexcept BLOKDUST_NONBLOCKING {
+  const bool powered = worldPower_ && block.staticPower + block.pulsePower > 0;
+  return powered != (block.params[P::PowerGate::invert] != 0.0);
 }
 
 /// A Power with Hits Cut Power (SIMULATION-0009): hits cut it, rather than pass through.
-bool Engine::gapsOnHit(const Block& b) noexcept BLOKDUST_NONBLOCKING {
-  return b.type == BlockType::PowerPower && b.params[P::PowerPower::cutByHits] != 0.0;
+bool Engine::gapsOnHit(const Block& block) noexcept BLOKDUST_NONBLOCKING {
+  return block.type == BlockType::PowerPower && block.params[P::PowerPower::cutByHits] != 0.0;
 }
 
 /// A particle on a Power with Hits Cut Power: no power from it for a hit's length (kPulseSeconds,
 /// as a particle's hit on a source), so its sources let go and are struck again when it comes back.
 /// A hit during a cut starts it over.
-void Engine::powerGap(Block& b) noexcept BLOKDUST_NONBLOCKING {
-  log(Event::Type::Logic, b.id);
-  b.gapUntil = tick_ + static_cast<std::uint32_t>(kPulseTicks);
+void Engine::powerGap(Block& block) noexcept BLOKDUST_NONBLOCKING {
+  log(Event::Type::Logic, block.id);
+  block.gapUntil = tick_ + static_cast<std::uint32_t>(kPulseTicks);
   recomputeStaticPower();
 }
 
-void Engine::logicHit(Block& b) noexcept BLOKDUST_NONBLOCKING {
-  if (b.type == BlockType::PowerToggle) {
-    b.params[P::PowerToggle::logic] = b.params[P::PowerToggle::logic] != 0.0 ? 0.0 : 1.0;
-    log(Event::Type::Logic, b.id);
+void Engine::logicHit(Block& block) noexcept BLOKDUST_NONBLOCKING {
+  if (block.type == BlockType::PowerToggle) {
+    block.params[P::PowerToggle::logic] = block.params[P::PowerToggle::logic] != 0.0 ? 0.0 : 1.0;
+    log(Event::Type::Logic, block.id);
     recomputeStaticPower();
     return;
   }
-  if (b.type == BlockType::PowerPulse) {
-    log(Event::Type::Logic, b.id);
+  if (block.type == BlockType::PowerPulse) {
+    log(Event::Type::Logic, block.id);
     // R2b (CHG-0029, SIMULATION-0010): with a Delay, the hit waits that long (`delayBeats` at the
     // tempo when synced); each hit keeps its own wait, up to kMaxPulseDelays at once. 0 is v1: at
     // once.
-    const bool synced = b.params[P::PowerPulse::sync] != 0.0;
-    const double wait = std::clamp(synced ? b.params[P::PowerPulse::delayBeats] * 60.0 / tempo_
-                                          : b.params[P::PowerPulse::delay],
+    const bool synced = block.params[P::PowerPulse::sync] != 0.0;
+    const double wait = std::clamp(synced ? block.params[P::PowerPulse::delayBeats] * 60.0 / tempo_
+                                          : block.params[P::PowerPulse::delay],
                                    0.0, 60.0);
     const long ticks = std::lround(wait * kTickRate);
     if (ticks <= 0) {
-      firePulse(b);
+      firePulse(block);
       return;
     }
-    if (b.pulseDelayCount < kMaxPulseDelays)
-      b.pulseFireTick[static_cast<std::size_t>(b.pulseDelayCount++)] =
+    if (block.pulseDelayCount < kMaxPulseDelays)
+      block.pulseFireTick[static_cast<std::size_t>(block.pulseDelayCount++)] =
           tick_ + static_cast<std::uint32_t>(ticks);
     return;
   }
-  if (b.type == BlockType::PowerCounter) {  // R2c: a switch with steps; on while its step is active
-    log(Event::Type::Logic, b.id);
-    const bool was = b.counterFired;
-    if (advanceCounter(b) != was)
+  if (block.type ==
+      BlockType::PowerCounter) {  // R2c: a switch with steps; on while its step is active
+    log(Event::Type::Logic, block.id);
+    const bool was = block.counterFired;
+    if (advanceCounter(block) != was)
       recomputeStaticPower();
     return;
   }
-  if (b.type ==
+  if (block.type ==
       BlockType::PowerChance) {  // R2d: a switch set by a roll; on while the last hit's roll passed
-    log(Event::Type::Logic, b.id);
-    const bool was = b.counterFired;
-    b.counterFired = chanceRoll(b);
-    log(b.counterFired ? Event::Type::Pass : Event::Type::Block, b.id);
-    if (b.counterFired != was)
+    log(Event::Type::Logic, block.id);
+    const bool was = block.counterFired;
+    block.counterFired = chanceRoll(block);
+    log(block.counterFired ? Event::Type::Pass : Event::Type::Block, block.id);
+    if (block.counterFired != was)
       recomputeStaticPower();
   }
 }
 
 /// A Pulse fires: v1 Pulse powers the connected sources for `pulseLength` s (its slider); synced,
 /// `pulseBeats` at the current tempo (CHG-0004 3.5).
-void Engine::firePulse(Block& b) noexcept BLOKDUST_NONBLOCKING {
+void Engine::firePulse(Block& block) noexcept BLOKDUST_NONBLOCKING {
   pulseConnected(
-      b, static_cast<int>(std::lround((b.params[P::PowerPulse::sync] != 0.0
-                                           ? b.params[P::PowerPulse::pulseBeats] * 60.0 / tempo_
-                                           : b.params[P::PowerPulse::pulseLength]) *
-                                      kTickRate)));
+      block,
+      static_cast<int>(std::lround((block.params[P::PowerPulse::sync] != 0.0
+                                        ? block.params[P::PowerPulse::pulseBeats] * 60.0 / tempo_
+                                        : block.params[P::PowerPulse::pulseLength]) *
+                                   kTickRate)));
 }
 
 /// Power the blocks connected to power block `b` for `ticks`.
-void Engine::pulseConnected(Block& b, int ticks) noexcept {
-  const auto& row = graph_.row(slotOf(b.id));
+void Engine::pulseConnected(Block& block, int ticks) noexcept {
+  const auto& row = graph_.row(slotOf(block.id));
   for (int k = 0; k < orderCount_; ++k) {
     Block& s = blocks_[order_[k]];
     if (row[order_[k]] && takesPower(s.kind())) {
@@ -199,10 +201,10 @@ void Engine::pulseConnected(Block& b, int ticks) noexcept {
 
 void Engine::releaseLaser(Block& laser) noexcept BLOKDUST_NONBLOCKING {
   for (int k = 0; k < orderCount_; ++k) {
-    Block& t = blocks_[order_[k]];
-    if (laser.laserHits[static_cast<std::size_t>(order_[k])] && t.kind() != BlockKind::Logic &&
-        t.laserPower > 0)
-      t.laserPower--;
+    Block& block = blocks_[order_[k]];
+    if (laser.laserHits[static_cast<std::size_t>(order_[k])] && block.kind() != BlockKind::Logic &&
+        block.laserPower > 0)
+      block.laserPower--;
   }
   laser.laserHits.reset();
   laser.beamOn = false;
@@ -221,9 +223,9 @@ void Engine::runLasers() noexcept BLOKDUST_NONBLOCKING {
   // out afresh each tick.
   std::bitset<kMaxBlocks> wasCut;
   for (int k = 0; k < orderCount_; ++k) {
-    Block& b = blocks_[order_[k]];
-    wasCut[static_cast<std::size_t>(order_[k])] = b.beamCut;
-    b.beamCut = false;
+    Block& block = blocks_[order_[k]];
+    wasCut[static_cast<std::size_t>(order_[k])] = block.beamCut;
+    block.beamCut = false;
   }
   struct Recheck {
     Engine& e;

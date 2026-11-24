@@ -219,7 +219,7 @@ void Convolver::reset() noexcept BLOKDUST_NONBLOCKING {
   histPos_ = headPos_ = tailPos_ = headFdl_ = tailFdl_ = 0;
 }
 
-void Convolver::process(const ConvolutionKernel& k, float* L, float* R, int n, double dry,
+void Convolver::process(const ConvolutionKernel& k, float* left, float* right, int n, double dry,
                         double wet) noexcept BLOKDUST_NONBLOCKING {
   using K = ConvolutionKernel;
   if (!k.valid() || ch_[0].hist.empty())
@@ -231,7 +231,7 @@ void Convolver::process(const ConvolutionKernel& k, float* L, float* R, int n, d
   for (int i = 0; i < n; ++i) {
     for (int c = 0; c < 2; ++c) {
       Channel& s = ch_[c];
-      float* io = c ? R : L;
+      float* io = c ? right : left;
       const float x = io[i];
       s.hist[static_cast<std::size_t>(histPos_)] = x;
       const float* h = k.direct_[c].data();

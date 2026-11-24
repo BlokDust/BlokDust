@@ -66,129 +66,129 @@ struct Command {
   bool outside = false;
 
   static Command add(BlockId id, BlockType t, double x, double y, std::int64_t at = -1) {
-    Command c;
-    c.type = Type::AddBlock;
-    c.id = id;
-    c.blockType = t;
-    c.x = x;
-    c.y = y;
-    c.atSample = at;
-    return c;
+    Command command;
+    command.type = Type::AddBlock;
+    command.id = id;
+    command.blockType = t;
+    command.x = x;
+    command.y = y;
+    command.atSample = at;
+    return command;
   }
   static Command remove(BlockId id, std::int64_t at = -1) {
-    Command c;
-    c.type = Type::RemoveBlock;
-    c.id = id;
-    c.atSample = at;
-    return c;
+    Command command;
+    command.type = Type::RemoveBlock;
+    command.id = id;
+    command.atSample = at;
+    return command;
   }
   static Command move(BlockId id, double x, double y, std::int64_t at = -1) {
-    Command c;
-    c.type = Type::MoveBlock;
-    c.id = id;
-    c.x = x;
-    c.y = y;
-    c.atSample = at;
-    return c;
+    Command command;
+    command.type = Type::MoveBlock;
+    command.id = id;
+    command.x = x;
+    command.y = y;
+    command.atSample = at;
+    return command;
   }
   static Command setParam(BlockId id, std::uint8_t p, double v, std::int64_t at = -1) {
-    Command c;
-    c.type = Type::SetParam;
-    c.id = id;
-    c.param = p;
-    c.value = v;
-    c.atSample = at;
-    return c;
+    Command command;
+    command.type = Type::SetParam;
+    command.id = id;
+    command.param = p;
+    command.value = v;
+    command.atSample = at;
+    return command;
   }
   static Command noteOn(BlockType controllerType, std::uint8_t note, double velocity = 1.0,
                         std::int64_t at = -1, int channel = 0) {
-    Command c;
-    c.type = Type::NoteOn;
-    c.blockType = controllerType;
-    c.param = note;
-    c.value = velocity;
-    c.atSample = at;
-    c.x = channel;
-    return c;
+    Command command;
+    command.type = Type::NoteOn;
+    command.blockType = controllerType;
+    command.param = note;
+    command.value = velocity;
+    command.atSample = at;
+    command.x = channel;
+    return command;
   }
   static Command noteExpression(BlockType controllerType, std::uint8_t note, int channel,
                                 Expression dim, double value, std::int64_t at = -1) {
-    Command c;
-    c.type = Type::NoteExpression;
-    c.blockType = controllerType;
-    c.param = note;
-    c.x = channel;
-    c.y = static_cast<double>(dim);
-    c.value = value;
-    c.atSample = at;
-    return c;
+    Command command;
+    command.type = Type::NoteExpression;
+    command.blockType = controllerType;
+    command.param = note;
+    command.x = channel;
+    command.y = static_cast<double>(dim);
+    command.value = value;
+    command.atSample = at;
+    return command;
   }
   /// v1 Settings › Master Volume: master output gain (linear; v1's −12 dB = 0.25 by default).
   /// `transportStart`: the DAW's transport just started (y = 1): the world resyncs to the position
   /// (owner review 2).
   static Command tempo(double bpm, double beat = -1.0, std::int64_t at = -1,
                        bool transportStart = false) {
-    Command c;
-    c.type = Type::Tempo;
-    c.value = bpm;
-    c.x = beat;
-    c.y = transportStart ? 1.0 : 0.0;
-    c.atSample = at;
-    return c;
+    Command command;
+    command.type = Type::Tempo;
+    command.value = bpm;
+    command.x = beat;
+    command.y = transportStart ? 1.0 : 0.0;
+    command.atSample = at;
+    return command;
   }
   static Command setMaster(double gain, std::int64_t at = -1) {
-    Command c;
-    c.type = Type::SetMaster;
-    c.value = gain;
-    c.atSample = at;
-    return c;
+    Command command;
+    command.type = Type::SetMaster;
+    command.value = gain;
+    command.atSample = at;
+    return command;
   }
   /// The app's power switch (owner, 2026-11-11, CHG-0005): off, nothing in the world powers
   /// anything (Power and Toggle blocks, emitters, lasers; particles in flight vanish). What the
   /// player does still plays: held blocks, keys, MIDI. WorldPower: value = on; x = 1: when off,
   /// particles in flight carry on (a Stage's Keep Particles, CHG-0021); else they vanish.
   static Command worldPower(bool on, std::int64_t at = -1, bool keepParticles = false) {
-    Command c;
-    c.type = Type::WorldPower;
-    c.value = on ? 1.0 : 0.0;
-    c.atSample = at;
-    c.x = keepParticles ? 1.0 : 0.0;
-    return c;
+    Command command;
+    command.type = Type::WorldPower;
+    command.value = on ? 1.0 : 0.0;
+    command.atSample = at;
+    command.x = keepParticles ? 1.0 : 0.0;
+    return command;
   }
   /// v1 Source.MouseDown/MouseUp → AddPower/RemovePower: a held source (audio or power source) is
   /// powered.
   static Command relink(BlockId a, BlockId b, std::int64_t at = -1) {
-    Command c;
-    c.type = Type::Relink;
-    c.id = a;
-    c.value = static_cast<double>(b);
-    c.atSample = at;
-    return c;
+    Command command;
+    command.type = Type::Relink;
+    command.id = a;
+    command.value = static_cast<double>(b);
+    command.atSample = at;
+    return command;
   }
   static Command reset(BlockId id, std::int64_t at = -1) {
-    Command c;
-    c.type = Type::Reset;
-    c.id = id;
-    c.atSample = at;
-    return c;
+    Command command;
+    command.type = Type::Reset;
+    command.id = id;
+    command.atSample = at;
+    return command;
   }
   static Command press(BlockId id, bool down, std::int64_t at = -1) {
-    Command c;
-    c.type = Type::Press;
-    c.id = id;
-    c.value = down ? 1.0 : 0.0;
-    c.atSample = at;
-    return c;
+    Command command;
+    command.type = Type::Press;
+    command.id = id;
+    command.value = down ? 1.0 : 0.0;
+    command.atSample = at;
+    return command;
   }
   static Command noteOff(BlockType controllerType, std::uint8_t note, std::int64_t at = -1,
                          int channel = 0) {
-    Command c;
-    c.type = Type::NoteOff;
-    c.blockType = controllerType;
-    c.param = note;
-    c.atSample = at;
-    c.x = channel;
-    return c;
+    Command command;
+    command.type = Type::NoteOff;
+    command.blockType = controllerType;
+    command.param = note;
+    command.atSample = at;
+    command.x = channel;
+    return command;
   }
 };
 
@@ -255,7 +255,7 @@ class Engine {
   explicit Engine(const EngineConfig& cfg);
 
   /// Control thread. Returns false if the queue is full.
-  bool push(const Command& c) noexcept { return queue_.push(c); }
+  bool push(const Command& command) noexcept { return queue_.push(command); }
 
   /// Audio thread. Renders `frames` samples of stereo audio. Output is independent of how calls are
   /// split into blocks.
@@ -268,9 +268,9 @@ class Engine {
   /// the queue, so the audio thread never becomes a second producer. Due queued commands are
   /// applied first, so order is preserved (e.g. host automation on the first block must not run
   /// before the patch's AddBlock commands).
-  void applyNow(const Command& c) noexcept BLOKDUST_NONBLOCKING {
+  void applyNow(const Command& command) noexcept BLOKDUST_NONBLOCKING {
     applyDueCommands();
-    apply(c);
+    apply(command);
   }
   /// Apply the commands already due (e.g. a patch's blocks) without rendering, so samples can be
   /// attached before the first process() call. The result is unchanged: they would apply at the
@@ -287,7 +287,7 @@ class Engine {
   /// built-in one); building its spectra takes a few milliseconds on this thread, once per load.
   /// Fresh loads set v1's region defaults (start 0, end = length, loop from half way to the end)
   /// unless the patch has a region already (endPosition > 0).
-  bool attachSample(BlockId id, const SampleBuffer& s) noexcept;
+  bool attachSample(BlockId id, const SampleBuffer& sample) noexcept;
   /// Audio thread (between process calls): give a source.stage block its inner world, an Engine
   /// made with EngineConfig::child. Host-owned: it must outlive the attachment (nullptr detaches;
   /// removing the block detaches). The inner world then runs in step with this one: same ticks,
@@ -349,43 +349,43 @@ class Engine {
 
  private:
   void applyDueCommands() noexcept BLOKDUST_NONBLOCKING;
-  void apply(const Command& c) noexcept BLOKDUST_NONBLOCKING;
+  void apply(const Command& command) noexcept BLOKDUST_NONBLOCKING;
   void onTopologyChanged(int slot,
                          const ConnectionGraph::Row& before) noexcept BLOKDUST_NONBLOCKING;
   void recomputeStaticPower() noexcept BLOKDUST_NONBLOCKING;
-  void configureDsp(Block& b) noexcept BLOKDUST_NONBLOCKING;
+  void configureDsp(Block& block) noexcept BLOKDUST_NONBLOCKING;
   void runTick() noexcept BLOKDUST_NONBLOCKING;
   void emit(Block& emitter) noexcept BLOKDUST_NONBLOCKING;
   void emit(Block& emitter, double angleDeg) noexcept BLOKDUST_NONBLOCKING;
-  void particleHit(Block& b) noexcept BLOKDUST_NONBLOCKING;
+  void particleHit(Block& block) noexcept BLOKDUST_NONBLOCKING;
   void restrike(int slot) noexcept BLOKDUST_NONBLOCKING;
-  void powerGap(Block& b) noexcept BLOKDUST_NONBLOCKING;
-  static bool gapsOnHit(const Block& b) noexcept BLOKDUST_NONBLOCKING;
-  void pulse(Block& b, int ticks) noexcept;
-  void firePulse(Block& b) noexcept BLOKDUST_NONBLOCKING;
-  void pulseConnected(Block& b, int ticks) noexcept;
-  bool advanceCounter(Block& c) noexcept BLOKDUST_NONBLOCKING;
-  static bool heldOnlyByHits(const Block& b) noexcept;
-  void beamStrike(Block& b) noexcept;
-  void strikeAgain(Block& b) noexcept;
+  void powerGap(Block& block) noexcept BLOKDUST_NONBLOCKING;
+  static bool gapsOnHit(const Block& block) noexcept BLOKDUST_NONBLOCKING;
+  void pulse(Block& block, int ticks) noexcept;
+  void firePulse(Block& block) noexcept BLOKDUST_NONBLOCKING;
+  void pulseConnected(Block& block, int ticks) noexcept;
+  bool advanceCounter(Block& block) noexcept BLOKDUST_NONBLOCKING;
+  static bool heldOnlyByHits(const Block& block) noexcept;
+  void beamStrike(Block& block) noexcept;
+  void strikeAgain(Block& block) noexcept;
   void updateGates() noexcept BLOKDUST_NONBLOCKING;
-  static std::int64_t beatSlotAt(const Block& e, double beat) noexcept;
-  void keyAim(Block& b, int note, bool down) noexcept;
+  static std::int64_t beatSlotAt(const Block& block, double beat) noexcept;
+  void keyAim(Block& block, int note, bool down) noexcept;
   void resyncToTransport(double beat) noexcept BLOKDUST_NONBLOCKING;
   void runLasers() noexcept BLOKDUST_NONBLOCKING;
   void traceBeam(int laserSlot, double angleDeg, double len, std::bitset<kMaxBlocks>& hits,
                  double& firstStop) noexcept BLOKDUST_NONBLOCKING;
-  bool chanceRoll(Block& c) noexcept BLOKDUST_NONBLOCKING;
-  bool gateOpen(const Block& g) const noexcept BLOKDUST_NONBLOCKING;
-  void logicHit(Block& b) noexcept BLOKDUST_NONBLOCKING;
-  void applyNote(const Command& c) noexcept BLOKDUST_NONBLOCKING;
-  void applyExpression(const Command& c) noexcept BLOKDUST_NONBLOCKING;
-  bool controllerHears(const Block& ctrl, const Command& c) const noexcept;
+  bool chanceRoll(Block& block) noexcept BLOKDUST_NONBLOCKING;
+  bool gateOpen(const Block& block) const noexcept BLOKDUST_NONBLOCKING;
+  void logicHit(Block& block) noexcept BLOKDUST_NONBLOCKING;
+  void applyNote(const Command& command) noexcept BLOKDUST_NONBLOCKING;
+  void applyExpression(const Command& command) noexcept BLOKDUST_NONBLOCKING;
+  bool controllerHears(const Block& ctrl, const Command& command) const noexcept;
   void forwardToStage(const Block& stage, const Block& ctrl,
-                      const Command& c) noexcept BLOKDUST_NONBLOCKING;
+                      const Command& command) noexcept BLOKDUST_NONBLOCKING;
   void releaseStageNotes() noexcept BLOKDUST_NONBLOCKING;
-  bool keepsParticles(const Block& b) const noexcept BLOKDUST_NONBLOCKING;
-  void renderGranular(Block& b, int n) noexcept BLOKDUST_NONBLOCKING;
+  bool keepsParticles(const Block& block) const noexcept BLOKDUST_NONBLOCKING;
+  void renderGranular(Block& block, int n) noexcept BLOKDUST_NONBLOCKING;
   static bool acceptsChannel(const Block& ctrl, int channel) noexcept;
   // v1 Source voices (Source.NoteOn/NoteOff/GetVoice/RemoveVoice/SetPitch)
   void voiceOn(int slot, BlockId controller, int key, bool poly, double glide, bool envFromChain,
@@ -418,18 +418,18 @@ class Engine {
                 int channel = 0) noexcept BLOKDUST_NONBLOCKING;
   void releaseVoice(int slot, int v) noexcept BLOKDUST_NONBLOCKING;
   void setPitch(int slot, int v, double glide) noexcept BLOKDUST_NONBLOCKING;
-  void applyPitch(Block& b, Voice& v) noexcept BLOKDUST_NONBLOCKING;
+  void applyPitch(Block& block, Voice& voice) noexcept BLOKDUST_NONBLOCKING;
   double controllerMods(int slot) const noexcept;
   void refreshVoices(int slot) noexcept BLOKDUST_NONBLOCKING;
-  void updateNotePower(Block& b) noexcept BLOKDUST_NONBLOCKING;
+  void updateNotePower(Block& block) noexcept BLOKDUST_NONBLOCKING;
   void releaseLaser(Block& laser) noexcept BLOKDUST_NONBLOCKING;
   void render(float* left, float* right, int n) noexcept BLOKDUST_NONBLOCKING;
-  void addHostInput(const Block& b, int n) noexcept;
+  void addHostInput(const Block& block, int n) noexcept;
   void renderChain(int c, int n) noexcept BLOKDUST_NONBLOCKING;
   void beginRoutingFade() noexcept BLOKDUST_NONBLOCKING;
   void switchRouting() noexcept BLOKDUST_NONBLOCKING;
-  void acquireDsp(Block& b, int slot) noexcept BLOKDUST_NONBLOCKING;
-  void releaseDsp(Block& b) noexcept BLOKDUST_NONBLOCKING;
+  void acquireDsp(Block& block, int slot) noexcept BLOKDUST_NONBLOCKING;
+  void releaseDsp(Block& block) noexcept BLOKDUST_NONBLOCKING;
   dsp::Envelope::Settings envelopeFor(int slot) const noexcept BLOKDUST_NONBLOCKING;
 
   /// Fixed pools of delay memory for effects with long delay lines (allocated at construction;

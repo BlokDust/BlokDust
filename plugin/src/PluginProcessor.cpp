@@ -238,8 +238,8 @@ void BlokDustProcessor::flushDust() {
     const double v = dustValue_[i].load(std::memory_order_relaxed);
     const auto key = std::string(gen::info(s.type).params[s.param].key);
     if (const auto k = idToKey_.find(s.block); k != idToKey_.end())
-      if (auto* b = blockJson(k->second))
-        (*b)["params"][key] = v;
+      if (auto* json = blockJson(k->second))
+        (*json)["params"][key] = v;
     // One entry per block param: the newest value wins.
     auto it = std::find_if(paramUpdates_.begin(), paramUpdates_.end(),
                            [&](const ParamUpdate& u) { return u.id == s.block && u.param == key; });
@@ -264,10 +264,10 @@ void BlokDustProcessor::syncToggles(const Snapshot& s) {
     if (was == togglesSeen_.end() || was->second == on)
       continue;
     const auto k = idToKey_.find(id);
-    auto* b = k == idToKey_.end() ? nullptr : blockJson(k->second);
-    if (!b)
+    auto* json = k == idToKey_.end() ? nullptr : blockJson(k->second);
+    if (!json)
       continue;
-    (*b)["params"]["logic"] = on;
+    (*json)["params"]["logic"] = on;
     auto it = std::find_if(paramUpdates_.begin(), paramUpdates_.end(),
                            [&](const ParamUpdate& u) { return u.id == id && u.param == "logic"; });
     if (it != paramUpdates_.end())
@@ -447,14 +447,14 @@ void BlokDustProcessor::publishSnapshot() noexcept {
   s.seq = ++snapshotSeq_;
   // The world on show (CHG-0038): a Stage block's inner world while the editor looks into it, else
   // the outer one.
-  const Engine* w = engine_.get();
+  const Engine* engine = engine_.get();
   s.view = 0;
   if (const BlockId v = view_.load(); v != 0)
-    if (const Engine* in = w->stage(v)) {
-      w = in;
+    if (const Engine* in = engine->stage(v)) {
+      engine = in;
       s.view = v;
     }
-  const auto parts = w->particles();
+  const auto parts = engine->particles();
   s.particleCount = static_cast<int>(std::min<std::size_t>(parts.size(), kMaxParticles));
   for (int i = 0; i < s.particleCount; ++i) {
     s.particles[static_cast<std::size_t>(i * 3)] =
@@ -463,7 +463,7 @@ void BlokDustProcessor::publishSnapshot() noexcept {
         static_cast<float>(parts[static_cast<std::size_t>(i)].y);
     s.particles[static_cast<std::size_t>(i * 3 + 2)] = parts[static_cast<std::size_t>(i)].size;
   }
-  const auto& blocks = w->blocks();
+  const auto& blocks = engine->blocks();
   s.poweredCount = 0;
   for (int i = 0; i < kMaxBlocks; ++i) {
     if (!blocks[static_cast<std::size_t>(i)].alive)
@@ -481,16 +481,16 @@ void BlokDustProcessor::publishSnapshot() noexcept {
         b.params[gen::param::PowerToggle::logic] != 0.0 ? 1 : 0;
   }
   s.beamCount = 0;
-  for (const auto& b : w->beams()) {
+  for (const auto& beam : engine->beams()) {
     const auto k = static_cast<std::size_t>(s.beamCount++ * 4);
-    s.beams[k] = static_cast<float>(b.x0);
-    s.beams[k + 1] = static_cast<float>(b.y0);
-    s.beams[k + 2] = static_cast<float>(b.x1);
-    s.beams[k + 3] = static_cast<float>(b.y1);
+    s.beams[k] = static_cast<float>(beam.x0);
+    s.beams[k + 1] = static_cast<float>(beam.y0);
+    s.beams[k + 2] = static_cast<float>(beam.x1);
+    s.beams[k + 3] = static_cast<float>(beam.y1);
   }
   {
     std::array<Engine::Playhead, 64> ph{};
-    s.playheadCount = w->playheads(ph.data(), 64);
+    s.playheadCount = engine->playheads(ph.data(), 64);
     for (int i = 0; i < s.playheadCount; ++i) {
       s.playheads[static_cast<std::size_t>(i * 2)] =
           static_cast<float>(ph[static_cast<std::size_t>(i)].block);
@@ -499,7 +499,7 @@ void BlokDustProcessor::publishSnapshot() noexcept {
   }
   {
     std::array<Engine::Monitor, 64> mon{};
-    s.monitorCount = w->monitors(mon.data(), 64);
+    s.monitorCount = engine->monitors(mon.data(), 64);
     for (int i = 0; i < s.monitorCount; ++i) {
       s.monitors[static_cast<std::size_t>(i * 5)] =
           static_cast<float>(mon[static_cast<std::size_t>(i)].block);
@@ -507,8 +507,8 @@ void BlokDustProcessor::publishSnapshot() noexcept {
         s.monitors[static_cast<std::size_t>(i * 5 + 1 + k)] = mon[static_cast<std::size_t>(i)].v[k];
     }
   }
-  s.pairCount =
-      w->connections(s.pairs.data(), static_cast<int>(s.pairs.size() / 2));  // oldest first (R4a)
+  s.pairCount = engine->connections(s.pairs.data(),
+                                    static_cast<int>(s.pairs.size() / 2));  // oldest first (R4a)
   snapshots_.publish();
 }
 
@@ -585,50 +585,50 @@ void BlokDustProcessor::applyUiCommands(const nlohmann::json& commands) {
     return nullptr;
   };
   for (const auto& j : commands) {
-    Command c;
-    c.type = static_cast<Command::Type>(j.value("type", 0));
-    c.id = j.value("id", 0u);
-    c.blockType = static_cast<BlockType>(j.value("blockType", 0));
-    c.x = j.value("x", 0.0);
-    c.y = j.value("y", 0.0);
-    c.param = static_cast<std::uint8_t>(j.value("param", 0));
-    c.value = j.value("value", 0.0);
+    Command command;
+    command.type = static_cast<Command::Type>(j.value("type", 0));
+    command.id = j.value("id", 0u);
+    command.blockType = static_cast<BlockType>(j.value("blockType", 0));
+    command.x = j.value("x", 0.0);
+    command.y = j.value("y", 0.0);
+    command.param = static_cast<std::uint8_t>(j.value("param", 0));
+    command.value = j.value("value", 0.0);
     // Inside Stage block `st` (CHG-0038): its inner world, made on first use. The page sends what
     // is inside (setMacros).
     if (const BlockId st = j.value("stage", 0u); st != 0) {
-      Engine* w = engine_ ? stages_.world(*engine_, st, childConfig(),
-                                          [this](bool on) { suspendProcessing(on); })
-                          : nullptr;
-      if (!w)
+      Engine* engine = engine_ ? stages_.world(*engine_, st, childConfig(),
+                                               [this](bool on) { suspendProcessing(on); })
+                               : nullptr;
+      if (!engine)
         continue;
-      w->push(c);
+      engine->push(command);
       auto& keys = stages_.keys(st);
-      if (c.type == Command::Type::AddBlock)
-        keys[c.id] = j.value("key", "b" + std::to_string(c.id));
-      else if (c.type == Command::Type::RemoveBlock)
-        keys.erase(c.id);
-      else if ((c.type == Command::Type::NoteOn || c.type == Command::Type::NoteOff) &&
-               c.blockType == BlockType::InputComputerKeyboard && c.param < 128)
-        pageKeys_.set(c.param, c.type == Command::Type::NoteOn);
+      if (command.type == Command::Type::AddBlock)
+        keys[command.id] = j.value("key", "b" + std::to_string(command.id));
+      else if (command.type == Command::Type::RemoveBlock)
+        keys.erase(command.id);
+      else if ((command.type == Command::Type::NoteOn || command.type == Command::Type::NoteOff) &&
+               command.blockType == BlockType::InputComputerKeyboard && command.param < 128)
+        pageKeys_.set(command.param, command.type == Command::Type::NoteOn);
       continue;
     }
-    if (c.type == Command::Type::WorldPower && powerMode_.load() == 2)
+    if (command.type == Command::Type::WorldPower && powerMode_.load() == 2)
       continue;  // the transport has the power
     if (engine_)
-      engine_->push(c);
+      engine_->push(command);
     // keep the patch model (host state) in step with the engine
-    switch (c.type) {
+    switch (command.type) {
       case Command::Type::AddBlock: {
         const std::string key =
-            j.value("key", "b" + std::to_string(c.id));  // the page's patch id for it
-        idToKey_[c.id] = key;
+            j.value("key", "b" + std::to_string(command.id));  // the page's patch id for it
+        idToKey_[command.id] = key;
         blocks.push_back({{"id", key},
-                          {"type", std::string(gen::info(c.blockType).id)},
-                          {"x", c.x},
-                          {"y", c.y}});
+                          {"type", std::string(gen::info(command.blockType).id)},
+                          {"x", command.x},
+                          {"y", command.y}});
         // A new Sample / Granular starts with v2's default sound, as on the web (DATA-0005 notes).
-        if (auto d = defaultSound(std::string(gen::info(c.blockType).id)); !d.is_null())
-          loadFreesound(c.id, d,
+        if (auto d = defaultSound(std::string(gen::info(command.blockType).id)); !d.is_null())
+          loadFreesound(command.id, d,
                         {{"trackName", juce::String(d["name"].get<std::string>())
                                            .toUpperCase()
                                            .substring(0, 30)
@@ -639,18 +639,18 @@ void BlokDustProcessor::applyUiCommands(const nlohmann::json& commands) {
         break;
       }
       case Command::Type::MoveBlock:
-        if (auto* b = find(c.id)) {
-          (*b)["x"] = c.x;
-          (*b)["y"] = c.y;
+        if (auto* b = find(command.id)) {
+          (*b)["x"] = command.x;
+          (*b)["y"] = command.y;
         }
         break;
       case Command::Type::RemoveBlock: {
-        if (stages_.find(c.id)) {
-          stages_.retire(c.id);
-          if (view_.load() == c.id)
+        if (stages_.find(command.id)) {
+          stages_.retire(command.id);
+          if (view_.load() == command.id)
             view_.store(0);
         }  // a Stage: its world goes too
-        const auto it = idToKey_.find(c.id);
+        const auto it = idToKey_.find(command.id);
         if (it != idToKey_.end()) {
           for (auto b = blocks.begin(); b != blocks.end(); ++b)
             if ((*b)["id"] == it->second) {
@@ -663,8 +663,8 @@ void BlokDustProcessor::applyUiCommands(const nlohmann::json& commands) {
       }
       case Command::Type::NoteOn:
       case Command::Type::NoteOff:
-        if (c.blockType == BlockType::InputComputerKeyboard && c.param < 128)
-          pageKeys_.set(c.param, c.type == Command::Type::NoteOn);
+        if (command.blockType == BlockType::InputComputerKeyboard && command.param < 128)
+          pageKeys_.set(command.param, command.type == Command::Type::NoteOn);
         break;
       case Command::Type::NoteExpression:
       case Command::Type::Press:
@@ -677,12 +677,12 @@ void BlokDustProcessor::applyUiCommands(const nlohmann::json& commands) {
       case Command::Type::WorldPower:
         break;  // session and transport state, not blocks
       case Command::Type::SetParam:
-        if (auto* b = find(c.id)) {
+        if (auto* b = find(command.id)) {
           BlockType t{};
           if (gen::findBlockType((*b)["type"].get<std::string>(), t) &&
-              c.param < gen::info(t).paramCount) {
-            const std::string pkey(gen::info(t).params[c.param].key);
-            (*b)["params"][pkey] = c.value;
+              command.param < gen::info(t).paramCount) {
+            const std::string pkey(gen::info(t).params[command.param].key);
+            (*b)["params"][pkey] = command.value;
             // An LFO's target (AUDIO-0003): the patch keeps it as "<block id>:<param key>"; engine
             // ids are per session.
             if (pkey == "targetBlock" || pkey == "targetParam") {
@@ -798,11 +798,11 @@ nlohmann::json* BlokDustProcessor::blockJson(const std::string& key) {
 }
 
 EngineConfig BlokDustProcessor::childConfig() const {
-  EngineConfig c;
-  c.sampleRate = static_cast<int>(sampleRate_ + 0.5);
-  c.seed = seed_;
-  c.hostInput = true;
-  return c;
+  EngineConfig config;
+  config.sampleRate = static_cast<int>(sampleRate_ + 0.5);
+  config.seed = seed_;
+  config.hostInput = true;
+  return config;
 }
 
 std::string BlokDustProcessor::keyOf(BlockId stage, BlockId id) const {
@@ -821,13 +821,13 @@ BlokDustProcessor::Where BlokDustProcessor::locate(const std::string& key) const
   if (slash == std::string::npos)
     return {engine_.get(), idOf(key), 0};
   const BlockId st = idOf(key.substr(0, slash));
-  Engine* w = stages_.find(st);
+  Engine* engine = stages_.find(st);
   const auto it = stages_.allKeys().find(st);
-  if (!w || it == stages_.allKeys().end())
+  if (!engine || it == stages_.allKeys().end())
     return {};
   for (const auto& [id, k] : it->second)
     if (k == key.substr(slash + 1))
-      return {w, id, st};
+      return {engine, id, st};
   return {};
 }
 
@@ -977,23 +977,23 @@ void BlokDustProcessor::loadFreesoundKey(const std::string& key, const nlohmann:
       });
 }
 
-void BlokDustProcessor::useSample(const std::string& key, std::shared_ptr<LoadedSample> s,
+void BlokDustProcessor::useSample(const std::string& key, std::shared_ptr<LoadedSample> sample,
                                   bool fresh, const nlohmann::json& display) {
   auto* b = blockJson(key);
   if (!b)
     return;
-  samples_[key] = s;
+  samples_[key] = sample;
   missing_.erase(key);
   auto& params = (*b)["params"];
   if (!params.is_object())
     params = nlohmann::json::object();
-  params["track"] = s->track;
+  params["track"] = sample->track;
   for (const char* k : {"trackName", "user", "permalink"})
     if (display.contains(k))
       params[k] = display[k];
   if (!patch_.contains("refs") || !patch_["refs"].is_object())
     patch_["refs"] = nlohmann::json::object();
-  patch_["refs"][s->track] = s->ref;
+  patch_["refs"][sample->track] = sample->ref;
   // v1 Sample.SetBuffers: a new sample resets the region (as the web, SPEC-SHARING-BACKEND R17).
   // Recorder: loop from half way too (v1 Recorder.UpdateWaveform); SampleGen loops all of it (v1
   // SampleGen).
@@ -1003,9 +1003,9 @@ void BlokDustProcessor::useSample(const std::string& key, std::shared_ptr<Loaded
   if (region && (fresh || !params.contains("endPosition") || !params["endPosition"].is_number() ||
                  params["endPosition"].get<double>() <= 0)) {
     params["startPosition"] = 0.0;
-    params["endPosition"] = s->duration;
-    params["loopStart"] = type == "source.sample-gen" ? 0.0 : s->duration * 0.5;
-    params["loopEnd"] = s->duration;
+    params["endPosition"] = sample->duration;
+    params["loopStart"] = type == "source.sample-gen" ? 0.0 : sample->duration * 0.5;
+    params["loopEnd"] = sample->duration;
     if (fresh)
       params["reverse"] = false;
   }
@@ -1013,7 +1013,7 @@ void BlokDustProcessor::useSample(const std::string& key, std::shared_ptr<Loaded
   // its own).
   if (b->value("type", std::string{}) == "source.granular" &&
       (fresh || !params.contains("region") || !params["region"].is_number()))
-    params["region"] = s->duration * 0.5;
+    params["region"] = sample->duration * 0.5;
   // Drop refs no block uses any more.
   std::set<std::string> used;
   const auto uses = [&](const nlohmann::json& blk) {
@@ -1264,16 +1264,16 @@ juce::File writeWav(const juce::File& dir, const juce::String& stem,
 }
 }  // namespace
 
-void BlokDustProcessor::captureRecording(const float* l, const float* r, int n) noexcept {
+void BlokDustProcessor::captureRecording(const float* left, const float* right, int n) noexcept {
   int s1, n1, s2, n2;
   recFifo_.prepareToWrite(n, s1, n1, s2, n2);
   if (n1 > 0) {
-    recFifoBuf_.copyFrom(0, s1, l, n1);
-    recFifoBuf_.copyFrom(1, s1, r, n1);
+    recFifoBuf_.copyFrom(0, s1, left, n1);
+    recFifoBuf_.copyFrom(1, s1, right, n1);
   }
   if (n2 > 0) {
-    recFifoBuf_.copyFrom(0, s2, l + n1, n2);
-    recFifoBuf_.copyFrom(1, s2, r + n1, n2);
+    recFifoBuf_.copyFrom(0, s2, left + n1, n2);
+    recFifoBuf_.copyFrom(1, s2, right + n1, n2);
   }
   recFifo_.finishedWrite(n1 + n2);  // a full FIFO drops the rest (the drain is late by > 4 s)
 }

@@ -16,7 +16,7 @@ class ConnectionGraph {
   using Row = std::bitset<kMaxBlocks>;
 
   /// R1–R3: are blocks a and b connected given their kinds, positions and the effect's catchment?
-  static bool shouldConnect(const Block& a, const Block& b) noexcept;
+  static bool shouldConnect(const Block& block, const Block& b) noexcept;
 
   void clear() noexcept;
   /// Recompute every pair (reference implementation; O(n²)).
@@ -36,7 +36,7 @@ class ConnectionGraph {
   /// False if not connected.
   bool touch(int a, int b) noexcept BLOKDUST_NONBLOCKING;
   /// Compares connections only (not their order: a full rebuild orders pairs by slot).
-  bool operator==(const ConnectionGraph& o) const noexcept { return adj_ == o.adj_; }
+  bool operator==(const ConnectionGraph& graph) const noexcept { return adj_ == graph.adj_; }
 
  private:
   static std::size_t pair(int a, int b) noexcept {
@@ -65,7 +65,7 @@ struct Chains {
   /// `order` lists alive slots in creation order: it picks where each DFS starts (v1 App.Blocks).
   /// From a block, the DFS visits its neighbours in the order they connected to it (v1
   /// Block.Connections, R4a).
-  void rebuild(const std::array<Block, kMaxBlocks>& blocks, const ConnectionGraph& g,
+  void rebuild(const std::array<Block, kMaxBlocks>& blocks, const ConnectionGraph& graph,
                const std::array<std::uint16_t, kMaxBlocks>& order,
                int orderCount) noexcept BLOKDUST_NONBLOCKING;
 };

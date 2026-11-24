@@ -62,7 +62,7 @@ void Engine::beginRoutingFade() noexcept BLOKDUST_NONBLOCKING {
 /// Audio In (and the plugins' Microphone, labelled Audio Input): always on, the host input in
 /// stereo at unity × gain. Its chain skips the master stage (see renderChain/render), so alone it
 /// is a true bypass (owner review 2).
-void Engine::addHostInput(const Block& b, int n) noexcept {
+void Engine::addHostInput(const Block& block, int n) noexcept {
   static_assert(int{P::SourceAudioIn::gain} == int{P::SourceMicrophone::gain});
   if (!chainDirect_) {
     chainDirect_ = true;
@@ -71,7 +71,7 @@ void Engine::addHostInput(const Block& b, int n) noexcept {
   }
   if (!inLeft_ && !inRight_)
     return;
-  const float g = static_cast<float>(b.params[P::SourceAudioIn::gain]);
+  const float g = static_cast<float>(block.params[P::SourceAudioIn::gain]);
   for (int i = 0; i < n; ++i) {
     const float l = inLeft_ ? inLeft_[inOffset_ + i] : 0.0f,
                 r = inRight_ ? inRight_[inOffset_ + i] : l;
@@ -89,15 +89,15 @@ void Engine::renderChain(int c, int n) noexcept BLOKDUST_NONBLOCKING {
   // chain, summed.
   bool detuned = false;
   for (int m = 0; m < r.count; ++m) {
-    Block& b = blocks_[audioChains_.members[r.start + m]];
-    if (!b.alive || (b.type != BlockType::FxVibrato && b.type != BlockType::FxScuzz))
+    Block& block = blocks_[audioChains_.members[r.start + m]];
+    if (!block.alive || (block.type != BlockType::FxVibrato && block.type != BlockType::FxScuzz))
       continue;
     if (!detuned) {
       std::fill_n(detune_.begin(), n, 0.0);
       detuned = true;
     }
     for (int i = 0; i < n; ++i)
-      detune_[i] += b.lfo.next(*wavetables_);
+      detune_[i] += block.lfo.next(*wavetables_);
   }
   for (int m = 0; m < r.count;
        ++m) {  // sources sum (mono, through Tone.Mono's −10 dB) into the chain
@@ -291,52 +291,52 @@ void Engine::renderChain(int c, int n) noexcept BLOKDUST_NONBLOCKING {
     Block& b = blocks_[audioChains_.members[r.start + m]];
     if (!b.alive)
       continue;
-    float* L = chainL_.data();
-    float* R = chainR_.data();
+    float* left = chainL_.data();
+    float* right = chainR_.data();
     switch (b.type) {
       case BlockType::FxFilter:
-        b.filter.process(L, R, n);
+        b.filter.process(left, right, n);
         if (b.filterLevel != 1.0f)
           for (int i = 0; i < n; ++i) {
-            L[i] *= b.filterLevel;
-            R[i] *= b.filterLevel;
+            left[i] *= b.filterLevel;
+            right[i] *= b.filterLevel;
           }
         break;
       case BlockType::FxEq:
-        b.eq.process(L, R, n);
+        b.eq.process(left, right, n);
         break;
       case BlockType::FxVolume:
-        b.volume.process(L, R, n);
+        b.volume.process(left, right, n);
         break;
       case BlockType::FxDistortion:
-        b.distortion.process(L, R, n);
+        b.distortion.process(left, right, n);
         break;
       case BlockType::FxBitCrusher:
-        b.crusher.process(L, R, n);
+        b.crusher.process(left, right, n);
         break;
       case BlockType::FxPhaser:
-        b.phaser.process(L, R, n, *wavetables_);
+        b.phaser.process(left, right, n, *wavetables_);
         break;
       case BlockType::FxChorus:
-        b.chorus.process(L, R, n, *wavetables_);
+        b.chorus.process(left, right, n, *wavetables_);
         break;
       case BlockType::FxReverb:
-        b.reverb.process(L, R, n);
+        b.reverb.process(left, right, n);
         break;
       case BlockType::FxStereoDelay:
-        b.pingpong.process(L, R, n);
+        b.pingpong.process(left, right, n);
         break;
       case BlockType::FxAutoWah:
-        b.autowah.process(L, R, n);
+        b.autowah.process(left, right, n);
         break;
       case BlockType::FxChomp:
-        b.chomp.process(L, R, n);
+        b.chomp.process(left, right, n);
         break;
       case BlockType::FxChopper:
-        b.chopper.process(L, R, n, *wavetables_);
+        b.chopper.process(left, right, n, *wavetables_);
         break;
       case BlockType::FxPitchShifter:
-        b.pitchshift.process(L, R, n, *wavetables_);
+        b.pitchshift.process(left, right, n, *wavetables_);
         break;
       case BlockType::FxCompressor:
         if (b.poolIndex >= 0) {  // CHG-0014: Chromium's DynamicsCompressor (as the master bus),
@@ -346,10 +346,10 @@ void Engine::renderChain(int c, int n) noexcept BLOKDUST_NONBLOCKING {
               dmath::exp10(std::clamp(b.params[P::FxCompressor::makeup], -24.0, 24.0) / 20.0));
           float peak = 0.0f;
           for (int i = 0; i < n; ++i) {
-            peak = std::max(peak, std::max(std::abs(L[i]), std::abs(R[i])));
-            comp.process(L[i], R[i]);
-            L[i] *= makeup;
-            R[i] *= makeup;
+            peak = std::max(peak, std::max(std::abs(left[i]), std::abs(right[i])));
+            comp.process(left[i], right[i]);
+            left[i] *= makeup;
+            right[i] *= makeup;
           }
           // The panel's meter: the input's peak in dB, falling 20 dB/s between peaks, and the gain
           // reduction now.
@@ -365,7 +365,8 @@ void Engine::renderChain(int c, int n) noexcept BLOKDUST_NONBLOCKING {
           mix.set(b.params[P::FxConvolver::mix]);
           const auto& k = b.userImpulse ? userImpulses_[static_cast<std::size_t>(b.poolIndex)]
                                         : *defaultImpulse_;
-          convolvers_[static_cast<std::size_t>(b.poolIndex)].process(k, L, R, n, mix.dry, mix.wet);
+          convolvers_[static_cast<std::size_t>(b.poolIndex)].process(k, left, right, n, mix.dry,
+                                                                     mix.wet);
         }
         break;
       default:
@@ -444,10 +445,10 @@ void Engine::render(float* left, float* right, int n) noexcept BLOKDUST_NONBLOCK
     listen(n);
   // Pre-effect LFOs outside any chain keep their phase (Tone LFOs run from block creation).
   for (int k = 0; k < orderCount_; ++k) {
-    Block& b = blocks_[order_[k]];
-    if ((b.type == BlockType::FxVibrato || b.type == BlockType::FxScuzz) &&
+    Block& block = blocks_[order_[k]];
+    if ((block.type == BlockType::FxVibrato || block.type == BlockType::FxScuzz) &&
         audioChains_.chainOf[order_[k]] < 0)
-      b.lfo.skip(n);
+      block.lfo.skip(n);
   }
   for (int i = 0; i < n; ++i) {
     // v1 order: chains -> master compressor (Chromium DynamicsCompressor) -> master volume.

@@ -11,10 +11,11 @@ void BlokDustEditor::sendSampleInfo(const nlohmann::json& s) {
   web_.emitEventIfBrowserIsVisible("bd_sampleInfo", juce::JSON::parse(juce::String(s.dump())));
 }
 
-void BlokDustEditor::sendPatchFile(const juce::File& f, const juce::String& mode, int req) {
-  if (!f.existsAsFile())
+void BlokDustEditor::sendPatchFile(const juce::File& file, const juce::String& mode, int req) {
+  if (!file.existsAsFile())
     return;
-  sendPatchText(f.loadFileAsString(), f.getFileNameWithoutExtension(), f.getFileName(), mode, req);
+  sendPatchText(file.loadFileAsString(), file.getFileNameWithoutExtension(), file.getFileName(),
+                mode, req);
 }
 
 void BlokDustEditor::sendPatchText(const juce::String& text, const juce::String& name,

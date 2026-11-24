@@ -58,7 +58,7 @@ class Convolver {
   void reserve(int maxTailParts);
   void reset() noexcept BLOKDUST_NONBLOCKING;
   /// In place: L/R ← dry·x + wet·(x ∗ ir). `kernel` may change between calls (a new IR loaded).
-  void process(const ConvolutionKernel& k, float* L, float* R, int n, double dry,
+  void process(const ConvolutionKernel& k, float* left, float* right, int n, double dry,
                double wet) noexcept BLOKDUST_NONBLOCKING;
 
  private:

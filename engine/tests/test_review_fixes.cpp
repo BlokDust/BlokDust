@@ -13,14 +13,14 @@ using namespace bdtest;
 
 namespace {
 std::vector<float> renderTone(BlockType fx, bool withFx) {
-  auto e = makeEngine(48000, 1, false);
-  e->push(Command::add(1, BlockType::SourceTone, 0, 0));
-  e->push(
+  auto engine = makeEngine(48000, 1, false);
+  engine->push(Command::add(1, BlockType::SourceTone, 0, 0));
+  engine->push(
       Command::setParam(1, P::SourceTone::waveform, 3));  // saw: harmonics for the filters to move
-  e->push(Command::add(2, BlockType::PowerPower, -3, 0));
+  engine->push(Command::add(2, BlockType::PowerPower, -3, 0));
   if (withFx)
-    e->push(Command::add(3, fx, 3, 0));
-  return render(*e, 48000);
+    engine->push(Command::add(3, fx, 3, 0));
+  return render(*engine, 48000);
 }
 double rmsOf(const std::vector<float>& x, std::size_t from = 0) {
   double s = 0;
@@ -86,11 +86,11 @@ TEST_CASE(
 TEST_CASE(
     "Review 2026-11-06: holding the pointer on a source powers it; release stops it (v1 "
     "Source.MouseDown)") {
-  auto e = makeEngine(48000, 1, false);
-  e->push(Command::add(1, BlockType::SourceTone, 0, 0));
-  e->push(Command::press(1, true, 4800));
-  e->push(Command::press(1, false, 24000));
-  const auto out = render(*e, 72000);
+  auto engine = makeEngine(48000, 1, false);
+  engine->push(Command::add(1, BlockType::SourceTone, 0, 0));
+  engine->push(Command::press(1, true, 4800));
+  engine->push(Command::press(1, false, 24000));
+  const auto out = render(*engine, 72000);
   const std::vector<float> before(out.begin(), out.begin() + 4800),
       held(out.begin() + 9600, out.begin() + 24000), after(out.begin() + 60000, out.end());
   CHECK(rmsOf(before) == 0.0);
@@ -101,31 +101,31 @@ TEST_CASE(
 TEST_CASE(
     "Review 2026-11-06: an unpowered emitter fires nothing; pressed, it fires at once and keeps "
     "firing") {
-  auto e = makeEngine(48000, 1, false);
-  e->push(Command::add(1, BlockType::PowerEmitter, 0, 0));
-  render(*e, 48000);
-  CHECK(e->particles().empty());
-  e->push(Command::press(1, true));
-  render(*e, 480);  // a few ticks: v1 primes the counter while unpowered, so the first particle
-                    // leaves immediately
-  CHECK(!e->particles().empty());
-  e->push(Command::press(1, false));
-  render(*e,
+  auto engine = makeEngine(48000, 1, false);
+  engine->push(Command::add(1, BlockType::PowerEmitter, 0, 0));
+  render(*engine, 48000);
+  CHECK(engine->particles().empty());
+  engine->push(Command::press(1, true));
+  render(*engine, 480);  // a few ticks: v1 primes the counter while unpowered, so the first
+                         // particle leaves immediately
+  CHECK(!engine->particles().empty());
+  engine->push(Command::press(1, false));
+  render(*engine,
          48000 * 4);  // particles live range/speed = 200 v1 frames; none are emitted after release
-  CHECK(e->particles().empty());
+  CHECK(engine->particles().empty());
 }
 
 TEST_CASE(
     "Review 2026-11-06: pressing an effect or a Power block does nothing (only v1 Source "
     "subclasses)") {
-  auto e = makeEngine(48000, 1, false);
-  e->push(Command::add(1, BlockType::FxFilter, 0, 0));
-  e->push(Command::add(2, BlockType::PowerPower, 10, 0));
-  e->push(Command::press(1, true));
-  e->push(Command::press(2, true));
-  render(*e, 480);
-  CHECK(e->block(1)->power() == 0);
-  CHECK(e->block(2)->power() == 0);
+  auto engine = makeEngine(48000, 1, false);
+  engine->push(Command::add(1, BlockType::FxFilter, 0, 0));
+  engine->push(Command::add(2, BlockType::PowerPower, 10, 0));
+  engine->push(Command::press(1, true));
+  engine->push(Command::press(2, true));
+  render(*engine, 480);
+  CHECK(engine->block(1)->power() == 0);
+  CHECK(engine->block(2)->power() == 0);
 }
 
 TEST_CASE(
@@ -137,16 +137,16 @@ TEST_CASE(
   for (std::size_t i = 0; i < buf.size(); ++i)
     buf[i] = static_cast<float>(
         std::sin(2 * 3.141592653589793 * 441.0 * static_cast<double>(i) / 48000.0));
-  auto e = makeEngine(48000, 1, false);
-  e->push(Command::add(1, BlockType::SourceSample, 0, 0));
-  e->push(Command::setParam(1, P::SourceSample::loop, 0));
-  render(*e, 128);
-  CHECK(e->attachSample(
+  auto engine = makeEngine(48000, 1, false);
+  engine->push(Command::add(1, BlockType::SourceSample, 0, 0));
+  engine->push(Command::setParam(1, P::SourceSample::loop, 0));
+  render(*engine, 128);
+  CHECK(engine->attachSample(
       1, SampleBuffer{buf.data(), nullptr, static_cast<std::uint32_t>(buf.size()), 48000.0}));
-  e->push(Command::add(2, BlockType::PowerPower, -3, 0));
-  render(*e, 38400);  // to 0.8 s
-  e->push(Command::setParam(1, P::SourceSample::reverse, 1));
-  const auto out = render(*e, 48000);                                        // 0.8 s → 1.8 s
+  engine->push(Command::add(2, BlockType::PowerPower, -3, 0));
+  render(*engine, 38400);  // to 0.8 s
+  engine->push(Command::setParam(1, P::SourceSample::reverse, 1));
+  const auto out = render(*engine, 48000);                                   // 0.8 s → 1.8 s
   const std::vector<float> later(out.begin() + 19200, out.begin() + 28800);  // 1.2–1.4 s
   CHECK(rmsOf(later) > 0.01);  // still sounding (restarted)
 }

@@ -17,9 +17,9 @@ double hz(int midi) {
   return 440.0 * std::pow(2.0, (midi - 69) / 12.0);
 }
 /// Pitches (Hz) of the Tone's sounding voices, lowest first.
-std::vector<double> pitches(const Engine& e, BlockId tone = 1) {
+std::vector<double> pitches(const Engine& engine, BlockId tone = 1) {
   std::vector<double> out;
-  for (const auto& v : e.block(tone)->voices)
+  for (const auto& v : engine.block(tone)->voices)
     if (v.active)
       out.push_back(v.pitch);
   std::sort(out.begin(), out.end());
@@ -40,66 +40,68 @@ bool are(const std::vector<double>& got, std::vector<double> want) {
 /// A Tone (1) with a Computer Keyboard (2) beside it; `fx` blocks join the Tone's chain as ids 10,
 /// 11, ….
 std::unique_ptr<Engine> toneAndKeys(std::vector<BlockType> fx = {}, bool keysSetPitch = false) {
-  auto e = makeEngine(48000, 1, false);
-  e->push(Command::add(1, BlockType::SourceTone, 0, 0));
-  e->push(Command::add(2, KB, 0, -3));
+  auto engine = makeEngine(48000, 1, false);
+  engine->push(Command::add(1, BlockType::SourceTone, 0, 0));
+  engine->push(Command::add(2, KB, 0, -3));
   if (keysSetPitch)
-    e->push(Command::setParam(2, P::InputComputerKeyboard::keysSetPitch, 1));
+    engine->push(Command::setParam(2, P::InputComputerKeyboard::keysSetPitch, 1));
   BlockId id = 10;
   for (const auto t : fx) {
-    e->push(Command::add(id, t, 3, static_cast<double>(id - 10) * 2));
+    engine->push(Command::add(id, t, 3, static_cast<double>(id - 10) * 2));
     ++id;
   }
-  return e;
+  return engine;
 }
 const double kBase = 261.6;  // v1 Config.BaseNote: a Tone's own note
 }  // namespace
 
 TEST_CASE("R10e Silent Keys: off by default, a keyboard plays as before") {
-  auto e = toneAndKeys();
-  e->push(Command::noteOn(KB, 64));
-  settle(*e);
-  CHECK_FALSE(e->block(1)->arranged);
-  CHECK(are(pitches(*e), {hz(64)}));
+  auto engine = toneAndKeys();
+  engine->push(Command::noteOn(KB, 64));
+  settle(*engine);
+  CHECK_FALSE(engine->block(1)->arranged);
+  CHECK(are(pitches(*engine), {hz(64)}));
 }
 
 TEST_CASE("R10e Silent Keys: held keys make no sound; power then plays them, all of them") {
-  auto e = toneAndKeys({}, true);
+  auto engine = toneAndKeys({}, true);
   for (int k : {60, 64, 67})
-    e->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
-  settle(*e);
-  CHECK(e->block(1)->arranged);
-  CHECK(pitches(*e).empty());  // keys alone: silent
-  CHECK(count_if(e->events().begin(), e->events().end(),
+    engine->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
+  settle(*engine);
+  CHECK(engine->block(1)->arranged);
+  CHECK(pitches(*engine).empty());  // keys alone: silent
+  CHECK(count_if(engine->events().begin(), engine->events().end(),
                  [](const Event& ev) { return ev.type == Event::Type::GateOn; }) == 0);
-  e->push(Command::press(1, true));  // power (a held pointer; a particle or laser is the same)
-  render(*e, 480);
-  CHECK(are(pitches(*e), {hz(60), hz(64), hz(67)}));
-  e->push(Command::noteOff(KB, 64));  // letting a key go takes its note away, without a new strike
-  render(*e, 480);
-  CHECK(are(pitches(*e), {hz(60), hz(67)}));
-  e->push(Command::press(1, false));
-  render(*e, 480);
-  CHECK(pitches(*e).empty());
+  engine->push(Command::press(1, true));  // power (a held pointer; a particle or laser is the same)
+  render(*engine, 480);
+  CHECK(are(pitches(*engine), {hz(60), hz(64), hz(67)}));
+  engine->push(
+      Command::noteOff(KB, 64));  // letting a key go takes its note away, without a new strike
+  render(*engine, 480);
+  CHECK(are(pitches(*engine), {hz(60), hz(67)}));
+  engine->push(Command::press(1, false));
+  render(*engine, 480);
+  CHECK(pitches(*engine).empty());
   // With no keys held, power plays the Tone's own note.
-  e->push(Command::noteOff(KB, 60));
-  e->push(Command::noteOff(KB, 67));
-  e->push(Command::press(1, true));
-  render(*e, 480);
-  CHECK(are(pitches(*e), {kBase}));
+  engine->push(Command::noteOff(KB, 60));
+  engine->push(Command::noteOff(KB, 67));
+  engine->push(Command::press(1, true));
+  render(*engine, 480);
+  CHECK(are(pitches(*engine), {kBase}));
 }
 
 TEST_CASE("R10e Silent Keys: a particle strums the held chord") {
-  auto e = toneAndKeys({}, true);
-  e->push(Command::add(5, BlockType::PowerEmitter, -10, 0));
-  e->push(Command::setParam(5, P::PowerEmitter::angle, 0));
-  e->push(Command::setParam(5, P::PowerEmitter::selfPoweredMode, 1));
-  e->push(Command::setParam(5, P::PowerEmitter::rate, 60));
-  e->push(Command::setParam(5, P::PowerEmitter::speed, 12));
+  auto engine = toneAndKeys({}, true);
+  engine->push(Command::add(5, BlockType::PowerEmitter, -10, 0));
+  engine->push(Command::setParam(5, P::PowerEmitter::angle, 0));
+  engine->push(Command::setParam(5, P::PowerEmitter::selfPoweredMode, 1));
+  engine->push(Command::setParam(5, P::PowerEmitter::rate, 60));
+  engine->push(Command::setParam(5, P::PowerEmitter::speed, 12));
   for (int k : {48, 55})
-    e->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
-  render(*e, 48000 * 2 + 9600);
-  const auto on = eventsOf(*e, Event::Type::GateOn, 1), hits = eventsOf(*e, Event::Type::Hit, 1);
+    engine->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
+  render(*engine, 48000 * 2 + 9600);
+  const auto on = eventsOf(*engine, Event::Type::GateOn, 1),
+             hits = eventsOf(*engine, Event::Type::Hit, 1);
   REQUIRE(!hits.empty());
   CHECK(on.size() == hits.size() * 2);  // two notes per hit
 }
@@ -107,49 +109,51 @@ TEST_CASE("R10e Silent Keys: a particle strums the held chord") {
 TEST_CASE(
     "R10f Chord: power on a Tone plays the chord on its own note's bar, as the Tone's Note sets "
     "it") {
-  auto e = toneAndKeys({BlockType::FxChord});
-  e->push(Command::setParam(10, P::FxChord::smooth, 0));
-  e->push(Command::press(1, true));
-  render(*e, 480);
+  auto engine = toneAndKeys({BlockType::FxChord});
+  engine->push(Command::setParam(10, P::FxChord::smooth, 0));
+  engine->push(Command::press(1, true));
+  render(*engine, 480);
   const auto st = [](int semis) {
     return kBase * std::pow(2.0, semis / 12.0);
   };
-  CHECK(are(pitches(*e), {st(0), st(4), st(7)}));  // C: major (default)
-  e->push(Command::setParam(10, P::FxChord::q0, 2));
-  render(*e, 480);
-  CHECK(are(pitches(*e), {st(0), st(3), st(7)}));  // C's bar set to minor: only the third moved
-  e->push(Command::press(1, false));
-  render(*e, 4800);
-  e->push(Command::setParam(1, P::SourceTone::transpose, 2));
-  e->push(Command::press(1, true));
-  render(*e, 480);
-  CHECK(are(pitches(*e), {st(2), st(5), st(9), st(12)}));  // the Tone plays D: D's bar, minor 7th
-  e->push(Command::setParam(10, P::FxChord::q2,
-                            0));  // a setting changing re-plays the chord (CHG-0017)
-  render(*e, 480);
-  CHECK(are(pitches(*e), {st(2)}));  // None: the note alone
+  CHECK(are(pitches(*engine), {st(0), st(4), st(7)}));  // C: major (default)
+  engine->push(Command::setParam(10, P::FxChord::q0, 2));
+  render(*engine, 480);
+  CHECK(
+      are(pitches(*engine), {st(0), st(3), st(7)}));  // C's bar set to minor: only the third moved
+  engine->push(Command::press(1, false));
+  render(*engine, 4800);
+  engine->push(Command::setParam(1, P::SourceTone::transpose, 2));
+  engine->push(Command::press(1, true));
+  render(*engine, 480);
+  CHECK(are(pitches(*engine),
+            {st(2), st(5), st(9), st(12)}));  // the Tone plays D: D's bar, minor 7th
+  engine->push(Command::setParam(10, P::FxChord::q2,
+                                 0));  // a setting changing re-plays the chord (CHG-0017)
+  render(*engine, 480);
+  CHECK(are(pitches(*engine), {st(2)}));  // None: the note alone
 }
 
 TEST_CASE(
     "R10f Chord: each key plays the chord on its own bar; Key slides the bars; each lets go with "
     "its key") {
-  auto e = toneAndKeys({BlockType::FxChord});
-  e->push(Command::setParam(2, P::InputComputerKeyboard::isPolyphonic, 1));
-  e->push(Command::setParam(10, P::FxChord::smooth, 0));
-  e->push(Command::noteOn(KB, 60));
-  e->push(Command::noteOn(KB, 62));
-  render(*e, 480);
-  CHECK(are(pitches(*e),
+  auto engine = toneAndKeys({BlockType::FxChord});
+  engine->push(Command::setParam(2, P::InputComputerKeyboard::isPolyphonic, 1));
+  engine->push(Command::setParam(10, P::FxChord::smooth, 0));
+  engine->push(Command::noteOn(KB, 60));
+  engine->push(Command::noteOn(KB, 62));
+  render(*engine, 480);
+  CHECK(are(pitches(*engine),
             {hz(60), hz(64), hz(67), hz(62), hz(65), hz(69), hz(72)}));  // C major, D minor 7th
-  e->push(Command::noteOff(KB, 60));
-  render(*e, 480);
-  CHECK(are(pitches(*e), {hz(62), hz(65), hz(69), hz(72)}));
-  e->push(Command::noteOff(KB, 62));
-  e->push(
+  engine->push(Command::noteOff(KB, 60));
+  render(*engine, 480);
+  CHECK(are(pitches(*engine), {hz(62), hz(65), hz(69), hz(72)}));
+  engine->push(Command::noteOff(KB, 62));
+  engine->push(
       Command::setParam(10, P::FxChord::key, 2));  // Key D: E plays D's stored chord (minor 7th)
-  e->push(Command::noteOn(KB, 64));
-  render(*e, 480);
-  CHECK(are(pitches(*e), {hz(64), hz(67), hz(71), hz(74)}));
+  engine->push(Command::noteOn(KB, 64));
+  render(*engine, 480);
+  CHECK(are(pitches(*engine), {hz(64), hz(67), hz(71), hz(74)}));
   // A mono keyboard sounds its newest key only.
   auto m = toneAndKeys({BlockType::FxChord});
   m->push(Command::setParam(10, P::FxChord::smooth, 0));
@@ -165,52 +169,52 @@ TEST_CASE(
 TEST_CASE(
     "R10f Chord, Smooth: the first chord in root position, then each note to the octave nearest "
     "the last chord") {
-  auto e = toneAndKeys({BlockType::FxChord});  // Smooth is on by default
-  e->push(Command::noteOn(KB, 60));
-  render(*e, 480);
-  CHECK(are(pitches(*e), {hz(60), hz(64), hz(67)}));  // C major, root position
-  e->push(Command::noteOn(KB, 65));  // F major 7th: F stays; A, C and E nearest C-E-G
-  render(*e, 480);
-  CHECK(are(pitches(*e), {hz(60), hz(64), hz(65), hz(69)}));
-  e->push(Command::setParam(10, P::FxChord::q0,
-                            2));  // another bar changing doesn't move the sounding chord
-  render(*e, 480);
-  CHECK(are(pitches(*e), {hz(60), hz(64), hz(65), hz(69)}));
-  e->push(Command::noteOff(KB, 65));
-  e->push(Command::noteOff(KB, 60));
-  e->push(Command::setParam(10, P::FxChord::smooth, 0));
-  e->push(Command::noteOn(KB, 65));
-  render(*e, 480);
-  CHECK(are(pitches(*e), {hz(65), hz(69), hz(72), hz(76)}));  // Smooth off: root position
+  auto engine = toneAndKeys({BlockType::FxChord});  // Smooth is on by default
+  engine->push(Command::noteOn(KB, 60));
+  render(*engine, 480);
+  CHECK(are(pitches(*engine), {hz(60), hz(64), hz(67)}));  // C major, root position
+  engine->push(Command::noteOn(KB, 65));  // F major 7th: F stays; A, C and E nearest C-E-G
+  render(*engine, 480);
+  CHECK(are(pitches(*engine), {hz(60), hz(64), hz(65), hz(69)}));
+  engine->push(Command::setParam(10, P::FxChord::q0,
+                                 2));  // another bar changing doesn't move the sounding chord
+  render(*engine, 480);
+  CHECK(are(pitches(*engine), {hz(60), hz(64), hz(65), hz(69)}));
+  engine->push(Command::noteOff(KB, 65));
+  engine->push(Command::noteOff(KB, 60));
+  engine->push(Command::setParam(10, P::FxChord::smooth, 0));
+  engine->push(Command::noteOn(KB, 65));
+  render(*engine, 480);
+  CHECK(are(pitches(*engine), {hz(65), hz(69), hz(72), hz(76)}));  // Smooth off: root position
 }
 
 TEST_CASE("R10f Chord: per-note bend reaches every note of that key's chord (PLUGIN-0004)") {
-  auto e = makeEngine(48000, 1, false);
+  auto engine = makeEngine(48000, 1, false);
   const BlockType MIDI = BlockType::InputMidiController;
-  e->push(Command::add(1, BlockType::SourceTone, 0, 0));
-  e->push(Command::add(2, MIDI, 0, -3));
-  e->push(Command::setParam(2, P::InputMidiController::isPolyphonic, 1));
-  e->push(Command::add(10, BlockType::FxChord, 3, 0));
-  e->push(Command::noteOn(MIDI, 60, 1.0, -1, 3));
-  e->push(Command::noteExpression(MIDI, 60, 3, Command::Expression::Bend, 2.0));
-  render(*e, 480);
-  CHECK(are(pitches(*e), {hz(62), hz(66), hz(69)}));  // C major, bent up a tone
+  engine->push(Command::add(1, BlockType::SourceTone, 0, 0));
+  engine->push(Command::add(2, MIDI, 0, -3));
+  engine->push(Command::setParam(2, P::InputMidiController::isPolyphonic, 1));
+  engine->push(Command::add(10, BlockType::FxChord, 3, 0));
+  engine->push(Command::noteOn(MIDI, 60, 1.0, -1, 3));
+  engine->push(Command::noteExpression(MIDI, 60, 3, Command::Expression::Bend, 2.0));
+  render(*engine, 480);
+  CHECK(are(pitches(*engine), {hz(62), hz(66), hz(69)}));  // C major, bent up a tone
 }
 
 TEST_CASE("R10g Arpeggiator, per hit: each strike plays the next of the held notes") {
-  auto e = toneAndKeys({BlockType::FxArpeggiator}, true);
-  e->push(Command::setParam(10, P::FxArpeggiator::perHit, 1));
+  auto engine = toneAndKeys({BlockType::FxArpeggiator}, true);
+  engine->push(Command::setParam(10, P::FxArpeggiator::perHit, 1));
   for (int k : {60, 64, 67})
-    e->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
+    engine->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
   std::vector<double> got;
   for (int i = 0; i < 5; ++i) {
-    e->push(Command::press(1, true));
-    render(*e, 480);
-    const auto p = pitches(*e);
+    engine->push(Command::press(1, true));
+    render(*engine, 480);
+    const auto p = pitches(*engine);
     REQUIRE(p.size() == 1);
     got.push_back(p[0]);
-    e->push(Command::press(1, false));
-    render(*e, 4800);
+    engine->push(Command::press(1, false));
+    render(*engine, 4800);
   }
   const double want[5] = {hz(60), hz(64), hz(67), hz(60), hz(64)};
   for (int i = 0; i < 5; ++i)
@@ -219,20 +223,20 @@ TEST_CASE("R10g Arpeggiator, per hit: each strike plays the next of the held not
 
 TEST_CASE("R10g Arpeggiator, patterns and octaves") {
   const auto run = [](int pattern, int octaves) {
-    auto e = toneAndKeys({BlockType::FxArpeggiator}, true);
-    e->push(Command::setParam(10, P::FxArpeggiator::perHit, 1));
-    e->push(Command::setParam(10, P::FxArpeggiator::pattern, pattern));
-    e->push(Command::setParam(10, P::FxArpeggiator::octaves, octaves));
+    auto engine = toneAndKeys({BlockType::FxArpeggiator}, true);
+    engine->push(Command::setParam(10, P::FxArpeggiator::perHit, 1));
+    engine->push(Command::setParam(10, P::FxArpeggiator::pattern, pattern));
+    engine->push(Command::setParam(10, P::FxArpeggiator::octaves, octaves));
     for (int k : {60, 64, 67})
-      e->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
+      engine->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
     std::vector<int> got;
     for (int i = 0; i < 8; ++i) {
-      e->push(Command::press(1, true));
-      render(*e, 480);
+      engine->push(Command::press(1, true));
+      render(*engine, 480);
       got.push_back(
-          static_cast<int>(std::lround(69.0 + 12.0 * std::log2(pitches(*e).at(0) / 440.0))));
-      e->push(Command::press(1, false));
-      render(*e, 4800);
+          static_cast<int>(std::lround(69.0 + 12.0 * std::log2(pitches(*engine).at(0) / 440.0))));
+      engine->push(Command::press(1, false));
+      render(*engine, 4800);
     }
     return got;
   };
@@ -250,18 +254,18 @@ TEST_CASE(
     "R10g Arpeggiator, on its own: Speed (not synced) and Division (synced) set how fast it moves "
     "through held notes") {
   // Not synced, 8 notes a second: a new note every 30 ticks (6000 samples).
-  auto e = toneAndKeys({BlockType::FxArpeggiator});
-  e->push(Command::setParam(2, P::InputComputerKeyboard::isPolyphonic, 1));
-  e->push(Command::setParam(10, P::FxArpeggiator::sync, 0));
-  e->push(Command::setParam(10, P::FxArpeggiator::speed, 8));
+  auto engine = toneAndKeys({BlockType::FxArpeggiator});
+  engine->push(Command::setParam(2, P::InputComputerKeyboard::isPolyphonic, 1));
+  engine->push(Command::setParam(10, P::FxArpeggiator::sync, 0));
+  engine->push(Command::setParam(10, P::FxArpeggiator::speed, 8));
   for (int k : {60, 64, 67})
-    e->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
-  render(*e, 48000);
-  const auto on = eventsOf(*e, Event::Type::GateOn, 1);
+    engine->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
+  render(*engine, 48000);
+  const auto on = eventsOf(*engine, Event::Type::GateOn, 1);
   REQUIRE(on.size() == 8);
   for (std::size_t i = 1; i < on.size(); ++i)
     CHECK(on[i].sample - on[i - 1].sample == 6000);
-  CHECK(are(pitches(*e), {hz(64)}));  // the 8th note: C E G C E G C E
+  CHECK(are(pitches(*engine), {hz(64)}));  // the 8th note: C E G C E G C E
   // Synced, 1/8 notes at 120 BPM: every 0.25 s.
   auto s = toneAndKeys({BlockType::FxArpeggiator});
   s->push(Command::setParam(2, P::InputComputerKeyboard::isPolyphonic, 1));
@@ -288,22 +292,22 @@ int midiOf(double p) {
 /// Tone's power.
 std::vector<int> randomPresses(std::uint64_t seed, const std::array<double, 12>& w, int presses,
                                int key = 0, int low = 60, int high = 71) {
-  auto e = makeEngine(48000, seed, false);
-  e->push(Command::add(1, BlockType::SourceTone, 0, 0));
-  e->push(Command::add(10, BlockType::FxRandomNote, 3, 0));
+  auto engine = makeEngine(48000, seed, false);
+  engine->push(Command::add(1, BlockType::SourceTone, 0, 0));
+  engine->push(Command::add(10, BlockType::FxRandomNote, 3, 0));
   for (int i = 0; i < 12; ++i)
-    e->push(Command::setParam(10, static_cast<std::uint8_t>(P::FxRandomNote::w0 + i),
-                              w[static_cast<std::size_t>(i)]));
-  e->push(Command::setParam(10, P::FxRandomNote::key, key));
-  e->push(Command::setParam(10, P::FxRandomNote::low, low));
-  e->push(Command::setParam(10, P::FxRandomNote::high, high));
+    engine->push(Command::setParam(10, static_cast<std::uint8_t>(P::FxRandomNote::w0 + i),
+                                   w[static_cast<std::size_t>(i)]));
+  engine->push(Command::setParam(10, P::FxRandomNote::key, key));
+  engine->push(Command::setParam(10, P::FxRandomNote::low, low));
+  engine->push(Command::setParam(10, P::FxRandomNote::high, high));
   std::vector<int> got;
   for (int i = 0; i < presses; ++i) {
-    e->push(Command::press(1, true));
-    render(*e, 480);
-    got.push_back(midiOf(pitches(*e).at(0)));
-    e->push(Command::press(1, false));
-    render(*e, 2400);
+    engine->push(Command::press(1, true));
+    render(*engine, 480);
+    got.push_back(midiOf(pitches(*engine).at(0)));
+    engine->push(Command::press(1, false));
+    render(*engine, 2400);
   }
   return got;
 }
@@ -348,15 +352,15 @@ TEST_CASE(
 TEST_CASE(
     "R10h Random Note with Silent Keys: each held key gets its own random note, picked again at "
     "each strike; then Chord, then Arpeggiator") {
-  auto e = toneAndKeys({BlockType::FxRandomNote}, true);
+  auto engine = toneAndKeys({BlockType::FxRandomNote}, true);
   for (int k : {50, 57})
-    e->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
+    engine->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
   std::vector<std::vector<int>> strikes;
   for (int i = 0; i < 12; ++i) {
-    e->push(Command::press(1, true));
-    render(*e, 480);
+    engine->push(Command::press(1, true));
+    render(*engine, 480);
     std::vector<int> got;
-    for (double p : pitches(*e))
+    for (double p : pitches(*engine))
       got.push_back(midiOf(p));
     for (int k : got) {
       CHECK(k >= 60);
@@ -366,8 +370,8 @@ TEST_CASE(
     CHECK(!got.empty());
     CHECK(got.size() <= 2);
     strikes.push_back(got);
-    e->push(Command::press(1, false));
-    render(*e, 2400);
+    engine->push(Command::press(1, false));
+    render(*engine, 2400);
   }
   CHECK(std::count_if(strikes.begin(), strikes.end(),
                       [&](const auto& g) { return g != strikes[0]; }) > 0);  // picked again
@@ -391,17 +395,17 @@ TEST_CASE(
     "go with its key") {
   // Owner bug, 2026-11-19: through Random Note a polyphonic keyboard sounded one note, flicking
   // between the held keys.
-  auto e = toneAndKeys({BlockType::FxRandomNote});
-  e->push(Command::setParam(2, P::InputComputerKeyboard::isPolyphonic, 1));
+  auto engine = toneAndKeys({BlockType::FxRandomNote});
+  engine->push(Command::setParam(2, P::InputComputerKeyboard::isPolyphonic, 1));
   for (int k : {40, 41, 42}) {
-    e->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
-    render(*e, 480);
+    engine->push(Command::noteOn(KB, static_cast<std::uint8_t>(k)));
+    render(*engine, 480);
   }
-  const auto held = pitches(*e);
+  const auto held = pitches(*engine);
   CHECK(held.size() == 3);
-  e->push(Command::noteOff(KB, 41));
-  render(*e, 4800);
-  const auto two = pitches(*e);
+  engine->push(Command::noteOff(KB, 41));
+  render(*engine, 4800);
+  const auto two = pitches(*engine);
   CHECK(two.size() == 2);
   for (double p : two)
     CHECK(std::find_if(held.begin(), held.end(), [&](double h) { return near(h, p); }) !=
@@ -411,22 +415,22 @@ TEST_CASE(
 TEST_CASE(
     "CHG-0017: joining or leaving a note effect starts clean, and plain sources are untouched "
     "(R12)") {
-  auto e = toneAndKeys();
-  e->push(Command::noteOn(KB, 60));
-  render(*e, 480);
-  CHECK(are(pitches(*e), {hz(60)}));
-  e->push(Command::add(10, BlockType::FxChord, 3,
-                       0));  // the Tone becomes arranged: the held key is dropped
-  render(*e, 480);
-  CHECK(e->block(1)->arranged);
-  CHECK(pitches(*e).empty());
-  e->push(Command::noteOn(KB, 60));
-  render(*e, 480);
-  CHECK(pitches(*e).size() == 3);
-  e->push(Command::remove(10));
-  render(*e, 480);
-  CHECK_FALSE(e->block(1)->arranged);
-  CHECK(pitches(*e).empty());
+  auto engine = toneAndKeys();
+  engine->push(Command::noteOn(KB, 60));
+  render(*engine, 480);
+  CHECK(are(pitches(*engine), {hz(60)}));
+  engine->push(Command::add(10, BlockType::FxChord, 3,
+                            0));  // the Tone becomes arranged: the held key is dropped
+  render(*engine, 480);
+  CHECK(engine->block(1)->arranged);
+  CHECK(pitches(*engine).empty());
+  engine->push(Command::noteOn(KB, 60));
+  render(*engine, 480);
+  CHECK(pitches(*engine).size() == 3);
+  engine->push(Command::remove(10));
+  render(*engine, 480);
+  CHECK_FALSE(engine->block(1)->arranged);
+  CHECK(pitches(*engine).empty());
   const auto run = [](std::uint32_t block) {
     auto x = toneAndKeys({BlockType::FxChord, BlockType::FxArpeggiator}, true);
     x->push(Command::add(5, BlockType::PowerEmitter, -10, 0));
@@ -446,24 +450,24 @@ TEST_CASE(
 TEST_CASE(
     "CHG-0019 Touchpad: a slide moves the held key for an Arpeggiator, which then plays the note "
     "slid to") {
-  auto e = makeEngine(48000, 1, false);
+  auto engine = makeEngine(48000, 1, false);
   const BlockType TOUCHPAD = BlockType::InputTouchpad;
-  e->push(Command::add(1, BlockType::SourceTone, 0, 0));
-  e->push(Command::add(2, TOUCHPAD, 0, -3));
-  e->push(Command::add(10, BlockType::FxArpeggiator, 3, 0));
-  e->push(Command::setParam(10, P::FxArpeggiator::sync, 0));
-  e->push(Command::setParam(10, P::FxArpeggiator::speed, 20));
+  engine->push(Command::add(1, BlockType::SourceTone, 0, 0));
+  engine->push(Command::add(2, TOUCHPAD, 0, -3));
+  engine->push(Command::add(10, BlockType::FxArpeggiator, 3, 0));
+  engine->push(Command::setParam(10, P::FxArpeggiator::sync, 0));
+  engine->push(Command::setParam(10, P::FxArpeggiator::speed, 20));
   Command a = Command::noteOn(TOUCHPAD, 52);
   a.id = 2;
   Command b = Command::noteOn(TOUCHPAD, 59);
   b.id = 2;
-  e->push(a);
-  e->push(b);
+  engine->push(a);
+  engine->push(b);
   const auto heard = [&](int ms) {
     std::vector<double> out;
     for (int t = 0; t < ms; t += 5) {
-      render(*e, 240);
-      for (double f : pitches(*e))
+      render(*engine, 240);
+      for (double f : pitches(*engine))
         if (std::none_of(out.begin(), out.end(), [&](double g) { return near(f, g); }))
           out.push_back(f);
     }
@@ -473,40 +477,41 @@ TEST_CASE(
   CHECK(are(heard(400), {hz(52), hz(59)}));
   Command slide = Command::noteExpression(TOUCHPAD, 52, 0, Command::Expression::Bend, 3.0);
   slide.id = 2;  // E → G
-  e->push(slide);
-  render(*e, 240);
+  engine->push(slide);
+  render(*engine, 240);
   CHECK(are(heard(400), {hz(55), hz(59)}));
 }
 
 TEST_CASE(
     "CHG-0019 Touchpad: its pads play like a keyboard's keys (poly by default); a slide bends the "
     "held note, no new attack") {
-  auto e = makeEngine(48000, 1, false);
+  auto engine = makeEngine(48000, 1, false);
   const BlockType TOUCHPAD = BlockType::InputTouchpad;
-  e->push(Command::add(1, BlockType::SourceTone, 0, 0));
-  e->push(Command::add(2, TOUCHPAD, 0, -3));
+  engine->push(Command::add(1, BlockType::SourceTone, 0, 0));
+  engine->push(Command::add(2, TOUCHPAD, 0, -3));
   Command a = Command::noteOn(TOUCHPAD, 52);
   a.id = 2;  // the page names the Touchpad block the pad is on
   Command b = Command::noteOn(TOUCHPAD, 55);
   b.id = 2;
-  e->push(a);
-  e->push(b);
-  render(*e, 480);
-  CHECK(are(pitches(*e), {hz(52), hz(55)}));  // two pads, two voices
-  const auto strikes = eventsOf(*e, Event::Type::GateOn, 1).size();
+  engine->push(a);
+  engine->push(b);
+  render(*engine, 480);
+  CHECK(are(pitches(*engine), {hz(52), hz(55)}));  // two pads, two voices
+  const auto strikes = eventsOf(*engine, Event::Type::GateOn, 1).size();
   Command slide = Command::noteExpression(TOUCHPAD, 52, 0, Command::Expression::Bend, 1.0);
   slide.id = 2;  // E → F
-  e->push(slide);
-  render(*e, 480);
-  CHECK(are(pitches(*e), {hz(53), hz(55)}));
-  CHECK(eventsOf(*e, Event::Type::GateOn, 1).size() == strikes);  // legato: nothing struck again
+  engine->push(slide);
+  render(*engine, 480);
+  CHECK(are(pitches(*engine), {hz(53), hz(55)}));
+  CHECK(eventsOf(*engine, Event::Type::GateOn, 1).size() ==
+        strikes);  // legato: nothing struck again
   Command off = Command::noteOff(TOUCHPAD, 52);
   off.id = 2;
-  e->push(off);
-  render(*e, 480);
-  CHECK(are(pitches(*e), {hz(55)}));
+  engine->push(off);
+  render(*engine, 480);
+  CHECK(are(pitches(*engine), {hz(55)}));
   // Octave moves every pad, as a keyboard's.
-  e->push(Command::setParam(2, P::InputTouchpad::transpose, 1));
-  render(*e, 480);
-  CHECK(are(pitches(*e), {hz(67)}));
+  engine->push(Command::setParam(2, P::InputTouchpad::transpose, 1));
+  render(*engine, 480);
+  CHECK(are(pitches(*engine), {hz(67)}));
 }

@@ -32,8 +32,8 @@ std::string hex(std::uint64_t v) {
   return b;
 }
 
-void writeWav(const std::string& path, const std::vector<float>& l, const std::vector<float>& r,
-              int sr) {
+void writeWav(const std::string& path, const std::vector<float>& left,
+              const std::vector<float>& right, int sr) {
   std::ofstream f(path, std::ios::binary);
   auto u32 = [&](std::uint32_t v) {
     f.write(reinterpret_cast<const char*>(&v), 4);
@@ -41,7 +41,7 @@ void writeWav(const std::string& path, const std::vector<float>& l, const std::v
   auto u16 = [&](std::uint16_t v) {
     f.write(reinterpret_cast<const char*>(&v), 2);
   };
-  const std::uint32_t dataBytes = static_cast<std::uint32_t>(l.size() * 2 * sizeof(float));
+  const std::uint32_t dataBytes = static_cast<std::uint32_t>(left.size() * 2 * sizeof(float));
   f.write("RIFF", 4);
   u32(36 + dataBytes);
   f.write("WAVE", 4);
@@ -55,9 +55,9 @@ void writeWav(const std::string& path, const std::vector<float>& l, const std::v
   u16(32);
   f.write("data", 4);
   u32(dataBytes);
-  for (std::size_t i = 0; i < l.size(); ++i) {
-    f.write(reinterpret_cast<const char*>(&l[i]), 4);
-    f.write(reinterpret_cast<const char*>(&r[i]), 4);
+  for (std::size_t i = 0; i < left.size(); ++i) {
+    f.write(reinterpret_cast<const char*>(&left[i]), 4);
+    f.write(reinterpret_cast<const char*>(&right[i]), 4);
   }
 }
 
@@ -163,8 +163,8 @@ int main(int argc, char** argv) {
   try {
     std::ifstream in(argv[1]);
     fx = nlohmann::json::parse(in);
-  } catch (const std::exception& e) {
-    std::cerr << "error: " << e.what() << "\n";
+  } catch (const std::exception& error) {
+    std::cerr << "error: " << error.what() << "\n";
     return 1;
   }
   const auto& patchJson = fx.contains("patch") ? fx["patch"] : fx;

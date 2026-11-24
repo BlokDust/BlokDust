@@ -61,8 +61,8 @@ Engine::Engine(const EngineConfig& cfg)
   const int convolvers = kMaxConvolvers / div;
   convolvers_.resize(static_cast<std::size_t>(convolvers));
   userImpulses_.resize(static_cast<std::size_t>(convolvers));
-  for (auto& c : convolvers_)
-    c.reserve(defaultImpulse_->maxTailParts());
+  for (auto& convolver : convolvers_)
+    convolver.reserve(defaultImpulse_->maxTailParts());
   for (auto& k : userImpulses_)
     k.reserve(maxTaps);
   convolverOwner_.assign(static_cast<std::size_t>(convolvers), -1);
@@ -80,8 +80,8 @@ Engine::Engine(const EngineConfig& cfg)
 
 /// R13b: does Stage `b` keep its inner world's particles in flight when it loses power? Not while
 /// this world's POWER switch is off: that clears particles everywhere.
-bool Engine::keepsParticles(const Block& b) const noexcept BLOKDUST_NONBLOCKING {
-  return worldPower_ && b.params[P::SourceStage::keepParticles] != 0.0;
+bool Engine::keepsParticles(const Block& block) const noexcept BLOKDUST_NONBLOCKING {
+  return worldPower_ && block.params[P::SourceStage::keepParticles] != 0.0;
 }
 
 /// A Stage block's inner world (CHG-0021). From here its clock is this engine's: the same sample,
@@ -91,11 +91,11 @@ bool Engine::attachStage(BlockId id, Engine* inner) noexcept {
   const int slot = slotOf(id);
   if (slot < 0 || child_ || inner == this)
     return false;
-  Block& b = blocks_[static_cast<std::size_t>(slot)];
-  if (b.type != BlockType::SourceStage || b.poolIndex < 0 || (inner && !inner->child_))
+  Block& block = blocks_[static_cast<std::size_t>(slot)];
+  if (block.type != BlockType::SourceStage || block.poolIndex < 0 || (inner && !inner->child_))
     return false;
-  stages_[static_cast<std::size_t>(b.poolIndex)] = inner;
-  stageNoteCount_[static_cast<std::size_t>(b.poolIndex)] = 0;
+  stages_[static_cast<std::size_t>(block.poolIndex)] = inner;
+  stageNoteCount_[static_cast<std::size_t>(block.poolIndex)] = 0;
   if (!inner)
     return true;
   inner->hostInput_ = hostInput_;  // the plugins' Microphone is the host input, inside a Stage too
@@ -106,7 +106,7 @@ bool Engine::attachStage(BlockId id, Engine* inner) noexcept {
   inner->tempo_ = tempo_;
   inner->beat_ = beat_;
   inner->worldPower_ = true;
-  inner->apply(Command::worldPower(b.powerOn, -1, keepsParticles(b)));
+  inner->apply(Command::worldPower(block.powerOn, -1, keepsParticles(block)));
   return true;
 }
 
@@ -114,9 +114,9 @@ Engine* Engine::stage(BlockId id) const noexcept {
   const int slot = slotOf(id);
   if (slot < 0)
     return nullptr;
-  const Block& b = blocks_[static_cast<std::size_t>(slot)];
-  return b.type == BlockType::SourceStage && b.poolIndex >= 0
-             ? stages_[static_cast<std::size_t>(b.poolIndex)]
+  const Block& block = blocks_[static_cast<std::size_t>(slot)];
+  return block.type == BlockType::SourceStage && block.poolIndex >= 0
+             ? stages_[static_cast<std::size_t>(block.poolIndex)]
              : nullptr;
 }
 
@@ -124,45 +124,45 @@ bool Engine::attachSample(BlockId id, const SampleBuffer& sb) noexcept {
   const int slot = slotOf(id);
   if (slot < 0)
     return false;
-  Block& b = blocks_[static_cast<std::size_t>(slot)];
-  if (b.type == BlockType::FxConvolver) {
-    if (b.poolIndex < 0)
+  Block& block = blocks_[static_cast<std::size_t>(slot)];
+  if (block.type == BlockType::FxConvolver) {
+    if (block.poolIndex < 0)
       return false;
-    auto& k = userImpulses_[static_cast<std::size_t>(b.poolIndex)];
+    auto& k = userImpulses_[static_cast<std::size_t>(block.poolIndex)];
     k.build(sb.left, sb.right, sb.left ? sb.frames : 0,
             sb.sampleRate > 0 ? sb.sampleRate : sampleRate_, sampleRate_);
-    b.userImpulse = k.valid();
+    block.userImpulse = k.valid();
     return true;
   }
-  if (!isSampler(b.type) && b.type != BlockType::SourceGranular)
+  if (!isSampler(block.type) && block.type != BlockType::SourceGranular)
     return false;
-  b.sampleL = sb.frames ? sb.left : nullptr;
-  b.sampleR = sb.frames ? (sb.right ? sb.right : sb.left) : nullptr;
-  b.sampleFrames = sb.left ? sb.frames : 0;
-  b.sampleRate = sb.sampleRate > 0 ? sb.sampleRate : sampleRate_;
-  for (auto& v : b.voices)
+  block.sampleL = sb.frames ? sb.left : nullptr;
+  block.sampleR = sb.frames ? (sb.right ? sb.right : sb.left) : nullptr;
+  block.sampleFrames = sb.left ? sb.frames : 0;
+  block.sampleRate = sb.sampleRate > 0 ? sb.sampleRate : sampleRate_;
+  for (auto& v : block.voices)
     v.samplePlaying = false;
-  for (auto& g : b.grains)
+  for (auto& g : block.grains)
     g.on = false;
-  if (b.type == BlockType::SourceGranular) {  // v1 SetupGrains: a new file starts at its middle
-                                              // unless the patch says
-    if (b.sampleFrames && b.params[P::SourceGranular::region] <= 0.0)
-      b.params[P::SourceGranular::region] = b.sampleFrames / b.sampleRate / 2.0;
+  if (block.type == BlockType::SourceGranular) {  // v1 SetupGrains: a new file starts at its middle
+                                                  // unless the patch says
+    if (block.sampleFrames && block.params[P::SourceGranular::region] <= 0.0)
+      block.params[P::SourceGranular::region] = block.sampleFrames / block.sampleRate / 2.0;
     return true;
   }
-  if (b.sampleFrames &&
-      b.params[P::SourceSample::endPosition] <= 0.0) {  // v1 Sample.SetBuffers defaults
-    const double dur = b.sampleFrames / b.sampleRate;
-    b.params[P::SourceSample::startPosition] = 0.0;
-    b.params[P::SourceSample::endPosition] = dur;
-    b.params[P::SourceSample::loopStart] = dur * 0.5;
-    b.params[P::SourceSample::loopEnd] = dur;
+  if (block.sampleFrames &&
+      block.params[P::SourceSample::endPosition] <= 0.0) {  // v1 Sample.SetBuffers defaults
+    const double dur = block.sampleFrames / block.sampleRate;
+    block.params[P::SourceSample::startPosition] = 0.0;
+    block.params[P::SourceSample::endPosition] = dur;
+    block.params[P::SourceSample::loopStart] = dur * 0.5;
+    block.params[P::SourceSample::loopEnd] = dur;
   }
-  configureDsp(b);
-  for (auto& v : b.voices)
+  configureDsp(block);
+  for (auto& v : block.voices)
     if (v.active) {  // v1: retrigger if playing
-      v.playhead = b.params[P::SourceSample::startPosition] * b.sampleRate;
-      v.samplePlaying = b.sampleFrames > 0;
+      v.playhead = block.params[P::SourceSample::startPosition] * block.sampleRate;
+      v.samplePlaying = block.sampleFrames > 0;
       v.env.gateOn();
     }
   return true;
@@ -185,110 +185,110 @@ int Engine::FxPool::acquire(int slot) noexcept {
   return -1;
 }
 
-void Engine::acquireDsp(Block& b, int slot) noexcept BLOKDUST_NONBLOCKING {
-  FxPool* pool = b.type == BlockType::FxReverb        ? &reverbPool_
-                 : b.type == BlockType::FxStereoDelay ? &delayPool_
-                 : b.type == BlockType::FxChorus      ? &chorusPool_
-                                                      : nullptr;
-  if (b.type == BlockType::SourceNoise)  // voice 0 keeps the original seed (golden renders); the
-                                         // others derive from it
+void Engine::acquireDsp(Block& block, int slot) noexcept BLOKDUST_NONBLOCKING {
+  FxPool* pool = block.type == BlockType::FxReverb        ? &reverbPool_
+                 : block.type == BlockType::FxStereoDelay ? &delayPool_
+                 : block.type == BlockType::FxChorus      ? &chorusPool_
+                                                          : nullptr;
+  if (block.type == BlockType::SourceNoise)  // voice 0 keeps the original seed (golden renders);
+                                             // the others derive from it
     for (int v = 0; v < kVoices; ++v)
-      b.voices[static_cast<std::size_t>(v)].noise.seed(
-          seed_ * 0x9E3779B97F4A7C15ULL + b.id + static_cast<std::uint64_t>(v) * 0x1000193ULL);
-  if (b.type == BlockType::FxConvolver) {
+      block.voices[static_cast<std::size_t>(v)].noise.seed(
+          seed_ * 0x9E3779B97F4A7C15ULL + block.id + static_cast<std::uint64_t>(v) * 0x1000193ULL);
+  if (block.type == BlockType::FxConvolver) {
     for (int i = 0; i < static_cast<int>(convolverOwner_.size()); ++i)
       if (convolverOwner_[static_cast<std::size_t>(i)] < 0) {
         convolverOwner_[static_cast<std::size_t>(i)] = static_cast<std::int16_t>(slot);
         convolvers_[static_cast<std::size_t>(i)].reset();
-        b.poolIndex = static_cast<std::int16_t>(i);
-        b.userImpulse = false;
+        block.poolIndex = static_cast<std::int16_t>(i);
+        block.userImpulse = false;
         break;
       }
     return;
   }
-  if (b.type == BlockType::SourceStage) {  // a place for an inner world (none in a child: depth 2,
-                                           // SCOPE-0006)
+  if (block.type == BlockType::SourceStage) {  // a place for an inner world (none in a child: depth
+                                               // 2, SCOPE-0006)
     if (!child_)
       for (int i = 0; i < kMaxStages; ++i)
         if (stageOwner_[static_cast<std::size_t>(i)] < 0) {
           stageOwner_[static_cast<std::size_t>(i)] = static_cast<std::int16_t>(slot);
           stages_[static_cast<std::size_t>(i)] = nullptr;
           stageNoteCount_[static_cast<std::size_t>(i)] = 0;
-          b.poolIndex = static_cast<std::int16_t>(i);
+          block.poolIndex = static_cast<std::int16_t>(i);
           break;
         }
     return;
   }
-  if (b.type == BlockType::PowerSoundLaser) {
+  if (block.type == BlockType::PowerSoundLaser) {
     for (int i = 0; i < kMaxListeners; ++i)
       if (listenerOwner_[static_cast<std::size_t>(i)] < 0) {
         listenerOwner_[static_cast<std::size_t>(i)] = static_cast<std::int16_t>(slot);
-        b.poolIndex = static_cast<std::int16_t>(i);
+        block.poolIndex = static_cast<std::int16_t>(i);
         break;
       }
     return;
   }
-  if (b.type == BlockType::FxCompressor) {
+  if (block.type == BlockType::FxCompressor) {
     for (int i = 0; i < static_cast<int>(compressorOwner_.size()); ++i)
       if (compressorOwner_[static_cast<std::size_t>(i)] < 0) {
         compressorOwner_[static_cast<std::size_t>(i)] = static_cast<std::int16_t>(slot);
         compressors_[static_cast<std::size_t>(i)].reset();
-        b.poolIndex = static_cast<std::int16_t>(i);
-        b.mon[0] = -100.0f;
+        block.poolIndex = static_cast<std::int16_t>(i);
+        block.mon[0] = -100.0f;
         break;
       }
     return;
   }
-  if (b.type == BlockType::FxPitchShifter)
+  if (block.type == BlockType::FxPitchShifter)
     pool = &pitchPool_;
   if (!pool)
     return;
-  b.poolIndex = static_cast<std::int16_t>(pool->acquire(slot));
-  if (b.poolIndex < 0)
+  block.poolIndex = static_cast<std::int16_t>(pool->acquire(slot));
+  if (block.poolIndex < 0)
     return;  // exhausted: the effect passes audio through unchanged
-  const int i = b.poolIndex;
-  if (b.type == BlockType::FxReverb)
+  const int i = block.poolIndex;
+  if (block.type == BlockType::FxReverb)
     for (int k = 0; k < 8; ++k)
-      b.reverb.comb[static_cast<std::size_t>(k)].attach(pool->line(i, k));
-  if (b.type == BlockType::FxStereoDelay) {
-    b.pingpong.dl.attach(pool->line(i, 0));
-    b.pingpong.dr.attach(pool->line(i, 1));
-    b.pingpong.pre.attach(pool->line(i, 2));
+      block.reverb.comb[static_cast<std::size_t>(k)].attach(pool->line(i, k));
+  if (block.type == BlockType::FxStereoDelay) {
+    block.pingpong.dl.attach(pool->line(i, 0));
+    block.pingpong.dr.attach(pool->line(i, 1));
+    block.pingpong.pre.attach(pool->line(i, 2));
   }
-  if (b.type == BlockType::FxPitchShifter) {
-    b.pitchshift.aL.attach(pool->line(i, 0));
-    b.pitchshift.aR.attach(pool->line(i, 1));
-    b.pitchshift.bL.attach(pool->line(i, 2));
-    b.pitchshift.bR.attach(pool->line(i, 3));
+  if (block.type == BlockType::FxPitchShifter) {
+    block.pitchshift.aL.attach(pool->line(i, 0));
+    block.pitchshift.aR.attach(pool->line(i, 1));
+    block.pitchshift.bL.attach(pool->line(i, 2));
+    block.pitchshift.bR.attach(pool->line(i, 3));
   }
-  if (b.type == BlockType::FxChorus) {
-    b.chorus.dl.attach(pool->line(i, 0));
-    b.chorus.dr.attach(pool->line(i, 1));
-    b.chorus.qL.attach(pool->line(i, 2));
-    b.chorus.qR.attach(pool->line(i, 3));
+  if (block.type == BlockType::FxChorus) {
+    block.chorus.dl.attach(pool->line(i, 0));
+    block.chorus.dr.attach(pool->line(i, 1));
+    block.chorus.qL.attach(pool->line(i, 2));
+    block.chorus.qR.attach(pool->line(i, 3));
   }
 }
 
-void Engine::releaseDsp(Block& b) noexcept BLOKDUST_NONBLOCKING {
-  if (b.type == BlockType::FxReverb)
-    reverbPool_.release(b.poolIndex);
-  if (b.type == BlockType::FxStereoDelay)
-    delayPool_.release(b.poolIndex);
-  if (b.type == BlockType::FxChorus)
-    chorusPool_.release(b.poolIndex);
-  if (b.type == BlockType::FxPitchShifter)
-    pitchPool_.release(b.poolIndex);
-  if (b.type == BlockType::FxConvolver && b.poolIndex >= 0)
-    convolverOwner_[static_cast<std::size_t>(b.poolIndex)] = -1;
-  if (b.type == BlockType::SourceStage && b.poolIndex >= 0) {
-    stageOwner_[static_cast<std::size_t>(b.poolIndex)] = -1;
-    stages_[static_cast<std::size_t>(b.poolIndex)] = nullptr;
+void Engine::releaseDsp(Block& block) noexcept BLOKDUST_NONBLOCKING {
+  if (block.type == BlockType::FxReverb)
+    reverbPool_.release(block.poolIndex);
+  if (block.type == BlockType::FxStereoDelay)
+    delayPool_.release(block.poolIndex);
+  if (block.type == BlockType::FxChorus)
+    chorusPool_.release(block.poolIndex);
+  if (block.type == BlockType::FxPitchShifter)
+    pitchPool_.release(block.poolIndex);
+  if (block.type == BlockType::FxConvolver && block.poolIndex >= 0)
+    convolverOwner_[static_cast<std::size_t>(block.poolIndex)] = -1;
+  if (block.type == BlockType::SourceStage && block.poolIndex >= 0) {
+    stageOwner_[static_cast<std::size_t>(block.poolIndex)] = -1;
+    stages_[static_cast<std::size_t>(block.poolIndex)] = nullptr;
   }
-  if (b.type == BlockType::PowerSoundLaser && b.poolIndex >= 0)
-    listenerOwner_[static_cast<std::size_t>(b.poolIndex)] = -1;
-  if (b.type == BlockType::FxCompressor && b.poolIndex >= 0)
-    compressorOwner_[static_cast<std::size_t>(b.poolIndex)] = -1;
-  b.poolIndex = -1;
+  if (block.type == BlockType::PowerSoundLaser && block.poolIndex >= 0)
+    listenerOwner_[static_cast<std::size_t>(block.poolIndex)] = -1;
+  if (block.type == BlockType::FxCompressor && block.poolIndex >= 0)
+    compressorOwner_[static_cast<std::size_t>(block.poolIndex)] = -1;
+  block.poolIndex = -1;
 }
 
 bool Engine::mapAutomation(BlockType t, std::uint8_t param, double v, double& out) noexcept {

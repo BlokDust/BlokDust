@@ -18,16 +18,16 @@ struct Run {
 Run run(std::uint64_t seed, bool powered, std::vector<Command> extra = {}, double seconds = 3.0) {
   for (std::size_t i = 0; i < ramp.size(); ++i)
     ramp[i] = static_cast<float>(i) / static_cast<float>(ramp.size());
-  auto e = makeEngine(48000, seed, false);
-  e->push(Command::add(1, BlockType::SourceGranular, 0, 0));
+  auto engine = makeEngine(48000, seed, false);
+  engine->push(Command::add(1, BlockType::SourceGranular, 0, 0));
   if (powered)
-    e->push(Command::add(2, BlockType::PowerPower, -3, 0));
+    engine->push(Command::add(2, BlockType::PowerPower, -3, 0));
   for (const auto& c : extra)
-    e->push(c);
-  render(*e, 128);
-  REQUIRE(e->attachSample(
+    engine->push(c);
+  render(*engine, 128);
+  REQUIRE(engine->attachSample(
       1, SampleBuffer{ramp.data(), nullptr, static_cast<std::uint32_t>(ramp.size()), 48000.0}));
-  auto out = render(*e, static_cast<std::int64_t>(seconds * 48000));
+  auto out = render(*engine, static_cast<std::int64_t>(seconds * 48000));
   return {out, hash::audio(out)};
 }
 double rmsOf(const std::vector<float>& x, std::size_t a, std::size_t b) {
@@ -96,18 +96,18 @@ TEST_CASE(
   auto level = [](double slide) {
     for (std::size_t i = 0; i < ramp.size(); ++i)
       ramp[i] = static_cast<float>(i) / static_cast<float>(ramp.size());
-    auto e = makeEngine(48000, 1, false);
-    e->push(Command::add(1, BlockType::SourceGranular, 0, 0));
-    e->push(Command::setParam(1, P::SourceGranular::spread, 0.2));
-    e->push(Command::add(3, BlockType::InputMidiController, 0, 3));
-    e->push(Command::setParam(3, P::InputMidiController::mpe, 1));
-    render(*e, 128);
-    REQUIRE(e->attachSample(
+    auto engine = makeEngine(48000, 1, false);
+    engine->push(Command::add(1, BlockType::SourceGranular, 0, 0));
+    engine->push(Command::setParam(1, P::SourceGranular::spread, 0.2));
+    engine->push(Command::add(3, BlockType::InputMidiController, 0, 3));
+    engine->push(Command::setParam(3, P::InputMidiController::mpe, 1));
+    render(*engine, 128);
+    REQUIRE(engine->attachSample(
         1, SampleBuffer{ramp.data(), nullptr, static_cast<std::uint32_t>(ramp.size()), 48000.0}));
-    e->push(Command::noteOn(BlockType::InputMidiController, 60, 1.0, -1, 1));
-    e->push(Command::noteExpression(BlockType::InputMidiController, 60, 1,
-                                    Command::Expression::Slide, slide));
-    const auto out = render(*e, 96000);
+    engine->push(Command::noteOn(BlockType::InputMidiController, 60, 1.0, -1, 1));
+    engine->push(Command::noteExpression(BlockType::InputMidiController, 60, 1,
+                                         Command::Expression::Slide, slide));
+    const auto out = render(*engine, 96000);
     return rmsOf(out, 9600, 96000);
   };
   CHECK(level(0.9) > 3.0 * level(0.1));
@@ -120,25 +120,25 @@ TEST_CASE(
     "silent ones none") {
   for (std::size_t i = 0; i < ramp.size(); ++i)
     ramp[i] = static_cast<float>(i) / static_cast<float>(ramp.size());
-  auto e = makeEngine(48000, 1, false);
-  e->push(Command::add(1, BlockType::SourceSample, 0, 0));
-  e->push(Command::add(3, BlockType::SourceGranular, 20, 0));
-  render(*e, 128);
-  REQUIRE(e->attachSample(
+  auto engine = makeEngine(48000, 1, false);
+  engine->push(Command::add(1, BlockType::SourceSample, 0, 0));
+  engine->push(Command::add(3, BlockType::SourceGranular, 20, 0));
+  render(*engine, 128);
+  REQUIRE(engine->attachSample(
       1, SampleBuffer{ramp.data(), nullptr, static_cast<std::uint32_t>(ramp.size()), 48000.0}));
-  REQUIRE(e->attachSample(
+  REQUIRE(engine->attachSample(
       3, SampleBuffer{ramp.data(), nullptr, static_cast<std::uint32_t>(ramp.size()), 48000.0}));
   std::array<Engine::Playhead, 64> ph{};
-  CHECK(e->playheads(ph.data(), 64) == 0);  // nothing playing
-  e->push(Command::press(1, true));         // hold the Sample (v1: plays from its start)
-  render(*e, 24000);                        // 0.5 s
-  int n = e->playheads(ph.data(), 64);
+  CHECK(engine->playheads(ph.data(), 64) == 0);  // nothing playing
+  engine->push(Command::press(1, true));         // hold the Sample (v1: plays from its start)
+  render(*engine, 24000);                        // 0.5 s
+  int n = engine->playheads(ph.data(), 64);
   REQUIRE(n == 1);
   CHECK(ph[0].block == 1);
   CHECK(std::abs(ph[0].seconds - 0.5) < 0.01);
-  e->push(Command::add(4, BlockType::PowerPower, 17, 0));  // power the Granular
-  render(*e, 48000);
-  n = e->playheads(ph.data(), 64);
+  engine->push(Command::add(4, BlockType::PowerPower, 17, 0));  // power the Granular
+  render(*engine, 48000);
+  n = engine->playheads(ph.data(), 64);
   int grains = 0;
   for (int i = 0; i < n; ++i)
     if (ph[static_cast<std::size_t>(i)].block == 3) {
@@ -166,14 +166,15 @@ TEST_CASE(
   for (std::size_t i = 0; i < sine.size(); ++i)
     sine[i] = static_cast<float>(std::sin(2.0 * 3.141592653589793 * 220.0 * double(i) / 48000.0));
   auto played = [&](int note) {
-    auto e = makeEngine(48000, 1, false);
-    e->push(Command::add(1, BlockType::SourceGranular, 0, 0));
-    e->push(Command::add(2, BlockType::InputComputerKeyboard, -3, 0));
-    render(*e, 128);
-    REQUIRE(e->attachSample(
+    auto engine = makeEngine(48000, 1, false);
+    engine->push(Command::add(1, BlockType::SourceGranular, 0, 0));
+    engine->push(Command::add(2, BlockType::InputComputerKeyboard, -3, 0));
+    render(*engine, 128);
+    REQUIRE(engine->attachSample(
         1, SampleBuffer{sine.data(), nullptr, static_cast<std::uint32_t>(sine.size()), 48000.0}));
-    e->push(Command::noteOn(BlockType::InputComputerKeyboard, static_cast<std::uint8_t>(note)));
-    const auto out = render(*e, 48000);
+    engine->push(
+        Command::noteOn(BlockType::InputComputerKeyboard, static_cast<std::uint8_t>(note)));
+    const auto out = render(*engine, 48000);
     return crossings(out, 9600, 48000);
   };
   const double low = played(48), high = played(60);  // an octave apart
@@ -188,24 +189,24 @@ TEST_CASE(
   std::vector<float> sine(48000 * 4);
   for (std::size_t i = 0; i < sine.size(); ++i)
     sine[i] = static_cast<float>(std::sin(2.0 * 3.141592653589793 * 220.0 * double(i) / 48000.0));
-  auto e = makeEngine(48000, 1, false);
-  e->push(Command::add(1, BlockType::SourceGranular, 0, 0));
-  e->push(Command::add(2, BlockType::InputComputerKeyboard, -3, 0));
-  render(*e, 128);
-  REQUIRE(e->attachSample(
+  auto engine = makeEngine(48000, 1, false);
+  engine->push(Command::add(1, BlockType::SourceGranular, 0, 0));
+  engine->push(Command::add(2, BlockType::InputComputerKeyboard, -3, 0));
+  render(*engine, 128);
+  REQUIRE(engine->attachSample(
       1, SampleBuffer{sine.data(), nullptr, static_cast<std::uint32_t>(sine.size()), 48000.0}));
-  e->push(Command::noteOn(BlockType::InputComputerKeyboard, 48));
-  const double first = crossings(render(*e, 48000), 9600, 48000);
+  engine->push(Command::noteOn(BlockType::InputComputerKeyboard, 48));
+  const double first = crossings(render(*engine, 48000), 9600, 48000);
   SECTION("legato: the next key while the first is held") {
-    e->push(Command::noteOn(BlockType::InputComputerKeyboard, 60));
-    const double second = crossings(render(*e, 48000), 9600, 48000);
+    engine->push(Command::noteOn(BlockType::InputComputerKeyboard, 60));
+    const double second = crossings(render(*engine, 48000), 9600, 48000);
     CHECK(second / first > 1.8);
   }
   SECTION("after a release") {
-    e->push(Command::noteOff(BlockType::InputComputerKeyboard, 48));
-    render(*e, 4800);
-    e->push(Command::noteOn(BlockType::InputComputerKeyboard, 60));
-    const double second = crossings(render(*e, 48000), 9600, 48000);
+    engine->push(Command::noteOff(BlockType::InputComputerKeyboard, 48));
+    render(*engine, 4800);
+    engine->push(Command::noteOn(BlockType::InputComputerKeyboard, 60));
+    const double second = crossings(render(*engine, 48000), 9600, 48000);
     CHECK(second / first > 1.8);
   }
 }
