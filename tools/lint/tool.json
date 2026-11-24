@@ -1,7 +1,15 @@
 {
   "name": "lint",
-  "summary": "Every static check in one command (CHG-0045): tsc for web, server, tools/tests/shared and the glossary; ESLint (typescript-eslint strict type-checked, no any) with a suppression baseline that may only shrink. `--staged` checks what is staged (the pre-commit hook); `install` sets that hook (bd size + bd lint).",
-  "usage": ["pnpm bd lint", "pnpm bd lint --staged", "pnpm bd lint --only eslint --fix", "pnpm bd lint baseline", "pnpm bd lint prune", "pnpm bd lint install"],
-  "outputs": "JSON {staged, outcomes{check: pass|fail|skip}, failed[]} on stdout; findings on stderr; exit 1 on any failure",
+  "summary": "Every static check in one command (CHG-0045): tsc for web, server, tools/tests/shared and the glossary; Prettier; ESLint (typescript-eslint strict type-checked, no any); clang-format and clang-tidy (pinned LLVM in .cache, `setup`). ESLint and clang-tidy findings have baselines that may only shrink (`prune` lowers them). `--staged` checks what is staged (the pre-commit hook); `install` sets that hook (bd size + bd lint).",
+  "usage": [
+    "pnpm bd lint",
+    "pnpm bd lint --staged",
+    "pnpm bd lint --only eslint --fix",
+    "pnpm bd lint setup",
+    "pnpm bd lint baseline",
+    "pnpm bd lint prune",
+    "pnpm bd lint install"
+  ],
+  "outputs": "JSON {staged, outcomes{check: pass|fail|skip}, failed[]} on stdout; findings on stderr; exit 1 on any failure. Baselines: eslint-suppressions.json, tools/lint/clang-tidy-baseline.json",
   "deterministic": true
 }

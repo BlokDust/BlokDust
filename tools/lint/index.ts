@@ -1,27 +1,30 @@
 // bd lint (CHG-0045): type checks, ESLint, formatting, comments and C++ checks in one command.
 //   pnpm bd lint [--staged] [--only eslint,typecheck] [--fix]
-//   pnpm bd lint baseline     record today's ESLint findings in eslint-suppressions.json
-//   pnpm bd lint prune        drop suppressions that no longer occur
+//   pnpm bd lint baseline     record today's findings (eslint-suppressions.json, clang-tidy-baseline.json)
+//   pnpm bd lint prune        lower the baselines to what is found now (never raises them)
 //   pnpm bd lint setup        install the pinned clang-format and clang-tidy into .cache (uv)
 //   pnpm bd lint install      install the pre-commit hook (bd size + bd lint --staged)
 import { installPreCommitHook } from '../lib/pre-commit-hook.ts';
 import { runCommand, type CheckOutcome, type LintCheck } from './check.ts';
+import { pruneBaseline, recordBaseline } from './baseline.ts';
+import { CLANG_TIDY_BASELINE, clangTidy, collectClangTidyFindings } from './clang-tidy.ts';
 import { clangFormat, setUpLlvmTools } from './cxx.ts';
 import { eslint, prettier, typecheck } from './typescript.ts';
 import { selectFiles } from './files.ts';
 
 const args = process.argv.slice(2);
-const subcommand = args[0]?.startsWith('--') === false ? args[0] : 'check';
+const firstArg = args[0] ?? '';
+const subcommand = firstArg !== '' && !firstArg.startsWith('--') ? firstArg : 'check';
 const valueAfter = (flag: string) => {
   const index = args.indexOf(flag);
   return index === -1 ? undefined : args[index + 1];
 };
 
-const ALL_CHECKS: LintCheck[] = [typecheck, prettier, eslint, clangFormat];
+const ALL_CHECKS: LintCheck[] = [typecheck, prettier, eslint, clangFormat, clangTidy];
 const ESLINT = 'node_modules/.bin/eslint';
 const ESLINT_TS_CONFIG_FLAG = ['--flag', 'unstable_native_nodejs_ts_config'];
 
-function runChecks(): void {
+async function runChecks(): Promise<void> {
   const selection = selectFiles(args.includes('--staged'));
   const onlyNames = valueAfter('--only')?.split(',');
   const checks = onlyNames
@@ -30,7 +33,7 @@ function runChecks(): void {
   const outcomes: Record<string, CheckOutcome> = {};
   for (const check of checks) {
     console.error(`\n== ${check.name}`);
-    outcomes[check.name] = check.run(selection, { fix: args.includes('--fix') });
+    outcomes[check.name] = await check.run(selection, { fix: args.includes('--fix') });
   }
   const failed = Object.keys(outcomes).filter((name) => outcomes[name] === 'fail');
   console.log(JSON.stringify({ staged: selection.stagedOnly, outcomes, failed }));
@@ -42,17 +45,24 @@ function runChecks(): void {
   }
 }
 
+/** Record (or lower) every baseline: ESLint's suppressions and our own counted ones. */
+async function updateBaselines(mode: 'record' | 'prune'): Promise<boolean> {
+  const eslintFlag = mode === 'record' ? '--suppress-all' : '--prune-suppressions';
+  const eslintOk = runCommand(ESLINT, [...ESLINT_TS_CONFIG_FLAG, eslintFlag, '.']);
+  const everything = selectFiles(false);
+  const tidyFindings = await collectClangTidyFindings(everything);
+  if (mode === 'record') recordBaseline(CLANG_TIDY_BASELINE, tidyFindings);
+  else pruneBaseline(CLANG_TIDY_BASELINE, tidyFindings, everything.files);
+  return eslintOk;
+}
+
 switch (subcommand) {
   case 'check':
-    runChecks();
+    await runChecks();
     break;
   case 'baseline':
-    process.exit(runCommand(ESLINT, [...ESLINT_TS_CONFIG_FLAG, '--suppress-all', '.']) ? 0 : 1);
-    break;
   case 'prune':
-    process.exit(
-      runCommand(ESLINT, [...ESLINT_TS_CONFIG_FLAG, '--prune-suppressions', '.']) ? 0 : 1,
-    );
+    process.exit((await updateBaselines(subcommand === 'baseline' ? 'record' : 'prune')) ? 0 : 1);
     break;
   case 'setup':
     process.exit(setUpLlvmTools() ? 0 : 1);

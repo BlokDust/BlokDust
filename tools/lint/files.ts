@@ -18,7 +18,10 @@ function gitFileList(args: string[]): string[] {
 export function selectFiles(stagedOnly: boolean): FileSelection {
   const files = stagedOnly
     ? gitFileList(['diff', '--cached', '--name-only', '--diff-filter=ACMR'])
-    : gitFileList(['ls-files']);
+    : [
+        ...gitFileList(['ls-files']),
+        ...gitFileList(['ls-files', '--others', '--exclude-standard']),
+      ];
   return { stagedOnly, files };
 }
 

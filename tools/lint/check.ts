@@ -8,7 +8,7 @@ export interface CheckOptions {
 
 export interface LintCheck {
   name: string;
-  run: (selection: FileSelection, options: CheckOptions) => CheckOutcome;
+  run: (selection: FileSelection, options: CheckOptions) => CheckOutcome | Promise<CheckOutcome>;
 }
 
 export type CheckOutcome = 'pass' | 'fail' | 'skip';

@@ -1165,11 +1165,6 @@
       "count": 4
     }
   },
-  "tools/lint/index.ts": {
-    "@typescript-eslint/no-unnecessary-boolean-literal-compare": {
-      "count": 1
-    }
-  },
   "tools/new/index.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
