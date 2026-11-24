@@ -1,15 +1,16 @@
-// Plays a patch in a fresh WASM engine, offline (SPEC-SHARING-VIDEO-EXPORT R1–R2, SHARING-0007): timed commands and
-// samples, each given to the engine before the 128-frame quantum it is timed for, as the AudioWorklet does. Determinism
-// (SIMULATION-0001) makes the same patch give the same audio and particles every time. No DOM: runs in Node too.
+// Plays a patch offline in a fresh WASM engine (SPEC-SHARING-VIDEO-EXPORT R1–R2): each command
+// and sample before its 128-frame quantum, as the worklet does. Deterministic (SIMULATION-0001).
 import { CommandType, WasmEngine, type Command } from '../engine/wasmEngine.ts';
 import { BLOCKS, BLOCKS_BY_ID } from '../generated/blocks.gen.ts';
 import type { StageBlock } from '../stage/drawWorld.ts';
 import { starPos } from '../stage/starPos.ts';
 
-/** The AudioWorklet's render quantum: the worklet hands the engine its commands only between quanta. */
+/** The AudioWorklet's render quantum: the worklet hands the engine its commands only between
+ * quanta. */
 export const QUANTUM = 128;
 
-/** What the engine is given before the quantum that starts at `frame`: commands, or sample attachment `sample`. */
+/** What the engine is given before the quantum that starts at `frame`: commands, or sample
+ * attachment `sample`. */
 export type LogEntry = { frame: number; commands: Command[] } | { frame: number; sample: number };
 export interface ReplaySample {
   id: number;
@@ -27,7 +28,8 @@ export interface ReplaySource {
   sample(seq: number): ReplaySample | undefined;
 }
 
-/** What the stage draws of the outer world, kept from the commands (a command for a Stage block's inside has `stage`). */
+/** What the stage draws of the outer world, kept from the commands (a command for a Stage block's
+ * inside has `stage`). */
 export function applyToBlocks(
   blocks: Map<number, StageBlock>,
   command: Command,
@@ -66,18 +68,19 @@ export interface Bounds {
   y1: number;
 }
 const extend = (bounds: Bounds, b: StageBlock) => {
-  const o = BLOCKS_BY_ID.get(b.type)?.geometry.outline ?? [
+  const outline = BLOCKS_BY_ID.get(b.type)?.geometry.outline ?? [
     [-1, -1],
     [1, 1],
   ];
-  for (const [x, y] of o) {
+  for (const [x, y] of outline) {
     bounds.x0 = Math.min(bounds.x0, b.x + x);
     bounds.y0 = Math.min(bounds.y0, b.y + y);
     bounds.x1 = Math.max(bounds.x1, b.x + x);
     bounds.y1 = Math.max(bounds.y1, b.y + y);
   }
 };
-/** Grid-unit box around every outer block on the stage at any time in [from, to] (R7). Null: no blocks. */
+/** Grid-unit box around every outer block on the stage at any time in [from, to] (R7). Null: no
+ * blocks. */
 export function blockBounds(entries: LogEntry[], from: number, to: number): Bounds | null {
   const blocks = new Map<number, StageBlock>(),
     bounds: Bounds = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
@@ -144,13 +147,15 @@ export class Replay {
     }
   }
 
-  /** Render whole quanta until `this.frame >= to`. `audio` gets each quantum's output (views: copy what you keep). */
+  /** Render whole quanta until `this.frame >= to`. `audio` gets each quantum's output (views: copy
+   * what you keep). */
   run(to: number, audio?: (left: Float32Array, right: Float32Array) => void): void {
     while (this.frame < to) {
       this.feed();
       const out = this.engine.process(QUANTUM);
       audio?.(out.left, out.right);
-      this.engine.drainEvents(); // as the worklet does every quantum, so the engine's event log never fills
+      // as the worklet does every quantum, so the engine's event log never fills
+      this.engine.drainEvents();
       this.frame += QUANTUM;
     }
   }
