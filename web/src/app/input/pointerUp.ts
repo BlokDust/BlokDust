@@ -85,7 +85,7 @@ export function init(): void {
         stage.redraw();
         return;
       }
-      if (labelDrag && event.pointerId === labelDrag.pointer && !labelDrag.fresh) {
+      if (event.pointerId === labelDrag?.pointer && !labelDrag.fresh) {
         setLabelDrag(null);
         scene.IsDraggingABlock = false;
         stage.redraw();
@@ -118,40 +118,46 @@ export function init(): void {
         return;
       }
       if (labelDrag && (labelDrag.fresh || event.pointerId === labelDrag.pointer)) {
-        const d = labelDrag;
+        const dropped = labelDrag;
         setLabelDrag(null);
-        // Dropped from the menu: type its words. A finger: now, inside the touch (iOS opens the keyboard only for a focus
-        // made while handling it); a mouse: after v1's own mouse-up.
-        if (d.fresh) {
-          if (event.pointerType === 'touch') editLabel(d.id);
+        // Dropped from the menu: type its words. A finger: now, inside the touch (iOS opens the
+        // keyboard only for a focus made while handling it); a mouse: after v1's own mouse-up.
+        if (dropped.fresh) {
+          if (event.pointerType === 'touch') editLabel(dropped.id);
           else
             setTimeout(() => {
-              editLabel(d.id);
+              editLabel(dropped.id);
             }, 0);
         } else {
           const binned =
-            d.moved &&
+            dropped.moved &&
             scene.pointerUp(event.offsetX * dpr(), event.offsetY * dpr(), true) === 'delete';
           scene.IsDraggingABlock = false;
           stage.held.clear();
-          if (d.group) {
+          if (dropped.group) {
             // the selection, led by this label: binned all together, or one move step
             if (binned) {
-              deleteBlocks([...d.group.keys()], d.group, [...selectedLabels], d.labelFrom);
+              deleteBlocks(
+                [...dropped.group.keys()],
+                dropped.group,
+                [...selectedLabels],
+                dropped.labelFrom,
+              );
               setSelection([]);
-            } else if (d.moved) {
-              recordMove([...d.group.keys()], d.group, d.labelFrom);
+            } else if (dropped.moved) {
+              recordMove([...dropped.group.keys()], dropped.group, dropped.labelFrom);
               labelsChanged();
             }
-          } else if (binned) deleteBlocks([], undefined, [d.id], d.labelFrom);
-          else if (d.moved) {
-            recordMove([], new Map(), d.labelFrom);
+          } else if (binned) deleteBlocks([], undefined, [dropped.id], dropped.labelFrom);
+          else if (dropped.moved) {
+            recordMove([], new Map(), dropped.labelFrom);
             labelsChanged();
           }
-          // A click (no move) edits the words, and a selection holding it is let go (as a click on a selected block).
-          if (!d.moved) {
-            if (d.group || selectedLabels.has(d.id)) setSelection([]);
-            editLabel(d.id);
+          // A click (no move) edits the words, and a selection holding it is let go (as a click on
+          // a selected block).
+          if (!dropped.moved) {
+            if (dropped.group || selectedLabels.has(dropped.id)) setSelection([]);
+            editLabel(dropped.id);
           }
           stage.redraw();
           return;
@@ -215,18 +221,20 @@ export function init(): void {
           );
         if (moved && wasGroup && selectedLabels.size) labelsChanged();
       }
-      // A double click on a Stage block looks inside it (the panel's OPEN STAGE does the same; CHG-0021).
+      // A double click on a Stage block looks inside it (the panel's OPEN STAGE does the same;
+      // CHG-0021).
       if (drag && !moved && !event.shiftKey && model.get(drag.id)?.type === 'source.stage') {
         const now = performance.now(),
           id = drag.id;
-        if (stageClick && stageClick.id === id && now - stageClick.t < 450) {
+        if (stageClick?.id === id && now - stageClick.t < 450) {
           setStageClick(null);
           setTimeout(() => {
             enterStage(id);
           }, 0);
         } else setStageClick({ id, t: now });
       }
-      // A click on a selected block (no move) is v1's click: its options panel, and the group is let go.
+      // A click on a selected block (no move) is v1's click: its options panel, and the group is
+      // let go.
       if (drag && !moved && wasGroup && !event.shiftKey) setSelection([]);
       if (role === 'stage' && still) setSelection([]); // a tap on the stage clears the selection
       setDrag(null);

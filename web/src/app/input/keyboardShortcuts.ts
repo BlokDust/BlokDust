@@ -15,12 +15,12 @@ import { copyLabels } from '../stageBlock/fillStage.ts';
 import { exitStage } from '../stageBlock/lookInside.ts';
 
 export function init(): void {
-  // v1 keyboard shortcut: delete the selected block. Esc drops an Insert being placed; Cmd/Ctrl+Z takes the last
-  // Insert out again (owner, 2026-11-10: one step).
+  // v1 keyboard shortcut: delete the selected block. Esc drops an Insert being placed; Cmd/Ctrl+Z
+  // takes the last Insert out again (owner, 2026-11-10: one step).
   window.addEventListener('keydown', (event) => {
-    const tag = (event.target as HTMLElement)?.tagName;
-    // Cmd/Ctrl+S (SPEC-SHARING-BACKEND R18): quick save, also while typing; never the browser's "Save page". In a DAW
-    // it is the DAW's Save (which keeps the plugin's patch in the project); the standalone app opens Patches › SAVE.
+    const tag = event.target instanceof HTMLElement ? event.target.tagName : undefined;
+    // Cmd/Ctrl+S (SPEC-SHARING-BACKEND R18): quick save, even while typing, never "Save page". A
+    // DAW's Save keeps the plugin's patch; the standalone app opens Patches › SAVE.
     if (
       (event.metaKey || event.ctrlKey) &&
       !event.shiftKey &&

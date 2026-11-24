@@ -17,24 +17,26 @@ declare global {
   }
 }
 
-// ---- notes: computer keyboard → input.computer-keyboard blocks, Web MIDI → input.midi-controller blocks ----
+// ---- notes: computer keyboard → input.computer-keyboard blocks, Web MIDI → input.midi-controller
+// blocks ----
 export let keyboardType!: number;
 export let midiType!: number;
 
-// To the outer world, which passes them into every Stage: a Keyboard inside one plays from outside it (owner, 2026-11-14).
-export const note = (blockType: number, n: number, down: boolean, velocity = 1) =>
+// To the outer world, which passes them into every Stage: a Keyboard inside one plays from outside
+// it (owner, 2026-11-14).
+export const note = (blockType: number, midiNote: number, down: boolean, velocity = 1) =>
   sendRaw([
     {
       type: down ? CommandType.NoteOn : CommandType.NoteOff,
       id: 0,
       blockType,
-      param: n,
+      param: midiNote,
       value: velocity,
     },
   ]);
 
-// Web MIDI → each MIDI Input block through its own MPE/MIDI parser (PLUGIN-0004): its device choice here, its
-// channel filter and expression mapping in the engine.
+// Web MIDI → each MIDI Input block through its own MPE/MIDI parser (PLUGIN-0004): its device choice
+// here, its channel filter and expression mapping in the engine.
 export const parsers = new Map<string, MpeParser>();
 
 // by "<stage>:<block id>" (0: the outer world)
@@ -44,26 +46,28 @@ export function init(): void {
   keyboardType = typeIndex('input.computer-keyboard');
   midiType = typeIndex('input.midi-controller');
   attachNoteInputs({
-    key: (n, down) => {
+    key: (midiNote, down) => {
       if (down && !usage.keys) {
         usage.keys = true;
         track('keyboard_played');
       }
-      note(keyboardType, n, down);
+      note(keyboardType, midiNote, down);
     },
-    // Plugin: with a Computer Keyboard in the patch its keys are BlokDust's while the editor has the keys (the DAW's
-    // shortcuts would fire too); without one they go on to the DAW (Logic's Musical Typing → MIDI Input).
+    // Plugin: with a Computer Keyboard block, keys are BlokDust's while the editor has focus (or
+    // the DAW's shortcuts fire too); without one they go to the DAW (Logic's Musical Typing).
     captureKeys: () =>
       !!juce && [...model.values()].some((b) => b.type === 'input.computer-keyboard'),
     captureAll: () => standalone,
-    // Plugin: the editor says when its window loses the keys (clicking into the DAW); the web view may not blur (Ableton).
+    // Plugin: the editor says when its window loses the keys (clicking into the DAW); the web view
+    // may not blur (Ableton).
     onReleaseAll: (release) => {
       juce?.addEventListener('bd_keysLost', () => {
         release();
       });
     },
     midi: (status, d1, d2, device) => {
-      // Every MIDI Input: those on show, and those inside the outer world's Stage blocks (they play from outside too).
+      // Every MIDI Input: those on show, and those inside the outer world's Stage blocks (they play
+      // from outside too).
       const inputs: { key: string; id: number; params: Record<string, unknown>; stage: number }[] =
         [];
       for (const [id, b] of model)
@@ -82,14 +86,14 @@ export function init(): void {
         if (st.type !== 'source.stage' || sid === inside?.stageId) continue;
         const ids = innerIds.get(st.uid)?.ids ?? {};
         for (const b of macros.get(st.uid)?.blocks ?? []) {
-          const id = b.id === undefined ? undefined : ids[b.id];
+          const id = Object.hasOwn(ids, b.id) ? ids[b.id] : undefined;
           if (b.type === 'input.midi-controller' && id !== undefined)
             inputs.push({ key: `${sid}:${id}`, id, params: b.params ?? {}, stage: sid });
         }
       }
       const cmds: Command[] = [];
-      for (const { key, id, params: q, stage: sid } of inputs) {
-        const want = typeof q.device === 'string' ? q.device : '';
+      for (const { key, id, params, stage: sid } of inputs) {
+        const want = typeof params.device === 'string' ? params.device : '';
         if (want && want !== device.name) continue;
         let parser = parsers.get(key);
         if (!parser) {
@@ -98,11 +102,11 @@ export function init(): void {
         }
         if (!usage.midi) {
           usage.midi = true;
-          track('midi_connected', { mpe: q.mpe ? 'yes' : 'no' });
+          track('midi_connected', { mpe: params.mpe ? 'yes' : 'no' });
         }
         parser.setSettings({
-          mpe: !!q.mpe,
-          memberBendRange: typeof q.bendRange === 'number' ? q.bendRange : 48,
+          mpe: !!params.mpe,
+          memberBendRange: typeof params.bendRange === 'number' ? params.bendRange : 48,
         });
         const out: Command[] = [];
         parser.message(status, d1, d2, -1, out);
@@ -114,7 +118,7 @@ export function init(): void {
     },
     devices: (list) => {
       midiDevices = list;
-      scene.setMidiDevices?.(list);
+      scene.setMidiDevices(list);
     },
   });
   window.__bd_midiDevices = () => midiDevices;

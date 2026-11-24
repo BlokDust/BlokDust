@@ -150,7 +150,8 @@ export function init(): void {
       if (primaryRole === 'select') return;
       let blockMoved = false;
       if (drag && event.altKey && !drag.moved && grouped()) {
-        // Alt + drag on a selection copies all of it (v1's Alt-copy, for the group): the copies are dragged and selected.
+        // Alt + drag on a selection copies all of it (v1's Alt-copy, for the group): the copies are
+        // dragged and selected.
         const ids = [...selection],
           made = copyBlocks(ids, 0, 0),
           first = made.get(drag.id),
@@ -175,8 +176,8 @@ export function init(): void {
         }
       }
       if (drag && event.altKey && !drag.moved && !grouped()) {
-        // v1 Block.MouseMove: Alt (Option) + drag copies the block (same params) at the pointer and drags the copy;
-        // the original is released where it was.
+        // v1 Block.MouseMove: Alt (Option) + drag copies the block (same params) at the pointer and
+        // drags the copy; the original is released where it was.
         const b = model.get(drag.id),
           v1Block = v1Blocks.get(drag.id);
         if (b) {
