@@ -1,0 +1,8 @@
+# CHG-0045, SIMULATION-0001: the engine is deterministic. No clocks, unseeded randomness, threads or
+# hash-ordered containers in engine code; the render CLI (engine/tools) may time itself.
+InheritParentConfig: true
+Checks: >
+  portability-restrict-system-includes
+CheckOptions:
+  portability-restrict-system-includes.Includes: '*,-random,-chrono,-ctime,-time.h,-thread,-mutex,-shared_mutex,-condition_variable,-future,-unordered_map,-unordered_set'
+  bugprone-unsafe-functions.CustomFunctions: '^::rand$,,non-deterministic (SIMULATION-0001);^::std::rand$,,non-deterministic (SIMULATION-0001);^::srand$,,non-deterministic (SIMULATION-0001);^::time$,,wall clock (SIMULATION-0001);^::clock$,,wall clock (SIMULATION-0001);^::getenv$,,environment-dependent (SIMULATION-0001)'

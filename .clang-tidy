@@ -1,0 +1,49 @@
+# CHG-0045: static checks for engine/ and plugin/. Run: pnpm bd lint --only clang-tidy
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  cert-flp30-c,
+  cert-msc50-cpp,
+  cert-msc51-cpp,
+  concurrency-*,
+  cppcoreguidelines-init-variables,
+  cppcoreguidelines-pro-type-member-init,
+  cppcoreguidelines-slicing,
+  misc-redundant-expression,
+  misc-unused-using-decls,
+  misc-unused-parameters,
+  misc-static-assert,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-use-using,
+  performance-*,
+  readability-container-size-empty,
+  readability-duplicate-include,
+  readability-else-after-return,
+  readability-identifier-length,
+  readability-identifier-naming,
+  readability-misleading-indentation,
+  readability-redundant-control-flow,
+  readability-redundant-declaration,
+  readability-simplify-boolean-expr
+WarningsAsErrors: '*'
+HeaderFilterRegex: '(engine|plugin)/(include|src|patch|tests|tools|wasm)/'
+ExcludeHeaderFilterRegex: '/generated/'
+CheckOptions:
+  readability-identifier-length.MinimumVariableNameLength: 2
+  readability-identifier-length.MinimumParameterNameLength: 2
+  readability-identifier-length.MinimumLoopCounterNameLength: 1
+  readability-identifier-length.IgnoredVariableNames: '^[xyzijkn_]$'
+  readability-identifier-length.IgnoredParameterNames: '^[xyzijkn_]$'
+  readability-identifier-naming.ClassCase: CamelCase
+  readability-identifier-naming.StructCase: CamelCase
+  readability-identifier-naming.EnumCase: CamelCase
+  readability-identifier-naming.FunctionCase: camelBack
+  readability-identifier-naming.FunctionIgnoredRegexp: '^(bd_.*|[A-Z][A-Za-z0-9]*|main)$'
+  readability-identifier-naming.VariableCase: camelBack
+  readability-identifier-naming.ParameterCase: camelBack
+  readability-identifier-naming.PrivateMemberSuffix: '_'
+  readability-identifier-naming.ConstexprVariableCase: CamelCase
+  readability-identifier-naming.ConstexprVariablePrefix: k
+  readability-identifier-naming.NamespaceCase: lower_case

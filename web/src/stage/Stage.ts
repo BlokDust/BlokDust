@@ -11,7 +11,14 @@ import type { Theme } from '../generated/palettes.gen.ts';
 import { bakeBlock, bakeOverlays, layerPoints } from '../render/bakeBlock.ts';
 import { computeMetrics, gridToPx, pxToGrid, type Metrics } from './metrics.ts';
 import { drawV1Chrome } from '../chrome/v1Chrome.ts';
-import { drawBeams, drawBlocks, drawConnections, drawOverlays, drawParticles, type StageBlock } from './drawWorld.ts';
+import {
+  drawBeams,
+  drawBlocks,
+  drawConnections,
+  drawOverlays,
+  drawParticles,
+  type StageBlock,
+} from './drawWorld.ts';
 
 /** UI-0005 bake-off: how block geometry is rasterised. */
 export type BlockRenderer = 'baked' | 'msaa' | 'ss2' | 'canvas';
@@ -19,11 +26,20 @@ export type BlockRenderer = 'baked' | 'msaa' | 'ss2' | 'canvas';
 export type { StageBlock } from './drawWorld.ts';
 
 /** Crossing-number test, grid units (same rule as the engine). */
-function pointInPolygon(px: number, py: number, poly: [number, number][], ox: number, oy: number): boolean {
+function pointInPolygon(
+  px: number,
+  py: number,
+  poly: [number, number][],
+  ox: number,
+  oy: number,
+): boolean {
   let inside = false;
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const xi = ox + poly[i][0], yi = oy + poly[i][1], xj = ox + poly[j][0], yj = oy + poly[j][1];
-    if ((yi > py) !== (yj > py) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
+    const xi = ox + poly[i][0],
+      yi = oy + poly[i][1],
+      xj = ox + poly[j][0],
+      yj = oy + poly[j][1];
+    if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
   }
   return inside;
 }
@@ -40,7 +56,10 @@ export class Stage {
   private readonly blockLayer = new Container();
   private readonly overlayLayer = new Container();
   private readonly particles = new Graphics();
-  private readonly blocks = new Map<number, { block: StageBlock; def: BlockDef; sprite: Sprite; key: string; overlay?: Sprite }>();
+  private readonly blocks = new Map<
+    number,
+    { block: StageBlock; def: BlockDef; sprite: Sprite; key: string; overlay?: Sprite }
+  >();
   private connections: Uint32Array = new Uint32Array();
   private powered = new Set<number>();
   private beams: Float32Array = new Float32Array();
@@ -65,15 +84,21 @@ export class Stage {
     // Create the 2D context first, with its final options: later getContext calls (Pixi's Texture.from included) return
     // the existing context. Opaque in the canvas renderer, like v1's main canvas (Chrome rasterises text differently).
     this.lineCtx = this.lineCanvas.getContext('2d', { alpha: renderer !== 'canvas' })!;
-    this.lineSprite = new Sprite(renderer === 'canvas' ? Texture.EMPTY : Texture.from(this.lineCanvas));
+    this.lineSprite = new Sprite(
+      renderer === 'canvas' ? Texture.EMPTY : Texture.from(this.lineCanvas),
+    );
     if (renderer === 'canvas') {
       // The static layer is a *visible* canvas behind a transparent Pixi canvas (particles only), like v1's single
       // on-screen canvas. As a texture source Chrome rasterises text differently (heavier), and every change would
       // re-upload a full-screen texture; drawn on-page it matches v1 bit for bit and costs no upload.
       const el = this.lineCanvas;
-      el.style.position = 'absolute'; el.style.left = '0'; el.style.top = '0';
+      el.style.position = 'absolute';
+      el.style.left = '0';
+      el.style.top = '0';
       app.canvas.parentElement?.insertBefore(el, app.canvas);
-      app.canvas.style.position = 'absolute'; app.canvas.style.left = '0'; app.canvas.style.top = '0';
+      app.canvas.style.position = 'absolute';
+      app.canvas.style.left = '0';
+      app.canvas.style.top = '0';
     } else {
       this.root.addChild(this.lineSprite, this.blockLayer, this.overlayLayer, this.particles);
     }
@@ -84,12 +109,19 @@ export class Stage {
   resize(): void {
     // app.screen is in CSS px; the renderer resolution is the device pixel ratio (autoDensity).
     const { width, height } = this.app.screen;
-    this.metrics = computeMetrics({ cssWidth: width, cssHeight: height, dpr: this.app.renderer.resolution, zoom: this.zoom, drag: this.drag });
+    this.metrics = computeMetrics({
+      cssWidth: width,
+      cssHeight: height,
+      dpr: this.app.renderer.resolution,
+      zoom: this.zoom,
+      drag: this.drag,
+    });
     this.lineCanvas.width = Math.round(this.metrics.width);
     this.lineCanvas.height = Math.round(this.metrics.height);
     this.lineCanvas.style.width = `${this.app.screen.width}px`;
     this.lineCanvas.style.height = `${this.app.screen.height}px`;
-    if (this.renderer !== 'canvas') this.lineSprite.texture.source.resize(this.lineCanvas.width, this.lineCanvas.height);
+    if (this.renderer !== 'canvas')
+      this.lineSprite.texture.source.resize(this.lineCanvas.width, this.lineCanvas.height);
     this.lineSprite.scale.set(1 / this.metrics.dpr);
     for (const b of this.blocks.values()) this.placeBlock(b.block.id);
     this.linesDirty = true;
@@ -97,10 +129,14 @@ export class Stage {
 
   setTheme(theme: Theme): void {
     this.theme = theme;
-    if (this.renderer !== 'canvas') this.app.renderer.background.color = theme.colors[0];  // canvas: drawn by the static layer
+    if (this.renderer !== 'canvas') this.app.renderer.background.color = theme.colors[0]; // canvas: drawn by the static layer
     this.resize();
   }
-  setView(zoom: number, drag: { x: number; y: number }): void { this.zoom = zoom; this.drag = drag; this.resize(); }
+  setView(zoom: number, drag: { x: number; y: number }): void {
+    this.zoom = zoom;
+    this.drag = drag;
+    this.resize();
+  }
 
   upsertBlock(b: StageBlock): void {
     const def = BLOCKS_BY_ID.get(b.type);
@@ -125,12 +161,15 @@ export class Stage {
     this.linesDirty = true;
   }
 
-  block(id: number): StageBlock | undefined { return this.blocks.get(id)?.block; }
+  block(id: number): StageBlock | undefined {
+    return this.blocks.get(id)?.block;
+  }
   /** v1 MainScene.BlockToFront: draw (and hit-test) the block last. */
   toFront(id: number): void {
     const b = this.blocks.get(id);
     if (!b) return;
-    this.blocks.delete(id); this.blocks.set(id, b);
+    this.blocks.delete(id);
+    this.blocks.set(id, b);
     this.linesDirty = true;
   }
   /** Block drawn at 50% while pressed and dragged (v1). */
@@ -144,7 +183,9 @@ export class Stage {
   /** A Stage block that what is being dragged would go into if let go now (CHG-0021): ringed solid. */
   dropTarget: number | null = null;
   selectBox: { x0: number; y0: number; x1: number; y1: number } | null = null;
-  allBlocks(): StageBlock[] { return [...this.blocks.values()].map(b => b.block); }
+  allBlocks(): StageBlock[] {
+    return [...this.blocks.values()].map((b) => b.block);
+  }
 
   /** Topmost block whose outline contains the css-px point (v1 hit order: last created on top). */
   hitTest(cssX: number, cssY: number, skip?: (id: number) => boolean): StageBlock | undefined {
@@ -163,66 +204,109 @@ export class Stage {
     const m = this.metrics;
     let b: { x0: number; y0: number; x1: number; y1: number } | null = null;
     for (const id of this.selected) {
-      const e = this.blocks.get(id); if (!e) continue;
-      for (const [x, y] of offsetPolygon(selectionRing(e.def).map(([gx, gy]) => gridToPx(m, e.block.x + gx, e.block.y + gy)), 4 * m.scaledUnit)) {
+      const e = this.blocks.get(id);
+      if (!e) continue;
+      for (const [x, y] of offsetPolygon(
+        selectionRing(e.def).map(([gx, gy]) => gridToPx(m, e.block.x + gx, e.block.y + gy)),
+        4 * m.scaledUnit,
+      )) {
         if (!b) b = { x0: x, y0: y, x1: x, y1: y };
-        else { b.x0 = Math.min(b.x0, x); b.y0 = Math.min(b.y0, y); b.x1 = Math.max(b.x1, x); b.y1 = Math.max(b.y1, y); }
+        else {
+          b.x0 = Math.min(b.x0, x);
+          b.y0 = Math.min(b.y0, y);
+          b.x1 = Math.max(b.x1, x);
+          b.y1 = Math.max(b.y1, y);
+        }
       }
     }
     return b;
   }
-  cssToGrid(cssX: number, cssY: number): [number, number] { return pxToGrid(this.metrics, cssX * this.metrics.dpr, cssY * this.metrics.dpr); }
+  cssToGrid(cssX: number, cssY: number): [number, number] {
+    return pxToGrid(this.metrics, cssX * this.metrics.dpr, cssY * this.metrics.dpr);
+  }
 
-  setConnections(pairs: Uint32Array): void { this.connections = pairs; this.linesDirty = true; }
+  setConnections(pairs: Uint32Array): void {
+    this.connections = pairs;
+    this.linesDirty = true;
+  }
   /** Gates that are open (CHG-0032): drawn faded, so what passes shows through (placeholder look until the design). */
   private openGates = new Set<number>();
   setOpenGates(ids: number[]): void {
-    if (ids.length !== this.openGates.size || ids.some(id => !this.openGates.has(id))) { this.openGates = new Set(ids); this.linesDirty = true; }
+    if (ids.length !== this.openGates.size || ids.some((id) => !this.openGates.has(id))) {
+      this.openGates = new Set(ids);
+      this.linesDirty = true;
+    }
   }
   setPowered(ids: Uint32Array): void {
     const next = new Set(ids);
-    if (next.size !== this.powered.size || [...next].some(id => !this.powered.has(id))) { this.powered = next; this.linesDirty = true; }
+    if (next.size !== this.powered.size || [...next].some((id) => !this.powered.has(id))) {
+      this.powered = next;
+      this.linesDirty = true;
+    }
   }
 
   /** Laser beams packed [x0, y0, x1, y1]* in grid units (canvas renderer draws them between blocks and overlays). */
   setBeams(b: Float32Array): void {
-    if (b.length || this.beams.length) this.linesDirty = true;  // v1 beams flicker: redraw every frame while any is on
+    if (b.length || this.beams.length) this.linesDirty = true; // v1 beams flicker: redraw every frame while any is on
     this.beams = b;
   }
 
   /** Particles packed [x, y, size]* in grid units. */
   setParticles(p: Float32Array): void {
-    if (this.renderer === 'canvas') {  // drawn with the static layer (v1 order: …, LaserBeams, Particles, ToolTip, …)
+    if (this.renderer === 'canvas') {
+      // drawn with the static layer (v1 order: …, LaserBeams, Particles, ToolTip, …)
       if (p.length || this.particleData.length) this.linesDirty = true;
       this.particleData = p;
       return;
     }
-    const g = this.particles, m = this.metrics, d = m.dpr;
+    const g = this.particles,
+      m = this.metrics,
+      d = m.dpr;
     g.clear();
     const color = this.theme.colors[this.theme.roles.power];
     for (let i = 0; i < p.length; i += 3) {
       const [px, py] = gridToPx(m, p[i], p[i + 1]);
       const s = p[i + 2] * m.scaledUnit;
-      g.poly([(px - s) / d, py / d, px / d, (py - s) / d, (px + s) / d, py / d, px / d, (py + s) / d]);
+      g.poly([
+        (px - s) / d,
+        py / d,
+        px / d,
+        (py - s) / d,
+        (px + s) / d,
+        py / d,
+        px / d,
+        (py + s) / d,
+      ]);
     }
     if (p.length) g.fill(color);
   }
 
   /** Force the static layer to redraw (e.g. after fonts load or the canvas is first shown). */
-  redraw(): void { this.linesDirty = true; this.update(); }
+  redraw(): void {
+    this.linesDirty = true;
+    this.update();
+  }
 
   /** Call once per frame. */
-  update(): void { if (this.linesDirty) this.drawLines(); }
+  update(): void {
+    if (this.linesDirty) this.drawLines();
+  }
 
   /** A picture of the stage as it is now, without v1's UI layer (the outer stage behind a Stage block's window,
    * CHG-0021). Same size as the canvas, device px. */
   snapshot(): HTMLCanvasElement {
-    const ui = this.drawUi, out = document.createElement('canvas');
-    this.drawUi = null; this.redraw();
+    const ui = this.drawUi,
+      out = document.createElement('canvas');
+    this.drawUi = null;
+    this.redraw();
     try {
-      out.width = this.lineCanvas.width; out.height = this.lineCanvas.height;
+      out.width = this.lineCanvas.width;
+      out.height = this.lineCanvas.height;
       out.getContext('2d')!.drawImage(this.lineCanvas, 0, 0);
-    } finally { this.drawUi = ui; this.redraw(); }
+    } finally {
+      this.drawUi = ui;
+      this.redraw();
+    }
     return out;
   }
   /**
@@ -230,33 +314,71 @@ export class Stage {
    * blocks to the output's aspect ratio and scaled to width × height. Canvas renderer only. With `caption`, the share
    * card (SPEC-SHARING-BACKEND R9): "TITLE — BY AUTHOR" bottom left and "BLOKDUST" bottom right in v1's Dosis.
    */
-  thumbnail(width: number, height: number, caption?: { title: string; author?: string | null }): HTMLCanvasElement {
+  thumbnail(
+    width: number,
+    height: number,
+    caption?: { title: string; author?: string | null },
+  ): HTMLCanvasElement {
     const ui = this.drawUi;
-    this.drawUi = null; this.redraw();
-    const src = this.lineCanvas, m = this.metrics, out = document.createElement('canvas');
-    out.width = width; out.height = height;
+    this.drawUi = null;
+    this.redraw();
+    const src = this.lineCanvas,
+      m = this.metrics,
+      out = document.createElement('canvas');
+    out.width = width;
+    out.height = height;
     try {
       // Bounding box of the blocks in canvas px (a block spans about ±2 cells from its anchor), plus a margin.
-      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      let x0 = Infinity,
+        y0 = Infinity,
+        x1 = -Infinity,
+        y1 = -Infinity;
       for (const { block } of this.blocks.values()) {
-        const [ax, ay] = gridToPx(m, block.x - 3, block.y - 3), [bx, by] = gridToPx(m, block.x + 3, block.y + 3);
-        x0 = Math.min(x0, ax); y0 = Math.min(y0, ay); x1 = Math.max(x1, bx); y1 = Math.max(y1, by);
+        const [ax, ay] = gridToPx(m, block.x - 3, block.y - 3),
+          [bx, by] = gridToPx(m, block.x + 3, block.y + 3);
+        x0 = Math.min(x0, ax);
+        y0 = Math.min(y0, ay);
+        x1 = Math.max(x1, bx);
+        y1 = Math.max(y1, by);
       }
-      if (!Number.isFinite(x0)) { x0 = 0; y0 = 0; x1 = src.width; y1 = src.height; }
+      if (!Number.isFinite(x0)) {
+        x0 = 0;
+        y0 = 0;
+        x1 = src.width;
+        y1 = src.height;
+      }
       const aspect = width / height;
-      let w = Math.max(x1 - x0, (y1 - y0) * aspect, src.width * 0.5), h = w / aspect;
-      if (w > src.width) { w = src.width; h = w / aspect; }
-      if (h > src.height) { h = src.height; w = h * aspect; }
-      const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-      const sx = Math.min(Math.max(cx - w / 2, 0), src.width - w), sy = Math.min(Math.max(cy - h / 2, 0), src.height - h);
+      let w = Math.max(x1 - x0, (y1 - y0) * aspect, src.width * 0.5),
+        h = w / aspect;
+      if (w > src.width) {
+        w = src.width;
+        h = w / aspect;
+      }
+      if (h > src.height) {
+        h = src.height;
+        w = h * aspect;
+      }
+      const cx = (x0 + x1) / 2,
+        cy = (y0 + y1) / 2;
+      const sx = Math.min(Math.max(cx - w / 2, 0), src.width - w),
+        sy = Math.min(Math.max(cy - h / 2, 0), src.height - h);
       const ctx = out.getContext('2d')!;
       ctx.fillStyle = this.theme.colors[0];
       ctx.fillRect(0, 0, width, height);
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(src, sx, sy, w, h, 0, 0, width, height);
-      if (caption) drawCaption(ctx, width, height, this.theme.colors[this.theme.roles.txt], caption.title, caption.author);
+      if (caption)
+        drawCaption(
+          ctx,
+          width,
+          height,
+          this.theme.colors[this.theme.roles.txt],
+          caption.title,
+          caption.author,
+        );
     } finally {
-      this.drawUi = ui; this.redraw();
+      this.drawUi = ui;
+      this.redraw();
     }
     return out;
   }
@@ -265,13 +387,26 @@ export class Stage {
     const b = this.blocks.get(id)!;
     const m = this.metrics;
     const [ox, oy] = gridToPx(m, b.block.x, b.block.y);
-    if (this.renderer === 'canvas') { this.linesDirty = true; return; }
+    if (this.renderer === 'canvas') {
+      this.linesDirty = true;
+      return;
+    }
     this.placeOverlay(b, ox, oy);
-    if (this.renderer !== 'baked') { this.placeVector(b, ox, oy); return; }
-    const fx = ox - Math.floor(ox), fy = oy - Math.floor(oy);
+    if (this.renderer !== 'baked') {
+      this.placeVector(b, ox, oy);
+      return;
+    }
+    const fx = ox - Math.floor(ox),
+      fy = oy - Math.floor(oy);
     const key = `${this.theme.index}|${m.scaledGridSize}|${fx}|${fy}|${b.block.starPos?.x},${b.block.starPos?.y}`;
     if (key !== b.key) {
-      const baked = bakeBlock(b.def, { colors: this.theme.colors, gridPx: m.scaledGridSize, fracX: fx, fracY: fy, starPos: b.block.starPos });
+      const baked = bakeBlock(b.def, {
+        colors: this.theme.colors,
+        gridPx: m.scaledGridSize,
+        fracX: fx,
+        fracY: fy,
+        starPos: b.block.starPos,
+      });
       const old = b.sprite.texture;
       b.sprite.texture = Texture.from(baked.canvas);
       if (old && old !== Texture.EMPTY) old.destroy(true);
@@ -286,18 +421,31 @@ export class Stage {
   private placeOverlay(b: { def: BlockDef; overlay?: Sprite }, ox: number, oy: number): void {
     if (!b.def.geometry.overlays?.length) return;
     const m = this.metrics;
-    const baked = bakeOverlays(b.def, 'idle', { colors: this.theme.colors, gridSize: m.gridSize, fracX: ox - Math.floor(ox), fracY: oy - Math.floor(oy) });
+    const baked = bakeOverlays(b.def, 'idle', {
+      colors: this.theme.colors,
+      gridSize: m.gridSize,
+      fracX: ox - Math.floor(ox),
+      fracY: oy - Math.floor(oy),
+    });
     if (!baked) return;
     b.overlay?.destroy({ texture: true });
     b.overlay = new Sprite(Texture.from(baked.canvas));
     b.overlay.scale.set(1 / m.dpr);
-    b.overlay.position.set((Math.floor(ox) + baked.offsetX) / m.dpr, (Math.floor(oy) + baked.offsetY) / m.dpr);
+    b.overlay.position.set(
+      (Math.floor(ox) + baked.offsetX) / m.dpr,
+      (Math.floor(oy) + baked.offsetY) / m.dpr,
+    );
     this.overlayLayer.addChild(b.overlay);
   }
 
   /** Bake-off candidates A (msaa: Pixi Graphics, GPU antialiasing) and B (ss2: Graphics at 2× into a texture, downsampled). */
-  private placeVector(b: { block: StageBlock; def: BlockDef; sprite: Sprite; key: string }, ox: number, oy: number): void {
-    const m = this.metrics, d = m.dpr;
+  private placeVector(
+    b: { block: StageBlock; def: BlockDef; sprite: Sprite; key: string },
+    ox: number,
+    oy: number,
+  ): void {
+    const m = this.metrics,
+      d = m.dpr;
     const key = `${this.renderer}|${this.theme.index}|${m.scaledGridSize}|${ox}|${oy}`;
     if (key === b.key) return;
     b.key = key;
@@ -305,18 +453,27 @@ export class Stage {
     const upg = b.def.geometry.unitsPerGrid ?? 15;
     const ss = this.renderer === 'ss2' ? 2 : 1;
     for (const l of b.def.geometry.layers) {
-      const pts = layerPoints(l, upg, b.block.starPos).flatMap(([x, y]) => [(ox + x * m.scaledGridSize) / d * ss, (oy + y * m.scaledGridSize) / d * ss]);
+      const pts = layerPoints(l, upg, b.block.starPos).flatMap(([x, y]) => [
+        ((ox + x * m.scaledGridSize) / d) * ss,
+        ((oy + y * m.scaledGridSize) / d) * ss,
+      ]);
       g.poly(pts).fill(this.theme.colors[l.palette]);
     }
     const old = b.sprite.texture;
     if (this.renderer === 'msaa') {
       b.sprite.texture = Texture.EMPTY;
-      b.sprite.removeChildren().forEach(c => c.destroy());
-      b.sprite.position.set(0, 0); b.sprite.scale.set(1);
+      b.sprite.removeChildren().forEach((c) => c.destroy());
+      b.sprite.position.set(0, 0);
+      b.sprite.scale.set(1);
       b.sprite.addChild(g);
     } else {
       const bounds = g.getLocalBounds();
-      const rt = RenderTexture.create({ width: Math.ceil(bounds.width) + 4, height: Math.ceil(bounds.height) + 4, resolution: d, antialias: true });
+      const rt = RenderTexture.create({
+        width: Math.ceil(bounds.width) + 4,
+        height: Math.ceil(bounds.height) + 4,
+        resolution: d,
+        antialias: true,
+      });
       g.position.set(-Math.floor(bounds.x) + 2, -Math.floor(bounds.y) + 2);
       this.app.renderer.render({ container: g, target: rt });
       g.destroy();
@@ -331,47 +488,84 @@ export class Stage {
   private drawBlocksAndOverlays(ctx: CanvasRenderingContext2D): void {
     const m = this.metrics;
     // v1 Block.Draw: pressed + selected → 50%
-    drawBlocks(ctx, m, this.theme, this.blocks.values(), id => (id === this.pressed || this.placing.has(id) || this.held.has(id) ? 0.5 : 1), id => this.openGates.has(id));
+    drawBlocks(
+      ctx,
+      m,
+      this.theme,
+      this.blocks.values(),
+      (id) => (id === this.pressed || this.placing.has(id) || this.held.has(id) ? 0.5 : 1),
+      (id) => this.openGates.has(id),
+    );
     // Multi-select (not in v1): each selected block ringed by its outline moved out 4 units on every side, and the box,
     // dashed in the text colour at half strength (owner, 2026-11-11: quieter than a solid line).
     if (this.selected.size || this.selectBox) {
       ctx.save();
-      ctx.strokeStyle = this.theme.colors[this.theme.roles.txt]; ctx.lineWidth = 2; ctx.globalAlpha = 0.5;
+      ctx.strokeStyle = this.theme.colors[this.theme.roles.txt];
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.5;
       ctx.setLineDash([4 * m.unit, 3 * m.unit]);
       ctx.beginPath();
       for (const id of this.selected) {
-        const e = this.blocks.get(id); if (!e) continue;
-        offsetPolygon(selectionRing(e.def).map(([x, y]) => gridToPx(m, e.block.x + x, e.block.y + y)), 4 * m.scaledUnit)
-          .forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+        const e = this.blocks.get(id);
+        if (!e) continue;
+        offsetPolygon(
+          selectionRing(e.def).map(([x, y]) => gridToPx(m, e.block.x + x, e.block.y + y)),
+          4 * m.scaledUnit,
+        ).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
         ctx.closePath();
       }
-      if (this.selectBox) { const b = this.selectBox; ctx.rect(Math.min(b.x0, b.x1), Math.min(b.y0, b.y1), Math.abs(b.x1 - b.x0), Math.abs(b.y1 - b.y0)); }
+      if (this.selectBox) {
+        const b = this.selectBox;
+        ctx.rect(
+          Math.min(b.x0, b.x1),
+          Math.min(b.y0, b.y1),
+          Math.abs(b.x1 - b.x0),
+          Math.abs(b.y1 - b.y0),
+        );
+      }
       ctx.stroke();
       ctx.restore();
     }
     if (this.dropTarget !== null && this.blocks.has(this.dropTarget)) {
       const e = this.blocks.get(this.dropTarget)!;
       ctx.save();
-      ctx.strokeStyle = this.theme.colors[this.theme.roles.txt]; ctx.lineWidth = 2;
+      ctx.strokeStyle = this.theme.colors[this.theme.roles.txt];
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      offsetPolygon(selectionRing(e.def).map(([x, y]) => gridToPx(m, e.block.x + x, e.block.y + y)), 6 * m.scaledUnit)
-        .forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-      ctx.closePath(); ctx.stroke();
+      offsetPolygon(
+        selectionRing(e.def).map(([x, y]) => gridToPx(m, e.block.x + x, e.block.y + y)),
+        6 * m.scaledUnit,
+      ).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+      ctx.closePath();
+      ctx.stroke();
       ctx.restore();
     }
-    drawBeams(ctx, m, this.theme, this.beams, this.beamJitter ?? Math.random());  // v1 LaserBeams.Draw
+    drawBeams(ctx, m, this.theme, this.beams, this.beamJitter ?? Math.random()); // v1 LaserBeams.Draw
     drawOverlays(ctx, m, this.theme, this.blocks.values(), this.skipOverlays);
-    drawParticles(ctx, m, this.theme, this.particleData);  // v1 ParticleLayer.Draw
-    if (this.drawUi) this.drawUi(ctx);  // v1 chrome/panels (web/src/v1ui), drawn after blocks as in v1's display list
-    else if (this.chrome) drawV1Chrome({ ctx, theme: this.theme, width: this.lineCanvas.width, height: this.lineCanvas.height, units: m.unit,
-      cssWidth: this.app.screen.width, cssHeight: this.app.screen.height, blockCount: this.blocks.size });
+    drawParticles(ctx, m, this.theme, this.particleData); // v1 ParticleLayer.Draw
+    if (this.drawUi)
+      this.drawUi(ctx); // v1 chrome/panels (web/src/v1ui), drawn after blocks as in v1's display list
+    else if (this.chrome)
+      drawV1Chrome({
+        ctx,
+        theme: this.theme,
+        width: this.lineCanvas.width,
+        height: this.lineCanvas.height,
+        units: m.unit,
+        cssWidth: this.app.screen.width,
+        cssHeight: this.app.screen.height,
+        blockCount: this.blocks.size,
+      });
   }
 
   private drawLines(): void {
     const ctx = this.lineCtx;
     const m = this.metrics;
     ctx.clearRect(0, 0, this.lineCanvas.width, this.lineCanvas.height);
-    if (this.renderer === 'canvas') { ctx.fillStyle = this.theme.colors[0]; ctx.fillRect(0, 0, this.lineCanvas.width, this.lineCanvas.height); }
+    if (this.renderer === 'canvas') {
+      ctx.fillStyle = this.theme.colors[0];
+      ctx.fillRect(0, 0, this.lineCanvas.width, this.lineCanvas.height);
+    }
     drawConnections(ctx, m, this.theme, this.blocks, this.connections, this.powered);
     if (this.renderer === 'canvas') this.drawBlocksAndOverlays(ctx);
     if (this.renderer !== 'canvas') this.lineSprite.texture.source.update();
@@ -387,51 +581,86 @@ export function offsetPolygon(pts: [number, number][], d: number): [number, numb
   const n = pts.length;
   if (n < 3) return pts;
   let area = 0;
-  for (let i = 0; i < n; i++) { const [x0, y0] = pts[i], [x1, y1] = pts[(i + 1) % n]; area += x0 * y1 - x1 * y0; }
-  const sign = area > 0 ? 1 : -1;  // outward normal side for this winding (screen y points down)
+  for (let i = 0; i < n; i++) {
+    const [x0, y0] = pts[i],
+      [x1, y1] = pts[(i + 1) % n];
+    area += x0 * y1 - x1 * y0;
+  }
+  const sign = area > 0 ? 1 : -1; // outward normal side for this winding (screen y points down)
   const normal = (a: [number, number], b: [number, number]): [number, number] => {
-    const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1;
-    return [sign * dy / l, -sign * dx / l];
+    const dx = b[0] - a[0],
+      dy = b[1] - a[1],
+      l = Math.hypot(dx, dy) || 1;
+    return [(sign * dy) / l, (-sign * dx) / l];
   };
   // Drop repeated points (zero-length edges have no normal).
-  const p = pts.filter((q, i) => { const r = pts[(i + n - 1) % n]; return Math.hypot(q[0] - r[0], q[1] - r[1]) > 1e-6; });
+  const p = pts.filter((q, i) => {
+    const r = pts[(i + n - 1) % n];
+    return Math.hypot(q[0] - r[0], q[1] - r[1]) > 1e-6;
+  });
   const m = p.length;
   return p.map((v, i) => {
-    const a = p[(i + m - 1) % m], c = p[(i + 1) % m], n1 = normal(a, v), n2 = normal(v, c);
-    const bx = n1[0] + n2[0], by = n1[1] + n2[1], dot = 1 + n1[0] * n2[0] + n1[1] * n2[1];
+    const a = p[(i + m - 1) % m],
+      c = p[(i + 1) % m],
+      n1 = normal(a, v),
+      n2 = normal(v, c);
+    const bx = n1[0] + n2[0],
+      by = n1[1] + n2[1],
+      dot = 1 + n1[0] * n2[0] + n1[1] * n2[1];
     if (dot < 1e-6) return [v[0] + n1[0] * d, v[1] + n1[1] * d] as [number, number];
     // Miter: v + (n1 + n2)·d / (1 + n1·n2) puts the corner d from both shifted edges; capped at 3·d.
-    const len = Math.hypot(bx, by), scale = Math.min(d / dot, (3 * d) / len);
+    const len = Math.hypot(bx, by),
+      scale = Math.min(d / dot, (3 * d) / len);
     return [v[0] + bx * scale, v[1] + by * scale] as [number, number];
   });
 }
 
 /** The share card's caption, sized for 1200 px wide (the mock-up the owner chose: layout C). */
-function drawCaption(ctx: CanvasRenderingContext2D, width: number, height: number, colour: string, title: string, author?: string | null): void {
-  const k = width / 1200, size = Math.round(30 * k), margin = Math.round(44 * k), y = height - Math.round(36 * k);
+function drawCaption(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  colour: string,
+  title: string,
+  author?: string | null,
+): void {
+  const k = width / 1200,
+    size = Math.round(30 * k),
+    margin = Math.round(44 * k),
+    y = height - Math.round(36 * k);
   ctx.save();
-  ctx.fillStyle = colour; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = colour;
+  ctx.textBaseline = 'alphabetic';
   if ('letterSpacing' in ctx) ctx.letterSpacing = `${Math.round(2 * k)}px`;
   const font = (weight: number) => `${weight} ${size}px Dosis, Arial, Helvetica, sans-serif`;
-  ctx.font = font(200); ctx.globalAlpha = 0.55; ctx.textAlign = 'right';
+  ctx.font = font(200);
+  ctx.globalAlpha = 0.55;
+  ctx.textAlign = 'right';
   const mark = 'BLOKDUST';
   ctx.fillText(mark, width - margin, y);
   const room = width - 2 * margin - ctx.measureText(mark).width - margin;
   ctx.textAlign = 'left';
-  const name = title.trim().toUpperCase(), by = author ? ` — BY ${author.toUpperCase()}` : '';
+  const name = title.trim().toUpperCase(),
+    by = author ? ` — BY ${author.toUpperCase()}` : '';
   const fit = (s: string, max: number) => {
     if (ctx.measureText(s).width <= max) return s;
     while (s.length > 1 && ctx.measureText(`${s}…`).width > max) s = s.slice(0, -1);
     return `${s.trimEnd()}…`;
   };
-  if (!name) { ctx.restore(); return; }  // untitled: the BLOKDUST mark alone
-  ctx.font = font(200); const byW = Math.min(ctx.measureText(by).width, room / 2);
-  ctx.font = font(400); ctx.globalAlpha = 1;
+  if (!name) {
+    ctx.restore();
+    return;
+  } // untitled: the BLOKDUST mark alone
+  ctx.font = font(200);
+  const byW = Math.min(ctx.measureText(by).width, room / 2);
+  ctx.font = font(400);
+  ctx.globalAlpha = 1;
   const shown = fit(name, room - byW);
   ctx.fillText(shown, margin, y);
   if (by) {
     const x = margin + ctx.measureText(shown).width;
-    ctx.font = font(200); ctx.globalAlpha = 0.7;
+    ctx.font = font(200);
+    ctx.globalAlpha = 0.7;
     ctx.fillText(fit(by, room - (x - margin)), x, y);
   }
   ctx.restore();

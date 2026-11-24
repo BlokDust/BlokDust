@@ -3,10 +3,15 @@
 // Audio In: there it is the DAW track and needs no power.
 import type { Patch, PatchBlock } from './loadPatch.ts';
 
-const swap = (b: PatchBlock): PatchBlock => (b.type === 'source.audio-in' ? { ...b, type: 'source.microphone' } : b);
+const swap = (b: PatchBlock): PatchBlock =>
+  b.type === 'source.audio-in' ? { ...b, type: 'source.microphone' } : b;
 
 export function audioInAsMicrophone(p: Patch): Patch {
-  const has = (bs: PatchBlock[] | undefined) => !!bs?.some(b => b.type === 'source.audio-in');
-  if (!has(p.blocks) && !p.macros?.some(m => has(m.blocks))) return p;
-  return { ...p, blocks: p.blocks.map(swap), ...(p.macros ? { macros: p.macros.map(m => ({ ...m, blocks: m.blocks.map(swap) })) } : {}) };
+  const has = (bs: PatchBlock[] | undefined) => !!bs?.some((b) => b.type === 'source.audio-in');
+  if (!has(p.blocks) && !p.macros?.some((m) => has(m.blocks))) return p;
+  return {
+    ...p,
+    blocks: p.blocks.map(swap),
+    ...(p.macros ? { macros: p.macros.map((m) => ({ ...m, blocks: m.blocks.map(swap) })) } : {}),
+  };
 }

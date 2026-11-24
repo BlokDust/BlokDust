@@ -1,0 +1,4 @@
+# The render CLI times itself; the engine's include ban does not apply here.
+InheritParentConfig: true
+Checks: >
+  -portability-restrict-system-includes

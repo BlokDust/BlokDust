@@ -1,12 +1,15 @@
-// The power switch (owner, 2026-11-11, CHG-0005): Command::worldPower(false) stops everything the world powers
-// (Power and Toggle blocks, emitters, lasers; particles in flight vanish) and keeps what the player does (held blocks).
+// The power switch (owner, 2026-11-11, CHG-0005): Command::worldPower(false) stops everything the
+// world powers (Power and Toggle blocks, emitters, lasers; particles in flight vanish) and keeps
+// what the player does (held blocks).
 #include <catch2/catch_test_macros.hpp>
 
 #include "helpers.hpp"
 
 using namespace bdtest;
 
-TEST_CASE("World power off: a powered tone stops, an emitter stops and its particles vanish; on again, all resumes") {
+TEST_CASE(
+    "World power off: a powered tone stops, an emitter stops and its particles vanish; on again, "
+    "all resumes") {
   auto e = makeEngine();
   e->push(Command::add(1, BlockType::SourceTone, 0, 0));
   e->push(Command::add(2, BlockType::PowerPower, -3, 0));
@@ -20,11 +23,11 @@ TEST_CASE("World power off: a powered tone stops, an emitter stops and its parti
   e->push(Command::worldPower(false));
   e->clearEvents();
   const auto off = render(*e, 48000);
-  CHECK(rms(off, 12000) < 1e-4);                 // the tone's release is over
+  CHECK(rms(off, 12000) < 1e-4);  // the tone's release is over
   CHECK(e->particles().empty());
   CHECK(eventsOf(*e, Event::Type::Emit).empty());
 
-  e->push(Command::press(1, true));              // the player can still play a block by holding it
+  e->push(Command::press(1, true));  // the player can still play a block by holding it
   const auto held = render(*e, 24000);
   CHECK(rms(held, 12000) > 0.01);
   e->push(Command::press(1, false));

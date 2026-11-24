@@ -1,10 +1,50 @@
 /* Same transparent DOM text layer as v1 SharePanel and Patches; all chrome is drawn with the existing canvas UI. */
-#feedback-panel[hidden] { display:none; }
-#feedback-panel { position:fixed; inset:0; pointer-events:none; }
-#feedback-panel textarea, #feedback-panel input, #feedback-panel button { position:fixed; box-sizing:border-box; pointer-events:auto; border:0; border-radius:0; padding:0; margin:0; outline:none; background:transparent; resize:none; }
-#feedback-panel textarea, #feedback-panel input { user-select:text; -webkit-user-select:text; }
-#feedback-panel textarea::placeholder { color:inherit; opacity:.5; }
-#feedback-panel button { cursor:pointer; }
-#feedback-panel button:disabled { cursor:wait; }
-#feedback-panel button:focus-visible { outline:1px solid currentColor; }
-#feedback-panel .feedback-honey, #feedback-status, #feedback-intro { position:fixed; left:-10000px; width:1px; height:1px; overflow:hidden; }
+#feedback-panel[hidden] {
+  display: none;
+}
+#feedback-panel {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+#feedback-panel textarea,
+#feedback-panel input,
+#feedback-panel button {
+  position: fixed;
+  box-sizing: border-box;
+  pointer-events: auto;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  background: transparent;
+  resize: none;
+}
+#feedback-panel textarea,
+#feedback-panel input {
+  user-select: text;
+  -webkit-user-select: text;
+}
+#feedback-panel textarea::placeholder {
+  color: inherit;
+  opacity: 0.5;
+}
+#feedback-panel button {
+  cursor: pointer;
+}
+#feedback-panel button:disabled {
+  cursor: wait;
+}
+#feedback-panel button:focus-visible {
+  outline: 1px solid currentColor;
+}
+#feedback-panel .feedback-honey,
+#feedback-status,
+#feedback-intro {
+  position: fixed;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

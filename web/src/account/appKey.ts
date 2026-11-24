@@ -3,6 +3,9 @@
 // requests as `Authorization: Bearer bdk_…`. The website never has one: it signs in with its own session cookie.
 let key: string | null = null;
 export const appKey = (): string | null => key;
-export function setAppKey(k: string | null): void { key = k && /^bdk_[A-Za-z0-9_-]{20,64}$/.test(k) ? k : null; }
+export function setAppKey(k: string | null): void {
+  key = k && /^bdk_[A-Za-z0-9_-]{20,64}$/.test(k) ? k : null;
+}
 /** The header that signs a request in, when this plugin is signed in. */
-export const keyHeader = (): Record<string, string> => (key ? { authorization: `Bearer ${key}` } : {});
+export const keyHeader = (): Record<string, string> =>
+  key ? { authorization: `Bearer ${key}` } : {};

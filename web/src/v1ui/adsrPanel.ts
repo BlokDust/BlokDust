@@ -28,14 +28,23 @@ export function timeText(t: number): string {
 
 let shift = false;
 if (typeof window !== 'undefined') {
-  window.addEventListener('keydown', e => { if (e.key === 'Shift') shift = true; });
-  window.addEventListener('keyup', e => { if (e.key === 'Shift') shift = false; });
-  window.addEventListener('blur', () => { shift = false; });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Shift') shift = true;
+  });
+  window.addEventListener('keyup', (e) => {
+    if (e.key === 'Shift') shift = false;
+  });
+  window.addEventListener('blur', () => {
+    shift = false;
+  });
 }
 
 /** Where handle `j` of an ADSR row is drawn, in panel-relative px (as v1 OptionsPanel's hit test). */
 function handlePoint(panel: any, o: any, j: number): [number, number] {
-  const h = o.Handles, x0 = panel.Position.x + panel.Margin, y0 = panel.Position.y + o.Position.y, ht = o.Size.height;
+  const h = o.Handles,
+    x0 = panel.Position.x + panel.Margin,
+    y0 = panel.Position.y + o.Position.y,
+    ht = o.Size.height;
   if (j === 0) return [x0 + h[0].Position.x, y0 + ht * 0.1];
   if (j === 1) return [x0 + h[0].Position.x + h[1].Position.x, y0 + ht * 0.9 - h[1].Position.y];
   return [x0 + panel.Range * 0.6 + h[2].Position.x, y0 + ht * 0.9];
@@ -46,13 +55,22 @@ function drawReadout(ctx: CanvasRenderingContext2D, o: any, panel: any, units: n
   const j = o.Handles.findIndex((h: any) => h.Selected);
   if (j < 0) return;
   const h = o.Handles[j];
-  const text = j === 0 ? `ATTACK ${timeText(h.XValue)}` : j === 1 ? `DECAY ${timeText(h.XValue)}   SUSTAIN ${Math.round(h.YValue * 100)}%` : `RELEASE ${timeText(h.XValue)}`;
+  const text =
+    j === 0
+      ? `ATTACK ${timeText(h.XValue)}`
+      : j === 1
+        ? `DECAY ${timeText(h.XValue)}   SUSTAIN ${Math.round(h.YValue * 100)}%`
+        : `RELEASE ${timeText(h.XValue)}`;
   // In the panel just above the graph, right-aligned to its right edge, in the title's type (v1 OptionsPanel TITLE):
   // it never crosses the graph, and a finger on the handle doesn't hide it.
   ctx.font = App.Metrics.TxtMid;
   App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
   ctx.textAlign = 'right';
-  ctx.fillText(text, panel.Margin + panel.Range + units, o.Position.y + o.Size.height * 0.1 - 12 * units);
+  ctx.fillText(
+    text,
+    panel.Margin + panel.Range + units,
+    o.Position.y + o.Size.height * 0.1 - 12 * units,
+  );
 }
 
 export function installAdsr(panel: any): void {
@@ -60,41 +78,63 @@ export function installAdsr(panel: any): void {
   const populate = panel.Populate.bind(panel);
   panel.Populate = (json: any, open: boolean) => {
     populate(json, open);
-    for (const o of panel.Options ?? []) if (o.Type === 'ADSR') {
-      for (const h of o.Handles) h.Position.x = h.XRange * fractionOf(h.XValue, h.XMin, h.XMax);
-      if (o.__bdReadout) continue;
-      const draw = o.Draw.bind(o);
-      o.__bdReadout = true;
-      o.Draw = (ctx: CanvasRenderingContext2D, units: number, i: number, p: any) => { draw(ctx, units, i, p); drawReadout(ctx, o, p, units); };
-    }
+    for (const o of panel.Options ?? [])
+      if (o.Type === 'ADSR') {
+        for (const h of o.Handles) h.Position.x = h.XRange * fractionOf(h.XValue, h.XMin, h.XMax);
+        if (o.__bdReadout) continue;
+        const draw = o.Draw.bind(o);
+        o.__bdReadout = true;
+        o.Draw = (ctx: CanvasRenderingContext2D, units: number, i: number, p: any) => {
+          draw(ctx, units, i, p);
+          drawReadout(ctx, o, p, units);
+        };
+      }
   };
 
   // The nearest handle only.
   const rollover = panel.RolloverCheck.bind(panel);
   panel.RolloverCheck = (mx: number, my: number) => {
     rollover(mx, my);
-    for (const o of panel.Options ?? []) if (o.Type === 'ADSR' && o.HandleRoll.filter(Boolean).length > 1) {
-      let best = -1, bestD = Infinity;
-      o.HandleRoll.forEach((r: boolean, j: number) => {
-        if (!r) return;
-        const [hx, hy] = handlePoint(panel, o, j), d = (hx - mx) ** 2 + (hy - my) ** 2;
-        if (d < bestD) { bestD = d; best = j; }
-      });
-      o.HandleRoll = o.HandleRoll.map((_: boolean, j: number) => j === best);
-    }
+    for (const o of panel.Options ?? [])
+      if (o.Type === 'ADSR' && o.HandleRoll.filter(Boolean).length > 1) {
+        let best = -1,
+          bestD = Infinity;
+        o.HandleRoll.forEach((r: boolean, j: number) => {
+          if (!r) return;
+          const [hx, hy] = handlePoint(panel, o, j),
+            d = (hx - mx) ** 2 + (hy - my) ** 2;
+          if (d < bestD) {
+            bestD = d;
+            best = j;
+          }
+        });
+        o.HandleRoll = o.HandleRoll.map((_: boolean, j: number) => j === best);
+      }
   };
 
   // Relative dragging (no jump on press; Shift is fine), on the log axis.
   let grab: { n: number; h: number; mx: number; my: number; x: number; y: number } | null = null;
   const handleSet = panel.HandleSet.bind(panel);
-  panel.HandleSet = (n: number, h: number, xStart: number, yRange: number, mx: number, my: number) => {
+  panel.HandleSet = (
+    n: number,
+    h: number,
+    xStart: number,
+    yRange: number,
+    mx: number,
+    my: number,
+  ) => {
     const o = panel.Options?.[n];
     if (o?.Type !== 'ADSR') return handleSet(n, h, xStart, yRange, mx, my);
     const hd = o.Handles[h];
-    if (!grab || grab.n !== n || grab.h !== h) { grab = { n, h, mx, my, x: hd.Position.x, y: hd.Position.y }; return; }
+    if (!grab || grab.n !== n || grab.h !== h) {
+      grab = { n, h, mx, my, x: hd.Position.x, y: hd.Position.y };
+      return;
+    }
     const k = shift ? FINE : 1;
-    grab.x += (mx - grab.mx) * k; grab.y -= (my - grab.my) * k;  // unclamped, so the pointer and handle stay together
-    grab.mx = mx; grab.my = my;
+    grab.x += (mx - grab.mx) * k;
+    grab.y -= (my - grab.my) * k; // unclamped, so the pointer and handle stay together
+    grab.mx = mx;
+    grab.my = my;
     hd.Position.x = Math.min(Math.max(grab.x, 0), hd.XRange);
     hd.XValue = timeAt(hd.Position.x / hd.XRange, hd.XMin, hd.XMax);
     panel._DrawReady = true;
@@ -106,5 +146,9 @@ export function installAdsr(panel: any): void {
     }
   };
   const up = panel.MouseUp.bind(panel);
-  panel.MouseUp = (...a: unknown[]) => { grab = null; panel._DrawReady = true; return up(...a); };
+  panel.MouseUp = (...a: unknown[]) => {
+    grab = null;
+    panel._DrawReady = true;
+    return up(...a);
+  };
 }

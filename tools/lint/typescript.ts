@@ -1,38 +1,9 @@
-// The checks `bd lint` runs. Each one reports to stderr and returns whether it passed.
-import { spawnSync } from 'node:child_process';
-import { filesMatching, type FileSelection } from './files.ts';
-
-export interface CheckOptions {
-  fix: boolean;
-}
-
-export interface LintCheck {
-  name: string;
-  run: (selection: FileSelection, options: CheckOptions) => CheckOutcome;
-}
-
-export type CheckOutcome = 'pass' | 'fail' | 'skip';
+// TypeScript checks: tsc per project, Prettier and ESLint.
+import { filesMatching } from './files.ts';
+import { inBatches, outcomeOf, runCommand, type LintCheck } from './check.ts';
 
 const TYPESCRIPT_SOURCE = /\.(ts|tsx|mts|cts|astro)$/;
 const ESLINT_SOURCE = /\.(ts|tsx|mts|cts|js|mjs|cjs|astro)$/;
-// Type-aware rules need every project's types, even for one staged file; keep argument lists short.
-const MAX_FILES_PER_COMMAND = 200;
-
-export function runCommand(command: string, args: string[]): boolean {
-  console.error(`$ ${command} ${args.length > 8 ? `${args.slice(0, 8).join(' ')} …` : args.join(' ')}`);
-  const result = spawnSync(command, args, { stdio: ['ignore', 2, 2] });
-  return result.status === 0;
-}
-
-function inBatches(files: string[], runBatch: (batch: string[]) => boolean): boolean {
-  let passed = true;
-  for (let start = 0; start < files.length; start += MAX_FILES_PER_COMMAND) {
-    passed = runBatch(files.slice(start, start + MAX_FILES_PER_COMMAND)) && passed;
-  }
-  return passed;
-}
-
-const outcomeOf = (passed: boolean): CheckOutcome => (passed ? 'pass' : 'fail');
 
 interface TypeScriptProject {
   directory: string;
@@ -77,15 +48,44 @@ export const eslint: LintCheck = {
   name: 'eslint',
   run(selection, { fix }) {
     const fixFlag = fix ? ['--fix'] : [];
-    const baseArgs = ['--flag', 'unstable_native_nodejs_ts_config', '--max-warnings', '0', ...fixFlag];
-    if (!selection.stagedOnly) return outcomeOf(runCommand('node_modules/.bin/eslint', [...baseArgs, '.']));
+    const baseArgs = [
+      '--flag',
+      'unstable_native_nodejs_ts_config',
+      '--max-warnings',
+      '0',
+      ...fixFlag,
+    ];
+    if (!selection.stagedOnly)
+      return outcomeOf(runCommand('node_modules/.bin/eslint', [...baseArgs, '.']));
     const files = filesMatching(selection, ESLINT_SOURCE);
     if (files.length === 0) return 'skip';
     const stagedArgs = [...baseArgs, '--no-warn-ignored', '--pass-on-unpruned-suppressions'];
     return outcomeOf(
-      inBatches(files, (batch) => runCommand('node_modules/.bin/eslint', [...stagedArgs, ...batch])),
+      inBatches(files, (batch) =>
+        runCommand('node_modules/.bin/eslint', [...stagedArgs, ...batch]),
+      ),
     );
   },
 };
 
-export const ALL_CHECKS: LintCheck[] = [typecheck, eslint];
+const PRETTIER_SOURCE = /\.(ts|tsx|mts|cts|js|mjs|cjs|astro|css|html)$/;
+
+export const prettier: LintCheck = {
+  name: 'prettier',
+  run(selection, { fix }) {
+    const files = filesMatching(selection, PRETTIER_SOURCE);
+    if (files.length === 0) return 'skip';
+    const mode = fix ? '--write' : '--check';
+    return outcomeOf(
+      inBatches(files, (batch) =>
+        runCommand('node_modules/.bin/prettier', [
+          mode,
+          '--ignore-unknown',
+          '--log-level',
+          'warn',
+          ...batch,
+        ]),
+      ),
+    );
+  },
+};

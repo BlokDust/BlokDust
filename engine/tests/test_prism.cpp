@@ -1,5 +1,5 @@
-// CHG-0015: the Prism (SPEC-SIMULATION-POWER-AND-PARTICLES R5d, R7a; SIMULATION-0006). The Counter is in
-// test_counter.cpp, the Chance in test_chance.cpp.
+// CHG-0015: the Prism (SPEC-SIMULATION-POWER-AND-PARTICLES R5d, R7a; SIMULATION-0006). The Counter
+// is in test_counter.cpp, the Chance in test_chance.cpp.
 #include <catch2/catch_test_macros.hpp>
 #include <cmath>
 #include <string>
@@ -20,19 +20,24 @@ std::unique_ptr<Engine> emitterRight(int rate = 20) {
   e->push(Command::setParam(1, P::PowerEmitter::speed, 12));
   return e;
 }
-int count(const Engine& e, Event::Type t, BlockId b = kInvalidBlock) { return static_cast<int>(eventsOf(e, t, b).size()); }
+int count(const Engine& e, Event::Type t, BlockId b = kInvalidBlock) {
+  return static_cast<int>(eventsOf(e, t, b).size());
+}
 }  // namespace
 
-TEST_CASE("R5d Prism: a particle leaves as its streams, fanned across the spread around the angle") {
+TEST_CASE(
+    "R5d Prism: a particle leaves as its streams, fanned across the spread around the angle") {
   auto e = emitterRight(600);  // one particle in this test
   e->push(Command::setParam(1, P::PowerEmitter::rate, 30));
   e->push(Command::add(2, BlockType::PowerPrism, 6, 0));
   e->push(Command::setParam(2, P::PowerPrism::angle, -90));  // up
   e->push(Command::setParam(2, P::PowerPrism::streams, 3));
   e->push(Command::setParam(2, P::PowerPrism::spread, 90));
-  e->push(Command::setParam(1, P::PowerEmitter::selfPoweredMode, 0, 30000));  // stop after the first
+  e->push(
+      Command::setParam(1, P::PowerEmitter::selfPoweredMode, 0, 30000));  // stop after the first
   // Run until the split, then look at the three particles.
-  for (int i = 0; i < 400 && count(*e, Event::Type::Split, 2) == 0; ++i) render(*e, 200);
+  for (int i = 0; i < 400 && count(*e, Event::Type::Split, 2) == 0; ++i)
+    render(*e, 200);
   REQUIRE(count(*e, Event::Type::Split, 2) == 1);
   REQUIRE(e->particles().size() == 3);
   render(*e, 200 * 20);  // 20 ticks on
@@ -40,27 +45,34 @@ TEST_CASE("R5d Prism: a particle leaves as its streams, fanned across the spread
   REQUIRE(ps.size() == 3);
   const double want[3] = {-135.0, -90.0, -45.0};
   for (int k = 0; k < 3; ++k) {
-    const double a = std::atan2(ps[static_cast<std::size_t>(k)].y - 0.0, ps[static_cast<std::size_t>(k)].x - 6.0) * 180.0 / 3.141592653589793;
+    const double a = std::atan2(ps[static_cast<std::size_t>(k)].y - 0.0,
+                                ps[static_cast<std::size_t>(k)].x - 6.0) *
+                     180.0 / 3.141592653589793;
     CHECK(std::abs(a - want[k]) < 0.01);
     // same speed as the particle that came in: 12 units/frame = 0.2 grid/tick
-    CHECK(std::abs(std::hypot(ps[static_cast<std::size_t>(k)].vx, ps[static_cast<std::size_t>(k)].vy) - 0.2) < 1e-9);
+    CHECK(std::abs(
+              std::hypot(ps[static_cast<std::size_t>(k)].vx, ps[static_cast<std::size_t>(k)].vy) -
+              0.2) < 1e-9);
   }
 }
 
-TEST_CASE("R5d Prism: streams keep the range the particle had left, so two facing Prisms do not loop forever") {
+TEST_CASE(
+    "R5d Prism: streams keep the range the particle had left, so two facing Prisms do not loop "
+    "forever") {
   auto e = emitterRight(600);
   e->push(Command::setParam(1, P::PowerEmitter::rate, 30));
-  e->push(Command::setParam(1, P::PowerEmitter::range, 600));  // 50 frames at speed 12 = 200 ticks = 40 grid
+  e->push(Command::setParam(1, P::PowerEmitter::range,
+                            600));  // 50 frames at speed 12 = 200 ticks = 40 grid
   e->push(Command::setParam(1, P::PowerEmitter::selfPoweredMode, 0, 30000));
   e->push(Command::add(2, BlockType::PowerPrism, 6, 0));
-  e->push(Command::setParam(2, P::PowerPrism::angle, 0));     // on to the right
+  e->push(Command::setParam(2, P::PowerPrism::angle, 0));  // on to the right
   e->push(Command::add(3, BlockType::PowerPrism, 16, 0));
-  e->push(Command::setParam(3, P::PowerPrism::angle, 180));   // back to the left
+  e->push(Command::setParam(3, P::PowerPrism::angle, 180));  // back to the left
   render(*e, 48000 * 3);
   CHECK(e->particles().empty());
   const int splits = count(*e, Event::Type::Split);
-  CHECK(splits >= 2);   // it bounced
-  CHECK(splits <= 5);   // 40 grid of range, 10 grid a leg
+  CHECK(splits >= 2);  // it bounced
+  CHECK(splits <= 5);  // 40 grid of range, 10 grid a leg
 }
 
 TEST_CASE("R7a: a Prism carries a laser's beam on, split, with the length it had left") {
@@ -83,11 +95,13 @@ TEST_CASE("R7a: a Prism carries a laser's beam on, split, with the length it had
   CHECK(e->block(5)->laserPower == 0);
   // The stream to the right ends 20 − 7 = 13 grid from the prism (the beam met its edge at x = 7).
   double far = 0;
-  for (const auto& b : e->beams()) far = std::max(far, b.x1);
+  for (const auto& b : e->beams())
+    far = std::max(far, b.x1);
   CHECK(std::abs(far - 21.0) < 1e-6);
 }
 
-TEST_CASE("R7a: beams never pass the same Prism twice, and one laser casts a bounded number of beams") {
+TEST_CASE(
+    "R7a: beams never pass the same Prism twice, and one laser casts a bounded number of beams") {
   auto e = makeEngine(48000, 1, false);
   e->push(Command::add(1, BlockType::PowerLaser, 0, 0));
   e->push(Command::setParam(1, P::PowerLaser::angle, 0));
@@ -117,7 +131,8 @@ TEST_CASE("CHG-0015: a Prism connects to nothing") {
   CHECK_FALSE(e->connected(5, 4));
 }
 
-TEST_CASE("R12 (CHG-0015): Counter, Chance and Prism render bit-identically whatever the buffer size") {
+TEST_CASE(
+    "R12 (CHG-0015): Counter, Chance and Prism render bit-identically whatever the buffer size") {
   const auto run = [](std::uint32_t block) {
     auto e = emitterRight(12);
     e->push(Command::add(2, BlockType::PowerChance, 5, 0));

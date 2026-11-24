@@ -3,8 +3,21 @@
 // as a plugin value (usageStats, asked again on each focus return) and sets it with bd_analytics.
 import type { Bridge, PluginValuesClient } from '../app/pluginValues.ts';
 
-export function pluginUsageStats(juce: Bridge, values: PluginValuesClient, changed: () => void): { get(): boolean; set(on: boolean): void } {
+export function pluginUsageStats(
+  juce: Bridge,
+  values: PluginValuesClient,
+  changed: () => void,
+): { get(): boolean; set(on: boolean): void } {
   let on = true;
-  values.follow('usageStats', v => { on = !!v; changed(); });
-  return { get: () => on, set: v => { on = v; juce.emitEvent('bd_analytics', { on: v }); } };
+  values.follow('usageStats', (v) => {
+    on = !!v;
+    changed();
+  });
+  return {
+    get: () => on,
+    set: (v) => {
+      on = v;
+      juce.emitEvent('bd_analytics', { on: v });
+    },
+  };
 }

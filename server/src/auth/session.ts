@@ -6,7 +6,11 @@ import { HttpError, b64urlBytes, publicBase, sha256Hex } from '../http.ts';
 export const SESSION_DAYS = 30;
 const DAY = 86_400_000;
 
-export interface User { id: string; handle: string | null; created: number }
+export interface User {
+  id: string;
+  handle: string | null;
+  created: number;
+}
 
 /** Secure cookies on https; plain http only for local dev and tests (`wrangler dev`). `__Host-` needs Secure. */
 const secure = (req: Request) => new URL(req.url).protocol === 'https:';
@@ -33,9 +37,13 @@ export function sameOrigin(env: Env, req: Request): void {
 
 /** A new session for `userId`: its Set-Cookie header. */
 export async function startSession(env: Env, req: Request, userId: string): Promise<string> {
-  const token = b64urlBytes(32), now = Date.now();
-  await env.DB.prepare('INSERT INTO sessions (token_hash, user_id, created, expires) VALUES (?, ?, ?, ?)')
-    .bind(await sha256Hex(token), userId, now, now + SESSION_DAYS * DAY).run();
+  const token = b64urlBytes(32),
+    now = Date.now();
+  await env.DB.prepare(
+    'INSERT INTO sessions (token_hash, user_id, created, expires) VALUES (?, ?, ?, ?)',
+  )
+    .bind(await sha256Hex(token), userId, now, now + SESSION_DAYS * DAY)
+    .run();
   return cookie(req, 'bd_session', token, SESSION_DAYS * 86_400);
 }
 
@@ -50,13 +58,22 @@ const HOUR = 3_600_000;
 /** The account a plugin key belongs to; a key past its life is deleted. Used, it lives 180 days more (written at most
  * hourly). */
 async function userForKey(env: Env, key: string): Promise<User | null> {
-  const hash = await sha256Hex(key), now = Date.now();
-  const row = await env.DB.prepare('SELECT u.id, u.handle, u.created, k.expires, k.last_used FROM app_keys k JOIN users u ON u.id = k.user_id WHERE k.key_hash = ?')
-    .bind(hash).first<User & { expires: number; last_used: number | null }>();
+  const hash = await sha256Hex(key),
+    now = Date.now();
+  const row = await env.DB.prepare(
+    'SELECT u.id, u.handle, u.created, k.expires, k.last_used FROM app_keys k JOIN users u ON u.id = k.user_id WHERE k.key_hash = ?',
+  )
+    .bind(hash)
+    .first<User & { expires: number; last_used: number | null }>();
   if (!row) return null;
-  if (row.expires <= now) { await env.DB.prepare('DELETE FROM app_keys WHERE key_hash = ?').bind(hash).run(); return null; }
+  if (row.expires <= now) {
+    await env.DB.prepare('DELETE FROM app_keys WHERE key_hash = ?').bind(hash).run();
+    return null;
+  }
   if (!row.last_used || now - row.last_used > HOUR)
-    await env.DB.prepare('UPDATE app_keys SET last_used = ?, expires = ? WHERE key_hash = ?').bind(now, now + APP_KEY_DAYS * DAY, hash).run();
+    await env.DB.prepare('UPDATE app_keys SET last_used = ?, expires = ? WHERE key_hash = ?')
+      .bind(now, now + APP_KEY_DAYS * DAY, hash)
+      .run();
   return { id: row.id, handle: row.handle, created: row.created };
 }
 
@@ -64,22 +81,39 @@ async function userForKey(env: Env, key: string): Promise<User | null> {
  * The signed-in user, or null. A session past half its life is extended (sliding expiry, R3). `app`: this endpoint
  * also takes a plugin's key (SHARING-0011 lists which). A request with a key is never read as the cookie's user.
  */
-export async function currentUser(env: Env, req: Request, opts: { app?: boolean } = {}): Promise<User | null> {
+export async function currentUser(
+  env: Env,
+  req: Request,
+  opts: { app?: boolean } = {},
+): Promise<User | null> {
   const key = appKeyOf(req);
   if (key) return opts.app ? userForKey(env, key) : null;
   const token = readCookie(req, 'bd_session');
   if (!token || token.length > 64) return null;
-  const hash = await sha256Hex(token), now = Date.now();
-  const row = await env.DB.prepare('SELECT u.id, u.handle, u.created, s.expires FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?')
-    .bind(hash).first<User & { expires: number }>();
+  const hash = await sha256Hex(token),
+    now = Date.now();
+  const row = await env.DB.prepare(
+    'SELECT u.id, u.handle, u.created, s.expires FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?',
+  )
+    .bind(hash)
+    .first<User & { expires: number }>();
   if (!row) return null;
-  if (row.expires <= now) { await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(hash).run(); return null; }
+  if (row.expires <= now) {
+    await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(hash).run();
+    return null;
+  }
   if (row.expires - now < (SESSION_DAYS * DAY) / 2)
-    await env.DB.prepare('UPDATE sessions SET expires = ? WHERE token_hash = ?').bind(now + SESSION_DAYS * DAY, hash).run();
+    await env.DB.prepare('UPDATE sessions SET expires = ? WHERE token_hash = ?')
+      .bind(now + SESSION_DAYS * DAY, hash)
+      .run();
   return { id: row.id, handle: row.handle, created: row.created };
 }
 
-export async function requireUser(env: Env, req: Request, opts: { app?: boolean } = {}): Promise<User> {
+export async function requireUser(
+  env: Env,
+  req: Request,
+  opts: { app?: boolean } = {},
+): Promise<User> {
   const u = await currentUser(env, req, opts);
   if (!u) throw new HttpError(401, 'sign in first');
   return u;
@@ -90,7 +124,12 @@ export async function endSession(env: Env, req: Request, everywhere: boolean): P
   const token = readCookie(req, 'bd_session');
   if (token) {
     const hash = await sha256Hex(token);
-    if (everywhere) await env.DB.prepare('DELETE FROM sessions WHERE user_id = (SELECT user_id FROM sessions WHERE token_hash = ?)').bind(hash).run();
+    if (everywhere)
+      await env.DB.prepare(
+        'DELETE FROM sessions WHERE user_id = (SELECT user_id FROM sessions WHERE token_hash = ?)',
+      )
+        .bind(hash)
+        .run();
     else await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(hash).run();
   }
   return cookie(req, 'bd_session', '', 0);

@@ -7,7 +7,14 @@ import { App, Dimensions, Point, Size, TWEEN } from './shim.ts';
 import { V1Block } from './blocks.ts';
 import { installFilterPanel } from './filterPanel.ts';
 import { installSelectors } from './selectorOption.ts';
-import { drawNewSprite, drawPrismExits, followLfos, hasLiveRows, installLiveRows, installNewBlockMenu } from './newBlocks.ts';
+import {
+  drawNewSprite,
+  drawPrismExits,
+  followLfos,
+  hasLiveRows,
+  installLiveRows,
+  installNewBlockMenu,
+} from './newBlocks.ts';
 import { installTouchpad } from './touchpadPanel.ts';
 import { installWaveZoom, panelView } from './waveZoom.ts';
 import { installAdsr } from './adsrPanel.ts';
@@ -60,7 +67,11 @@ export interface SceneHost extends PatchesHost {
   /** v1 SoundcloudPanel search, on Freesound (DATA-0005): sounds of at most `maxSeconds`. */
   searchSamples(query: string, maxSeconds: number): Promise<FreesoundSound[]>;
   /** v1 LoadTrack: fetch and use a Freesound sound in a sampler block. */
-  loadFreesound(id: number, sound: FreesoundSound, display: { trackName: string; user: string; permalink: string }): void;
+  loadFreesound(
+    id: number,
+    sound: FreesoundSound,
+    display: { trackName: string; user: string; permalink: string },
+  ): void;
   /** The patch tempo (web; the plugin follows the host): SIMULATION-0003, CHG-0004 3.5. */
   tempo(): number;
   setTempo(bpm: number): void;
@@ -95,15 +106,15 @@ export interface SceneHost extends PatchesHost {
   setTarget(id: number, target: { id: number; param: string } | null): void;
 }
 
-
 /** The Share panel's warning (v1 l10n UI.SharePanel.SaveWarning, reworded: SoundCloud is gone; local files added). */
-export const SAVE_WARNING = "Note: Recorder recordings and your own audio samples aren't saved in the link. " +
-  'To share audio, download a recording from its options panel or use samples from Freesound.';  // owner, PR #1 review 2026-11-12
-
+export const SAVE_WARNING =
+  "Note: Recorder recordings and your own audio samples aren't saved in the link. " +
+  'To share audio, download a recording from its options panel or use samples from Freesound.'; // owner, PR #1 review 2026-11-12
 
 export class V1Scene {
   Ctx!: CanvasRenderingContext2D;
-  Width = 0; Height = 0;
+  Width = 0;
+  Height = 0;
   IsDraggingABlock = false;
   SelectedBlock: V1Block | null = null;
   readonly Metrics = new Metrics();
@@ -145,7 +156,8 @@ export class V1Scene {
     // v1 SharePanel.GetWarning warned about Recorder blocks (their audio is not saved). v2 also warns about samples
     // from the user's own files (DATA-0005: never uploaded, so the link can't carry them). v1's text pointed at
     // SoundCloud, which is gone.
-    const share = this.SharePanel as any, getWarning = share.GetWarning.bind(share);
+    const share = this.SharePanel as any,
+      getWarning = share.GetWarning.bind(share);
     share.GetWarning = () => {
       getWarning();
       if (this.host.hasLocalFiles()) share._Warning = true;
@@ -155,41 +167,92 @@ export class V1Scene {
 
   /** Zoom/drag followed every frame (no re-layout). */
   setView(zoom: number, drag: { x: number; y: number }): void {
-    App.ZoomLevel = zoom; this.lastZoom = zoom; App.DragOffset.x = drag.x; App.DragOffset.y = drag.y; this.lastDrag = { x: drag.x, y: drag.y };
+    App.ZoomLevel = zoom;
+    this.lastZoom = zoom;
+    App.DragOffset.x = drag.x;
+    App.DragOffset.y = drag.y;
+    this.lastDrag = { x: drag.x, y: drag.y };
     this.Metrics.UpdateGridScale();
   }
   /** The block list changed (v1 calls CreateNew.CheckState after create/delete/load). */
-  setBlocks(blocks: V1Block[]): void { App.Blocks = blocks; if (this.initialised && !this.resetting) this.CreateNew.CheckState(); }
+  setBlocks(blocks: V1Block[]): void {
+    App.Blocks = blocks;
+    if (this.initialised && !this.resetting) this.CreateNew.CheckState();
+  }
   /** Inside ResetScene: v1 DeleteAllBlocks then one _Invalidate, so CreateNew checks its state once. Checking per
    * deleted block stopped the panel's close tweens half-way (owner, 2026-11-08). */
   private resetting = false;
 
   /** Bind to the stage canvas and sizes: on init and on every resize/theme change (v1 Metrics.Compute + Resize). */
-  sync(ctx: CanvasRenderingContext2D, theme: Theme, zoom: number, drag: { x: number; y: number }, blocks: V1Block[]): void {
+  sync(
+    ctx: CanvasRenderingContext2D,
+    theme: Theme,
+    zoom: number,
+    drag: { x: number; y: number },
+    blocks: V1Block[],
+  ): void {
     this.Ctx = ctx;
     App.Canvas.Ctx = ctx;
-    App.MainScene = this; App.Stage = { MainScene: this };
+    App.MainScene = this;
+    App.Stage = { MainScene: this };
     App.Metrics = this.Metrics;
     App.Palette = theme.colors;
-    App.ThemeManager.Txt = theme.roles.txt; App.ThemeManager.MenuOrder = theme.roles.menu; App.ThemeManager.OptionsOrder = theme.roles.options;
-    App.ThemeManager.CurrentThemeNo = theme.index; App.ThemeManager.CurrentTheme = { Name: theme.name };
-    App.ThemeManager.Themes = this.host.themes().map(t => ({ Name: t.name }));
+    App.ThemeManager.Txt = theme.roles.txt;
+    App.ThemeManager.MenuOrder = theme.roles.menu;
+    App.ThemeManager.OptionsOrder = theme.roles.options;
+    App.ThemeManager.CurrentThemeNo = theme.index;
+    App.ThemeManager.CurrentTheme = { Name: theme.name };
+    App.ThemeManager.Themes = this.host.themes().map((t) => ({ Name: t.name }));
     App.ThemeManager.LoadTheme = (n: number) => this.host.setTheme(n);
-    App.ZoomLevel = zoom; this.lastZoom = zoom; App.DragOffset.x = drag.x; App.DragOffset.y = drag.y;
+    App.ZoomLevel = zoom;
+    this.lastZoom = zoom;
+    App.DragOffset.x = drag.x;
+    App.DragOffset.y = drag.y;
     App.Blocks = blocks;
     App.CommandManager = { ExecuteCommand: (c: unknown) => this.command(c) };
     App.Audio.Master.volume.onMaster = (db: number) => this.host.setMasterDb(db);
     // v1 ThemeManager: the share text fields take the theme's text colour.
-    for (const id of ['shareUrl', 'shareTitle', 'soundCloudSearch', 'patchTitle', 'patchUrl', 'accountHandle', 'gallerySearch']) document.getElementById(id)!.style.color = theme.colors[theme.roles.txt];
-    App.BlockSprites = { DrawSprite: (dc: any, pos: Point, scaled: boolean, name: string) => this.drawSprite(dc.Ctx ?? dc, pos, scaled, name) };
+    for (const id of [
+      'shareUrl',
+      'shareTitle',
+      'soundCloudSearch',
+      'patchTitle',
+      'patchUrl',
+      'accountHandle',
+      'gallerySearch',
+    ])
+      document.getElementById(id)!.style.color = theme.colors[theme.roles.txt];
+    App.BlockSprites = {
+      DrawSprite: (dc: any, pos: Point, scaled: boolean, name: string) =>
+        this.drawSprite(dc.Ctx ?? dc, pos, scaled, name),
+    };
     App.AnimationsLayer = this.AnimationsLayer;
     if (!this.initialised) {
       // v1 order: panels are created before Metrics.Compute (App.Width is 0, so their Resize() bails out), then the
       // first resize lays them out.
       this.initialised = true;
-      installNewBlockMenu();  // the post-2.0 blocks join v1's menu before the header reads it (SCOPE-0005)
-      App.Width = 0; App.Height = 0;
-      for (const o of [this.ToolTip, this.AnimationsLayer, this.RecorderPanel, this.ZoomButtons, this.MainSceneDragger, this.TrashCan, this.Tutorial, this.OptionsPanel, this.Header, this.CreateNew, this.TutorialHotspots, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel, this.MessagePanel]) o.Init(this);
+      installNewBlockMenu(); // the post-2.0 blocks join v1's menu before the header reads it (SCOPE-0005)
+      App.Width = 0;
+      App.Height = 0;
+      for (const o of [
+        this.ToolTip,
+        this.AnimationsLayer,
+        this.RecorderPanel,
+        this.ZoomButtons,
+        this.MainSceneDragger,
+        this.TrashCan,
+        this.Tutorial,
+        this.OptionsPanel,
+        this.Header,
+        this.CreateNew,
+        this.TutorialHotspots,
+        this.SharePanel,
+        this.SettingsPanel,
+        this.SoundcloudPanel,
+        this.PatchesPanel,
+        this.MessagePanel,
+      ])
+        o.Init(this);
       installTour(this.Tutorial, this.TutorialHotspots);
       // v1's MessagePanel never sets _Alpha before its first fade-in tween; this tween library then gives NaN (nothing
       // drawn). It starts hidden, at 0.
@@ -202,51 +265,117 @@ export class V1Scene {
       cancellableOpen(this.OptionsPanel);
       installSelectors(this.OptionsPanel);
       installLiveRows(this.OptionsPanel);
-      installTouchpad(this.OptionsPanel);  // it lays the Touchpad's rows out again after the others adapt them
-      installNoteBars(this.OptionsPanel);  // Random Note's and Chord's bars and Range (UI-0016)
-      installAdsr(this.OptionsPanel);  // the Envelope's graph: curved time axis, readout, fine drags (adsrPanel.ts)
-      installWaveZoom(this.OptionsPanel);  // outermost: it narrows the form the others are given (waveZoom.ts)
+      installTouchpad(this.OptionsPanel); // it lays the Touchpad's rows out again after the others adapt them
+      installNoteBars(this.OptionsPanel); // Random Note's and Chord's bars and Range (UI-0016)
+      installAdsr(this.OptionsPanel); // the Envelope's graph: curved time axis, readout, fine drags (adsrPanel.ts)
+      installWaveZoom(this.OptionsPanel); // outermost: it narrows the form the others are given (waveZoom.ts)
       locateMissingFiles(this);
     }
     this.Metrics.Compute();
-    this.Width = App.Width; this.Height = App.Height;
-    for (const o of [this.ZoomButtons, this.TrashCan, this.Tutorial, this.OptionsPanel, this.Header, this.CreateNew, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel]) o.Resize?.();
+    this.Width = App.Width;
+    this.Height = App.Height;
+    for (const o of [
+      this.ZoomButtons,
+      this.TrashCan,
+      this.Tutorial,
+      this.OptionsPanel,
+      this.Header,
+      this.CreateNew,
+      this.SharePanel,
+      this.SettingsPanel,
+      this.SoundcloudPanel,
+      this.PatchesPanel,
+    ])
+      o.Resize?.();
     // v1 MainScene.Resize
     this.OptionsPanel.Close();
     this.Header.Populate(this.Header.MenuJson);
     this.SettingsPanel.Populate(this.SettingsPanel.MenuJson);
-    this.CreateNew.CheckState();  // v1 calls it whenever the block list changes (icon + logo margin when > 1 block)
+    this.CreateNew.CheckState(); // v1 calls it whenever the block list changes (icon + logo margin when > 1 block)
   }
 
   /** v1 App.Message: show `text` in the message bar (v1's defaults: three seconds, no button). */
   /** v1 MessagePanel: a line, gone after `seconds`; with `buttonText`, it stays until closed or its button is pressed. */
-  message(text: string, options?: { seconds?: number; buttonText?: string; buttonEvent?: () => void }): void { if (this.initialised) this.MessagePanel.NewMessage(text, options); }
+  message(
+    text: string,
+    options?: { seconds?: number; buttonText?: string; buttonEvent?: () => void },
+  ): void {
+    if (this.initialised) this.MessagePanel.NewMessage(text, options);
+  }
 
   /** Advance tweens; true while anything animates (the stage then redraws every frame). */
   update(nowMs: number): boolean {
     const animating = TWEEN.update(nowMs);
     // The open panel's block is loading (AnimationsLayer list): keep redrawing it so its loading square spins.
-    if (this.OptionsPanel.Scale > 0 && this.AnimationsLayer.ActiveBlocks.includes(this.OptionsPanel.SelectedBlock)) this.OptionsPanel.Animating = true;
-    for (const o of [this.ToolTip, this.AnimationsLayer, this.RecorderPanel, this.ZoomButtons, this.Tutorial, this.OptionsPanel, this.Header, this.CreateNew, this.TutorialHotspots, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel, this.MessagePanel]) { o.LastVisualTick = nowMs; o.Update?.(); }
+    if (
+      this.OptionsPanel.Scale > 0 &&
+      this.AnimationsLayer.ActiveBlocks.includes(this.OptionsPanel.SelectedBlock)
+    )
+      this.OptionsPanel.Animating = true;
+    for (const o of [
+      this.ToolTip,
+      this.AnimationsLayer,
+      this.RecorderPanel,
+      this.ZoomButtons,
+      this.Tutorial,
+      this.OptionsPanel,
+      this.Header,
+      this.CreateNew,
+      this.TutorialHotspots,
+      this.SharePanel,
+      this.SettingsPanel,
+      this.SoundcloudPanel,
+      this.PatchesPanel,
+      this.MessagePanel,
+    ]) {
+      o.LastVisualTick = nowMs;
+      o.Update?.();
+    }
     checkTour(this.Tutorial, nowMs, this.OptionsPanel.Scale > 0);
     // The tour's markers pulse, and follow the menus and blocks they point at.
-    const touring = this.Tutorial.Open || this.Tutorial.SplashOpen || this.TutorialHotspots.Points.length > 0;
+    const touring =
+      this.Tutorial.Open || this.Tutorial.SplashOpen || this.TutorialHotspots.Points.length > 0;
     this.MainSceneDragger.LastVisualTick = nowMs;
     this.MainSceneDragger.Update();
-    if (Math.abs(App.ZoomLevel - this.lastZoom) > 1e-9) { this.lastZoom = App.ZoomLevel; this.host.setZoom(App.ZoomLevel); }
-    const d = App.DragOffset, easing = Math.round(d.x) !== Math.round(this.MainSceneDragger.Destination.x) || Math.round(d.y) !== Math.round(this.MainSceneDragger.Destination.y);
-    if (d.x !== this.lastDrag.x || d.y !== this.lastDrag.y) { this.lastDrag = { x: d.x, y: d.y }; this.host.setDrag({ x: d.x, y: d.y }); }
+    if (Math.abs(App.ZoomLevel - this.lastZoom) > 1e-9) {
+      this.lastZoom = App.ZoomLevel;
+      this.host.setZoom(App.ZoomLevel);
+    }
+    const d = App.DragOffset,
+      easing =
+        Math.round(d.x) !== Math.round(this.MainSceneDragger.Destination.x) ||
+        Math.round(d.y) !== Math.round(this.MainSceneDragger.Destination.y);
+    if (d.x !== this.lastDrag.x || d.y !== this.lastDrag.y) {
+      this.lastDrag = { x: d.x, y: d.y };
+      this.host.setDrag({ x: d.x, y: d.y });
+    }
     // Spinners (AnimationsLayer: loading blocks, Share "saving…", sample search) animate every frame while shown.
-    const spinning = this.AnimationsLayer.ActiveBlocks.length > 0 || (this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).Animating) || !!(this.SharePanel as any)._Saving || (this.SoundcloudPanel.Open && !!(this.OptionsPanel.SelectedBlock as any)?.Searching) || (this.PatchesPanel.Open && this.PatchesPanel.animating)
-      || (this.SettingsPanel.Open && !!(this.SettingsPanel as any).accountPage?.animating);
+    const spinning =
+      this.AnimationsLayer.ActiveBlocks.length > 0 ||
+      (this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).Animating) ||
+      !!(this.SharePanel as any)._Saving ||
+      (this.SoundcloudPanel.Open && !!(this.OptionsPanel.SelectedBlock as any)?.Searching) ||
+      (this.PatchesPanel.Open && this.PatchesPanel.animating) ||
+      (this.SettingsPanel.Open && !!(this.SettingsPanel as any).accountPage?.animating);
     // Playback lines move every frame while shown (and once more to clear them when playback stops).
     const playing = this.playheadsShown || !!this.playheadLines();
     // Live rows (a Compressor's meter, …) follow the engine: the panel is redrawn every frame while one shows.
     const live = followLfos(this.OptionsPanel) || hasLiveRows(this.OptionsPanel);
     if (live) (this.OptionsPanel as any)._DrawReady = true;
-    const hint = this.hostHinting, hintGone = this.hintDrawn && !hint;  // one more frame clears the hint
+    const hint = this.hostHinting,
+      hintGone = this.hintDrawn && !hint; // one more frame clears the hint
     this.hintDrawn = hint;
-    return animating || easing || spinning || playing || live || touring || this.splashDrawing || hint || hintGone;
+    return (
+      animating ||
+      easing ||
+      spinning ||
+      playing ||
+      live ||
+      touring ||
+      this.splashDrawing ||
+      hint ||
+      hintGone
+    );
   }
   private lastZoom = 1;
   private lastDrag = { x: 0, y: 0 };
@@ -255,16 +384,46 @@ export class V1Scene {
   drawRecorderPanel = true;
   /** v1 MainScene display list, from the ToolTip upward (blocks/lines/beams are drawn by the stage before this). */
   draw(): void {
-    for (const o of [this.ToolTip, this.AnimationsLayer, ...(this.drawRecorderPanel ? [this.RecorderPanel] : []), this.ZoomButtons, this.MainSceneDragger, this.TrashCan, this.Tutorial, this.OptionsPanel, this.Header, this.CreateNew, this.TutorialHotspots, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel, this.MessagePanel]) {
-      if (o === this.OptionsPanel) drawPrismExits(this.Ctx, this.OptionsPanel);  // under the panel, over the stage
+    for (const o of [
+      this.ToolTip,
+      this.AnimationsLayer,
+      ...(this.drawRecorderPanel ? [this.RecorderPanel] : []),
+      this.ZoomButtons,
+      this.MainSceneDragger,
+      this.TrashCan,
+      this.Tutorial,
+      this.OptionsPanel,
+      this.Header,
+      this.CreateNew,
+      this.TutorialHotspots,
+      this.SharePanel,
+      this.SettingsPanel,
+      this.SoundcloudPanel,
+      this.PatchesPanel,
+      this.MessagePanel,
+    ]) {
+      if (o === this.OptionsPanel) drawPrismExits(this.Ctx, this.OptionsPanel); // under the panel, over the stage
       this.Ctx.save();
       o.Draw();
       this.Ctx.restore();
       if (o === this.OptionsPanel) this.drawPlayheads();
-      if (o === this.TrashCan) { this.Ctx.save(); this.drawPower(); this.Ctx.restore(); }
+      if (o === this.TrashCan) {
+        this.Ctx.save();
+        this.drawPower();
+        this.Ctx.restore();
+      }
     }
-    if (this.SoundcloudPanel.Open) { this.Ctx.save(); this.drawFileButton(); this.Ctx.restore(); }
-    if (this.splash && !this.splash.IsTransitionFinished) { this.Ctx.save(); this.splash.FrameCount++; this.splash.Draw(); this.Ctx.restore(); }
+    if (this.SoundcloudPanel.Open) {
+      this.Ctx.save();
+      this.drawFileButton();
+      this.Ctx.restore();
+    }
+    if (this.splash && !this.splash.IsTransitionFinished) {
+      this.Ctx.save();
+      this.splash.FrameCount++;
+      this.splash.Draw();
+      this.Ctx.restore();
+    }
     this.Ctx.globalAlpha = 1;
   }
 
@@ -280,13 +439,24 @@ export class V1Scene {
   /** START pressed: v1 Splash.StartButtonPressed (its audio unlock is v2's click). `done` once the stage shows. */
   startSplash(done: () => void): void {
     const s = this.splash;
-    if (!s) { done(); return; }
+    if (!s) {
+      done();
+      return;
+    }
     let finished = false;
-    this.splashDone = () => { if (finished) return; finished = true; done(); };
-    s.AnimationFinished.on(() => { if (finished) return; s.TransitionOut(); this.splashDone!(); });
+    this.splashDone = () => {
+      if (finished) return;
+      finished = true;
+      done();
+    };
+    s.AnimationFinished.on(() => {
+      if (finished) return;
+      s.TransitionOut();
+      this.splashDone!();
+    });
     const before = new Set(TWEEN.getAll());
     s.StartButtonPressed();
-    this.splashTweens = TWEEN.getAll().filter(t => !before.has(t));
+    this.splashTweens = TWEEN.getAll().filter((t) => !before.has(t));
     if (this.skipRequested) this.skipSplash();
   }
   private splashDone: (() => void) | null = null;
@@ -298,7 +468,10 @@ export class V1Scene {
   skipSplash(): void {
     const s = this.splash;
     if (!s || s.IsTransitionFinished) return;
-    if (!this.splashDone) { this.skipRequested = true; return; }
+    if (!this.splashDone) {
+      this.skipRequested = true;
+      return;
+    }
     for (const t of this.splashTweens) t.stop();
     this.splashTweens = [];
     s.IsAnimationFinished = true;
@@ -309,18 +482,27 @@ export class V1Scene {
    * v1's "Welcome to BlokDust." even over the demo; taking the tour clears the stage as v1's did. */
   launchTour(): void {
     if (App.IsPlugin || tourSkipped()) return;
-    const text = (this.Tutorial as any).Text, s2 = text.Splash2;
+    const text = (this.Tutorial as any).Text,
+      s2 = text.Splash2;
     text.Splash2 = { ...text.Splash1 };
     const close = this.Tutorial.CloseSplash.bind(this.Tutorial);
-    this.Tutorial.CloseSplash = () => { text.Splash2 = s2; this.Tutorial.CloseSplash = close; close(); };
+    this.Tutorial.CloseSplash = () => {
+      text.Splash2 = s2;
+      this.Tutorial.CloseSplash = close;
+      close();
+    };
     this.Tutorial.CheckLaunch();
   }
   /** v1 MainScene.Begin (Splash calls it on START: v1 faded its audio in there; v2's starts in the click). */
   Begin(): void {}
   /** True while the splash still covers the stage (input waits, as v1 MainScene._PointerDown). */
-  get splashing(): boolean { return !!this.splash && !this.splash.IsAnimationFinished; }
+  get splashing(): boolean {
+    return !!this.splash && !this.splash.IsAnimationFinished;
+  }
   /** True while the splash still draws (the loop keeps redrawing). */
-  get splashDrawing(): boolean { return !!this.splash && !this.splash.IsTransitionFinished; }
+  get splashDrawing(): boolean {
+    return !!this.splash && !this.splash.IsTransitionFinished;
+  }
 
   // ---- input, in v1 MainScene order (device px) ----
   /** Returns true when the UI took the press (the stage must not start a block/stage drag). */
@@ -328,34 +510,70 @@ export class V1Scene {
     const p = new Point(x, y);
     this.pointer = p;
     if (this.ToolTip.Open) this.toolTipClose();
-    if (this.MessagePanel.Open && this.MessagePanel.Hover) { this.MessagePanel.MouseDown(p); return true; }  // v1 MainScene
-    if (this.SharePanel.Open) { this.SharePanel.MouseDown(p); return true; }
-    if (this.SettingsPanel.Open) { this.SettingsPanel.MouseDown(p); return true; }
-    if (this.PatchesPanel.Open) { this.PatchesPanel.MouseDown(p); return true; }
+    if (this.MessagePanel.Open && this.MessagePanel.Hover) {
+      this.MessagePanel.MouseDown(p);
+      return true;
+    } // v1 MainScene
+    if (this.SharePanel.Open) {
+      this.SharePanel.MouseDown(p);
+      return true;
+    }
+    if (this.SettingsPanel.Open) {
+      this.SettingsPanel.MouseDown(p);
+      return true;
+    }
+    if (this.PatchesPanel.Open) {
+      this.PatchesPanel.MouseDown(p);
+      return true;
+    }
     if (this.SoundcloudPanel.Open) {
-      if (this.fileButtonHit(p)) { const b = this.OptionsPanel.SelectedBlock; this.SoundcloudPanel.ClosePanel(); if (b) this.host.loadSample(b.Id); return true; }
-      this.SoundcloudPanel.MouseDown(p); return true;
+      if (this.fileButtonHit(p)) {
+        const b = this.OptionsPanel.SelectedBlock;
+        this.SoundcloudPanel.ClosePanel();
+        if (b) this.host.loadSample(b.Id);
+        return true;
+      }
+      this.SoundcloudPanel.MouseDown(p);
+      return true;
     }
     const tour = this.Tutorial;
-    if (tour.SplashOpen) { tour.SplashMouseDown(p); if (tour.Hover) return true; }  // v1 order: the welcome first
-    this.CreateNew.MouseDown(p); if (this.CreateNew.Hover) return true;
-    this.Header.MouseDown(p); if (this.Header.MenuOver) return true;
-    this.ZoomButtons.MouseDown(p); if (this.ZoomButtons.InRoll || this.ZoomButtons.OutRoll) return true;
-    if (this.powerHit(p)) { this.pressPower(p.x); return true; }
-    if (this.OptionsPanel.Scale === 1) { this.OptionsPanel.MouseDown(p.x, p.y); if (this.OptionsPanel.Hover) return true; }
-    if (tour.Open) { tour.MouseDown(p); if (tour.Hover) return true; }  // SKIP TOUR / OKAY DONE
-    this.RecorderPanel.MouseDown(p); if (this.RecorderPanel.Hover) return true;
+    if (tour.SplashOpen) {
+      tour.SplashMouseDown(p);
+      if (tour.Hover) return true;
+    } // v1 order: the welcome first
+    this.CreateNew.MouseDown(p);
+    if (this.CreateNew.Hover) return true;
+    this.Header.MouseDown(p);
+    if (this.Header.MenuOver) return true;
+    this.ZoomButtons.MouseDown(p);
+    if (this.ZoomButtons.InRoll || this.ZoomButtons.OutRoll) return true;
+    if (this.powerHit(p)) {
+      this.pressPower(p.x);
+      return true;
+    }
+    if (this.OptionsPanel.Scale === 1) {
+      this.OptionsPanel.MouseDown(p.x, p.y);
+      if (this.OptionsPanel.Hover) return true;
+    }
+    if (tour.Open) {
+      tour.MouseDown(p);
+      if (tour.Hover) return true;
+    } // SKIP TOUR / OKAY DONE
+    this.RecorderPanel.MouseDown(p);
+    if (this.RecorderPanel.Hover) return true;
     const hit = blockAt();
     if (hit) {
       this.select(hit);
       hit.IsPressed = true;
       this.IsDraggingABlock = true;
       this.optionTimeout = true;
-      setTimeout(() => { this.optionTimeout = false; }, App.Config.SingleClickTime);
+      setTimeout(() => {
+        this.optionTimeout = false;
+      }, App.Config.SingleClickTime);
       return false;
     }
     this.OptionsPanel.Close();
-    this.MainSceneDragger.MouseDown(p);  // v1: no block hit → drag the stage
+    this.MainSceneDragger.MouseDown(p); // v1: no block hit → drag the stage
     return false;
   }
 
@@ -376,15 +594,26 @@ export class V1Scene {
     else if (this.SettingsPanel.Open) this.SettingsPanel.MouseUp(p);
     else if (this.SoundcloudPanel.Open) this.SoundcloudPanel.MouseUp(p);
     else if (this.PatchesPanel.Open) this.PatchesPanel.MouseUp();
-    else { this.Header.MouseUp(); if (this.OptionsPanel.Scale === 1) this.OptionsPanel.MouseUp(); this.MainSceneDragger.MouseUp(); }
+    else {
+      this.Header.MouseUp();
+      if (this.OptionsPanel.Scale === 1) this.OptionsPanel.MouseUp();
+      this.MainSceneDragger.MouseUp();
+    }
     return result;
   }
 
-  pointerMove(x: number, y: number, pointerDown: boolean, hover: () => V1Block | null, blockMoved: boolean): void {
+  pointerMove(
+    x: number,
+    y: number,
+    pointerDown: boolean,
+    hover: () => V1Block | null,
+    blockMoved: boolean,
+  ): void {
     const p = new Point(x, y);
     this.pointer = p;
     this.checkHover(p, pointerDown, hover);
-    if (blockMoved && this.IsDraggingABlock && this.OptionsPanel.Scale === 1) this.OptionsPanel.Close();
+    if (blockMoved && this.IsDraggingABlock && this.OptionsPanel.Scale === 1)
+      this.OptionsPanel.Close();
     if (this.OptionsPanel.Scale === 1) this.OptionsPanel.MouseMove(p.x, p.y);
     if (this.SharePanel.Open) this.SharePanel.MouseMove(p);
     if (this.SettingsPanel.Open) this.SettingsPanel.MouseMove(p);
@@ -404,7 +633,10 @@ export class V1Scene {
   // ---- the power switch (owner, 2026-11-11; not in v1) ----
   worldPower = true;
   private powerHover = false;
-  setWorldPower(on: boolean): void { this.worldPower = on; this.host.setWorldPower(on); }
+  setWorldPower(on: boolean): void {
+    this.worldPower = on;
+    this.host.setWorldPower(on);
+  }
   /**
    * DAW plugins (owner, 2026-11-16, CHG-0025): a third cell, HOST, hands the power to the DAW's transport: powered
    * while it plays, off while it is stopped. Its icon shows the transport (▷ stopped, ■ playing). A plugin can't press
@@ -417,31 +649,55 @@ export class V1Scene {
   private hintDrawn = false;
   setPowerMode(mode: 0 | 1 | 2): void {
     this.powerMode = mode;
-    this.host.setPowerMode?.(mode);  // first: the processor drops the page's power commands in host mode
-    if (mode < 2) this.setWorldPower(mode === 1); else this.worldPower = this.hostPlaying;
+    this.host.setPowerMode?.(mode); // first: the processor drops the page's power commands in host mode
+    if (mode < 2) this.setWorldPower(mode === 1);
+    else this.worldPower = this.hostPlaying;
   }
   /** The processor's mode and the DAW's play state (bd_patch, bd_hostState). */
   setHostState(mode: number, playing: boolean): void {
-    this.powerMode = mode === 2 ? 2 : mode === 0 ? 0 : 1; this.hostPlaying = playing;
+    this.powerMode = mode === 2 ? 2 : mode === 0 ? 0 : 1;
+    this.hostPlaying = playing;
     if (this.powerMode === 2) this.worldPower = playing;
   }
   private pressPower(x: number): void {
-    if (!this.hostPower) { this.setWorldPower(!this.worldPower); return; }
-    const r = this.powerRect(), cell = Math.max(0, Math.min(2, Math.floor((x - r.x) / (r.w / 3)))) as 0 | 1 | 2;
-    if (cell === 2 && this.powerMode === 2) { this.hostHintUntil = performance.now() + 2500; return; }
+    if (!this.hostPower) {
+      this.setWorldPower(!this.worldPower);
+      return;
+    }
+    const r = this.powerRect(),
+      cell = Math.max(0, Math.min(2, Math.floor((x - r.x) / (r.w / 3)))) as 0 | 1 | 2;
+    if (cell === 2 && this.powerMode === 2) {
+      this.hostHintUntil = performance.now() + 2500;
+      return;
+    }
     this.setPowerMode(cell);
   }
   /** Bottom centre, between the zoom buttons and the trash: v1's off/on switch (OptionSwitch, "offOn"), at its own size
    * (a 60u options row, 60u wide; 90u with HOST's cell). Its dash and diamond sit level with +, − and the trash (30u up,
    * v1 ZoomButtons and TrashCan); the label goes above it, where v1's zoom shows its percentage (50u up), as below
    * would meet the edge. */
-  private powerRect() { const u = App.Unit, w = (this.hostPower ? 90 : 60) * u, h = 60 * u; return { x: App.Width * 0.5 - w * 0.5, y: App.Height - 30 * u - h * 0.35, w, h }; }
+  private powerRect() {
+    const u = App.Unit,
+      w = (this.hostPower ? 90 : 60) * u,
+      h = 60 * u;
+    return { x: App.Width * 0.5 - w * 0.5, y: App.Height - 30 * u - h * 0.35, w, h };
+  }
   private powerHit(p: { x: number; y: number }): boolean {
-    if (this.SharePanel.Open || this.SettingsPanel.Open || this.SoundcloudPanel.Open || this.PatchesPanel.Open) return false;
-    const u = App.Unit, r = this.powerRect(); return Dimensions.hitRect(r.x, App.Height - 66 * u, r.w, 66 * u, p.x, p.y);
+    if (
+      this.SharePanel.Open ||
+      this.SettingsPanel.Open ||
+      this.SoundcloudPanel.Open ||
+      this.PatchesPanel.Open
+    )
+      return false;
+    const u = App.Unit,
+      r = this.powerRect();
+    return Dimensions.hitRect(r.x, App.Height - 66 * u, r.w, 66 * u, p.x, p.y);
   }
   /** Hosts: the HOST hint is showing (the stage keeps redrawing until it goes). */
-  private get hostHinting(): boolean { return this.hostHintUntil > performance.now(); }
+  private get hostHinting(): boolean {
+    return this.hostHintUntil > performance.now();
+  }
   /**
    * v1 OptionSwitch (style 1, "offOn"), its proportions unchanged: dividers from 0.15h to 0.55h, the dash (off),
    * diamond (on) and HOST's ▷/■ at 0.35h, the chosen cell underlined at 0.55h. The label: POWER; when off, POWER OFF
@@ -449,32 +705,67 @@ export class V1Scene {
    * one; HOST with the host stopped reads SYNCED TO HOST on the same red (owner, 2026-11-20). Space toggles it too (web).
    */
   private drawPower(): void {
-    const ctx = this.Ctx, u = App.Unit, { x, y, w, h } = this.powerRect(), menu = App.ThemeManager.MenuOrder;
-    const txt = App.Palette[App.ThemeManager.Txt], cy = y + h * 0.35, cells = this.hostPower ? 3 : 2, cw = w / cells;
+    const ctx = this.Ctx,
+      u = App.Unit,
+      { x, y, w, h } = this.powerRect(),
+      menu = App.ThemeManager.MenuOrder;
+    const txt = App.Palette[App.ThemeManager.Txt],
+      cy = y + h * 0.35,
+      cells = this.hostPower ? 3 : 2,
+      cw = w / cells;
     const mode = this.hostPower ? this.powerMode : this.worldPower ? 1 : 0;
-    App.StrokeColor(ctx, App.Palette[1]); ctx.lineWidth = 1;
+    App.StrokeColor(ctx, App.Palette[1]);
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    for (let i = 1; i < cells; i++) { ctx.moveTo(Math.round(x + cw * i), y + h * 0.15); ctx.lineTo(Math.round(x + cw * i), y + h * 0.55); }
+    for (let i = 1; i < cells; i++) {
+      ctx.moveTo(Math.round(x + cw * i), y + h * 0.15);
+      ctx.lineTo(Math.round(x + cw * i), y + h * 0.55);
+    }
     ctx.stroke();
-    const red = 13, stopped = mode === 0 || (mode === 2 && !this.hostPlaying);
+    const red = 13,
+      stopped = mode === 0 || (mode === 2 && !this.hostPlaying);
     App.FillColor(ctx, App.Palette[stopped ? red : menu[2]]);
     ctx.fillRect(x + cw * mode, y + h * 0.55, cw, h * 0.05 + (this.powerHover ? u : 0));
-    const lx = x + cw * 0.5, rx = x + cw * 1.5, hx = x + cw * 2.5;
-    ctx.lineWidth = 2; App.StrokeColor(ctx, txt);
+    const lx = x + cw * 0.5,
+      rx = x + cw * 1.5,
+      hx = x + cw * 2.5;
+    ctx.lineWidth = 2;
+    App.StrokeColor(ctx, txt);
     ctx.beginPath();
-    ctx.moveTo(lx - 5 * u, cy); ctx.lineTo(lx + 5 * u, cy);
-    ctx.moveTo(rx + 5 * u, cy); ctx.lineTo(rx, cy - 5 * u); ctx.lineTo(rx - 5 * u, cy); ctx.lineTo(rx, cy + 5 * u); ctx.lineTo(rx + 5 * u, cy);
+    ctx.moveTo(lx - 5 * u, cy);
+    ctx.lineTo(lx + 5 * u, cy);
+    ctx.moveTo(rx + 5 * u, cy);
+    ctx.lineTo(rx, cy - 5 * u);
+    ctx.lineTo(rx - 5 * u, cy);
+    ctx.lineTo(rx, cy + 5 * u);
+    ctx.lineTo(rx + 5 * u, cy);
     if (this.hostPower && this.hostPlaying) ctx.rect(hx - 4.5 * u, cy - 4.5 * u, 9 * u, 9 * u);
-    else if (this.hostPower) { ctx.moveTo(hx - 4 * u, cy - 5 * u); ctx.lineTo(hx + 5 * u, cy); ctx.lineTo(hx - 4 * u, cy + 5 * u); ctx.closePath(); }
-    ctx.stroke(); ctx.lineWidth = 1;
+    else if (this.hostPower) {
+      ctx.moveTo(hx - 4 * u, cy - 5 * u);
+      ctx.lineTo(hx + 5 * u, cy);
+      ctx.lineTo(hx - 4 * u, cy + 5 * u);
+      ctx.closePath();
+    }
+    ctx.stroke();
+    ctx.lineWidth = 1;
     const hosted = mode === 2;
-    const label = this.hostHinting ? "USE THE HOST'S PLAY BUTTON" : mode === 0 ? 'POWER OFF' : !hosted ? 'POWER'
-      : this.hostPlaying ? 'POWER · HOST PLAYING' : 'SYNCED TO HOST';
+    const label = this.hostHinting
+      ? "USE THE HOST'S PLAY BUTTON"
+      : mode === 0
+        ? 'POWER OFF'
+        : !hosted
+          ? 'POWER'
+          : this.hostPlaying
+            ? 'POWER · HOST PLAYING'
+            : 'SYNCED TO HOST';
     const fill = this.hostHinting ? menu[1] : stopped ? red : null;
-    ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'center';
+    ctx.font = App.Metrics.TxtMid;
+    ctx.textAlign = 'center';
     let base = App.Height - 50 * u;
     if (fill !== null) {
-      const m = ctx.measureText(label), boxY = base - 11 * u, boxH = 15 * u;
+      const m = ctx.measureText(label),
+        boxY = base - 11 * u,
+        boxH = 15 * u;
       App.FillColor(ctx, App.Palette[fill]);
       ctx.fillRect(x + w * 0.5 - m.width * 0.5 - 6 * u, boxY, m.width + 12 * u, boxH);
       // The letters sit in the middle of the fill (owner, 2026-11-13: they sat a pixel or two high).
@@ -485,29 +776,59 @@ export class V1Scene {
   }
 
   /** A mouse wheel over the UI: the gallery's list scrolls (owner review 2); elsewhere v1's zoom buttons take it. */
-  wheel(e: WheelEvent): void { if (this.PatchesPanel.Open) { this.PatchesPanel.Wheel(e); return; } this.ZoomButtons.MouseWheel(e); }
+  wheel(e: WheelEvent): void {
+    if (this.PatchesPanel.Open) {
+      this.PatchesPanel.Wheel(e);
+      return;
+    }
+    this.ZoomButtons.MouseWheel(e);
+  }
 
   // ---- multi-touch (CHG-0005 task 8; not in v1, which took one pointer) ----
   /** Is (x, y) device px on the UI (an open panel, the header with its open menu, the options panel)? Another finger
    * there doesn't grab the block underneath. */
   uiAt(x: number, y: number): boolean {
-    if (this.SharePanel.Open || this.SettingsPanel.Open || this.PatchesPanel.Open || this.SoundcloudPanel.Open) return true;
-    const h = this.Header as any, u = App.Unit;
+    if (
+      this.SharePanel.Open ||
+      this.SettingsPanel.Open ||
+      this.PatchesPanel.Open ||
+      this.SoundcloudPanel.Open
+    )
+      return true;
+    const h = this.Header as any,
+      u = App.Unit;
     if (y < (h.Height * (h.Rows ?? 1) + (h.DropDown ?? 0)) * u) return true;
-    return this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).OutlineTest(new Point(x, y));
+    return (
+      this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).OutlineTest(new Point(x, y))
+    );
   }
   /** Is (x, y) device px on the open options panel? (A trackpad pinch there never zooms the stage.) */
   optionsPanelAt(x: number, y: number): boolean {
-    return this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).OutlineTest(new Point(x, y));
+    return (
+      this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).OutlineTest(new Point(x, y))
+    );
   }
   /** A second finger turned a stage drag into a pinch: the first finger stops dragging the stage. */
-  endStageDrag(): void { this.MainSceneDragger.MouseUp(); }
+  endStageDrag(): void {
+    this.MainSceneDragger.MouseUp();
+  }
   /** The open options panel's slider row under (x, y) device px (v1 OptionsPanel.RolloverCheck's rect), or -1. */
   sliderIndexAt(x: number, y: number): number {
-    const o = this.OptionsPanel as any, u = App.Unit;
+    const o = this.OptionsPanel as any,
+      u = App.Unit;
     if (o.Scale !== 1 || !o.SelectedBlock) return -1;
-    return (o.Options ?? []).findIndex((opt: any) => (opt.Type === 'slider' || opt.Type === 'waveslider')
-      && Dimensions.hitRect(o.Position.x + o.Margin - 10 * u, o.Position.y + opt.Position.y, o.Range + 20 * u, opt.Size.height, x, y));
+    return (o.Options ?? []).findIndex(
+      (opt: any) =>
+        (opt.Type === 'slider' || opt.Type === 'waveslider') &&
+        Dimensions.hitRect(
+          o.Position.x + o.Margin - 10 * u,
+          o.Position.y + opt.Position.y,
+          o.Range + 20 * u,
+          opt.Size.height,
+          x,
+          y,
+        ),
+    );
   }
   /** Another finger drags slider `i` (v1 OptionsPanel.SliderSet). It is not marked Selected: v1 moves every selected
    * slider to the first finger. */
@@ -518,34 +839,47 @@ export class V1Scene {
   /** Pinch zoom: the view follows the fingers; the zoom readout shows as with v1's zoom buttons. */
   pinchView(zoom: number, drag: { x: number; y: number }): void {
     const z = this.ZoomButtons as any;
-    z.StopAllTweens?.(); this.MainSceneDragger.StopAllTweens();
+    z.StopAllTweens?.();
+    this.MainSceneDragger.StopAllTweens();
     z.ZoomAlpha = 1;
-    this.MainSceneDragger.Destination.x = drag.x; this.MainSceneDragger.Destination.y = drag.y;
+    this.MainSceneDragger.Destination.x = drag.x;
+    this.MainSceneDragger.Destination.y = drag.y;
     this.setView(zoom, drag);
   }
   /** Fingers lifted: the zoom buttons step on from the nearest of v1's levels; the readout fades as after a step. */
   pinchEnd(): void {
-    const z = this.ZoomButtons as any, slots: number[] = z._ZoomSlots ?? [0.15, 0.25, 0.5, 1, 2, 4];
+    const z = this.ZoomButtons as any,
+      slots: number[] = z._ZoomSlots ?? [0.15, 0.25, 0.5, 1, 2, 4];
     let best = 0;
-    slots.forEach((s, i) => { if (Math.abs(Math.log(s / App.ZoomLevel)) < Math.abs(Math.log(slots[best] / App.ZoomLevel))) best = i; });
+    slots.forEach((s, i) => {
+      if (Math.abs(Math.log(s / App.ZoomLevel)) < Math.abs(Math.log(slots[best] / App.ZoomLevel)))
+        best = i;
+    });
     z.CurrentSlot = best;
     z.DelayTo?.(z, 0, 500, 700, 'ZoomAlpha');
   }
 
   /** The slider row of the open options panel under (x, y) device px, using v1 OptionsPanel.HitTests' row rect. */
   sliderAt(x: number, y: number): { block: V1Block; setting: string; name: string } | null {
-    const o = this.OptionsPanel, u = App.Unit;
+    const o = this.OptionsPanel,
+      u = App.Unit;
     if (o.Scale !== 1 || !o.SelectedBlock) return null;
     for (const opt of o.Options ?? []) {
       if (opt.Type !== 'slider') continue;
-      const rx = o.Position.x + o.Margin - 10 * u, ry = o.Position.y + opt.Position.y;
-      if (x > rx && x < rx + o.Range + 20 * u && y > ry && y < ry + opt.Size.height) return { block: o.SelectedBlock, setting: opt.Setting, name: opt.Name };
+      const rx = o.Position.x + o.Margin - 10 * u,
+        ry = o.Position.y + opt.Position.y;
+      if (x > rx && x < rx + o.Range + 20 * u && y > ry && y < ry + opt.Size.height)
+        return { block: o.SelectedBlock, setting: opt.Setting, name: opt.Name };
     }
     // The Filter's graph (CHG-0010) stands in for its Frequency and Gain sliders: the handle is Gain, the width bar
     // Width, anywhere else on the graph Frequency (the menu's title names which).
-    const g = (o.SelectedBlock as any).def?.id === 'fx.filter' ? o.Options?.find((q: any) => q.Type === 'parametric') : null;
+    const g =
+      (o.SelectedBlock as any).def?.id === 'fx.filter'
+        ? o.Options?.find((q: any) => q.Type === 'parametric')
+        : null;
     if (g) {
-      const rx = o.Position.x + o.Margin - 10 * u, ry = o.Position.y + g.Position.y;
+      const rx = o.Position.x + o.Margin - 10 * u,
+        ry = o.Position.y + g.Position.y;
       if (x > rx && x < rx + o.Range + 20 * u && y > ry && y < ry + g.Size.height) {
         o.RolloverCheck(x, y);
         if (g.HandleRoll[1]) return { block: o.SelectedBlock, setting: 'gain', name: 'Gain' };
@@ -565,35 +899,49 @@ export class V1Scene {
   setPlayheads(packed: Float32Array): void {
     this.playheads.clear();
     for (let i = 0; i + 1 < packed.length; i += 2) {
-      const id = packed[i], list = this.playheads.get(id);
-      if (list) list.push(packed[i + 1]); else this.playheads.set(id, [packed[i + 1]]);
+      const id = packed[i],
+        list = this.playheads.get(id);
+      if (list) list.push(packed[i + 1]);
+      else this.playheads.set(id, [packed[i + 1]]);
     }
   }
   /** The open panel's playheads as fractions of its waveform's width, and the waveform's rect (panel coordinates). */
   playheadLines(): { xs: number[]; x: number; y: number; width: number; height: number } | null {
-    const o = this.OptionsPanel as any, v = o.SelectedBlock as V1Block | null;
+    const o = this.OptionsPanel as any,
+      v = o.SelectedBlock as V1Block | null;
     if (!v || o.Scale !== 1) return null;
     const secs = this.playheads.get(v.Id);
-    const w = (o.Options ?? []).find((q: any) => q.Type === 'waveregion' || q.Type === 'waveslider' || q.Type === 'waveimage');
+    const w = (o.Options ?? []).find(
+      (q: any) => q.Type === 'waveregion' || q.Type === 'waveslider' || q.Type === 'waveimage',
+    );
     const dur = v.GetDuration();
     if (!secs?.length || !w || !(dur > 0) || !(w.Waveform?.length > 0)) return null;
     // A zoomed waveform (waveZoom.ts) shows only the playheads inside its window.
     const view = panelView(o) ?? { f0: 0, f1: 1 };
-    const xs = secs.map(t => Math.max(0, Math.min(1, t / dur))).map(f => (f - view.f0) / (view.f1 - view.f0)).filter(f => f >= 0 && f <= 1);
+    const xs = secs
+      .map((t) => Math.max(0, Math.min(1, t / dur)))
+      .map((f) => (f - view.f0) / (view.f1 - view.f0))
+      .filter((f) => f >= 0 && f <= 1);
     return { xs, x: o.Margin, y: w.Position.y, width: o.Range, height: w.Size.height };
   }
   private drawPlayheads(): void {
     const l = this.playheadLines();
     this.playheadsShown = !!l;
     if (!l) return;
-    const o = this.OptionsPanel as any, ctx = this.Ctx, u = App.Unit;
+    const o = this.OptionsPanel as any,
+      ctx = this.Ctx,
+      u = App.Unit;
     ctx.save();
     ctx.setTransform(o.Scale, 0, 0, o.Scale, o.Position.x, o.Position.y);
     App.StrokeColor(ctx, App.Palette[App.ThemeManager.Txt]);
     ctx.globalAlpha = 0.85;
     ctx.lineWidth = Math.max(1, u);
     ctx.beginPath();
-    for (const f of l.xs) { const x = Math.round(l.x + f * l.width) + 0.5; ctx.moveTo(x, l.y); ctx.lineTo(x, l.y + l.height); }
+    for (const f of l.xs) {
+      const x = Math.round(l.x + f * l.width) + 0.5;
+      ctx.moveTo(x, l.y);
+      ctx.lineTo(x, l.y + l.height);
+    }
     ctx.stroke();
     ctx.restore();
   }
@@ -605,16 +953,32 @@ export class V1Scene {
   }
 
   get uiBusy(): boolean {
-    const z = this.ZoomButtons, o = this.OptionsPanel;
-    return this.powerHover || z.InRoll || z.OutRoll || ((this.Tutorial.Open || this.Tutorial.SplashOpen) && this.Tutorial.Hover) || this.RecorderPanel.Hover || this.Header.MenuOver || this.SharePanel.Open || this.SettingsPanel.Open || this.SoundcloudPanel.Open || this.PatchesPanel.Open || this.CreateNew.Hover || (o.Scale === 1 && o.Hover);
+    const z = this.ZoomButtons,
+      o = this.OptionsPanel;
+    return (
+      this.powerHover ||
+      z.InRoll ||
+      z.OutRoll ||
+      ((this.Tutorial.Open || this.Tutorial.SplashOpen) && this.Tutorial.Hover) ||
+      this.RecorderPanel.Hover ||
+      this.Header.MenuOver ||
+      this.SharePanel.Open ||
+      this.SettingsPanel.Open ||
+      this.SoundcloudPanel.Open ||
+      this.PatchesPanel.Open ||
+      this.CreateNew.Hover ||
+      (o.Scale === 1 && o.Hover)
+    );
   }
 
   /** v1 CommandManager commands the panels issue: SAVE / SAVE_AS go to the sharing backend (CHG-0003); the Share
    * panel then shows the id exactly as v1 showed a saved composition id. */
   private command(c: unknown): void {
-    const name = ((c as { value?: string })?.value ?? String(c)).toLowerCase();  // v1 StringValue lowercases
+    const name = ((c as { value?: string })?.value ?? String(c)).toLowerCase(); // v1 StringValue lowercases
     if (name === 'save' || name === 'saveas') {
-      void this.host.share(name === 'save' ? 'save' : 'saveAs', this.SharePanel.SessionTitle ?? '').then(id => this.SharePanel.ReturnLink(id));
+      void this.host
+        .share(name === 'save' ? 'save' : 'saveAs', this.SharePanel.SessionTitle ?? '')
+        .then((id) => this.SharePanel.ReturnLink(id));
     }
   }
 
@@ -629,27 +993,42 @@ export class V1Scene {
   pendingSelect: number | null = null;
   /** Web MIDI inputs (MIDI Input block's device option, CHG-0004). */
   midiDevices: { id: string; name: string }[] = [];
-  setMidiDevices(list: { id: string; name: string }[]): void { this.midiDevices = list; this.OptionsPanel.SelectedBlock?.RefreshOptionsPanel?.(); }
-  DeleteSelectedBlock(): void { if (this.SelectedBlock) this.host.deleteBlock(this.SelectedBlock.Id); this.select(null); this.OptionsPanel.Close(); }
+  setMidiDevices(list: { id: string; name: string }[]): void {
+    this.midiDevices = list;
+    this.OptionsPanel.SelectedBlock?.RefreshOptionsPanel?.();
+  }
+  DeleteSelectedBlock(): void {
+    if (this.SelectedBlock) this.host.deleteBlock(this.SelectedBlock.Id);
+    this.select(null);
+    this.OptionsPanel.Close();
+  }
   /** v1 MainScene.ResetScene: delete all blocks, reset zoom and drag, close the options panel, reset the session. */
   ResetScene(): void {
-    if (this.Tutorial.Open) this.Tutorial.ClosePanel();  // v1 MainScene.ResetScene
+    if (this.Tutorial.Open) this.Tutorial.ClosePanel(); // v1 MainScene.ResetScene
     this.Tutorial.WatchedBlocks = [];
     this.resetting = true;
-    try { this.host.resetScene(); } finally { this.resetting = false; }
+    try {
+      this.host.resetScene();
+    } finally {
+      this.resetting = false;
+    }
     this.CreateNew.CheckState();
     this.select(null);
-    App.DragOffset.x = 0; App.DragOffset.y = 0;
+    App.DragOffset.x = 0;
+    App.DragOffset.y = 0;
     this.ZoomButtons.CurrentSlot = (this.ZoomButtons as any)._ZoomSlots.indexOf(1);
     this.MainSceneDragger.Destination = new Point(0, 0);
     App.ZoomLevel = 1;
     this.Metrics.UpdateGridScale();
     this.OptionsPanel.Close();
-    App.CompositionId = null; App.SessionId = null;
+    App.CompositionId = null;
+    App.SessionId = null;
     this.SharePanel.Reset();
-    this.PatchesPanel.setTitle('');  // a new scene gets a new title
+    this.PatchesPanel.setTitle(''); // a new scene gets a new title
   }
-  setParam(block: V1Block, key: string, value: number): void { this.host.setParam(block.Id, key, value); }
+  setParam(block: V1Block, key: string, value: number): void {
+    this.host.setParam(block.Id, key, value);
+  }
 
   select(b: V1Block | null): void {
     if (this.SelectedBlock) this.SelectedBlock.IsSelected = false;
@@ -658,24 +1037,37 @@ export class V1Scene {
   }
 
   private checkHover(p: Point, pointerDown: boolean, hover: () => V1Block | null): void {
-    const t = this.ToolTip, o = this.OptionsPanel;
-    let panelCheck = false, over: V1Block | null = null;
-    if (o.Scale === 1) panelCheck = p.x > o.Position.x && p.x < o.Position.x + o.Size.width && p.y > o.Position.y - o.Size.height * 0.5 && p.y < o.Position.y + o.Size.height * 0.5;
+    const t = this.ToolTip,
+      o = this.OptionsPanel;
+    let panelCheck = false,
+      over: V1Block | null = null;
+    if (o.Scale === 1)
+      panelCheck =
+        p.x > o.Position.x &&
+        p.x < o.Position.x + o.Size.width &&
+        p.y > o.Position.y - o.Size.height * 0.5 &&
+        p.y < o.Position.y + o.Size.height * 0.5;
     if (!panelCheck && !pointerDown) over = hover();
     if (over) {
       t.Name = over.BlockName;
       const pos = this.Metrics.PointOnGrid(over.Position);
-      t.Position.x = pos.x; t.Position.y = pos.y;
+      t.Position.x = pos.x;
+      t.Position.y = pos.y;
     }
     if (over && !t.Open && !o.Opening) {
       t.Open = true;
       if (t.Alpha > 0) t.AlphaTo(t, 100, 600);
-      else this.toolTipTimer = setTimeout(() => { if (t.Alpha === 0) t.AlphaTo(t, 100, 600); }, 550);
+      else
+        this.toolTipTimer = setTimeout(() => {
+          if (t.Alpha === 0) t.AlphaTo(t, 100, 600);
+        }, 550);
     }
     if (!over && t.Open) this.toolTipClose();
   }
   private toolTipTimer: any;
-  ToolTipClose(): void { this.toolTipClose(); }
+  ToolTipClose(): void {
+    this.toolTipClose();
+  }
   private toolTipClose(): void {
     const t = this.ToolTip;
     clearTimeout(this.toolTipTimer);
@@ -687,28 +1079,46 @@ export class V1Scene {
   /** v2 addition to the sample panel (DATA-0005: the user's own audio comes first): an UPLOAD FILE button centred under
    * the results, styled like v1's Randomise button beside it, with the upload mark (owner, 2026-11-10). */
   private fileButtonRect(): { x: number; y: number; w: number; h: number; label: string } {
-    const u = App.Unit, label = 'UPLOAD FILE';
+    const u = App.Unit,
+      label = 'UPLOAD FILE';
     this.Ctx.font = App.Metrics.TxtMid;
     const w = this.Ctx.measureText(label).width;
     const cy = this.SoundcloudPanel.OffsetY + App.Height * 0.5;
-    return { x: App.Width * 0.5 - w * 0.5 - 5 * u, y: cy + 136 * u, w: w + 10 * u, h: 46 * u, label };
+    return {
+      x: App.Width * 0.5 - w * 0.5 - 5 * u,
+      y: cy + 136 * u,
+      w: w + 10 * u,
+      h: 46 * u,
+      label,
+    };
   }
   private fileButtonHit(p: Point): boolean {
     const r = this.fileButtonRect();
     return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
   }
   private drawFileButton(): void {
-    const r = this.fileButtonRect(), cy = this.SoundcloudPanel.OffsetY + App.Height * 0.5;
-    drawUploadLink(this.Ctx, r.label, App.Width * 0.5, cy + 160 * App.Unit, this.fileButtonHit(this.pointer));
+    const r = this.fileButtonRect(),
+      cy = this.SoundcloudPanel.OffsetY + App.Height * 0.5;
+    drawUploadLink(
+      this.Ctx,
+      r.label,
+      App.Width * 0.5,
+      cy + 160 * App.Unit,
+      this.fileButtonHit(this.pointer),
+    );
   }
 
   /** v1 BlockSprites (ported): menu icons and dragged items use v1's own sprite code, with its per-type offsets. */
   private readonly sprites = new BlockSprites();
-  private drawSprite(ctx: CanvasRenderingContext2D, pos: Point, scaled: boolean, name: string): void {
-    if (!scaled && drawNewSprite(ctx, pos, name)) return;  // the post-2.0 blocks: from their manifests
+  private drawSprite(
+    ctx: CanvasRenderingContext2D,
+    pos: Point,
+    scaled: boolean,
+    name: string,
+  ): void {
+    if (!scaled && drawNewSprite(ctx, pos, name)) return; // the post-2.0 blocks: from their manifests
     this.sprites.DrawSprite({ Ctx: ctx }, pos, scaled, name);
   }
-
 }
 
 /** v1 index.html's share inputs (the Share panel positions real DOM text fields over the canvas) and their v1 CSS
@@ -735,17 +1145,33 @@ function ensureShareDom(): void {
     <div id="gallerySearch"><form action=""><input type="text" id="gallerySearchInput" name="q" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="40" value=""></form></div>`;
   // The video player on SAVE / SHARE (owner review 2): portrait, over the panel like the text fields.
   const video = document.createElement('video');
-  video.id = 'patchVideo'; video.playsInline = true; video.loop = true; video.controls = true; video.preload = 'auto';
-  Object.assign(video.style, { position: 'absolute', display: 'none', background: '#000', objectFit: 'contain' });
+  video.id = 'patchVideo';
+  video.playsInline = true;
+  video.loop = true;
+  video.controls = true;
+  video.preload = 'auto';
+  Object.assign(video.style, {
+    position: 'absolute',
+    display: 'none',
+    background: '#000',
+    objectFit: 'contain',
+  });
   wrap.appendChild(video);
   for (const el of [...wrap.children]) document.body.appendChild(el);
   // Enter in these fields is handled by the panels (v1 EnterCheck); never submit (reload) the page.
-  for (const f of document.querySelectorAll('#shareUrl form, #shareTitle form, #soundCloudSearch form, #patchTitle form, #patchUrl form, #accountHandle form, #gallerySearch form')) f.addEventListener('submit', e => e.preventDefault());
+  for (const f of document.querySelectorAll(
+    '#shareUrl form, #shareTitle form, #soundCloudSearch form, #patchTitle form, #patchUrl form, #accountHandle form, #gallerySearch form',
+  ))
+    f.addEventListener('submit', (e) => e.preventDefault());
   // v1 used a scrolling <textarea>; v2 shows the link on one line like the title field, with no scrollbars, and a
   // click selects the whole link (owner review 2026-11-06).
   for (const id of ['shareUrlText', 'patchUrlText']) {
     const ta = document.getElementById(id) as HTMLInputElement;
-    ta.addEventListener('click', () => { ta.focus(); ta.selectionStart = 0; ta.selectionEnd = ta.value.length; });
+    ta.addEventListener('click', () => {
+      ta.focus();
+      ta.selectionStart = 0;
+      ta.selectionEnd = ta.value.length;
+    });
   }
 }
 
@@ -758,14 +1184,25 @@ function ensureShareDom(): void {
 const SHARE_SLOT_LABEL = 'PATCHES';
 function relabelShareButton(header: any): void {
   const wrap = (fn: () => void) => {
-    const ctx = header.Ctx as CanvasRenderingContext2D, { fillText, measureText } = ctx;
-    ctx.fillText = function (text: string, x: number, y: number, w?: number) { fillText.call(this, text === 'SHARE' ? SHARE_SLOT_LABEL : text, x, y, w); };
-    ctx.measureText = function (text: string) { return measureText.call(this, text === 'SHARE' ? SHARE_SLOT_LABEL : text); };
+    const ctx = header.Ctx as CanvasRenderingContext2D,
+      { fillText, measureText } = ctx;
+    ctx.fillText = function (text: string, x: number, y: number, w?: number) {
+      fillText.call(this, text === 'SHARE' ? SHARE_SLOT_LABEL : text, x, y, w);
+    };
+    ctx.measureText = function (text: string) {
+      return measureText.call(this, text === 'SHARE' ? SHARE_SLOT_LABEL : text);
+    };
     // Remove the overrides rather than assigning the originals back: an own property left on the context would shadow
     // CanvasRenderingContext2D.prototype from then on.
-    try { fn(); } finally { delete (ctx as any).fillText; delete (ctx as any).measureText; }
+    try {
+      fn();
+    } finally {
+      delete (ctx as any).fillText;
+      delete (ctx as any).measureText;
+    }
   };
-  const draw = header.Draw.bind(header), hit = header.HitTests.bind(header);
+  const draw = header.Draw.bind(header),
+    hit = header.HitTests.bind(header);
   header.Draw = () => wrap(draw);
   header.HitTests = (point: unknown) => wrap(() => hit(point));
 }
@@ -774,11 +1211,18 @@ function relabelShareButton(header: any): void {
  * doesn't use. "DAW plugin" becomes a link to the downloads once they exist (CHG-0005 task 12). */
 /** Luke Phillips's credit in About (owner, 2026-11-16): v1's roles, plus V2, which he built alone; his site is funputs.com.
  * At most three lines in its column: v1 draws the website 42 units below the blurb's first line. */
-export const PHILLIPS = { blurb: 'Luke Phillips - audio/musical interaction. V2 architecture & full-stack development.', url: 'funputs.com' };
-export const ABOUT = 'BlokDust is a collaboration between Luke Twyman, Luke Phillips and Ed Silverton, developed in Brighton, UK, '
-  + 'and released in 2016. This rebuild was released in 2026, built by Luke Phillips, now available as a DAW plugin.';
+export const PHILLIPS = {
+  blurb: 'Luke Phillips - audio/musical interaction. V2 architecture & full-stack development.',
+  url: 'funputs.com',
+};
+export const ABOUT =
+  'BlokDust is a collaboration between Luke Twyman, Luke Phillips and Ed Silverton, developed in Brighton, UK, ' +
+  'and released in 2016. This rebuild was released in 2026, built by Luke Phillips, now available as a DAW plugin.';
 /** The code (owner: people can read it and send pull requests), where v1 had "Chrome Recommended". */
-export const SOURCE_LINK = { label: 'View the code on GitHub', url: 'https://github.com/BlokDust/BlokDust' };
+export const SOURCE_LINK = {
+  label: 'View the code on GitHub',
+  url: 'https://github.com/BlokDust/BlokDust',
+};
 /** The published plugin installers (`pnpm bd release publish` writes it; null until the first release). */
 type Release = { file: string; url: string; sha256: string; bytes: number } | null;
 let RELEASE = RELEASES as { version: string | null; macos: Release; windows: Release };
@@ -786,8 +1230,10 @@ let RELEASE = RELEASES as { version: string | null; macos: Release; windows: Rel
  * paragraphs, each starting on its own line (owner, 2026-11-12, CHG-0010). The unsigned-Windows note moved into the
  * Windows zip's README.txt (CHG-0010). */
 export const DOWNLOAD = {
-  intro: ['Download the standalone app or VST3/AU plugins to use in your DAW, or get the iPad app with its AUv3 plugin.',
-    'BlokDust can be used as both an instrument and an effect.'],
+  intro: [
+    'Download the standalone app or VST3/AU plugins to use in your DAW, or get the iPad app with its AUv3 plugin.',
+    'BlokDust can be used as both an instrument and an effect.',
+  ],
   macos: 'macOS 11 or later, Apple silicon and Intel. VST3, Audio Unit and the standalone app.',
   windows: 'Windows 10 or 11, 64-bit. VST3 and the standalone app.',
   ipad: 'iPadOS 16 or later. AUv3 for AUM, GarageBand, Logic Pro and other hosts, and the standalone app.',
@@ -797,7 +1243,7 @@ export const DOWNLOAD = {
 export const IPAD_APP_STORE_URL: string | null = null;
 /** The About footer: the code (owner, 2026-11-11: the licences are viewable there, NOTICE.md, so no separate links;
  * every build also carries NOTICE.txt and LICENSE.txt). */
-export const FOOTER_LINKS = [SOURCE_LINK];  // no Privacy link until the page exists (owner, 2026-11-16)
+export const FOOTER_LINKS = [SOURCE_LINK]; // no Privacy link until the page exists (owner, 2026-11-16)
 /** The footer links shown: none where links can't open (App.NoLinks). */
 const footerLinks = () => (App.NoLinks ? [] : FOOTER_LINKS);
 
@@ -808,7 +1254,11 @@ const footerLinks = () => (App.NoLinks ? [] : FOOTER_LINKS);
  */
 export function hideLinks(): void {
   App.NoLinks = true;
-  for (const who of Object.values(App.L10n.Attribution as Record<string, any>)) if (who && typeof who === 'object') { who.url = ''; who.twitter = ''; }
+  for (const who of Object.values(App.L10n.Attribution as Record<string, any>))
+    if (who && typeof who === 'object') {
+      who.url = '';
+      who.twitter = '';
+    }
 }
 /** The usage stats switch's words (SHARING-0010; owner 2026-11-16: very small, beside the version number). */
 export const USAGE_STATS = (on: boolean) => `Anonymous usage stats: ${on ? 'on' : 'off'}`;
@@ -826,42 +1276,72 @@ export const USAGE_STATS = (on: boolean) => `Anonymous usage stats: ${on ? 'on' 
 function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   const p = panel as any;
   (App.L10n as any).Attribution.about = ABOUT;
-  Object.assign((App.L10n as any).Attribution.phillips, App.NoLinks ? { blurb: PHILLIPS.blurb } : PHILLIPS);
+  Object.assign(
+    (App.L10n as any).Attribution.phillips,
+    App.NoLinks ? { blurb: PHILLIPS.blurb } : PHILLIPS,
+  );
   const populate = p.Populate.bind(p);
   // DOWNLOAD (web only) is tab 3: v1 draws nothing for it, so its page is drawn here, following its tab's YOffset.
   const withDownload = !App.IsPlugin;
   // SIGN IN / ACCOUNT (CHG-0023, owner review 2026-11-15) is the last tab, drawn here the same way: tab 4 on the web,
   // tab 3 in the plugins, which have no DOWNLOAD (they sign in with a code: SHARING-0011, CHG-0039).
-  const account: AccountPage | null = host.account ? new AccountPage(host.account, () => p.Ctx) : null;
+  const account: AccountPage | null = host.account
+    ? new AccountPage(host.account, () => p.Ctx)
+    : null;
   const AT = withDownload ? 4 : 3;
   p.accountPage = account;
   p.Populate = () => {
-    populate({ categories: [{ name: 'settings' }, { name: 'feedback' },  // FEEDBACK (CHG-0041: was CONNECT)
-       { name: 'about' }, ...(withDownload ? [{ name: 'download' }] : []), ...(account ? [{ name: account.tabName }] : [])] });
+    populate({
+      categories: [
+        { name: 'settings' },
+        { name: 'feedback' }, // FEEDBACK (CHG-0041: was CONNECT)
+        { name: 'about' },
+        ...(withDownload ? [{ name: 'download' }] : []),
+        ...(account ? [{ name: account.tabName }] : []),
+      ],
+    });
   };
   if (account) {
     // The tab's name follows who is signed in (SIGN IN / ACCOUNT): lay the tabs out again, keeping each tab's state.
     const prevChange = account.onChange;
     account.onChange = () => {
       prevChange();
-      const keep = (p.MenuItems as any[]).map(m => ({ Selected: m.Selected, YOffset: m.YOffset }));
+      const keep = (p.MenuItems as any[]).map((m) => ({
+        Selected: m.Selected,
+        YOffset: m.YOffset,
+      }));
       p.Populate();
-      (p.MenuItems as any[]).forEach((m, i) => { if (keep[i]) { m.Selected = keep[i].Selected; m.YOffset = keep[i].YOffset; } });
+      (p.MenuItems as any[]).forEach((m, i) => {
+        if (keep[i]) {
+          m.Selected = keep[i].Selected;
+          m.YOffset = keep[i].YOffset;
+        }
+      });
     };
     // Closing Settings (×) while DELETE ACCOUNT asks is CANCEL (owner, 2026-11-18: it opened on the question again).
     const closeSettings = p.ClosePanel.bind(p);
     // SIGN-IN METHODS too: the account comes back on its own page (owner, 2026-11-19).
-    p.ClosePanel = () => { if (account?.View === 'delete' || account?.View === 'methods') { account.View = 'main'; account.Message = ''; } closeSettings(); };
+    p.ClosePanel = () => {
+      if (account?.View === 'delete' || account?.View === 'methods') {
+        account.View = 'main';
+        account.Message = '';
+      }
+      closeSettings();
+    };
     /** Open Settings on SIGN IN / ACCOUNT (back from Google, the signed-in mark on the stage). */
     p.openAccount = () => {
       p._OpenTab = AT;
-      (p.MenuItems as any[]).forEach((m, i) => { m.Selected = i === AT ? 1 : 0; m.YOffset = i === AT ? 0 : -p.DrawTo.Height; });
+      (p.MenuItems as any[]).forEach((m, i) => {
+        m.Selected = i === AT ? 1 : 0;
+        m.YOffset = i === AT ? 0 : -p.DrawTo.Height;
+      });
       void account.refresh();
       p.OpenPanel();
     };
   }
   // 35 units higher than the other pages (owner, 2026-11-18: the stats left too much room under the tabs).
-  const accountTop = () => p.OffsetY + ACCOUNT_TOP * App.Unit + (p.MenuItems[AT]?.YOffset ?? -p.DrawTo.Height);
+  const accountTop = () =>
+    p.OffsetY + ACCOUNT_TOP * App.Unit + (p.MenuItems[AT]?.YOffset ?? -p.DrawTo.Height);
   /** Tests: an account control's centre in CSS px. */
   p.accountCentre = (name: string) => account?.centreOf(name, accountTop()) ?? null;
   /** The DOWNLOAD page's two buttons (v1 SharePanel's halves, 420u wide) and their state. */
@@ -869,45 +1349,108 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
    * across About's text column (owner, 2026-11-17, CHG-0035). The iPad one opens the App Store page as it is; the
    * installers carry ?source=download-page. */
   const downloads = () => {
-    const u = App.Unit, W = App.Width, y = p.OffsetY + 120 * u + (p.MenuItems[3]?.YOffset ?? -p.DrawTo.Height) + 70 * u;
-    const pw = pageWidth(), bw = (pw - 30 * u) / 3, left = W * 0.5 - pw * 0.5;
+    const u = App.Unit,
+      W = App.Width,
+      y = p.OffsetY + 120 * u + (p.MenuItems[3]?.YOffset ?? -p.DrawTo.Height) + 70 * u;
+    const pw = pageWidth(),
+      bw = (pw - 30 * u) / 3,
+      left = W * 0.5 - pw * 0.5;
     // A phone (owner, 2026-11-18): one a row, the page's width, its line under it.
-    const at = (i: number) => App.SettingsPhone
-      ? { x: left, y: y + i * 110 * u, w: pw, h: 40 * u, cx: left + pw * 0.5 }
-      : { x: left + i * (bw + 15 * u), y, w: bw, h: 40 * u, cx: left + i * (bw + 15 * u) + bw * 0.5 };
-    const ipad = IPAD_APP_STORE_URL ? { file: '', url: IPAD_APP_STORE_URL, sha256: '', bytes: 0, store: true } : null;
+    const at = (i: number) =>
+      App.SettingsPhone
+        ? { x: left, y: y + i * 110 * u, w: pw, h: 40 * u, cx: left + pw * 0.5 }
+        : {
+            x: left + i * (bw + 15 * u),
+            y,
+            w: bw,
+            h: 40 * u,
+            cx: left + i * (bw + 15 * u) + bw * 0.5,
+          };
+    const ipad = IPAD_APP_STORE_URL
+      ? { file: '', url: IPAD_APP_STORE_URL, sha256: '', bytes: 0, store: true }
+      : null;
     return [
-      { key: 'macos' as const, label: 'macOS', release: RELEASE.macos as (Release & { store?: boolean }) | null, ...at(0), line: DOWNLOAD.macos },
-      { key: 'windows' as const, label: 'Windows', release: RELEASE.windows as (Release & { store?: boolean }) | null, ...at(1), line: DOWNLOAD.windows },
-      { key: 'ipad' as const, label: 'iPad', release: ipad as (Release & { store?: boolean }) | null, ...at(2), line: DOWNLOAD.ipad },
+      {
+        key: 'macos' as const,
+        label: 'macOS',
+        release: RELEASE.macos as (Release & { store?: boolean }) | null,
+        ...at(0),
+        line: DOWNLOAD.macos,
+      },
+      {
+        key: 'windows' as const,
+        label: 'Windows',
+        release: RELEASE.windows as (Release & { store?: boolean }) | null,
+        ...at(1),
+        line: DOWNLOAD.windows,
+      },
+      {
+        key: 'ipad' as const,
+        label: 'iPad',
+        release: ipad as (Release & { store?: boolean }) | null,
+        ...at(2),
+        line: DOWNLOAD.ipad,
+      },
     ];
   };
   let downloadHover = -1;
   /** Tests: show the page as it will be once a release is published. */
-  p.setRelease = (r: typeof RELEASE) => { RELEASE = r; };
+  p.setRelease = (r: typeof RELEASE) => {
+    RELEASE = r;
+  };
   /** Tests: the DOWNLOAD page's buttons in CSS px, and what they offer. */
-  p.downloadButtons = () => { const pr = App.Metrics.PixelRatio; return downloads().map(b => ({ key: b.key, x: (b.x + b.w / 2) / pr, y: (b.y + b.h / 2) / pr, url: b.release?.url ?? null })); };
+  p.downloadButtons = () => {
+    const pr = App.Metrics.PixelRatio;
+    return downloads().map((b) => ({
+      key: b.key,
+      x: (b.x + b.w / 2) / pr,
+      y: (b.y + b.h / 2) / pr,
+      url: b.release?.url ?? null,
+    }));
+  };
   /** v1's word wrap (SharePanel.WordWrap): fill `text` within `width` from (x, y), `lh` apart; returns the next line's y. */
-  const wrap = (ctx: CanvasRenderingContext2D, text: string, x: number, y: number, lh: number, width: number) => {
+  const wrap = (
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    x: number,
+    y: number,
+    lh: number,
+    width: number,
+  ) => {
     let line = '';
     for (const word of text.split(' ')) {
       const t = line ? `${line} ${word}` : word;
-      if (ctx.measureText(t).width > width && line) { ctx.fillText(line, x, y); y += lh; line = word; } else line = t;
+      if (ctx.measureText(t).width > width && line) {
+        ctx.fillText(line, x, y);
+        y += lh;
+        line = word;
+      } else line = t;
     }
-    if (line) { ctx.fillText(line, x, y); y += lh; }
+    if (line) {
+      ctx.fillText(line, x, y);
+      y += lh;
+    }
     return y;
   };
   const drawDownload = () => {
     const item = p.MenuItems[3];
     if (!item || item.YOffset <= -p.DrawTo.Height) return;
-    const ctx = p.Ctx as CanvasRenderingContext2D, u = App.Unit, W = App.Width, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
+    const ctx = p.Ctx as CanvasRenderingContext2D,
+      u = App.Unit,
+      W = App.Width,
+      txt = App.Palette[App.ThemeManager.Txt],
+      menu = App.ThemeManager.MenuOrder;
     const top = p.OffsetY + 120 * u + item.YOffset;
     // INTRO (v1 About's body type) //
-    App.FillColor(ctx, txt); ctx.textAlign = 'left'; ctx.font = App.Metrics.TxtMid;
+    App.FillColor(ctx, txt);
+    ctx.textAlign = 'left';
+    ctx.font = App.Metrics.TxtMid;
     let iy = top + 10 * u;
     const pw = pageWidth();
     // A phone (owner, 2026-11-18): three lines, broken after "DAW," (the desktop's break left "plugin." alone).
-    const intro = App.SettingsPhone ? [...DOWNLOAD.intro[0].split(/(?<=DAW,) /), ...DOWNLOAD.intro.slice(1)] : DOWNLOAD.intro;
+    const intro = App.SettingsPhone
+      ? [...DOWNLOAD.intro[0].split(/(?<=DAW,) /), ...DOWNLOAD.intro.slice(1)]
+      : DOWNLOAD.intro;
     for (const para of intro) iy = wrap(ctx, para, W * 0.5 - pw * 0.5, iy, 16 * u, pw);
     // MACOS · WINDOWS · IPAD (v1 SharePanel's SAVE / SAVE AS colours and a third, Connect's GUIDE button type) //
     let below = 0;
@@ -915,39 +1458,93 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
       const on = !!b.release;
       App.FillColor(ctx, App.Palette[on ? [menu[3], menu[1], menu[2]][i] : 1]);
       ctx.fillRect(b.x, b.y, b.w, b.h);
-      if (on && downloadHover === i) { ctx.beginPath(); ctx.moveTo(b.cx, b.y + b.h + 9 * u); ctx.lineTo(b.cx - 10 * u, b.y + b.h - u); ctx.lineTo(b.cx + 10 * u, b.y + b.h - u); ctx.closePath(); ctx.fill(); }
-      App.FillColor(ctx, txt); ctx.textAlign = 'center'; ctx.font = App.Metrics.TxtUrl2;
+      if (on && downloadHover === i) {
+        ctx.beginPath();
+        ctx.moveTo(b.cx, b.y + b.h + 9 * u);
+        ctx.lineTo(b.cx - 10 * u, b.y + b.h - u);
+        ctx.lineTo(b.cx + 10 * u, b.y + b.h - u);
+        ctx.closePath();
+        ctx.fill();
+      }
+      App.FillColor(ctx, txt);
+      ctx.textAlign = 'center';
+      ctx.font = App.Metrics.TxtUrl2;
       ctx.fillText(b.label.toUpperCase(), b.cx, b.y + 29 * u);
-      ctx.textAlign = 'left'; ctx.font = App.Metrics.TxtItalic2;
-      below = Math.max(below, wrap(ctx, on ? b.line : DOWNLOAD.soon, b.x, b.y + b.h + 24 * u, 14 * u, b.w));
+      ctx.textAlign = 'left';
+      ctx.font = App.Metrics.TxtItalic2;
+      below = Math.max(
+        below,
+        wrap(ctx, on ? b.line : DOWNLOAD.soon, b.x, b.y + b.h + 24 * u, 14 * u, b.w),
+      );
     }
     // VERSION: under the longest line (the columns are narrow) //
     const y = Math.max(downloads()[0].y + 40 * u + 80 * u, below + 16 * u);
-    ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
-    if (RELEASE.version && !App.SettingsPhone) ctx.fillText(`Version ${RELEASE.version}`, W * 0.5 - pw * 0.5, y);  // a phone: About has the build (owner, 2026-11-18)
+    ctx.font = App.Metrics.TxtItalic2;
+    ctx.textAlign = 'left';
+    if (RELEASE.version && !App.SettingsPhone)
+      ctx.fillText(`Version ${RELEASE.version}`, W * 0.5 - pw * 0.5, y); // a phone: About has the build (owner, 2026-11-18)
   };
   // Tempo (web) / nothing (plugin) in place of Tour, v1's last row (drawn at +156 units).
-  const tempoRow = () => (p.Options as any[]).findIndex(o => o.Type === 'tempo');
-  const placeTempo = (o: any) => { o.Value = host.tempo(); o.Position.x = p.linPosition(0, p.Range, o.Min, o.Max, o.Value); };
+  const tempoRow = () => (p.Options as any[]).findIndex((o) => o.Type === 'tempo');
+  const placeTempo = (o: any) => {
+    o.Value = host.tempo();
+    o.Position.x = p.linPosition(0, p.Range, o.Min, o.Max, o.Value);
+  };
   const populateOptions = p.PopulateOptions.bind(p);
   p.PopulateOptions = () => {
     populateOptions();
-    const opts = p.Options as any[], i = opts.findIndex(o => o.Setting === 'tutorial');
+    const opts = p.Options as any[],
+      i = opts.findIndex((o) => o.Setting === 'tutorial');
     if (i < 0) return;
-    if (App.IsPlugin) { opts[i] = { Type: 'hidden', Name: opts[i].Name, Selected: false, HandleRoll: [false, false], Position: opts[i].Position, Size: opts[i].Size, Draw() {} }; return; }
-    const t = new Slider(new Point(0, 0), new Size(1, App.SettingsRow * App.Unit), p.Margin, 120, 40, 240, true, 'Tempo', 'tempo', false) as any;
+    if (App.IsPlugin) {
+      opts[i] = {
+        Type: 'hidden',
+        Name: opts[i].Name,
+        Selected: false,
+        HandleRoll: [false, false],
+        Position: opts[i].Position,
+        Size: opts[i].Size,
+        Draw() {},
+      };
+      return;
+    }
+    const t = new Slider(
+      new Point(0, 0),
+      new Size(1, App.SettingsRow * App.Unit),
+      p.Margin,
+      120,
+      40,
+      240,
+      true,
+      'Tempo',
+      'tempo',
+      false,
+    ) as any;
     t.Type = 'tempo';
     t.DisplayConversion = (v: number) => `${Math.round(v)} BPM`;
     placeTempo(t);
     opts[i] = t;
-    opts.push(new OptionActionButton(new Point(0, 0), new Size(1, App.SettingsRow * App.Unit), 'Tour', 'Launch Tour', 'tutorial'));  // v1's own row
+    opts.push(
+      new OptionActionButton(
+        new Point(0, 0),
+        new Size(1, App.SettingsRow * App.Unit),
+        'Tour',
+        'Launch Tour',
+        'tutorial',
+      ),
+    ); // v1's own row
   };
   /** The TOUR row (web): under Tempo, 48 units down, where v1 would have put a fifth row. */
   /** 204 units (v1's rows: 60, then 48 each); taller rows on a phone (App.SettingsRow). */
   const tourY = () => 60 + 3 * App.SettingsRow;
-  const tourRow = () => (p.Options as any[]).findIndex(o => o.Type === 'actionbutton' && o.Setting === 'tutorial');
+  const tourRow = () =>
+    (p.Options as any[]).findIndex((o) => o.Type === 'actionbutton' && o.Setting === 'tutorial');
   const openPanel = p.OpenPanel.bind(p);
-  p.OpenPanel = () => { const i = tempoRow(); if (i >= 0) placeTempo(p.Options[i]); openPanel(); };
+  p.OpenPanel = () => {
+    const i = tempoRow();
+    if (i >= 0) placeTempo(p.Options[i]);
+    openPanel();
+  };
 
   /** Which footer link the pointer is over (-1: none). */
   let linkHover = -1;
@@ -958,24 +1555,51 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   const FOOT_LINE = 14;
   const statsBox = () => {
     if (!host.usageStats || p._OpenTab !== 2) return null;
-    const u = App.Unit, ctx = p.Ctx as CanvasRenderingContext2D;
+    const u = App.Unit,
+      ctx = p.Ctx as CanvasRenderingContext2D;
     ctx.font = App.Metrics.TxtItalic2;
-    const w = ctx.measureText(USAGE_STATS(host.usageStats.get())).width, y = p.OffsetY + p.DrawTo.Height - 20 * u;
+    const w = ctx.measureText(USAGE_STATS(host.usageStats.get())).width,
+      y = p.OffsetY + p.DrawTo.Height - 20 * u;
     return { x: p.DrawTo.Width - 20 * u - w, y, w, u };
   };
   /** Tests: the switch's centre in CSS px, and its words (null: not shown). */
-  p.usageStatsSwitch = () => { const b = statsBox(), pr = App.Metrics.PixelRatio; return b ? { x: (b.x + b.w / 2) / pr, y: (b.y - 4 * b.u) / pr, label: USAGE_STATS(host.usageStats!.get()) } : null; };
+  p.usageStatsSwitch = () => {
+    const b = statsBox(),
+      pr = App.Metrics.PixelRatio;
+    return b
+      ? {
+          x: (b.x + b.w / 2) / pr,
+          y: (b.y - 4 * b.u) / pr,
+          label: USAGE_STATS(host.usageStats!.get()),
+        }
+      : null;
+  };
   /** The footer links in one centred row, in v1's footer type (where it had "Chrome Recommended"), 30u apart. */
   const footer = () => {
-    const u = App.Unit, ctx = p.Ctx as CanvasRenderingContext2D;
+    const u = App.Unit,
+      ctx = p.Ctx as CanvasRenderingContext2D;
     ctx.font = App.Metrics.TxtLarge;
-    const ws = footerLinks().map(l => ctx.measureText(l.label).width), gap = 30 * u, y = p.OffsetY + p.DrawTo.Height - 20 * u;
+    const ws = footerLinks().map((l) => ctx.measureText(l.label).width),
+      gap = 30 * u,
+      y = p.OffsetY + p.DrawTo.Height - 20 * u;
     let x = App.Width * 0.5 - (ws.reduce((a, b) => a + b, 0) + gap * (ws.length - 1)) * 0.5;
-    const links = ws.map(w => { const l = { x, w }; x += w + gap; return l; });
+    const links = ws.map((w) => {
+      const l = { x, w };
+      x += w + gap;
+      return l;
+    });
     return { links, y, u };
   };
   /** Tests: each footer link's centre in CSS px. */
-  p.footerLinks = () => { const f = footer(), pr = App.Metrics.PixelRatio; return f.links.map((l, i) => ({ label: footerLinks()[i].label, x: (l.x + l.w / 2) / pr, y: (f.y - 5 * f.u) / pr })); };
+  p.footerLinks = () => {
+    const f = footer(),
+      pr = App.Metrics.PixelRatio;
+    return f.links.map((l, i) => ({
+      label: footerLinks()[i].label,
+      x: (l.x + l.w / 2) / pr,
+      y: (f.y - 5 * f.u) / pr,
+    }));
+  };
   // About (owner, 2026-11-17, CHG-0035): no Twitter names; each website takes its line, so the three line up under
   // blurbs of different lengths. v1 draws and hit-tests the websites on one line and the Twitter names on the next, so
   // the websites are shown, and pressed, in the Twitter names' places.
@@ -983,74 +1607,279 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   /** ABOUT on a phone (owner, 2026-11-18): the three people one a row, each v1's icon (a third larger) at the left and
    * the blurb and website at its right. v1 draws them side by side (skipped there by bd v1 port-ui). */
   const ICONS: [number, [number, number][]][][] = [
-    [[4, [[0, -3], [1, -3], [2, -2], [1, -1]]], [4, [[1, 0], [2, -1], [2, 0]]], [3, [[0, 0], [0, -3], [1, -2], [1, -1]]]],
-    [[5, [[0, 0], [0, -1], [1, -2], [3, -2], [1, 0]]], [10, [[0, 0], [0, -1], [1, -2], [1, 0]]], [10, [[0, -3], [1, -3], [0, -2]]]],
-    [[7, [[0, 0], [1, -3], [2, -3], [2, -1], [1, 0]]], [9, [[0, 0], [0, -2], [1, -3], [1, -1]]], [9, [[2, 0], [3, 0], [3, -1]]]],
+    [
+      [
+        4,
+        [
+          [0, -3],
+          [1, -3],
+          [2, -2],
+          [1, -1],
+        ],
+      ],
+      [
+        4,
+        [
+          [1, 0],
+          [2, -1],
+          [2, 0],
+        ],
+      ],
+      [
+        3,
+        [
+          [0, 0],
+          [0, -3],
+          [1, -2],
+          [1, -1],
+        ],
+      ],
+    ],
+    [
+      [
+        5,
+        [
+          [0, 0],
+          [0, -1],
+          [1, -2],
+          [3, -2],
+          [1, 0],
+        ],
+      ],
+      [
+        10,
+        [
+          [0, 0],
+          [0, -1],
+          [1, -2],
+          [1, 0],
+        ],
+      ],
+      [
+        10,
+        [
+          [0, -3],
+          [1, -3],
+          [0, -2],
+        ],
+      ],
+    ],
+    [
+      [
+        7,
+        [
+          [0, 0],
+          [1, -3],
+          [2, -3],
+          [2, -1],
+          [1, 0],
+        ],
+      ],
+      [
+        9,
+        [
+          [0, 0],
+          [0, -2],
+          [1, -3],
+          [1, -1],
+        ],
+      ],
+      [
+        9,
+        [
+          [2, 0],
+          [3, 0],
+          [3, -1],
+        ],
+      ],
+    ],
   ];
   const peoplePhone = () => {
-    const ctx = p.Ctx as CanvasRenderingContext2D, u = App.Unit, pw = pageWidth(), L = App.Width * 0.5 - pw * 0.5, g = App.GridSize * 1.35;
+    const ctx = p.Ctx as CanvasRenderingContext2D,
+      u = App.Unit,
+      pw = pageWidth(),
+      L = App.Width * 0.5 - pw * 0.5,
+      g = App.GridSize * 1.35;
     const top = p.OffsetY + 120 * u + (p.MenuItems[2]?.YOffset ?? -p.DrawTo.Height);
     ctx.font = App.Metrics.TxtLarge;
-    let y = top, line = '';
-    for (const word of String(p._Attribution.about).split(' ')) { const t = line ? `${line} ${word}` : word; if (ctx.measureText(t).width > pw && line) { y += 16 * u; line = word; } else line = t; }
+    let y = top,
+      line = '';
+    for (const word of String(p._Attribution.about).split(' ')) {
+      const t = line ? `${line} ${word}` : word;
+      if (ctx.measureText(t).width > pw && line) {
+        y += 16 * u;
+        line = word;
+      } else line = t;
+    }
     y += 16 * u + 40 * u;
-    const tx = L + 3 * g + 20 * u, tw = pw - (tx - L);
+    const tx = L + 3 * g + 20 * u,
+      tw = pw - (tx - L);
     ctx.font = App.Metrics.TxtItalic2;
     return PEOPLE.map((k, i) => {
-      const a = p._Attribution[k], lines: string[] = [];
+      const a = p._Attribution[k],
+        lines: string[] = [];
       line = '';
-      for (const word of String(a.blurb).split(' ')) { const t = line ? `${line} ${word}` : word; if (ctx.measureText(t).width > tw && line) { lines.push(line); line = word; } else line = t; }
+      for (const word of String(a.blurb).split(' ')) {
+        const t = line ? `${line} ${word}` : word;
+        if (ctx.measureText(t).width > tw && line) {
+          lines.push(line);
+          line = word;
+        } else line = t;
+      }
       if (line) lines.push(line);
-      const rowTop = y, urlY = rowTop + 10 * u + lines.length * 14 * u;
+      const rowTop = y,
+        urlY = rowTop + 10 * u + lines.length * 14 * u;
       y = Math.max(rowTop + 3 * g, urlY) + 30 * u;
-      return { i, icon: ICONS[i], x: L, base: rowTop + 3 * g, tx, lines, rowTop, urlY, url: String(a.url ?? ''), urlW: ctx.measureText(String(a.url ?? '')).width, g };
+      return {
+        i,
+        icon: ICONS[i],
+        x: L,
+        base: rowTop + 3 * g,
+        tx,
+        lines,
+        rowTop,
+        urlY,
+        url: String(a.url ?? ''),
+        urlW: ctx.measureText(String(a.url ?? '')).width,
+        g,
+      };
     });
   };
   const drawPeoplePhone = () => {
-    if (!App.SettingsPhone || (p.MenuItems[2]?.YOffset ?? -p.DrawTo.Height) <= -p.DrawTo.Height) return;
-    const ctx = p.Ctx as CanvasRenderingContext2D, u = App.Unit, txt = App.Palette[App.ThemeManager.Txt];
+    if (!App.SettingsPhone || (p.MenuItems[2]?.YOffset ?? -p.DrawTo.Height) <= -p.DrawTo.Height)
+      return;
+    const ctx = p.Ctx as CanvasRenderingContext2D,
+      u = App.Unit,
+      txt = App.Palette[App.ThemeManager.Txt];
     for (const r of peoplePhone()) {
       for (const [pal, pts] of r.icon) {
-        App.FillColor(ctx, App.Palette[pal]); ctx.beginPath();
-        pts.forEach(([x, y], j) => { const px = r.x + x * r.g, py = r.base + y * r.g; if (j) ctx.lineTo(px, py); else ctx.moveTo(px, py); });
-        ctx.closePath(); ctx.fill();
+        App.FillColor(ctx, App.Palette[pal]);
+        ctx.beginPath();
+        pts.forEach(([x, y], j) => {
+          const px = r.x + x * r.g,
+            py = r.base + y * r.g;
+          if (j) ctx.lineTo(px, py);
+          else ctx.moveTo(px, py);
+        });
+        ctx.closePath();
+        ctx.fill();
       }
-      App.FillColor(ctx, txt); App.StrokeColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
+      App.FillColor(ctx, txt);
+      App.StrokeColor(ctx, txt);
+      ctx.font = App.Metrics.TxtItalic2;
+      ctx.textAlign = 'left';
       r.lines.forEach((l, j) => ctx.fillText(l, r.tx, r.rowTop + 10 * u + j * 14 * u));
       if (r.url && !App.NoLinks) {
         ctx.fillText(r.url, r.tx, r.urlY + 4 * u);
-        if (p._RollOvers[r.i + 1]) { ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(r.tx, r.urlY + 6 * u); ctx.lineTo(r.tx + r.urlW, r.urlY + 6 * u); ctx.stroke(); }
+        if (p._RollOvers[r.i + 1]) {
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(r.tx, r.urlY + 6 * u);
+          ctx.lineTo(r.tx + r.urlW, r.urlY + 6 * u);
+          ctx.stroke();
+        }
       }
     }
   };
   /** Tests: ABOUT's people on a phone (CSS px). */
-  p.peoplePhone = () => { const pr = App.Metrics.PixelRatio; return App.SettingsPhone ? peoplePhone().map(r => ({ icon: [r.x / pr, (r.base - 3 * r.g) / pr], text: [r.tx / pr, r.rowTop / pr], url: r.url })) : null; };
+  p.peoplePhone = () => {
+    const pr = App.Metrics.PixelRatio;
+    return App.SettingsPhone
+      ? peoplePhone().map((r) => ({
+          icon: [r.x / pr, (r.base - 3 * r.g) / pr],
+          text: [r.tx / pr, r.rowTop / pr],
+          url: r.url,
+        }))
+      : null;
+  };
   const hitTests = p.HitTests.bind(p);
   p.HitTests = (pt: { x: number; y: number }) => {
     hitTests(pt);
-    for (let i = 1; i <= 3; i++) { p._RollOvers[i] = !!p._RollOvers[i + 3] && !!p._Attribution[PEOPLE[i - 1]].url; p._RollOvers[i + 3] = false; }
+    for (let i = 1; i <= 3; i++) {
+      p._RollOvers[i] = !!p._RollOvers[i + 3] && !!p._Attribution[PEOPLE[i - 1]].url;
+      p._RollOvers[i + 3] = false;
+    }
     // A phone: the websites are where drawPeoplePhone puts them.
-    if (App.SettingsPhone) for (const r of peoplePhone()) p._RollOvers[r.i + 1] = p._OpenTab === 2 && !!r.url && Dimensions.hitRect(r.tx - 4 * App.Unit, r.urlY - 10 * App.Unit, r.urlW + 8 * App.Unit, 20 * App.Unit, pt.x, pt.y);
+    if (App.SettingsPhone)
+      for (const r of peoplePhone())
+        p._RollOvers[r.i + 1] =
+          p._OpenTab === 2 &&
+          !!r.url &&
+          Dimensions.hitRect(
+            r.tx - 4 * App.Unit,
+            r.urlY - 10 * App.Unit,
+            r.urlW + 8 * App.Unit,
+            20 * App.Unit,
+            pt.x,
+            pt.y,
+          );
     // No links (hideLinks): v1 hit-tests About's websites and Twitter names (rollovers 1–6) over fixed widths.
     if (App.NoLinks) for (let i = 1; i <= 6; i++) p._RollOvers[i] = false;
     for (let i = 7; i <= 14; i++) p._RollOvers[i] = false; // Removed Connect social/guide targets.
     const f = footer();
-    linkHover = p._OpenTab !== 2 ? -1 : f.links.findIndex(l => Dimensions.hitRect(l.x - 5 * f.u, f.y - 20 * f.u, l.w + 10 * f.u, 30 * f.u, pt.x, pt.y));
+    linkHover =
+      p._OpenTab !== 2
+        ? -1
+        : f.links.findIndex((l) =>
+            Dimensions.hitRect(l.x - 5 * f.u, f.y - 20 * f.u, l.w + 10 * f.u, 30 * f.u, pt.x, pt.y),
+          );
     const sb = statsBox();
-    statsHover = !!sb && Dimensions.hitRect(sb.x - 4 * sb.u, sb.y - 14 * sb.u, sb.w + 8 * sb.u, 20 * sb.u, pt.x, pt.y);
-    downloadHover = withDownload && p._OpenTab === 3 ? downloads().findIndex(b => !!b.release && Dimensions.hitRect(b.x, b.y, b.w, b.h, pt.x, pt.y)) : -1;
-    if (account) { if (p._OpenTab === AT) account.hit(pt, accountTop()); else account.hit({ x: -1e9, y: -1e9 }, accountTop()); }
+    statsHover =
+      !!sb &&
+      Dimensions.hitRect(sb.x - 4 * sb.u, sb.y - 14 * sb.u, sb.w + 8 * sb.u, 20 * sb.u, pt.x, pt.y);
+    downloadHover =
+      withDownload && p._OpenTab === 3
+        ? downloads().findIndex(
+            (b) => !!b.release && Dimensions.hitRect(b.x, b.y, b.w, b.h, pt.x, pt.y),
+          )
+        : -1;
+    if (account) {
+      if (p._OpenTab === AT) account.hit(pt, accountTop());
+      else account.hit({ x: -1e9, y: -1e9 }, accountTop());
+    }
     const i = tempoRow();
-    if (i >= 0) p._OptionsRoll[i] = Dimensions.hitRect(p.Margin - 10 * f.u, p.OffsetY + 120 * f.u + p.MenuItems[0].YOffset + (60 + 2 * App.SettingsRow) * f.u, p.Range + 20 * f.u, App.SettingsRow * App.Unit, pt.x, pt.y);
-    const k = tourRow();  // v1 hit-tests an action button at its own row (156): the tour's is lower
+    if (i >= 0)
+      p._OptionsRoll[i] = Dimensions.hitRect(
+        p.Margin - 10 * f.u,
+        p.OffsetY + 120 * f.u + p.MenuItems[0].YOffset + (60 + 2 * App.SettingsRow) * f.u,
+        p.Range + 20 * f.u,
+        App.SettingsRow * App.Unit,
+        pt.x,
+        pt.y,
+      );
+    const k = tourRow(); // v1 hit-tests an action button at its own row (156): the tour's is lower
     if (k >= 0) {
-      const ty = p.OffsetY + 120 * f.u + p.MenuItems[0].YOffset + tourY() * f.u, o = p.Options[k];
-      p._OptionsRoll[k] = Dimensions.hitRect(p.Margin - 10 * f.u, ty, p.Range + 20 * f.u, App.SettingsRow * App.Unit, pt.x, pt.y);
-      o.HandleRoll[0] = Dimensions.hitRect(p.Margin + p.Range * 0.25, ty, p.Range * 0.5, o.Size.height, pt.x, pt.y);
+      const ty = p.OffsetY + 120 * f.u + p.MenuItems[0].YOffset + tourY() * f.u,
+        o = p.Options[k];
+      p._OptionsRoll[k] = Dimensions.hitRect(
+        p.Margin - 10 * f.u,
+        ty,
+        p.Range + 20 * f.u,
+        App.SettingsRow * App.Unit,
+        pt.x,
+        pt.y,
+      );
+      o.HandleRoll[0] = Dimensions.hitRect(
+        p.Margin + p.Range * 0.25,
+        ty,
+        p.Range * 0.5,
+        o.Size.height,
+        pt.x,
+        pt.y,
+      );
     }
   };
   /** Tests: the TOUR button's centre in CSS px (null: no row). */
-  p.tourButton = () => { const pr = App.Metrics.PixelRatio, u = App.Unit; return tourRow() < 0 ? null : { x: (p.Margin + p.Range * 0.5) / pr, y: (p.OffsetY + 120 * u + p.MenuItems[0].YOffset + tourY() * u + 24 * u) / pr }; };
+  p.tourButton = () => {
+    const pr = App.Metrics.PixelRatio,
+      u = App.Unit;
+    return tourRow() < 0
+      ? null
+      : {
+          x: (p.Margin + p.Range * 0.5) / pr,
+          y: (p.OffsetY + 120 * u + p.MenuItems[0].YOffset + tourY() * u + 24 * u) / pr,
+        };
+  };
   const setTempo = (x: number) => {
     const o = p.Options[tempoRow()];
     o.Position.x = Math.max(0, Math.min(p.Range, x - p.Margin));
@@ -1062,14 +1891,33 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   p.MouseDown = (pt: { x: number; y: number }) => {
     const before = p._OpenTab;
     mouseDown(pt);
-    if (account && p._OpenTab === AT && before !== AT) { if (account.View === 'delete' || account.View === 'methods') { account.View = 'main'; account.Message = ''; } void account.refresh(); }
+    if (account && p._OpenTab === AT && before !== AT) {
+      if (account.View === 'delete' || account.View === 'methods') {
+        account.View = 'main';
+        account.Message = '';
+      }
+      void account.refresh();
+    }
     if (!p.Open) return;
-    if (linkHover >= 0) { window.open(footerLinks()[linkHover].url, '_blank'); return; }
-    if (statsHover && host.usageStats) { host.usageStats.set(!host.usageStats.get()); return; }
-    if (downloadHover >= 0) { const r = downloads()[downloadHover].release; if (r) window.open(r.store ? r.url : `${r.url}?source=download-page`, '_blank'); return; }
-    if (account && p._OpenTab === AT) { account.hit(pt, accountTop()); account.press(); }
+    if (linkHover >= 0) {
+      window.open(footerLinks()[linkHover].url, '_blank');
+      return;
+    }
+    if (statsHover && host.usageStats) {
+      host.usageStats.set(!host.usageStats.get());
+      return;
+    }
+    if (downloadHover >= 0) {
+      const r = downloads()[downloadHover].release;
+      if (r) window.open(r.store ? r.url : `${r.url}?source=download-page`, '_blank');
+      return;
+    }
+    if (account && p._OpenTab === AT) {
+      account.hit(pt, accountTop());
+      account.press();
+    }
     const i = tempoRow();
-    if (i >= 0 && p._OpenTab === 0 && p._OptionsRoll[i]) setTempo(pt.x);  // v1 sliders jump to the press, as Volume does
+    if (i >= 0 && p._OpenTab === 0 && p._OptionsRoll[i]) setTempo(pt.x); // v1 sliders jump to the press, as Volume does
   };
   const mouseMove = p.MouseMove.bind(p);
   p.MouseMove = (pt: { x: number; y: number }) => {
@@ -1080,52 +1928,96 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   const draw = p.Draw.bind(p);
   p.Draw = () => {
     // The build line and the GitHub link are About's (owner review 2, 2026-11-15); v1 drew the build under every tab.
-    const about = p._OpenTab === 2, build = p._Attribution.build, moved = about && !!statsBox();
+    const about = p._OpenTab === 2,
+      build = p._Attribution.build,
+      moved = about && !!statsBox();
     if (!about || moved) p._Attribution.build = '';
-    const kept = PEOPLE.map(k => ({ ...p._Attribution[k] })), rolls = (p._RollOvers as boolean[]).slice(0, 7);
-    for (const [i, k] of PEOPLE.entries()) {  // the website on the Twitter line (and its hover underline)
+    const kept = PEOPLE.map((k) => ({ ...p._Attribution[k] })),
+      rolls = (p._RollOvers as boolean[]).slice(0, 7);
+    for (const [i, k] of PEOPLE.entries()) {
+      // the website on the Twitter line (and its hover underline)
       Object.assign(p._Attribution[k], { twitter: p._Attribution[k].url, url: '' });
-      p._RollOvers[i + 4] = rolls[i + 1]; p._RollOvers[i + 1] = false;
+      p._RollOvers[i + 4] = rolls[i + 1];
+      p._RollOvers[i + 1] = false;
     }
     // Connect's v1 body (guide and social links, retired) is not drawn: its tab stays, and holds the feedback form (CHG-0036).
     const connectY = p.MenuItems[1]?.YOffset;
     if (p.MenuItems[1]) p.MenuItems[1].YOffset = -p.DrawTo.Height * 2;
-    try { draw(); } finally {
+    try {
+      draw();
+    } finally {
       if (p.MenuItems[1]) p.MenuItems[1].YOffset = connectY;
       p._Attribution.build = build;
       PEOPLE.forEach((k, i) => Object.assign(p._Attribution[k], kept[i]));
-      rolls.forEach((r, i) => { p._RollOvers[i] = r; });
+      rolls.forEach((r, i) => {
+        p._RollOvers[i] = r;
+      });
     }
-    account?.placeField(accountTop(), p.Open && p._OpenTab === AT && (p.MenuItems[AT]?.YOffset ?? -1) > -p.DrawTo.Height * 0.5);
-    if (!p.Open) { host.feedback?.draw(p); return; }
+    account?.placeField(
+      accountTop(),
+      p.Open && p._OpenTab === AT && (p.MenuItems[AT]?.YOffset ?? -1) > -p.DrawTo.Height * 0.5,
+    );
+    if (!p.Open) {
+      host.feedback?.draw(p);
+      return;
+    }
     // DOWNLOAD, ACCOUNT and CONNECT slide in and out under the tabs, as SETTINGS and ABOUT do: v1's clipping box, from 60 units
     // below the tabs' top to the bottom (owner, 2026-11-16: they drew over the tabs while sliding).
     const cctx = p.Ctx as CanvasRenderingContext2D;
     cctx.save();
-    cctx.beginPath(); cctx.rect(0, p.OffsetY + 60 * App.Unit, App.Width, App.Height); cctx.clip();
+    cctx.beginPath();
+    cctx.rect(0, p.OffsetY + 60 * App.Unit, App.Width, App.Height);
+    cctx.clip();
     try {
-      const k = tourRow();  // SETTINGS' TOUR row, sliding with its tab as v1's rows do
-      if (k >= 0 && p.MenuItems[0].YOffset > -p.DrawTo.Height) p.Options[k].Draw(cctx, App.Unit, k, p, p.OffsetY + 120 * App.Unit + p.MenuItems[0].YOffset + tourY() * App.Unit);
-      if (withDownload) drawDownload();  // the plugins: tab 3 is the account (SHARING-0011)
+      const k = tourRow(); // SETTINGS' TOUR row, sliding with its tab as v1's rows do
+      if (k >= 0 && p.MenuItems[0].YOffset > -p.DrawTo.Height)
+        p.Options[k].Draw(
+          cctx,
+          App.Unit,
+          k,
+          p,
+          p.OffsetY + 120 * App.Unit + p.MenuItems[0].YOffset + tourY() * App.Unit,
+        );
+      if (withDownload) drawDownload(); // the plugins: tab 3 is the account (SHARING-0011)
       drawPeoplePhone();
-      if (account && (p.MenuItems[AT]?.YOffset ?? -p.DrawTo.Height) > -p.DrawTo.Height) account.draw(accountTop());
-      host.feedback?.draw(p);  // CONNECT's form slides in under the tabs too (owner, 2026-11-18)
-    } finally { cctx.restore(); }
+      if (account && (p.MenuItems[AT]?.YOffset ?? -p.DrawTo.Height) > -p.DrawTo.Height)
+        account.draw(accountTop());
+      host.feedback?.draw(p); // CONNECT's form slides in under the tabs too (owner, 2026-11-18)
+    } finally {
+      cctx.restore();
+    }
     if (!about) return;
-    const ctx = p.Ctx as CanvasRenderingContext2D, f = footer(), txt = App.Palette[App.ThemeManager.Txt];
-    App.FillColor(ctx, txt); App.StrokeColor(ctx, txt);
-    ctx.font = App.Metrics.TxtLarge; ctx.textAlign = 'left';
+    const ctx = p.Ctx as CanvasRenderingContext2D,
+      f = footer(),
+      txt = App.Palette[App.ThemeManager.Txt];
+    App.FillColor(ctx, txt);
+    App.StrokeColor(ctx, txt);
+    ctx.font = App.Metrics.TxtLarge;
+    ctx.textAlign = 'left';
     f.links.forEach((l, i) => {
       ctx.fillText(footerLinks()[i].label, l.x, f.y);
-      if (i === linkHover) { ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(l.x, f.y + 2 * f.u); ctx.lineTo(l.x + l.w, f.y + 2 * f.u); ctx.stroke(); }
+      if (i === linkHover) {
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(l.x, f.y + 2 * f.u);
+        ctx.lineTo(l.x + l.w, f.y + 2 * f.u);
+        ctx.stroke();
+      }
     });
     const sb = statsBox();
     if (sb && host.usageStats) {
-      ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'right';
+      ctx.font = App.Metrics.TxtItalic2;
+      ctx.textAlign = 'right';
       ctx.fillText(build, p.DrawTo.Width - 20 * sb.u, sb.y - FOOT_LINE * sb.u);
       ctx.textAlign = 'left';
       ctx.fillText(USAGE_STATS(host.usageStats.get()), sb.x, sb.y);
-      if (statsHover) { ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(sb.x, sb.y + 2 * sb.u); ctx.lineTo(sb.x + sb.w, sb.y + 2 * sb.u); ctx.stroke(); }
+      if (statsHover) {
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(sb.x, sb.y + 2 * sb.u);
+        ctx.lineTo(sb.x + sb.w, sb.y + 2 * sb.u);
+        ctx.stroke();
+      }
     }
   };
 }
@@ -1139,15 +2031,27 @@ const MISSING = 'MISSING · ';
  * search. v1's option is ported verbatim, so its label is substituted while it draws.
  */
 function locateMissingFiles(scene: V1Scene): void {
-  const proto = OptionSample.prototype as any, draw = proto.Draw;
+  const proto = OptionSample.prototype as any,
+    draw = proto.Draw;
   proto.Draw = function (ctx: CanvasRenderingContext2D, ...rest: unknown[]) {
     if (!String(this.Track ?? '').startsWith(MISSING)) return draw.call(this, ctx, ...rest);
     ctx.fillText = function (t: string, x: number, y: number, w?: number) {
-      CanvasRenderingContext2D.prototype.fillText.call(this, t === 'LOAD NEW SAMPLE' ? 'LOCATE FILE' : t, x, y, w);
+      CanvasRenderingContext2D.prototype.fillText.call(
+        this,
+        t === 'LOAD NEW SAMPLE' ? 'LOCATE FILE' : t,
+        x,
+        y,
+        w,
+      );
     };
-    try { return draw.call(this, ctx, ...rest); } finally { delete (ctx as any).fillText; }
+    try {
+      return draw.call(this, ctx, ...rest);
+    } finally {
+      delete (ctx as any).fillText;
+    }
   };
-  const search = scene.SoundcloudPanel as any, open = search.OpenPanel.bind(search);
+  const search = scene.SoundcloudPanel as any,
+    open = search.OpenPanel.bind(search);
   search.OpenPanel = () => {
     const b = scene.OptionsPanel.SelectedBlock as any;
     if (b && String(b.Params?.trackName ?? '').startsWith(MISSING)) scene.host.loadSample(b.Id);
@@ -1165,7 +2069,10 @@ function cancellableOpen(panel: any): void {
     if (panel.Scale == 1 && block !== panel.SelectedBlock) panel.Close();
     panel.Opening = true;
     panel.SelectedBlock = block;
-    App.MainScene.MainSceneDragger.Jump(block.Position, new Point(App.Metrics.OptionsPoint.x, App.Metrics.OptionsPoint.y));
+    App.MainScene.MainSceneDragger.Jump(
+      block.Position,
+      new Point(App.Metrics.OptionsPoint.x, App.Metrics.OptionsPoint.y),
+    );
     clearTimeout(timer);
     timer = setTimeout(() => {
       timer = undefined;
@@ -1176,7 +2083,8 @@ function cancellableOpen(panel: any): void {
   };
   panel.CancelOpen = () => {
     if (timer === undefined) return;
-    clearTimeout(timer); timer = undefined;
+    clearTimeout(timer);
+    timer = undefined;
     panel.Opening = false;
   };
 }

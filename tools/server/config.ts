@@ -7,11 +7,14 @@ import { CONFIG_DIR, requiredSetting, setting } from '../lib/local-config.ts';
 export type EnvName = 'staging' | 'production';
 export const envKey = (env: EnvName, suffix: string) => `BLOKDUST_${env.toUpperCase()}_${suffix}`;
 export const publicUrl = (env: EnvName) => requiredSetting(envKey(env, 'PUBLIC_URL'));
-export const workerUrl = (env: EnvName) => `https://${env === 'staging' ? 'blokdust-staging' : 'blokdust'}.${requiredSetting('BLOKDUST_WORKERS_SUBDOMAIN')}.workers.dev`;
+export const workerUrl = (env: EnvName) =>
+  `https://${env === 'staging' ? 'blokdust-staging' : 'blokdust'}.${requiredSetting('BLOKDUST_WORKERS_SUBDOMAIN')}.workers.dev`;
 
 export function remoteConfig(env: EnvName): string {
   // The template uses standalone line comments only, so URLs inside strings remain untouched.
-  const config = JSON.parse(readFileSync('server/wrangler.jsonc', 'utf8').replace(/^\s*\/\/.*$/gm, ''));
+  const config = JSON.parse(
+    readFileSync('server/wrangler.jsonc', 'utf8').replace(/^\s*\/\/.*$/gm, ''),
+  );
   const server = resolve('server');
   delete config.$schema;
   config.main = resolve(server, config.main);
@@ -29,14 +32,23 @@ export function remoteConfig(env: EnvName): string {
   const google = setting('BLOKDUST_GOOGLE_CLIENT_ID').trim();
   if (google) target.vars.GOOGLE_CLIENT_ID = google;
   // Sign in with Apple (R2b): optional; the Services ID, team id and key id are vars, the .p8 key a Worker secret.
-  for (const k of ['CLIENT_ID', 'TEAM_ID', 'KEY_ID']) { const v = setting(`BLOKDUST_APPLE_${k}`).trim(); if (v) target.vars[`APPLE_${k}`] = v; }
+  for (const k of ['CLIENT_ID', 'TEAM_ID', 'KEY_ID']) {
+    const v = setting(`BLOKDUST_APPLE_${k}`).trim();
+    if (v) target.vars[`APPLE_${k}`] = v;
+  }
   // The iPad app (SHARING-0011): Sign in with Apple in the app, and the site's apple-app-site-association. Its id is
   // the app's bundle id (plugin/CMakeLists.txt); BLOKDUST_APPLE_APP_ID overrides it.
-  if (target.vars.APPLE_TEAM_ID) target.vars.APPLE_APP_ID = setting('BLOKDUST_APPLE_APP_ID', 'com.funputs.blokdust').trim();
+  if (target.vars.APPLE_TEAM_ID)
+    target.vars.APPLE_APP_ID = setting('BLOKDUST_APPLE_APP_ID', 'com.funputs.blokdust').trim();
   // Usage analytics (SHARING-0010): optional, per environment, from local config. Access protects /admin/*; Sentry's
   // DSN is public (it's in the page) but stays out of the repo with the rest; ANALYTICS_RATE overrides the committed
   // default (production's is "0", off). The dashboard's account id and query token are secrets (`bd server secret`).
-  for (const [name, key] of [['ACCESS_TEAM_DOMAIN', 'ACCESS_TEAM_DOMAIN'], ['ACCESS_AUD', 'ACCESS_AUD'], ['SENTRY_DSN', 'SENTRY_DSN'], ['ANALYTICS_RATE', 'ANALYTICS_RATE']] as const) {
+  for (const [name, key] of [
+    ['ACCESS_TEAM_DOMAIN', 'ACCESS_TEAM_DOMAIN'],
+    ['ACCESS_AUD', 'ACCESS_AUD'],
+    ['SENTRY_DSN', 'SENTRY_DSN'],
+    ['ANALYTICS_RATE', 'ANALYTICS_RATE'],
+  ] as const) {
     const v = setting(envKey(env, key));
     if (v) target.vars[name] = v;
   }

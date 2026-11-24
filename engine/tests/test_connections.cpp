@@ -50,7 +50,9 @@ TEST_CASE("R2 S3: power sources only connect to power effects, logic and keyboar
   CHECK(e->connected(6, 3));        // laser → power
 }
 
-TEST_CASE("R3: audio sources connect to every effect-side kind; like never connects to like; Void connects to nothing") {
+TEST_CASE(
+    "R3: audio sources connect to every effect-side kind; like never connects to like; Void "
+    "connects to nothing") {
   auto e = makeEngine();
   e->push(Command::add(1, BlockType::SourceTone, 0, 0));
   e->push(Command::add(2, BlockType::PowerPower, 2, 0));
@@ -65,10 +67,13 @@ TEST_CASE("R3: audio sources connect to every effect-side kind; like never conne
   CHECK(e->connected(1, 4));
   CHECK_FALSE(e->connected(1, 5));  // source-source
   CHECK_FALSE(e->connected(2, 6));  // effect-effect
-  for (BlockId other = 1; other <= 6; ++other) CHECK_FALSE(e->connected(7, other));
+  for (BlockId other = 1; other <= 6; ++other)
+    CHECK_FALSE(e->connected(7, other));
 }
 
-TEST_CASE("R5 S4: moving a block across the catchment boundary connects/disconnects it, logged at the tick boundary") {
+TEST_CASE(
+    "R5 S4: moving a block across the catchment boundary connects/disconnects it, logged at the "
+    "tick boundary") {
   auto e = makeEngine();
   e->push(Command::add(1, BlockType::SourceTone, 0, 0));
   e->push(Command::add(2, BlockType::FxFilter, 4, -2));
@@ -88,7 +93,9 @@ TEST_CASE("R5: incremental per-block updates always equal a full O(n^2) rebuild"
   auto e = makeEngine();
   Pcg32 rng(7);
   const int n = 80;
-  auto coord = [&] { return std::floor(rng.nextFloat() * 30.0f) - 15.0; };
+  auto coord = [&] {
+    return std::floor(rng.nextFloat() * 30.0f) - 15.0;
+  };
   for (int i = 1; i <= n; ++i) {
     const auto t = static_cast<BlockType>(rng.next() % gen::kBlockTypeCount);
     e->push(Command::add(static_cast<BlockId>(i), t, coord(), coord()));
@@ -97,8 +104,10 @@ TEST_CASE("R5: incremental per-block updates always equal a full O(n^2) rebuild"
   for (int step = 0; step < 400; ++step) {
     const auto id = static_cast<BlockId>(1 + rng.next() % n);
     e->push(Command::move(id, coord(), coord()));
-    if (step % 50 == 0) e->push(Command::remove(id));
-    if (step % 50 == 1) e->push(Command::add(id, BlockType::SourceTone, coord(), coord()));
+    if (step % 50 == 0)
+      e->push(Command::remove(id));
+    if (step % 50 == 1)
+      e->push(Command::add(id, BlockType::SourceTone, coord(), coord()));
     render(*e, 200, 200);  // one tick
     ConnectionGraph full;
     full.rebuildAll(e->blocks());
@@ -106,7 +115,8 @@ TEST_CASE("R5: incremental per-block updates always equal a full O(n^2) rebuild"
   }
 }
 
-TEST_CASE("R4: chains are connected components in v1 DFS order, excluding power-effect-like blocks") {
+TEST_CASE(
+    "R4: chains are connected components in v1 DFS order, excluding power-effect-like blocks") {
   auto e = makeEngine();
   // T1 — F1 — T2 — F2 in a row, plus a Power block next to T1 (excluded from chains)
   e->push(Command::add(1, BlockType::SourceTone, 0, 0));
@@ -121,7 +131,8 @@ TEST_CASE("R4: chains are connected components in v1 DFS order, excluding power-
   const auto r = ch.chains[0];
   REQUIRE(r.count == 4);
   std::vector<BlockId> ids;
-  for (int i = 0; i < r.count; ++i) ids.push_back(e->blocks()[ch.members[r.start + i]].id);
+  for (int i = 0; i < r.count; ++i)
+    ids.push_back(e->blocks()[ch.members[r.start + i]].id);
   CHECK(ids == std::vector<BlockId>{1, 2, 3, 4});
   CHECK(ch.chains[1].count == 1);
 }
@@ -142,21 +153,26 @@ TEST_CASE("removing a block removes its connections and logs disconnects") {
 
 namespace {
 /// One tick: queued commands apply at the next tick boundary (200 samples at 48 kHz).
-void tick(Engine& e) { render(e, 200, 200); }
+void tick(Engine& e) {
+  render(e, 200, 200);
+}
 std::vector<BlockId> chainOf(const Engine& e, BlockId first) {
   const auto& ch = e.chains();
   for (int c = 0; c < ch.chainCount; ++c) {
     const auto r = ch.chains[c];
     std::vector<BlockId> ids;
-    for (int i = 0; i < r.count; ++i) ids.push_back(e.blocks()[ch.members[r.start + i]].id);
-    if (!ids.empty() && ids[0] == first) return ids;
+    for (int i = 0; i < r.count; ++i)
+      ids.push_back(e.blocks()[ch.members[r.start + i]].id);
+    if (!ids.empty() && ids[0] == first)
+      return ids;
   }
   return {};
 }
 }  // namespace
 
 TEST_CASE("R4a (owner, 2026-11-12): a source's effects run in the order they connected, as in v1") {
-  // Tone, Bit Crusher and Stereo Delay are made apart; the crusher is brought in first, then the delay.
+  // Tone, Bit Crusher and Stereo Delay are made apart; the crusher is brought in first, then the
+  // delay.
   auto e = makeEngine();
   e->push(Command::add(1, BlockType::SourceTone, 0, 0));
   e->push(Command::add(2, BlockType::FxBitCrusher, 40, 0));
@@ -176,14 +192,18 @@ TEST_CASE("R4a (owner, 2026-11-12): a source's effects run in the order they con
   // Moving a still-connected effect keeps its place.
   e->push(Command::move(3, -2, 1));
   tick(*e);
-  CHECK(chainOf(*e, 1) == std::vector<BlockId>{1, 3, 2});  // connections() lists the pairs oldest first: what the UI saves as the patch's `connectionOrder`.
+  CHECK(chainOf(*e, 1) ==
+        std::vector<BlockId>{1, 3, 2});  // connections() lists the pairs oldest first: what the UI
+                                         // saves as the patch's `connectionOrder`.
   std::array<std::uint32_t, 8> pairs{};
   REQUIRE(e->connections(pairs.data(), 4) == 2);
-  CHECK(std::vector<std::uint32_t>(pairs.begin(), pairs.begin() + 4) == std::vector<std::uint32_t>{1, 3, 1, 2});
+  CHECK(std::vector<std::uint32_t>(pairs.begin(), pairs.begin() + 4) ==
+        std::vector<std::uint32_t>{1, 3, 1, 2});
 }
 
 TEST_CASE("R4a: Relink replays a saved connection order (patch `connectionOrder`)") {
-  // Loaded together, the pairs connect in creation order (crusher, delay); the saved order puts the delay first.
+  // Loaded together, the pairs connect in creation order (crusher, delay); the saved order puts the
+  // delay first.
   auto e = makeEngine();
   e->push(Command::add(1, BlockType::SourceTone, 0, 0));
   e->push(Command::add(2, BlockType::FxBitCrusher, 3, 0));

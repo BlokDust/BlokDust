@@ -56,10 +56,7 @@ export default tseslint.config(
         },
         { selector: 'parameter', format: ['camelCase', 'PascalCase'], leadingUnderscore: 'allow' },
       ],
-      'id-length': [
-        'error',
-        { min: 2, properties: 'never', exceptions: singleLetterNamesAllowed },
-      ],
+      'id-length': ['error', { min: 2, properties: 'never', exceptions: singleLetterNamesAllowed }],
       eqeqeq: ['error', 'always'],
       'no-console': 'off',
       'prefer-const': 'error',

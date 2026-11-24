@@ -1,4 +1,9 @@
-import { SUPPORT, diagnosticText, type Diagnostic, type DiagnosticKind } from '../../../shared/support.ts';
+import {
+  SUPPORT,
+  diagnosticText,
+  type Diagnostic,
+  type DiagnosticKind,
+} from '../../../shared/support.ts';
 
 /** UI-thread only; no engine timing, filesystem access, persistent logs or arbitrary object serialisation. */
 export class Diagnostics {
@@ -10,16 +15,31 @@ export class Diagnostics {
     this.onError?.(event);
   }
   recent(): Diagnostic[] {
-    this.events = this.events.filter(e => e.at >= Date.now() - SUPPORT.windowMs);
-    return this.events.map(e => ({ ...e }));
+    this.events = this.events.filter((e) => e.at >= Date.now() - SUPPORT.windowMs);
+    return this.events.map((e) => ({ ...e }));
   }
   install(): void {
-    window.addEventListener('error', e => { if (e instanceof ErrorEvent) this.add('error', e.message); });
-    window.addEventListener('unhandledrejection', e => this.add('unhandledrejection', e.reason instanceof Error ? e.reason.message : e.reason));
+    window.addEventListener('error', (e) => {
+      if (e instanceof ErrorEvent) this.add('error', e.message);
+    });
+    window.addEventListener('unhandledrejection', (e) =>
+      this.add('unhandledrejection', e.reason instanceof Error ? e.reason.message : e.reason),
+    );
     const original = console.error.bind(console);
     console.error = (...args: unknown[]) => {
       original(...args);
-      this.add('console', args.map(a => a instanceof Error ? diagnosticText(a.message) : typeof a === 'string' ? diagnosticText(a) : '[non-text diagnostic]').join(' '));
+      this.add(
+        'console',
+        args
+          .map((a) =>
+            a instanceof Error
+              ? diagnosticText(a.message)
+              : typeof a === 'string'
+                ? diagnosticText(a)
+                : '[non-text diagnostic]',
+          )
+          .join(' '),
+      );
     };
   }
 }

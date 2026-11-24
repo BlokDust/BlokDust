@@ -2,7 +2,8 @@
 # on iPadOS (CHG-0025), WebView editor hosting web/dist.
 # Build via `pnpm bd plugin build` (needs `pnpm web:build` first: the web bundle is embedded as BinaryData).
 include(FetchContent)
-FetchContent_Declare(JUCE GIT_REPOSITORY https://github.com/juce-framework/JUCE.git GIT_TAG 8.0.15 GIT_SHALLOW TRUE)
+FetchContent_Declare(JUCE GIT_REPOSITORY https://github.com/juce-framework/JUCE.git GIT_TAG 8.0.15 GIT_SHALLOW TRUE
+  SYSTEM)
 FetchContent_MakeAvailable(JUCE)
 
 set(BLOKDUST_WEB_DIST "${CMAKE_SOURCE_DIR}/web/dist")
@@ -134,6 +135,10 @@ function(blokdust_plugin target)
     PRIVATE blokdust_patch blokdust_plugin_resources juce::juce_audio_utils juce::juce_gui_extra juce::juce_cryptography
     PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
 endfunction()
+
+# CHG-0045: our own plugin sources get the project's warnings (JUCE's modules keep JUCE's).
+file(GLOB BLOKDUST_PLUGIN_OWN_SOURCES CONFIGURE_DEPENDS src/*.cpp src/*.mm src/ios/*.mm tests/*.cpp)
+blokdust_strict_warnings_for_sources(${BLOKDUST_PLUGIN_OWN_SOURCES})
 
 if(IOS)
   # iPadOS (CHG-0025): the instrument as an AUv3 inside the BlokDust app (JUCE needs the Standalone as its container),

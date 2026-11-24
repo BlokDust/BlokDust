@@ -12,7 +12,8 @@ const EMBED = { width: 640, height: 400 } as const;
 const displayTitle = (p: Loaded | null) => (p?.title ? `${p.title} · BlokDust` : 'BlokDust');
 /** Link previews show og:site_name ("BlokDust") already, so the card title is just the patch's (R9). */
 const cardTitle = (p: Loaded | null) => p?.title || 'BlokDust';
-const DESCRIPTION = 'Connect blocks to make sounds, instruments and self-playing music. Free on the web and as a VST/AU plugin.';
+const DESCRIPTION =
+  'Connect blocks to make sounds, instruments and self-playing music. Free on the web and as a VST/AU plugin.';
 
 function tags(env: Env, req: Request, id: string | null, p: Loaded | null, embed: boolean): string {
   const base = publicBase(env, req);
@@ -30,17 +31,25 @@ function tags(env: Env, req: Request, id: string | null, p: Loaded | null, embed
     const embedUrl = `${base}/embed/${id}`;
     if (p.hasThumb) {
       const img = `${base}/api/patches/${id}/thumb.png?rev=${p.rev}`;
-      out.push(`<meta property="og:image" content="${escapeHtml(img)}">`, `<meta property="og:image:type" content="image/png">`,
-        `<meta property="og:image:width" content="${THUMB.width}">`, `<meta property="og:image:height" content="${THUMB.height}">`,
-        `<meta name="twitter:image" content="${escapeHtml(img)}">`);
+      out.push(
+        `<meta property="og:image" content="${escapeHtml(img)}">`,
+        `<meta property="og:image:type" content="image/png">`,
+        `<meta property="og:image:width" content="${THUMB.width}">`,
+        `<meta property="og:image:height" content="${THUMB.height}">`,
+        `<meta name="twitter:image" content="${escapeHtml(img)}">`,
+      );
     }
     // X gates player cards (SHARING-0002): attempted, not relied on; other sites use og:* or oEmbed.
-    out.push(`<meta name="twitter:card" content="player">`, `<meta name="twitter:title" content="${escapeHtml(title)}">`,
+    out.push(
+      `<meta name="twitter:card" content="player">`,
+      `<meta name="twitter:title" content="${escapeHtml(title)}">`,
       `<meta name="twitter:description" content="${escapeHtml(DESCRIPTION)}">`,
       `<meta name="twitter:player" content="${escapeHtml(embedUrl)}">`,
-      `<meta name="twitter:player:width" content="${EMBED.width}">`, `<meta name="twitter:player:height" content="${EMBED.height}">`,
+      `<meta name="twitter:player:width" content="${EMBED.width}">`,
+      `<meta name="twitter:player:height" content="${EMBED.height}">`,
       `<link rel="alternate" type="application/json+oembed" href="${escapeHtml(`${base}/oembed?url=${encodeURIComponent(pageUrl)}&format=json`)}" title="${escapeHtml(title)}">`,
-      `<link rel="canonical" href="${escapeHtml(pageUrl)}">`);
+      `<link rel="canonical" href="${escapeHtml(pageUrl)}">`,
+    );
   } else {
     out.push(`<meta name="twitter:card" content="summary">`);
   }
@@ -50,16 +59,29 @@ function tags(env: Env, req: Request, id: string | null, p: Loaded | null, embed
   // Usage analytics and error reports (SHARING-0010 R5, R9): the share of sessions that send events (0: off), and Sentry.
   const a = clientConfig(env);
   out.push(`<meta name="blokdust-analytics" content="${a.rate}">`);
-  if (a.sentryDsn) out.push(`<meta name="blokdust-sentry" content="${escapeHtml(a.sentryDsn)}">`, `<meta name="blokdust-sentry-env" content="${escapeHtml(a.sentryEnv)}">`);
+  if (a.sentryDsn)
+    out.push(
+      `<meta name="blokdust-sentry" content="${escapeHtml(a.sentryDsn)}">`,
+      `<meta name="blokdust-sentry-env" content="${escapeHtml(a.sentryEnv)}">`,
+    );
   return out.join('\n    ');
 }
 
 /** `/`, `/index.html` (with or without `?c=`) and `/embed/<id>`: index.html plus preview tags. */
-export async function page(env: Env, req: Request, url: URL, embedId: string | null): Promise<Response> {
+export async function page(
+  env: Env,
+  req: Request,
+  url: URL,
+  embedId: string | null,
+): Promise<Response> {
   const c = embedId ?? url.searchParams.get('c');
   const id = c && ID_RE.test(c) ? c : null;
   const p = id ? await loadPatch(env, id) : null;
-  if (embedId && !p) return new Response('No such BlokDust patch.', { status: 404, headers: { 'content-type': 'text/plain' } });
+  if (embedId && !p)
+    return new Response('No such BlokDust patch.', {
+      status: 404,
+      headers: { 'content-type': 'text/plain' },
+    });
   const assetUrl = new URL(`${url.origin}${assetBase(env)}/`);
   const asset = await env.ASSETS.fetch(new Request(assetUrl.toString(), { headers: req.headers }));
   if (!asset.ok) return asset;
@@ -68,8 +90,17 @@ export async function page(env: Env, req: Request, url: URL, embedId: string | n
   const baseTag = embedId ? `<base href="${escapeHtml(basePath(env))}/">\n    ` : '';
   const title = escapeHtml(embedId || p ? displayTitle(p) : 'BlokDust');
   const rewritten = new HTMLRewriter()
-    .on('head', { element(e) { if (baseTag) e.prepend(baseTag, { html: true }); e.append(`    ${head}\n  `, { html: true }); } })
-    .on('title', { element(e) { e.setInnerContent(title); } })
+    .on('head', {
+      element(e) {
+        if (baseTag) e.prepend(baseTag, { html: true });
+        e.append(`    ${head}\n  `, { html: true });
+      },
+    })
+    .on('title', {
+      element(e) {
+        e.setInnerContent(title);
+      },
+    })
     .transform(asset);
   const headers = new Headers(rewritten.headers);
   headers.set('content-type', 'text/html; charset=utf-8');
@@ -86,24 +117,46 @@ export async function oembed(env: Env, req: Request, url: URL): Promise<Response
   const target = url.searchParams.get('url');
   if (!target) throw new HttpError(400, 'url required');
   let t: URL;
-  try { t = new URL(target); } catch { throw new HttpError(400, 'bad url'); }
+  try {
+    t = new URL(target);
+  } catch {
+    throw new HttpError(400, 'bad url');
+  }
   const base = new URL(publicBase(env, req) + '/');
   if (t.host !== base.host) throw new HttpError(404, 'not a BlokDust URL');
-  const rel = t.pathname.startsWith(base.pathname) ? t.pathname.slice(base.pathname.length - 1) : t.pathname;
+  const rel = t.pathname.startsWith(base.pathname)
+    ? t.pathname.slice(base.pathname.length - 1)
+    : t.pathname;
   const id = rel.match(/^\/embed\/([^/]+)\/?$/)?.[1] ?? t.searchParams.get('c');
   if (!id || !ID_RE.test(id)) throw new HttpError(404, 'not a BlokDust patch URL');
   const p = await loadPatch(env, id);
   if (!p) throw new HttpError(404, 'no such patch');
-  const maxW = Number(url.searchParams.get('maxwidth')) || Infinity, maxH = Number(url.searchParams.get('maxheight')) || Infinity;
+  const maxW = Number(url.searchParams.get('maxwidth')) || Infinity,
+    maxH = Number(url.searchParams.get('maxheight')) || Infinity;
   const scale = Math.min(1, maxW / EMBED.width, maxH / EMBED.height);
-  const width = Math.max(1, Math.floor(EMBED.width * scale)), height = Math.max(1, Math.floor(EMBED.height * scale));
+  const width = Math.max(1, Math.floor(EMBED.width * scale)),
+    height = Math.max(1, Math.floor(EMBED.height * scale));
   const root = publicBase(env, req);
   const src = `${root}/embed/${id}`;
   const body: Record<string, unknown> = {
-    version: '1.0', type: 'rich', provider_name: 'BlokDust', provider_url: `${root}/`, title: displayTitle(p),
-    width, height, cache_age: 3600,
+    version: '1.0',
+    type: 'rich',
+    provider_name: 'BlokDust',
+    provider_url: `${root}/`,
+    title: displayTitle(p),
+    width,
+    height,
+    cache_age: 3600,
     html: `<iframe src="${escapeHtml(src)}" width="${width}" height="${height}" style="border:0" allow="autoplay; fullscreen; midi" allowfullscreen loading="lazy" title="${escapeHtml(displayTitle(p))}"></iframe>`,
   };
-  if (p.hasThumb) Object.assign(body, { thumbnail_url: `${root}/api/patches/${id}/thumb.png?rev=${p.rev}`, thumbnail_width: THUMB.width, thumbnail_height: THUMB.height });
-  return json(body, 200, { 'access-control-allow-origin': '*', 'cache-control': 'public, max-age=300' });
+  if (p.hasThumb)
+    Object.assign(body, {
+      thumbnail_url: `${root}/api/patches/${id}/thumb.png?rev=${p.rev}`,
+      thumbnail_width: THUMB.width,
+      thumbnail_height: THUMB.height,
+    });
+  return json(body, 200, {
+    'access-control-allow-origin': '*',
+    'cache-control': 'public, max-age=300',
+  });
 }

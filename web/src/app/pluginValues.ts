@@ -26,7 +26,14 @@ export function pluginValues(juce: Bridge): PluginValuesClient {
   juce.addEventListener('bd_values', (values: Record<string, unknown>) => {
     for (const [key, value] of Object.entries(values ?? {})) followers.get(key)?.(value);
   });
-  const ask = () => { if (followers.size) juce.emitEvent('bd_get', { keys: [...followers.keys()] }); };
+  const ask = () => {
+    if (followers.size) juce.emitEvent('bd_get', { keys: [...followers.keys()] });
+  };
   onFocusReturn(ask);
-  return { follow: (key, fn) => { followers.set(key, fn as (value: unknown) => void); }, ask };
+  return {
+    follow: (key, fn) => {
+      followers.set(key, fn as (value: unknown) => void);
+    },
+    ask,
+  };
 }

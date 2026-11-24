@@ -24,6 +24,9 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - name: Indexes and generated code are current
         run: pnpm check
+      - uses: astral-sh/setup-uv@v6
+      - name: Lint (CHG-0045)
+        run: pnpm bd lint setup && pnpm lint
       - name: Block manifests re-render v1 pixels (SPEC-VISUAL-V1-PARITY)
         run: pnpm bd v1 verify
       - name: Web typecheck + build
@@ -46,7 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBLOKDUST_BUILD_TESTS=ON
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBLOKDUST_BUILD_TESTS=ON -DBLOKDUST_WARNINGS_AS_ERRORS=ON
       - name: Build
         run: cmake --build build --config Release --parallel
       - name: Test

@@ -11,14 +11,21 @@ export const DEFAULT_PER_DAY = 10;
 export const LIMIT_MESSAGE = 'Cannot create any more new accounts today.';
 
 const today = () => new Date().toISOString().slice(0, 10);
-const perDay = (env: Env) => { const n = Number(env.ACCOUNTS_PER_DAY); return Number.isFinite(n) && n > 0 ? Math.floor(n) : DEFAULT_PER_DAY; };
+const perDay = (env: Env) => {
+  const n = Number(env.ACCOUNTS_PER_DAY);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : DEFAULT_PER_DAY;
+};
 async function keyOf(env: Env, req: Request): Promise<string> {
-  return sha256Hex(`${await dailySalt(env)}|accounts|${req.headers.get('cf-connecting-ip') ?? 'local'}`);
+  return sha256Hex(
+    `${await dailySalt(env)}|accounts|${req.headers.get('cf-connecting-ip') ?? 'local'}`,
+  );
 }
 
 /** Whether this network may make another account today. */
 export async function mayCreateAccount(env: Env, req: Request): Promise<boolean> {
-  const n = await env.DB.prepare('SELECT n FROM new_accounts WHERE key = ? AND day = ?').bind(await keyOf(env, req), today()).first<number>('n');
+  const n = await env.DB.prepare('SELECT n FROM new_accounts WHERE key = ? AND day = ?')
+    .bind(await keyOf(env, req), today())
+    .first<number>('n');
   return (n ?? 0) < perDay(env);
 }
 export async function requireMayCreateAccount(env: Env, req: Request): Promise<void> {
@@ -30,6 +37,8 @@ export async function countNewAccount(env: Env, req: Request): Promise<D1Prepare
   const day = today();
   return [
     env.DB.prepare('DELETE FROM new_accounts WHERE day < ?').bind(day),
-    env.DB.prepare('INSERT INTO new_accounts (key, day, n) VALUES (?, ?, 1) ON CONFLICT(key) DO UPDATE SET n = n + 1').bind(await keyOf(env, req), day),
+    env.DB.prepare(
+      'INSERT INTO new_accounts (key, day, n) VALUES (?, ?, 1) ON CONFLICT(key) DO UPDATE SET n = n + 1',
+    ).bind(await keyOf(env, req), day),
   ];
 }

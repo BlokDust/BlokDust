@@ -6,5 +6,9 @@
 export function setAudioSession(type: 'playback' | 'play-and-record'): void {
   const session = (navigator as unknown as { audioSession?: { type: string } }).audioSession;
   if (!session || session.type === type) return;
-  try { session.type = type; } catch { /* a browser that rejects the value still plays, just not over the switch */ }
+  try {
+    session.type = type;
+  } catch {
+    /* a browser that rejects the value still plays, just not over the switch */
+  }
 }

@@ -8,7 +8,8 @@ using namespace bdtest;
 using Catch::Matchers::WithinAbs;
 
 namespace {
-constexpr int kRateTicks = 80 * kTicksPerV1Frame;  // v1 default emitter rate (80 frames) → 320 ticks = 1.333 s
+constexpr int kRateTicks =
+    80 * kTicksPerV1Frame;  // v1 default emitter rate (80 frames) → 320 ticks = 1.333 s
 constexpr std::int64_t kSamplesPerTick = 48000 / kTickRate;
 
 /// Self-powered emitter at (ex, ey) firing right (angle 0).
@@ -22,29 +23,34 @@ void addEmitterRight(Engine& e, BlockId id, double ex, double ey) {
 TEST_CASE("R4 S1: a self-powered emitter pulses a Tone every interval with sample-accurate gates") {
   auto e = makeEngine();
   addEmitterRight(*e, 1, -10, 0);
-  e->push(Command::add(2, BlockType::SourceTone, 0, -0.5));  // particle path crosses the Tone outline at x ≈ -1.5
+  e->push(Command::add(2, BlockType::SourceTone, 0,
+                       -0.5));  // particle path crosses the Tone outline at x ≈ -1.5
   render(*e, 48000 * 10);
 
   const auto emits = eventsOf(*e, Event::Type::Emit, 1);
   const auto hits = eventsOf(*e, Event::Type::Hit, 2);
   const auto on = eventsOf(*e, Event::Type::GateOn, 2);
   const auto off = eventsOf(*e, Event::Type::GateOff, 2);
-  REQUIRE(emits.size() == 7);  // ticks 319, 639, …, 2239 within 2400 ticks
+  REQUIRE(emits.size() == 7);              // ticks 319, 639, …, 2239 within 2400 ticks
   CHECK(emits[0].tick == kRateTicks - 1);  // v1: a new self-powered emitter's counter starts at 0
-  for (std::size_t i = 1; i < emits.size(); ++i) CHECK(emits[i].tick - emits[i - 1].tick == kRateTicks);
+  for (std::size_t i = 1; i < emits.size(); ++i)
+    CHECK(emits[i].tick - emits[i - 1].tick == kRateTicks);
 
   REQUIRE(hits.size() == 6);
-  // speed 3 units/frame = 0.05 grid/tick; the outline edge at y=+0.5 is x=-1.5 → 8.5 grid / 0.05 ≈ 170 ticks
+  // speed 3 units/frame = 0.05 grid/tick; the outline edge at y=+0.5 is x=-1.5 → 8.5 grid / 0.05 ≈
+  // 170 ticks
   CHECK(hits[0].tick - emits[0].tick >= 170);
   CHECK(hits[0].tick - emits[0].tick <= 172);
-  for (std::size_t i = 1; i < hits.size(); ++i) CHECK(hits[i].tick - hits[i - 1].tick == kRateTicks);
+  for (std::size_t i = 1; i < hits.size(); ++i)
+    CHECK(hits[i].tick - hits[i - 1].tick == kRateTicks);
 
   REQUIRE(on.size() == 6);
   REQUIRE(off.size() == 6);
   for (std::size_t i = 0; i < on.size(); ++i) {
-    CHECK(on[i].tick == hits[i].tick);                 // gate opens on the hit tick
-    CHECK(off[i].tick - on[i].tick == kPulseTicks);    // 0.15 s pulse (v1 Config.PulseLength)
-    CHECK(on[i].sample == static_cast<std::int64_t>(on[i].tick) * kSamplesPerTick);  // events land on tick samples
+    CHECK(on[i].tick == hits[i].tick);               // gate opens on the hit tick
+    CHECK(off[i].tick - on[i].tick == kPulseTicks);  // 0.15 s pulse (v1 Config.PulseLength)
+    CHECK(on[i].sample ==
+          static_cast<std::int64_t>(on[i].tick) * kSamplesPerTick);  // events land on tick samples
   }
 }
 
@@ -73,7 +79,8 @@ TEST_CASE("R4: particles expire after range/speed (600/3 = 200 v1 frames = 800 t
   auto e = makeEngine();
   addEmitterRight(*e, 1, 0, 0);
   // first emission at tick 319; switch the emitter off right after so only one particle exists
-  e->push(Command::setParam(1, P::PowerEmitter::selfPoweredMode, 0.0, kRateTicks * kSamplesPerTick));
+  e->push(
+      Command::setParam(1, P::PowerEmitter::selfPoweredMode, 0.0, kRateTicks * kSamplesPerTick));
   render(*e, kSamplesPerTick * (kRateTicks - 1 + 799));
   REQUIRE(e->particles().size() == 1);
   const auto& p = e->particles()[0];
@@ -113,7 +120,8 @@ TEST_CASE("R2 S3: particle hits on a Toggle flip power to its connected sources"
   auto e = makeEngine();
   addEmitterRight(*e, 1, -10, 0);
   e->push(Command::add(2, BlockType::PowerToggle, 0, 0));
-  e->push(Command::add(3, BlockType::SourceTone, 0, 5));  // connected to the toggle, off the particle path
+  e->push(Command::add(3, BlockType::SourceTone, 0,
+                       5));  // connected to the toggle, off the particle path
   render(*e, 48000 * 5);
   const auto logic = eventsOf(*e, Event::Type::Logic, 2);
   const auto on = eventsOf(*e, Event::Type::GateOn, 3);
@@ -140,13 +148,17 @@ TEST_CASE("R2: a particle hit on a Pulse block pulses its connected sources for 
   CHECK(off[0].tick - on[0].tick == kPulseTicks);
 }
 
-TEST_CASE("overlapping pulses keep a source powered until the last one ends; each hit strikes it again (SIMULATION-0008)") {
+TEST_CASE(
+    "overlapping pulses keep a source powered until the last one ends; each hit strikes it again "
+    "(SIMULATION-0008)") {
   auto e = makeEngine();
   addEmitterRight(*e, 1, -10, 0);
   addEmitterRight(*e, 2, -10, 0);  // second emitter, same path, created later
   e->push(Command::setParam(2, P::PowerEmitter::selfPoweredMode, 0.0));
-  // emitter 1 fires at tick 319; emitter 2 is switched on at tick 329 and fires immediately (primed counter)
-  e->push(Command::setParam(2, P::PowerEmitter::selfPoweredMode, 1.0, /*atSample*/ (kRateTicks + 9) * kSamplesPerTick));
+  // emitter 1 fires at tick 319; emitter 2 is switched on at tick 329 and fires immediately (primed
+  // counter)
+  e->push(Command::setParam(2, P::PowerEmitter::selfPoweredMode, 1.0,
+                            /*atSample*/ (kRateTicks + 9) * kSamplesPerTick));
   e->push(Command::add(3, BlockType::SourceTone, 0, -0.5));
   render(*e, 48000 * 3);
   const auto hits = eventsOf(*e, Event::Type::Hit, 3);
@@ -159,50 +171,60 @@ TEST_CASE("overlapping pulses keep a source powered until the last one ends; eac
   CHECK(on[0].tick == hits[0].tick);
   CHECK(off[0].tick == hits[1].tick + kPulseTicks);  // one continuous gate across both pulses
   REQUIRE(on.size() >= 2);
-  CHECK(on[1].tick == hits[1].tick);                  // ... struck again by the second hit (v1 only lengthened it)
+  CHECK(on[1].tick == hits[1].tick);  // ... struck again by the second hit (v1 only lengthened it)
 }
 
 TEST_CASE("SIMULATION-0008: fast particles through a Random Note pick a new note on every hit") {
   auto e = makeEngine(48000, 1, false);
   addEmitterRight(*e, 1, -10, 0);
-  e->push(Command::setParam(1, P::PowerEmitter::rate, 6));  // a particle every 0.1 s: closer than a pulse (0.15 s)
+  e->push(Command::setParam(1, P::PowerEmitter::rate,
+                            6));  // a particle every 0.1 s: closer than a pulse (0.15 s)
   e->push(Command::add(2, BlockType::SourceTone, 0, -0.5));
   e->push(Command::add(3, BlockType::FxRandomNote, 3, -0.5));
   std::vector<double> heard;
   for (int t = 0; t < 1200; ++t) {  // 3 s: the first particle takes ~0.7 s to arrive
     render(*e, 120);
-    for (const auto& v : e->block(2)->voices) if (v.active && (heard.empty() || heard.back() != v.pitch)) heard.push_back(v.pitch);
+    for (const auto& v : e->block(2)->voices)
+      if (v.active && (heard.empty() || heard.back() != v.pitch))
+        heard.push_back(v.pitch);
   }
   const auto hits = eventsOf(*e, Event::Type::Hit, 2), on = eventsOf(*e, Event::Type::GateOn, 2);
   REQUIRE(hits.size() >= 8);
-  CHECK(on.size() == hits.size());     // every hit is a strike
+  CHECK(on.size() == hits.size());         // every hit is a strike
   CHECK(heard.size() >= hits.size() / 2);  // and mostly a different note (a pick can repeat)
 }
 
-TEST_CASE("SPEC-SIMULATION-POWER-AND-PARTICLES R2a: Hits Cut Power: a particle cuts the Power for a hit's 0.15 s; off, hits pass") {
+TEST_CASE(
+    "SPEC-SIMULATION-POWER-AND-PARTICLES R2a: Hits Cut Power: a particle cuts the Power for a "
+    "hit's 0.15 s; off, hits pass") {
   const auto run = [](bool cut) {
     auto e = makeEngine(48000, 1, false);
     addEmitterRight(*e, 1, -14, 0);
-    e->push(Command::add(2, BlockType::SourceTone, 0, 4));    // out of the particles' path
-    e->push(Command::add(3, BlockType::PowerPower, 0, 0));     // powers the Tone, in the path
+    e->push(Command::add(2, BlockType::SourceTone, 0, 4));  // out of the particles' path
+    e->push(Command::add(3, BlockType::PowerPower, 0, 0));  // powers the Tone, in the path
     e->push(Command::setParam(3, P::PowerPower::cutByHits, cut ? 1 : 0));
     render(*e, 48000 * 4);
-    return std::move(e);
+    return e;
   };
   const auto on = run(true);
-  const auto gateOns = eventsOf(*on, Event::Type::GateOn, 2), gateOffs = eventsOf(*on, Event::Type::GateOff, 2), cuts = eventsOf(*on, Event::Type::Logic, 3);
+  const auto gateOns = eventsOf(*on, Event::Type::GateOn, 2),
+             gateOffs = eventsOf(*on, Event::Type::GateOff, 2),
+             cuts = eventsOf(*on, Event::Type::Logic, 3);
   REQUIRE(cuts.size() >= 2);
-  CHECK(gateOns.size() == cuts.size() + 1);             // on at the start, then again after every cut
+  CHECK(gateOns.size() == cuts.size() + 1);  // on at the start, then again after every cut
   REQUIRE(gateOffs.size() >= 1);
-  CHECK(gateOffs[0].tick == cuts[0].tick);             // the cut lets go at once ...
-  CHECK(gateOns[1].tick - cuts[0].tick == 36);         // ... and power comes back after a hit's 0.15 s (36 ticks)
+  CHECK(gateOffs[0].tick == cuts[0].tick);  // the cut lets go at once ...
+  CHECK(gateOns[1].tick - cuts[0].tick ==
+        36);  // ... and power comes back after a hit's 0.15 s (36 ticks)
   CHECK(eventsOf(*on, Event::Type::Hit, 3).size() == cuts.size());  // the particles stop at it
   const auto off = run(false);
-  CHECK(eventsOf(*off, Event::Type::GateOn, 2).size() == 1);   // v1: the Power just holds the Tone
-  CHECK(eventsOf(*off, Event::Type::Hit, 3).empty());          // particles pass through it
+  CHECK(eventsOf(*off, Event::Type::GateOn, 2).size() == 1);  // v1: the Power just holds the Tone
+  CHECK(eventsOf(*off, Event::Type::Hit, 3).empty());         // particles pass through it
 }
 
-TEST_CASE("SPEC-SIMULATION-POWER-AND-PARTICLES R2a: Hits Cut Power: a laser beam cuts the Power for as long as it touches it (owner, 2026-11-20)") {
+TEST_CASE(
+    "SPEC-SIMULATION-POWER-AND-PARTICLES R2a: Hits Cut Power: a laser beam cuts the Power for as "
+    "long as it touches it (owner, 2026-11-20)") {
   auto e = makeEngine(48000, 1, false);
   e->push(Command::add(2, BlockType::SourceTone, 0, 4));
   e->push(Command::add(3, BlockType::PowerPower, 0, 0));
@@ -222,8 +244,11 @@ TEST_CASE("SPEC-SIMULATION-POWER-AND-PARTICLES R2a: Hits Cut Power: a laser beam
   CHECK(eventsOf(*e, Event::Type::GateOn, 2).size() == 1);  // struck again as the power returns
 }
 
-TEST_CASE("SPEC-SIMULATION-POWER-AND-PARTICLES R1b: Reset of the whole world (id 0) clears the particles in flight, in its Stages too") {
-  // Clearing the stage or opening another patch (owner, 2026-11-18): the old patch's particles went on flying.
+TEST_CASE(
+    "SPEC-SIMULATION-POWER-AND-PARTICLES R1b: Reset of the whole world (id 0) clears the particles "
+    "in flight, in its Stages too") {
+  // Clearing the stage or opening another patch (owner, 2026-11-18): the old patch's particles went
+  // on flying.
   auto e = makeEngine(48000, 1, false);
   e->push(Command::add(1, BlockType::PowerEmitter, 0, 0));
   e->push(Command::setParam(1, P::PowerEmitter::selfPoweredMode, 1));

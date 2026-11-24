@@ -7,15 +7,52 @@
     <title>BlokDust 2</title>
     <link rel="icon" type="image/png" href="favicon.ico" />
     <style>
-      html, body { margin: 0; -webkit-font-smoothing: antialiased; /* v1 styles.css: also governs canvas text on macOS */ height: 100%; overflow: hidden; background: #1a1f21; font: 13px system-ui, sans-serif; }
-      #stage, #stage canvas { position: absolute; inset: 0; touch-action: none; }
+      html,
+      body {
+        margin: 0;
+        -webkit-font-smoothing: antialiased; /* v1 styles.css: also governs canvas text on macOS */
+        height: 100%;
+        overflow: hidden;
+        background: #1a1f21;
+        font:
+          13px system-ui,
+          sans-serif;
+      }
+      #stage,
+      #stage canvas {
+        position: absolute;
+        inset: 0;
+        touch-action: none;
+      }
       /* Touch screens (owner, 2026-11-08; Funputs #45): no selection, no callout/magnifier, no tap flash. Text fields
          keep theirs. `-webkit-user-select`: Safari before 17 ignores the unprefixed one. */
-      html, body, #stage, #stage canvas { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
-      input, textarea { user-select: text; -webkit-user-select: text; -webkit-touch-callout: default; }
+      html,
+      body,
+      #stage,
+      #stage canvas {
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      input,
+      textarea {
+        user-select: text;
+        -webkit-user-select: text;
+        -webkit-touch-callout: default;
+      }
       /* v1 Splash's black until the scene has drawn the start button (Splash) under it; then clear (main.ts). Embeds
          give it their own play overlay. */
-      #start { position: fixed; inset: 0; z-index: 3; display: grid; place-items: center; color: #fff4d6; cursor: pointer; background: rgb(10 10 10); }
+      #start {
+        position: fixed;
+        inset: 0;
+        z-index: 3;
+        display: grid;
+        place-items: center;
+        color: #fff4d6;
+        cursor: pointer;
+        background: rgb(10 10 10);
+      }
     </style>
   </head>
   <body>

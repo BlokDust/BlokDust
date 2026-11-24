@@ -15,51 +15,96 @@ const ALPHABET = 'BCDFGHJKLMNPQRSTVWXZ23456789';
 async function body<T>(req: Request): Promise<T> {
   const t = await req.text();
   if (t.length > 16 * 1024) throw new HttpError(413, 'request too large');
-  try { return JSON.parse(t || '{}') as T; } catch { throw new HttpError(400, 'body must be JSON'); }
+  try {
+    return JSON.parse(t || '{}') as T;
+  } catch {
+    throw new HttpError(400, 'body must be JSON');
+  }
 }
 
 /** Eight characters of ALPHABET, evenly drawn (rejection sampling), as XXXX-XXXX. */
 function newUserCode(): string {
-  const out: string[] = [], limit = 256 - (256 % ALPHABET.length);
-  while (out.length < 8) for (const b of crypto.getRandomValues(new Uint8Array(16))) if (b < limit && out.length < 8) out.push(ALPHABET[b % ALPHABET.length]);
+  const out: string[] = [],
+    limit = 256 - (256 % ALPHABET.length);
+  while (out.length < 8)
+    for (const b of crypto.getRandomValues(new Uint8Array(16)))
+      if (b < limit && out.length < 8) out.push(ALPHABET[b % ALPHABET.length]);
   return `${out.slice(0, 4).join('')}-${out.slice(4).join('')}`;
 }
 /** A typed code as stored: capitals, the dash where it goes; null if it can't be one. */
 export function normaliseCode(raw: unknown): string | null {
   if (typeof raw !== 'string') return null;
   const c = raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
-  return c.length === 8 && [...c].every(ch => ALPHABET.includes(ch)) ? `${c.slice(0, 4)}-${c.slice(4)}` : null;
+  return c.length === 8 && [...c].every((ch) => ALPHABET.includes(ch))
+    ? `${c.slice(0, 4)}-${c.slice(4)}`
+    : null;
 }
 /** What the plugin calls itself ("BlokDust on Mac"): printable, one line, 60 characters at most. */
 function deviceName(raw: unknown): string {
-  const s = typeof raw === 'string' ? raw.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) : '';
+  const s =
+    typeof raw === 'string'
+      ? raw
+          .replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 60)
+      : '';
   return s || 'BlokDust';
 }
 
 /** A new key for `userId`, named `name`: the key itself (shown to the plugin once) and its public id. */
-export async function createKey(env: Env, userId: string, name: string): Promise<{ key: string; id: string }> {
-  const key = `bdk_${b64urlBytes(32)}`, id = b64urlBytes(9), now = Date.now();
-  await env.DB.prepare('INSERT INTO app_keys (id, key_hash, user_id, name, created, last_used, expires) VALUES (?, ?, ?, ?, ?, ?, ?)')
-    .bind(id, await sha256Hex(key), userId, deviceName(name), now, now, now + APP_KEY_DAYS * DAY).run();
+export async function createKey(
+  env: Env,
+  userId: string,
+  name: string,
+): Promise<{ key: string; id: string }> {
+  const key = `bdk_${b64urlBytes(32)}`,
+    id = b64urlBytes(9),
+    now = Date.now();
+  await env.DB.prepare(
+    'INSERT INTO app_keys (id, key_hash, user_id, name, created, last_used, expires) VALUES (?, ?, ?, ?, ?, ?, ?)',
+  )
+    .bind(id, await sha256Hex(key), userId, deviceName(name), now, now, now + APP_KEY_DAYS * DAY)
+    .run();
   return { key, id };
 }
 
 /** POST /api/device/start {name} — a device code and the code to show (from a plugin; no account needed). */
 export async function deviceStart(env: Env, req: Request): Promise<Response> {
   const { name } = await body<{ name?: unknown }>(req);
-  const deviceCode = b64urlBytes(32), now = Date.now();
+  const deviceCode = b64urlBytes(32),
+    now = Date.now();
   for (let attempt = 0; attempt < 5; attempt++) {
     const userCode = newUserCode();
     try {
       await env.DB.batch([
         env.DB.prepare('DELETE FROM device_codes WHERE expires < ?').bind(now),
-        env.DB.prepare('INSERT INTO device_codes (code_hash, user_code_hash, name, created, expires) VALUES (?, ?, ?, ?, ?)')
-          .bind(await sha256Hex(deviceCode), await sha256Hex(userCode), deviceName(name), now, now + DEVICE_MS),
+        env.DB.prepare(
+          'INSERT INTO device_codes (code_hash, user_code_hash, name, created, expires) VALUES (?, ?, ?, ?, ?)',
+        ).bind(
+          await sha256Hex(deviceCode),
+          await sha256Hex(userCode),
+          deviceName(name),
+          now,
+          now + DEVICE_MS,
+        ),
       ]);
       const site = publicBase(env, req);
-      return json({ deviceCode, userCode, verifyUrl: `${site}/link?code=${userCode}`, verifyAt: `${new URL(site).host}${new URL(site).pathname.replace(/\/$/, '')}/link`,
-        interval: POLL_SECONDS, expiresIn: DEVICE_MS / 1000 }, 200, { 'cache-control': 'no-store' });
-    } catch (e) { if (!String(e).includes('UNIQUE')) throw e; }
+      return json(
+        {
+          deviceCode,
+          userCode,
+          verifyUrl: `${site}/link?code=${userCode}`,
+          verifyAt: `${new URL(site).host}${new URL(site).pathname.replace(/\/$/, '')}/link`,
+          interval: POLL_SECONDS,
+          expiresIn: DEVICE_MS / 1000,
+        },
+        200,
+        { 'cache-control': 'no-store' },
+      );
+    } catch (e) {
+      if (!String(e).includes('UNIQUE')) throw e;
+    }
   }
   throw new HttpError(500, 'could not make a code');
 }
@@ -70,32 +115,62 @@ export async function deviceStart(env: Env, req: Request): Promise<Response> {
  */
 export async function devicePoll(env: Env, req: Request): Promise<Response> {
   const { deviceCode } = await body<{ deviceCode?: unknown }>(req);
-  if (typeof deviceCode !== 'string' || deviceCode.length > 64) throw new HttpError(400, 'deviceCode required');
-  const hash = await sha256Hex(deviceCode), now = Date.now(), noStore = { 'cache-control': 'no-store' };
-  const row = await env.DB.prepare('SELECT expires, polled, user_id, denied FROM device_codes WHERE code_hash = ?').bind(hash)
+  if (typeof deviceCode !== 'string' || deviceCode.length > 64)
+    throw new HttpError(400, 'deviceCode required');
+  const hash = await sha256Hex(deviceCode),
+    now = Date.now(),
+    noStore = { 'cache-control': 'no-store' };
+  const row = await env.DB.prepare(
+    'SELECT expires, polled, user_id, denied FROM device_codes WHERE code_hash = ?',
+  )
+    .bind(hash)
     .first<{ expires: number; polled: number; user_id: string | null; denied: number }>();
   if (!row || row.expires < now) return json({ status: 'expired' }, 410, noStore);
-  if (row.denied) { await env.DB.prepare('DELETE FROM device_codes WHERE code_hash = ?').bind(hash).run(); return json({ status: 'denied' }, 403, noStore); }
+  if (row.denied) {
+    await env.DB.prepare('DELETE FROM device_codes WHERE code_hash = ?').bind(hash).run();
+    return json({ status: 'denied' }, 403, noStore);
+  }
   if (row.user_id) {
     // Taken once: the row goes in the same statement that reads it, so two polls can't both get a key.
-    const taken = await env.DB.prepare('DELETE FROM device_codes WHERE code_hash = ? AND user_id IS NOT NULL RETURNING user_id, name').bind(hash).first<{ user_id: string; name: string }>();
+    const taken = await env.DB.prepare(
+      'DELETE FROM device_codes WHERE code_hash = ? AND user_id IS NOT NULL RETURNING user_id, name',
+    )
+      .bind(hash)
+      .first<{ user_id: string; name: string }>();
     if (taken) {
       const { key } = await createKey(env, taken.user_id, taken.name);
-      const u = await env.DB.prepare('SELECT handle FROM users WHERE id = ?').bind(taken.user_id).first<{ handle: string | null }>();
+      const u = await env.DB.prepare('SELECT handle FROM users WHERE id = ?')
+        .bind(taken.user_id)
+        .first<{ handle: string | null }>();
       return json({ status: 'approved', key, user: { handle: u?.handle ?? null } }, 200, noStore);
     }
   }
-  if (now - row.polled < (POLL_SECONDS - 1) * 1000) return json({ status: 'slow_down', interval: POLL_SECONDS }, 429, noStore);
-  await env.DB.prepare('UPDATE device_codes SET polled = ? WHERE code_hash = ?').bind(now, hash).run();
+  if (now - row.polled < (POLL_SECONDS - 1) * 1000)
+    return json({ status: 'slow_down', interval: POLL_SECONDS }, 429, noStore);
+  await env.DB.prepare('UPDATE device_codes SET polled = ? WHERE code_hash = ?')
+    .bind(now, hash)
+    .run();
   return json({ status: 'pending' }, 202, noStore);
 }
 
 /** The waiting code `code` (signed in on the website), or 404. */
-async function waiting(env: Env, code: unknown): Promise<{ user_code_hash: string; name: string; created: number }> {
+async function waiting(
+  env: Env,
+  code: unknown,
+): Promise<{ user_code_hash: string; name: string; created: number }> {
   const c = normaliseCode(code);
-  const row = c ? await env.DB.prepare('SELECT user_code_hash, name, created FROM device_codes WHERE user_code_hash = ? AND expires > ? AND user_id IS NULL AND denied = 0')
-    .bind(await sha256Hex(c), Date.now()).first<{ user_code_hash: string; name: string; created: number }>() : null;
-  if (!row) throw new HttpError(404, 'That code is not waiting. It may have expired: start again in BlokDust.');
+  const row = c
+    ? await env.DB.prepare(
+        'SELECT user_code_hash, name, created FROM device_codes WHERE user_code_hash = ? AND expires > ? AND user_id IS NULL AND denied = 0',
+      )
+        .bind(await sha256Hex(c), Date.now())
+        .first<{ user_code_hash: string; name: string; created: number }>()
+    : null;
+  if (!row)
+    throw new HttpError(
+      404,
+      'That code is not waiting. It may have expired: start again in BlokDust.',
+    );
   return row;
 }
 
@@ -112,9 +187,18 @@ export async function deviceApprove(env: Env, req: Request): Promise<Response> {
   const u = await requireUser(env, req);
   const b = await body<{ code?: unknown; approve?: unknown }>(req);
   const row = await waiting(env, b.code);
-  const r = b.approve === true
-    ? await env.DB.prepare('UPDATE device_codes SET user_id = ? WHERE user_code_hash = ? AND user_id IS NULL AND denied = 0').bind(u.id, row.user_code_hash).run()
-    : await env.DB.prepare('UPDATE device_codes SET denied = 1 WHERE user_code_hash = ? AND user_id IS NULL').bind(row.user_code_hash).run();
+  const r =
+    b.approve === true
+      ? await env.DB.prepare(
+          'UPDATE device_codes SET user_id = ? WHERE user_code_hash = ? AND user_id IS NULL AND denied = 0',
+        )
+          .bind(u.id, row.user_code_hash)
+          .run()
+      : await env.DB.prepare(
+          'UPDATE device_codes SET denied = 1 WHERE user_code_hash = ? AND user_id IS NULL',
+        )
+          .bind(row.user_code_hash)
+          .run();
   if (!r.meta.changes) throw new HttpError(409, 'That code was answered already.');
   return json({ ok: true, approved: b.approve === true, name: row.name });
 }
@@ -122,8 +206,11 @@ export async function deviceApprove(env: Env, req: Request): Promise<Response> {
 /** GET /api/me/apps — the plugins signed in to this account (the website's session only). */
 export async function listApps(env: Env, req: Request): Promise<Response> {
   const u = await requireUser(env, req);
-  const r = await env.DB.prepare('SELECT id, name, created, last_used AS lastUsed FROM app_keys WHERE user_id = ? AND expires > ? ORDER BY last_used DESC')
-    .bind(u.id, Date.now()).all();
+  const r = await env.DB.prepare(
+    'SELECT id, name, created, last_used AS lastUsed FROM app_keys WHERE user_id = ? AND expires > ? ORDER BY last_used DESC',
+  )
+    .bind(u.id, Date.now())
+    .all();
   return json({ apps: r.results }, 200, { 'cache-control': 'no-store' });
 }
 
@@ -132,7 +219,9 @@ export async function removeApp(env: Env, req: Request): Promise<Response> {
   const u = await requireUser(env, req);
   const { id } = await body<{ id?: unknown }>(req);
   if (typeof id !== 'string' || id.length > 32) throw new HttpError(400, 'id required');
-  const r = await env.DB.prepare('DELETE FROM app_keys WHERE id = ? AND user_id = ?').bind(id, u.id).run();
+  const r = await env.DB.prepare('DELETE FROM app_keys WHERE id = ? AND user_id = ?')
+    .bind(id, u.id)
+    .run();
   if (!r.meta.changes) throw new HttpError(404, 'no such app');
   return json({ ok: true });
 }
@@ -141,6 +230,8 @@ export async function removeApp(env: Env, req: Request): Promise<Response> {
 export async function endKey(env: Env, req: Request): Promise<boolean> {
   const key = appKeyOf(req);
   if (!key) return false;
-  await env.DB.prepare('DELETE FROM app_keys WHERE key_hash = ?').bind(await sha256Hex(key)).run();
+  await env.DB.prepare('DELETE FROM app_keys WHERE key_hash = ?')
+    .bind(await sha256Hex(key))
+    .run();
   return true;
 }

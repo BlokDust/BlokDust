@@ -6,29 +6,48 @@
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
-import { WasmEngine, hashAudio, hashEvents, hashStereo, hex, FNV_OFFSET } from '../../web/src/engine/wasmEngine.ts';
+import {
+  WasmEngine,
+  hashAudio,
+  hashEvents,
+  hashStereo,
+  hex,
+  FNV_OFFSET,
+} from '../../web/src/engine/wasmEngine.ts';
 import { loadPatch } from '../../web/src/patch/loadPatch.ts';
 
 const EMSDK = '.cache/emsdk';
 const WASM = 'build/wasm/engine/blokdust.wasm';
 const version = readFileSync('engine/emsdk-version', 'utf8').trim();
-const python = () => ['python3.13', 'python3.12', 'python3.11', 'python3.10']
-  .map(p => spawnSync('sh', ['-c', `command -v ${p}`], { encoding: 'utf8' }).stdout.trim()).find(Boolean);
+const python = () =>
+  ['python3.13', 'python3.12', 'python3.11', 'python3.10']
+    .map((p) => spawnSync('sh', ['-c', `command -v ${p}`], { encoding: 'utf8' }).stdout.trim())
+    .find(Boolean);
 const sh = (cmd: string, env: Record<string, string> = {}) => {
-  const r = spawnSync('bash', ['-c', cmd], { stdio: ['ignore', 'inherit', 'inherit'], env: { ...process.env, ...env } });
+  const r = spawnSync('bash', ['-c', cmd], {
+    stdio: ['ignore', 'inherit', 'inherit'],
+    env: { ...process.env, ...env },
+  });
   if (r.status !== 0) throw new Error(`failed: ${cmd}`);
 };
 
 function setup() {
   const py = python();
   if (!py) throw new Error('emsdk needs Python >= 3.10 (e.g. `uv python install 3.12`)');
-  if (!existsSync(EMSDK)) sh(`git clone -q --depth 1 https://github.com/emscripten-core/emsdk.git ${EMSDK}`);
-  sh(`cd ${EMSDK} && ./emsdk install ${version} && ./emsdk activate ${version}`, { EMSDK_PYTHON: py });
+  if (!existsSync(EMSDK))
+    sh(`git clone -q --depth 1 https://github.com/emscripten-core/emsdk.git ${EMSDK}`);
+  sh(`cd ${EMSDK} && ./emsdk install ${version} && ./emsdk activate ${version}`, {
+    EMSDK_PYTHON: py,
+  });
 }
 
 function build() {
-  if (!existsSync(`${EMSDK}/emsdk_env.sh`)) throw new Error('emsdk missing: run `pnpm bd wasm setup`');
-  sh(`source ${EMSDK}/emsdk_env.sh >/dev/null 2>&1 && cmake --preset wasm >/dev/null && cmake --build --preset wasm -j 8`, { EMSDK_PYTHON: python() ?? '' });
+  if (!existsSync(`${EMSDK}/emsdk_env.sh`))
+    throw new Error('emsdk missing: run `pnpm bd wasm setup`');
+  sh(
+    `source ${EMSDK}/emsdk_env.sh >/dev/null 2>&1 && cmake --preset wasm >/dev/null && cmake --build --preset wasm -j 8`,
+    { EMSDK_PYTHON: python() ?? '' },
+  );
   mkdirSync('web/public', { recursive: true });
   copyFileSync(WASM, 'web/public/blokdust.wasm');
   console.error(`built ${WASM} (${readFileSync(WASM).length} bytes) → web/public/blokdust.wasm`);
@@ -40,11 +59,16 @@ export function renderWasm(module: WebAssembly.Module, fixture: any, block = 128
   const frames = Math.round((fixture.render?.seconds ?? 5) * sr);
   const engine = WasmEngine.fromModule(module, sr, loaded.seed);
   for (const c of loaded.commands) if (!engine.push(c)) throw new Error('command queue full');
-  let audio = FNV_OFFSET, audioR = FNV_OFFSET, events = FNV_OFFSET, eventCount = 0;
+  let audio = FNV_OFFSET,
+    audioR = FNV_OFFSET,
+    events = FNV_OFFSET,
+    eventCount = 0;
   const input = fixture.input;
   for (let done = 0; done < frames; done += block) {
     const n = Math.min(block, frames - done);
-    const out = input ? engine.processTestSine(n, done, sr, input.frequency ?? 440, input.gain ?? 0.25) : engine.process(n);
+    const out = input
+      ? engine.processTestSine(n, done, sr, input.frequency ?? 440, input.gain ?? 0.25)
+      : engine.process(n);
     audio = hashAudio(out.left, audio);
     audioR = hashAudio(out.right, audioR);
     const ev = engine.drainEvents();
@@ -58,19 +82,46 @@ export function renderWasm(module: WebAssembly.Module, fixture: any, block = 128
 function test() {
   if (!existsSync(WASM)) build();
   const module = new WebAssembly.Module(readFileSync(WASM));
-  const results = readdirSync('tests/golden').filter(f => f.endsWith('.json')).sort().map(f => {
-    const name = basename(f, '.json');
-    const fixture = JSON.parse(readFileSync(join('tests/golden', f), 'utf8'));
-    const exp = JSON.parse(readFileSync(join('tests/golden/expected', f), 'utf8'));
-    const runs = [128, 4096].map(b => renderWasm(module, fixture, b));  // worklet quantum and a large block
-    const ok = runs.every(r => r.audioHash === exp.audioHash && r.eventHash === exp.eventHash && r.eventCount === exp.eventCount);
-    return { name, ok, wasm: runs[0], native: { audioHash: exp.audioHash, eventHash: exp.eventHash, eventCount: exp.eventCount } };
-  });
-  for (const r of results.filter(r => !r.ok)) console.error(`MISMATCH ${r.name}: wasm ${JSON.stringify(r.wasm)} native ${JSON.stringify(r.native)}`);
-  console.log(JSON.stringify({ fixtures: results.length, identical: results.filter(r => r.ok).length, wasmBytes: readFileSync(WASM).length }));
-  if (results.some(r => !r.ok)) process.exit(1);
+  const results = readdirSync('tests/golden')
+    .filter((f) => f.endsWith('.json'))
+    .sort()
+    .map((f) => {
+      const name = basename(f, '.json');
+      const fixture = JSON.parse(readFileSync(join('tests/golden', f), 'utf8'));
+      const exp = JSON.parse(readFileSync(join('tests/golden/expected', f), 'utf8'));
+      const runs = [128, 4096].map((b) => renderWasm(module, fixture, b)); // worklet quantum and a large block
+      const ok = runs.every(
+        (r) =>
+          r.audioHash === exp.audioHash &&
+          r.eventHash === exp.eventHash &&
+          r.eventCount === exp.eventCount,
+      );
+      return {
+        name,
+        ok,
+        wasm: runs[0],
+        native: { audioHash: exp.audioHash, eventHash: exp.eventHash, eventCount: exp.eventCount },
+      };
+    });
+  for (const r of results.filter((r) => !r.ok))
+    console.error(
+      `MISMATCH ${r.name}: wasm ${JSON.stringify(r.wasm)} native ${JSON.stringify(r.native)}`,
+    );
+  console.log(
+    JSON.stringify({
+      fixtures: results.length,
+      identical: results.filter((r) => r.ok).length,
+      wasmBytes: readFileSync(WASM).length,
+    }),
+  );
+  if (results.some((r) => !r.ok)) process.exit(1);
 }
 
 const cmd = process.argv[2];
-if (cmd === 'setup') setup(); else if (cmd === 'build') build(); else if (cmd === 'test') test();
-else { console.error('usage: bd wasm setup | build | test'); process.exit(2); }
+if (cmd === 'setup') setup();
+else if (cmd === 'build') build();
+else if (cmd === 'test') test();
+else {
+  console.error('usage: bd wasm setup | build | test');
+  process.exit(2);
+}

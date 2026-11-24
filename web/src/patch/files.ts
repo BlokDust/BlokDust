@@ -9,13 +9,26 @@ export const PATCH_EXT = 'blokdust';
 /** A patch file's text → a v2 patch (v1 save files, `{Composition: […]}`, are imported too), or null. */
 export function parsePatchFile(text: string): (Patch & { meta?: { title?: string } }) | null {
   let j: unknown;
-  try { j = JSON.parse(text); } catch { return null; }
+  try {
+    j = JSON.parse(text);
+  } catch {
+    return null;
+  }
   if (!j || typeof j !== 'object') return null;
   const o = j as Record<string, unknown>;
-  if (Array.isArray(o.Composition)) { try { return importV1(o as unknown as V1Composition).patch; } catch { return null; } }
+  if (Array.isArray(o.Composition)) {
+    try {
+      return importV1(o as unknown as V1Composition).patch;
+    } catch {
+      return null;
+    }
+  }
   if (!Array.isArray(o.blocks)) return null;
   if (o.format !== undefined && o.format !== 'blokdust.patch') return null;
-  const blocks = (o.blocks as unknown[]).filter((b): b is PatchBlock => !!b && typeof b === 'object' && typeof (b as PatchBlock).type === 'string');
+  const blocks = (o.blocks as unknown[]).filter(
+    (b): b is PatchBlock =>
+      !!b && typeof b === 'object' && typeof (b as PatchBlock).type === 'string',
+  );
   return { ...(o as unknown as Patch), blocks };
 }
 
@@ -26,7 +39,11 @@ export function patchTitle(p: { meta?: { title?: string } } | null, fallback = '
 
 /** A title → a safe file name (no extension): no path or reserved characters, never empty. */
 export function fileNameFor(title: string): string {
-  const n = title.replace(/[\/\\:*?"<>|\x00-\x1f]/g, '').replace(/^\.+/, '').trim().slice(0, 64);
+  const n = title
+    .replace(/[\/\\:*?"<>|\x00-\x1f]/g, '')
+    .replace(/^\.+/, '')
+    .trim()
+    .slice(0, 64);
   return n || 'Untitled';
 }
 
@@ -34,27 +51,48 @@ export function fileNameFor(title: string): string {
  * Insert (CHG-0005): the incoming blocks keep their layout, centred on grid cell `at`, with ids that don't clash with
  * `taken`. Their refs come along; automation and tempo do not (they belong to the scene being inserted into).
  */
-export function insertBlocks(incoming: Patch, taken: Set<string>, at: { x: number; y: number }): { blocks: PatchBlock[]; refs: Record<string, unknown>; labels: NonNullable<Patch['labels']>; macros: NonNullable<Patch['macros']> } {
+export function insertBlocks(
+  incoming: Patch,
+  taken: Set<string>,
+  at: { x: number; y: number },
+): {
+  blocks: PatchBlock[];
+  refs: Record<string, unknown>;
+  labels: NonNullable<Patch['labels']>;
+  macros: NonNullable<Patch['macros']>;
+} {
   const src = incoming.blocks;
   if (!src.length) return { blocks: [], refs: {}, labels: [], macros: [] };
-  const xs = src.map(b => b.x ?? 0), ys = src.map(b => b.y ?? 0);
-  const dx = Math.round(at.x - (Math.min(...xs) + Math.max(...xs)) / 2), dy = Math.round(at.y - (Math.min(...ys) + Math.max(...ys)) / 2);
+  const xs = src.map((b) => b.x ?? 0),
+    ys = src.map((b) => b.y ?? 0);
+  const dx = Math.round(at.x - (Math.min(...xs) + Math.max(...xs)) / 2),
+    dy = Math.round(at.y - (Math.min(...ys) + Math.max(...ys)) / 2);
   const used = new Set(taken);
   const blocks = src.map((b, i) => {
     let id = b.id && !used.has(b.id) ? b.id : `b${i + 1}`;
     for (let k = 2; used.has(id); k++) id = `${b.id || 'b'}_${k}`;
     used.add(id);
-    return { ...b, id, x: (b.x ?? 0) + dx, y: (b.y ?? 0) + dy, params: structuredClone(b.params ?? {}) };
+    return {
+      ...b,
+      id,
+      x: (b.x ?? 0) + dx,
+      y: (b.y ?? 0) + dy,
+      params: structuredClone(b.params ?? {}),
+    };
   });
   // LFO targets ("<block id>:<param key>", AUDIO-0003) follow blocks whose id changed.
   const renamed = new Map(src.map((b, i) => [b.id, blocks[i].id]));
   for (const b of blocks) {
-    const t = b.params.target, colon = typeof t === 'string' ? t.lastIndexOf(':') : -1;
-    if (typeof t === 'string' && colon > 0 && renamed.has(t.slice(0, colon))) b.params.target = `${renamed.get(t.slice(0, colon))}${t.slice(colon)}`;
+    const t = b.params.target,
+      colon = typeof t === 'string' ? t.lastIndexOf(':') : -1;
+    if (typeof t === 'string' && colon > 0 && renamed.has(t.slice(0, colon)))
+      b.params.target = `${renamed.get(t.slice(0, colon))}${t.slice(colon)}`;
   }
   // Labels come along, moved with the blocks (CHG-0020); the scene gives them ids of its own.
-  const labels = (incoming.labels ?? []).map(l => ({ ...l, x: l.x + dx, y: l.y + dy }));
+  const labels = (incoming.labels ?? []).map((l) => ({ ...l, x: l.x + dx, y: l.y + dy }));
   // What is inside Stage blocks comes along too (CHG-0021), under their new ids.
-  const macros = (incoming.macros ?? []).filter(m => renamed.has(m.block)).map(m => ({ ...structuredClone(m), block: renamed.get(m.block)! }));
+  const macros = (incoming.macros ?? [])
+    .filter((m) => renamed.has(m.block))
+    .map((m) => ({ ...structuredClone(m), block: renamed.get(m.block)! }));
   return { blocks, refs: { ...(incoming.refs ?? {}) }, labels, macros };
 }

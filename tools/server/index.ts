@@ -19,7 +19,10 @@ import { envKey, publicUrl as siteUrl, workerUrl, remoteConfig, type EnvName } f
 
 const args = process.argv.slice(2);
 const cmd = args[0];
-const opt = (k: string) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : undefined; };
+const opt = (k: string) => {
+  const i = args.indexOf(k);
+  return i >= 0 ? args[i + 1] : undefined;
+};
 const SECRETS = CONFIG_DIR;
 
 function envName(): EnvName {
@@ -29,23 +32,34 @@ function envName(): EnvName {
 }
 const workerName = (e: EnvName) => (e === 'staging' ? 'blokdust-staging' : 'blokdust');
 const dbName = workerName;
-const hostsOf = (e: EnvName) => [...new Set([new URL(workerUrl(e)).host, new URL(siteUrl(e)).host])];
+const hostsOf = (e: EnvName) => [
+  ...new Set([new URL(workerUrl(e)).host, new URL(siteUrl(e)).host]),
+];
 const secretFile = (name: string) => join(SECRETS, name);
-const readSecret = (name: string) => (existsSync(secretFile(name)) ? readFileSync(secretFile(name), 'utf8').trim() : '');
+const readSecret = (name: string) =>
+  existsSync(secretFile(name)) ? readFileSync(secretFile(name), 'utf8').trim() : '';
 
 /** The OAuth token wrangler keeps after `wrangler login` (refreshed by running a wrangler command first). */
 async function cfToken(): Promise<string> {
   if (process.env.CLOUDFLARE_API_TOKEN) return process.env.CLOUDFLARE_API_TOKEN;
   await run([WRANGLER, 'whoami'], { quiet: true });
   const f = join(homedir(), 'Library/Preferences/.wrangler/config/default.toml');
-  const t = existsSync(f) ? readFileSync(f, 'utf8').match(/oauth_token = "([^"]+)"/)?.[1] : undefined;
+  const t = existsSync(f)
+    ? readFileSync(f, 'utf8').match(/oauth_token = "([^"]+)"/)?.[1]
+    : undefined;
   if (!t) throw new Error('not logged in: run `npx wrangler login` in server/');
   return t;
 }
 async function cf<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${requiredSetting('CLOUDFLARE_ACCOUNT_ID')}${path}`, {
-    method, headers: { authorization: `Bearer ${await cfToken()}`, 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
-  const j = await r.json() as { success: boolean; result: T; errors: unknown[] };
+  const r = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${requiredSetting('CLOUDFLARE_ACCOUNT_ID')}${path}`,
+    {
+      method,
+      headers: { authorization: `Bearer ${await cfToken()}`, 'content-type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+    },
+  );
+  const j = (await r.json()) as { success: boolean; result: T; errors: unknown[] };
   if (!j.success) throw new Error(`${method} ${path}: ${JSON.stringify(j.errors)}`);
   return j.result;
 }
@@ -54,28 +68,52 @@ async function setup(): Promise<void> {
   const e = envName();
   // D1
   const dbs = await cf<{ uuid: string; name: string }[]>('GET', '/d1/database?per_page=100');
-  let db = dbs.find(d => d.name === dbName(e));
-  if (!db) { db = await cf<{ uuid: string; name: string }>('POST', '/d1/database', { name: dbName(e) }); console.error(`created D1 ${db.name}`); }
+  let db = dbs.find((d) => d.name === dbName(e));
+  if (!db) {
+    db = await cf<{ uuid: string; name: string }>('POST', '/d1/database', { name: dbName(e) });
+    console.error(`created D1 ${db.name}`);
+  }
   saveSettings({ [envKey(e, 'DATABASE_ID')]: db.uuid });
-  let support = dbs.find(d => d.name === `blokdust-support-${e}`);
-  if (!support) support = await cf<{ uuid: string; name: string }>('POST', '/d1/database', { name: `blokdust-support-${e}` });
+  let support = dbs.find((d) => d.name === `blokdust-support-${e}`);
+  if (!support)
+    support = await cf<{ uuid: string; name: string }>('POST', '/d1/database', {
+      name: `blokdust-support-${e}`,
+    });
   saveSettings({ [envKey(e, 'SUPPORT_DATABASE_ID')]: support.uuid });
   // Turnstile (invisible), bound to the Worker's hostname
   const hosts = hostsOf(e);
   type Widget = { sitekey: string; name: string; secret?: string; domains: string[]; mode: string };
   const widgets = await cf<Widget[]>('GET', '/challenges/widgets?per_page=50');
-  let w: Widget | undefined = widgets.find(x => x.name === workerName(e));
+  let w: Widget | undefined = widgets.find((x) => x.name === workerName(e));
   if (!w) {
-    w = await cf<Widget>('POST', '/challenges/widgets', { name: workerName(e), domains: hosts, mode: 'invisible' });
+    w = await cf<Widget>('POST', '/challenges/widgets', {
+      name: workerName(e),
+      domains: hosts,
+      mode: 'invisible',
+    });
     console.error(`created Turnstile widget ${w.name} for ${hosts.join(', ')}`);
-  } else if (hosts.some(h => !w!.domains.includes(h))) {
+  } else if (hosts.some((h) => !w!.domains.includes(h))) {
     // Add hosts, keep any already there.
     const domains = [...new Set([...w.domains, ...hosts])];
-    w = { ...await cf<Widget>('PUT', `/challenges/widgets/${w.sitekey}`, { name: w.name, domains, mode: w.mode }), secret: undefined };
+    w = {
+      ...(await cf<Widget>('PUT', `/challenges/widgets/${w.sitekey}`, {
+        name: w.name,
+        domains,
+        mode: w.mode,
+      })),
+      secret: undefined,
+    };
     console.error(`Turnstile widget ${w.name} now allows ${domains.join(', ')}`);
   }
   if (!w.secret && !readSecret(`turnstile_${e}`)) {
-    w = { ...w, ...await cf<{ sitekey: string; secret: string; name: string }>('POST', `/challenges/widgets/${w.sitekey}/rotate_secret`, { invalidate_immediately: true }) };
+    w = {
+      ...w,
+      ...(await cf<{ sitekey: string; secret: string; name: string }>(
+        'POST',
+        `/challenges/widgets/${w.sitekey}/rotate_secret`,
+        { invalidate_immediately: true },
+      )),
+    };
     console.error(`rotated the Turnstile secret for ${w.name} (no local copy)`);
   }
   if (w.secret) writeFileSync(secretFile(`turnstile_${e}`), w.secret, { mode: 0o600 });
@@ -87,9 +125,12 @@ async function putSecret(e: EnvName, name: string, value: string): Promise<void>
   if (!value) throw new Error(`no value for ${name} (run setup, or add ${SECRETS}/…)`);
   const { spawn } = await import('node:child_process');
   await new Promise<void>((res, rej) => {
-    const p = spawn(WRANGLER, ['secret', 'put', name, '--env', e, '--config', remoteConfig(e)], { cwd: SERVER_DIR, stdio: ['pipe', 'inherit', 'inherit'] });
+    const p = spawn(WRANGLER, ['secret', 'put', name, '--env', e, '--config', remoteConfig(e)], {
+      cwd: SERVER_DIR,
+      stdio: ['pipe', 'inherit', 'inherit'],
+    });
     p.stdin.end(value);
-    p.on('close', c => (c ? rej(new Error(`wrangler secret put ${name} failed`)) : res()));
+    p.on('close', (c) => (c ? rej(new Error(`wrangler secret put ${name} failed`)) : res()));
   });
 }
 
@@ -100,10 +141,16 @@ async function secret(): Promise<void> {
   const secrets = ['TURNSTILE_SECRET', 'FREESOUND_TOKEN'];
   // Sign in with Google (SPEC-SHARING-ACCOUNTS R2a), when its client secret is kept here.
   const google = readSecret('google_client_secret');
-  if (google) { await putSecret(e, 'GOOGLE_CLIENT_SECRET', google); secrets.push('GOOGLE_CLIENT_SECRET'); }
+  if (google) {
+    await putSecret(e, 'GOOGLE_CLIENT_SECRET', google);
+    secrets.push('GOOGLE_CLIENT_SECRET');
+  }
   // Sign in with Apple (R2b): the .p8 key from Apple, kept as apple_private_key.p8.
   const apple = readSecret('apple_private_key.p8');
-  if (apple) { await putSecret(e, 'APPLE_PRIVATE_KEY', apple); secrets.push('APPLE_PRIVATE_KEY'); }
+  if (apple) {
+    await putSecret(e, 'APPLE_PRIVATE_KEY', apple);
+    secrets.push('APPLE_PRIVATE_KEY');
+  }
   // The analytics dashboard's queries (SHARING-0010): the account id and an Account Analytics: Read token, when the
   // token file exists (`analytics_token` in the config directory). Optional: without them the dashboard says so.
   const analyticsToken = readSecret('analytics_token');
@@ -125,11 +172,36 @@ async function deploy(): Promise<void> {
   // Cloudflare's D1 API sometimes fails a request transiently (seen 2026-11-07): retry before giving up.
   let m = { code: 1, out: '' };
   for (let i = 0; i < 4 && m.code; i++) {
-    if (i) { console.error(`migrations failed; retrying (${i}/3)`); await new Promise(r => setTimeout(r, 3000 * i)); }
-    m = await run([WRANGLER, 'd1', 'migrations', 'apply', dbName(e), '--remote', '--env', e, '--config', config]);
+    if (i) {
+      console.error(`migrations failed; retrying (${i}/3)`);
+      await new Promise((r) => setTimeout(r, 3000 * i));
+    }
+    m = await run([
+      WRANGLER,
+      'd1',
+      'migrations',
+      'apply',
+      dbName(e),
+      '--remote',
+      '--env',
+      e,
+      '--config',
+      config,
+    ]);
   }
   if (m.code) throw new Error('migrations failed');
-  const support = await run([WRANGLER, 'd1', 'migrations', 'apply', `blokdust-support-${e}`, '--remote', '--env', e, '--config', config]);
+  const support = await run([
+    WRANGLER,
+    'd1',
+    'migrations',
+    'apply',
+    `blokdust-support-${e}`,
+    '--remote',
+    '--env',
+    e,
+    '--config',
+    config,
+  ]);
   if (support.code) throw new Error('support migrations failed');
   const d = await run([WRANGLER, 'deploy', '--env', e, '--config', config]);
   if (d.code) throw new Error('deploy failed');
@@ -139,11 +211,21 @@ async function deploy(): Promise<void> {
 async function dev(): Promise<void> {
   const real = args.includes('--real');
   const vars: Record<string, string> = real
-    ? { TURNSTILE_SECRET: '1x0000000000000000000000000000000AA', FREESOUND_TOKEN: readSecret('freesound_token') }
+    ? {
+        TURNSTILE_SECRET: '1x0000000000000000000000000000000AA',
+        FREESOUND_TOKEN: readSecret('freesound_token'),
+      }
     : { TURNSTILE_SECRET: '1x0000000000000000000000000000000AA' };
-  const s = await startLocal({ name: 'dev', vars, port: Number(opt('--port') ?? 8787), fresh: false });
-  console.error(`BlokDust Worker on ${s.url} (Ctrl-C to stop)${real ? '' : ' — Freesound off; add --real to use the key'}`);
-  await new Promise<void>(r => process.on('SIGINT', () => r()));
+  const s = await startLocal({
+    name: 'dev',
+    vars,
+    port: Number(opt('--port') ?? 8787),
+    fresh: false,
+  });
+  console.error(
+    `BlokDust Worker on ${s.url} (Ctrl-C to stop)${real ? '' : ' — Freesound off; add --real to use the key'}`,
+  );
+  await new Promise<void>((r) => process.on('SIGINT', () => r()));
   await s.stop();
 }
 
@@ -153,6 +235,22 @@ async function smoke(): Promise<void> {
   process.exitCode = r.code;
 }
 
-const commands: Record<string, () => Promise<void>> = { dev, setup, secret, deploy, smoke, config: async () => { remoteConfig(envName()); console.log(JSON.stringify({ configured: true })); } };
-if (!commands[cmd]) { console.error('usage: pnpm bd server dev|setup|secret|deploy|smoke|config'); process.exit(2); }
-commands[cmd]().catch(err => { console.error(err instanceof Error ? err.message : err); process.exit(1); });
+const commands: Record<string, () => Promise<void>> = {
+  dev,
+  setup,
+  secret,
+  deploy,
+  smoke,
+  config: async () => {
+    remoteConfig(envName());
+    console.log(JSON.stringify({ configured: true }));
+  },
+};
+if (!commands[cmd]) {
+  console.error('usage: pnpm bd server dev|setup|secret|deploy|smoke|config');
+  process.exit(2);
+}
+commands[cmd]().catch((err) => {
+  console.error(err instanceof Error ? err.message : err);
+  process.exit(1);
+});

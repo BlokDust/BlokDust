@@ -34,19 +34,39 @@ export function queries(dataset: string, days: number): Record<string, string> {
   };
 }
 
-export interface SqlTarget { url: string; token: string }
+export interface SqlTarget {
+  url: string;
+  token: string;
+}
 /** The SQL API endpoint for an account (or a test's mock). */
-export const sqlUrl = (accountId: string) => `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/analytics_engine/sql`;
+export const sqlUrl = (accountId: string) =>
+  `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/analytics_engine/sql`;
 
 /** Run every query; a failing one reports its error instead of failing the rest. */
-export async function runQueries(target: SqlTarget, dataset: string, days: number, fetcher: typeof fetch = fetch): Promise<Record<string, { rows?: Record<string, unknown>[]; error?: string }>> {
+export async function runQueries(
+  target: SqlTarget,
+  dataset: string,
+  days: number,
+  fetcher: typeof fetch = fetch,
+): Promise<Record<string, { rows?: Record<string, unknown>[]; error?: string }>> {
   const out: Record<string, { rows?: Record<string, unknown>[]; error?: string }> = {};
-  await Promise.all(Object.entries(queries(dataset, days)).map(async ([name, sql]) => {
-    try {
-      const r = await fetcher(target.url, { method: 'POST', headers: { authorization: `Bearer ${target.token}` }, body: `${sql} FORMAT JSON` });
-      if (!r.ok) { out[name] = { error: `HTTP ${r.status}: ${(await r.text()).slice(0, 200)}` }; return; }
-      out[name] = { rows: ((await r.json()) as { data?: Record<string, unknown>[] }).data ?? [] };
-    } catch (e) { out[name] = { error: String(e).slice(0, 200) }; }
-  }));
+  await Promise.all(
+    Object.entries(queries(dataset, days)).map(async ([name, sql]) => {
+      try {
+        const r = await fetcher(target.url, {
+          method: 'POST',
+          headers: { authorization: `Bearer ${target.token}` },
+          body: `${sql} FORMAT JSON`,
+        });
+        if (!r.ok) {
+          out[name] = { error: `HTTP ${r.status}: ${(await r.text()).slice(0, 200)}` };
+          return;
+        }
+        out[name] = { rows: ((await r.json()) as { data?: Record<string, unknown>[] }).data ?? [] };
+      } catch (e) {
+        out[name] = { error: String(e).slice(0, 200) };
+      }
+    }),
+  );
   return out;
 }

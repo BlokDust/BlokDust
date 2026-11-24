@@ -18,7 +18,9 @@ export function safeReturn(r: string | null): string {
     if (u.origin !== probe) return '/';
     const path = `${u.pathname}${u.search}${u.hash}`;
     return path.length <= 512 ? path : '/';
-  } catch { return '/'; }
+  } catch {
+    return '/';
+  }
 }
 
 /**
@@ -27,31 +29,62 @@ export function safeReturn(r: string | null): string {
  * another BlokDust account it is refused and nothing changes (R7b: never switch accounts behind the user's back).
  * The page learns what happened from `?account=`: new | in | limit | linked-<provider> | taken-<provider>.
  */
-export async function finishSignIn(env: Env, req: Request, provider: 'google' | 'apple', subject: string, back: string | undefined): Promise<Response> {
+export async function finishSignIn(
+  env: Env,
+  req: Request,
+  provider: 'google' | 'apple',
+  subject: string,
+  back: string | undefined,
+): Promise<Response> {
   const now = Date.now();
-  const owner = (await env.DB.prepare('SELECT user_id FROM identities WHERE provider = ? AND subject = ?').bind(provider, subject).first<{ user_id: string }>())?.user_id;
+  const owner = (
+    await env.DB.prepare('SELECT user_id FROM identities WHERE provider = ? AND subject = ?')
+      .bind(provider, subject)
+      .first<{ user_id: string }>()
+  )?.user_id;
   let asked = '/';
-  try { asked = decodeURIComponent(back ?? '/'); } catch { /* a mangled cookie: go home */ }
+  try {
+    asked = decodeURIComponent(back ?? '/');
+  } catch {
+    /* a mangled cookie: go home */
+  }
   const target = new URL(safeReturn(asked), publicBase(env, req) + '/');
   const headers = new Headers({ 'cache-control': 'no-store' });
   headers.append('set-cookie', cookie(req, 'bd_oauth', '', 0));
-  const go = (account: string) => { target.searchParams.set('account', account); headers.set('location', target.toString()); return new Response(null, { status: 302, headers }); };
+  const go = (account: string) => {
+    target.searchParams.set('account', account);
+    headers.set('location', target.toString());
+    return new Response(null, { status: 302, headers });
+  };
   const me = await currentUser(env, req);
   if (me) {
     if (owner && owner !== me.id) return go(`taken-${provider}`);
-    if (!owner) await env.DB.prepare('INSERT INTO identities (provider, subject, user_id, created) VALUES (?, ?, ?, ?)').bind(provider, subject, me.id, now).run();
-    return go(owner ? 'in' : `linked-${provider}`);  // the session already there stays
+    if (!owner)
+      await env.DB.prepare(
+        'INSERT INTO identities (provider, subject, user_id, created) VALUES (?, ?, ?, ?)',
+      )
+        .bind(provider, subject, me.id, now)
+        .run();
+    return go(owner ? 'in' : `linked-${provider}`); // the session already there stays
   }
-  let userId = owner, fresh = false;
+  let userId = owner,
+    fresh = false;
   if (!userId) {
     // R1b: no new account today from this network; the app says so in Settings › SIGN IN.
     if (!(await mayCreateAccount(env, req))) return go('limit');
-    userId = newUserId(); fresh = true;
+    userId = newUserId();
+    fresh = true;
     await env.DB.batch([
-      env.DB.prepare('INSERT INTO users (id, handle, created) VALUES (?, NULL, ?)').bind(userId, now), ...await countNewAccount(env, req),
-      env.DB.prepare('INSERT INTO identities (provider, subject, user_id, created) VALUES (?, ?, ?, ?)').bind(provider, subject, userId, now),
+      env.DB.prepare('INSERT INTO users (id, handle, created) VALUES (?, NULL, ?)').bind(
+        userId,
+        now,
+      ),
+      ...(await countNewAccount(env, req)),
+      env.DB.prepare(
+        'INSERT INTO identities (provider, subject, user_id, created) VALUES (?, ?, ?, ?)',
+      ).bind(provider, subject, userId, now),
     ]);
   }
   headers.append('set-cookie', await startSession(env, req, userId));
-  return go(fresh ? 'new' : 'in');  // the app skips its start screen; a new account picks its name
+  return go(fresh ? 'new' : 'in'); // the app skips its start screen; a new account picks its name
 }

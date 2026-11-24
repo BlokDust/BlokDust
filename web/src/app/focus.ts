@@ -12,7 +12,9 @@ function run(): void {
 
 export function onFocusReturn(job: () => void): void {
   if (!jobs.length) {
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') run(); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') run();
+    });
     window.addEventListener('focus', run);
   }
   jobs.push(job);

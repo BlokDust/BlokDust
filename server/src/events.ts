@@ -31,7 +31,9 @@ export const EVENTS = {
   perf: { strings: { fps: ['<20', '20-40', '40-55', '55+'] } },
   // ---- patches ----
   patch_created: { strings: { from: ['blank', 'reset'] } },
-  patch_opened: { strings: { source: ['link', 'embed', 'file', 'preset', 'autosave', 'demo', 'v1'] } },
+  patch_opened: {
+    strings: { source: ['link', 'embed', 'file', 'preset', 'autosave', 'demo', 'v1'] },
+  },
   patch_saved: { strings: { kind: ['file', 'link'] }, numbers: ['blocks'] },
   save_failed: { strings: { kind: ['file', 'link'] } },
   embed_opened_full: {},
@@ -45,7 +47,9 @@ export const EVENTS = {
   freesound_search: { numbers: ['results'], server: true },
   freesound_error: { numbers: ['status'], server: true },
   // ---- plugins (R8): one ping a day per install, and errors the plugin catches ----
-  plugin_active: { strings: { kind: ['instrument', 'fx'], host: 'token', host_version: 'token', arch: 'token' } },
+  plugin_active: {
+    strings: { kind: ['instrument', 'fx'], host: 'token', host_version: 'token', arch: 'token' },
+  },
   plugin_error: { strings: { where: 'token', code: 'token' } },
 } as const satisfies Record<string, EventDef>;
 export type EventName = keyof typeof EVENTS;
@@ -73,6 +77,9 @@ const DOMAIN_RE = /^[a-z0-9-]+(\.[a-z0-9-]+)+$/;
 export function checkString(rule: Allowed, value: unknown): string | null {
   if (typeof value !== 'string') return null;
   if (rule === 'token') return TOKEN_RE.test(value) ? value : null;
-  if (rule === 'domain') { const d = value.toLowerCase(); return d.length <= 64 && DOMAIN_RE.test(d) ? d : null; }
+  if (rule === 'domain') {
+    const d = value.toLowerCase();
+    return d.length <= 64 && DOMAIN_RE.test(d) ? d : null;
+  }
   return rule.includes(value) ? value : null;
 }

@@ -26,6 +26,7 @@ const social = [
   { href: 'https://www.tiktok.com/@blokdust', label: siteCopy.tiktokLabel },
 ];
 ---
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -51,7 +52,9 @@ const social = [
     <meta name="twitter:image:alt" content={image.alt} />
   </head>
   <body>
-    <a class="skip-link" href="#main">{siteCopy.skipLabel}</a>
+    <a class="skip-link" href="#main">
+      {siteCopy.skipLabel}
+    </a>
     <GuideHeader />
     <main id="main">
       <slot />
@@ -59,8 +62,14 @@ const social = [
     <footer class="site-footer">
       <nav class="footer-links" aria-label={siteCopy.footerLabel}>
         <ul class="site-links">
-          {social.map(({ href, label }) => <li><a href={href}>{label}</a></li>)}
-          <li><a href="https://github.com/BlokDust/BlokDust">{siteCopy.sourceLabel}</a></li>
+          {social.map(({ href, label }) => (
+            <li>
+              <a href={href}>{label}</a>
+            </li>
+          ))}
+          <li>
+            <a href="https://github.com/BlokDust/BlokDust">{siteCopy.sourceLabel}</a>
+          </li>
         </ul>
       </nav>
     </footer>

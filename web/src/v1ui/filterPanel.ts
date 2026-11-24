@@ -20,42 +20,86 @@ export const FILTER_ICONS = [
   'M-11,5 C-6,5 -4,-5 0,-5 C4,-5 6,5 11,5',
 ];
 
-const GAIN = { min: -35, max: 35 };   // the Gain slider's range in v1's Filter
-const WIDTH = { min: 14, max: 0.5 };  // v1 EQ's mid bands: a short bar is narrow (Q 14), a long one wide (Q 0.5)
-const PARKED = 1e6;                   // x of the unused handles: off the panel
+const GAIN = { min: -35, max: 35 }; // the Gain slider's range in v1's Filter
+const WIDTH = { min: 14, max: 0.5 }; // v1 EQ's mid bands: a short bar is narrow (Q 14), a long one wide (Q 0.5)
+const PARKED = 1e6; // x of the unused handles: off the panel
 
 /** The response of a Filter in dB at `hz` (sample rate 48 kHz; the curve is a picture, not the DSP). */
-export function filterResponseDb(type: number, freq: number, gainDb: number, q: number, hz: number, sr = 48000): number {
-  const c = Math.min(Math.max(freq / (sr / 2), 1e-6), 0.999999), w0 = Math.PI * c, k = Math.cos(w0);
-  let b: number[], a: number[], level = 1;
-  if (type === 1 || type === 2) {  // Low / High pass: Q is the resonance in dB (Web Audio)
-    const alpha = Math.sin(w0) / (2 * Math.pow(10, gainDb / 20)), beta = type === 1 ? (1 - k) / 2 : (1 + k) / 2, s = type === 1 ? 2 : -2;
-    b = [beta, s * beta, beta]; a = [1 + alpha, -2 * k, 1 - alpha];
+export function filterResponseDb(
+  type: number,
+  freq: number,
+  gainDb: number,
+  q: number,
+  hz: number,
+  sr = 48000,
+): number {
+  const c = Math.min(Math.max(freq / (sr / 2), 1e-6), 0.999999),
+    w0 = Math.PI * c,
+    k = Math.cos(w0);
+  let b: number[],
+    a: number[],
+    level = 1;
+  if (type === 1 || type === 2) {
+    // Low / High pass: Q is the resonance in dB (Web Audio)
+    const alpha = Math.sin(w0) / (2 * Math.pow(10, gainDb / 20)),
+      beta = type === 1 ? (1 - k) / 2 : (1 + k) / 2,
+      s = type === 1 ? 2 : -2;
+    b = [beta, s * beta, beta];
+    a = [1 + alpha, -2 * k, 1 - alpha];
   } else {
     const alpha = Math.sin(w0) / (2 * Math.max(q, 1e-3));
-    if (type === 3) { b = [alpha, 0, -alpha]; a = [1 + alpha, -2 * k, 1 - alpha]; level = Math.pow(10, gainDb / 20); }
-    else { const A = Math.pow(10, gainDb / 40); b = [1 + alpha * A, -2 * k, 1 - alpha * A]; a = [1 + alpha / A, -2 * k, 1 - alpha / A]; }
+    if (type === 3) {
+      b = [alpha, 0, -alpha];
+      a = [1 + alpha, -2 * k, 1 - alpha];
+      level = Math.pow(10, gainDb / 20);
+    } else {
+      const A = Math.pow(10, gainDb / 40);
+      b = [1 + alpha * A, -2 * k, 1 - alpha * A];
+      a = [1 + alpha / A, -2 * k, 1 - alpha / A];
+    }
   }
-  const w = 2 * Math.PI * hz / sr, mag = (h: number[]) => {
-    const re = h[0] + h[1] * Math.cos(w) + h[2] * Math.cos(2 * w), im = -h[1] * Math.sin(w) - h[2] * Math.sin(2 * w);
-    return re * re + im * im;
-  };
-  return 10 * Math.log10(Math.max(mag(b) * level * level / mag(a), 1e-12));
+  const w = (2 * Math.PI * hz) / sr,
+    mag = (h: number[]) => {
+      const re = h[0] + h[1] * Math.cos(w) + h[2] * Math.cos(2 * w),
+        im = -h[1] * Math.sin(w) - h[2] * Math.sin(2 * w);
+      return re * re + im * im;
+    };
+  return 10 * Math.log10(Math.max((mag(b) * level * level) / mag(a), 1e-12));
 }
 
 /** The Filter's options form: v1's Parametric (one live node) and a Buttons row (mode "filter", drawn here). */
 export function filterForm(b: { OptionsForm: any; Params: Record<string, any> }): void {
-  const p = b.Params, node = {
-    x_setting: 'frequency', x_value: Number(p.frequency), x_min: 20, x_max: 20000,
-    y_setting: 'gain', y_value: Number(p.gain), y_min: GAIN.min, y_max: GAIN.max,
-    q_setting: 'Q', q_value: Number(p.Q ?? 1), q_min: WIDTH.min, q_max: WIDTH.max,
-  };
+  const p = b.Params,
+    node = {
+      x_setting: 'frequency',
+      x_value: Number(p.frequency),
+      x_min: 20,
+      x_max: 20000,
+      y_setting: 'gain',
+      y_value: Number(p.gain),
+      y_min: GAIN.min,
+      y_max: GAIN.max,
+      q_setting: 'Q',
+      q_value: Number(p.Q ?? 1),
+      q_min: WIDTH.min,
+      q_max: WIDTH.max,
+    };
   b.OptionsForm = {
     name: b.OptionsForm?.name ?? 'Filter',
     parameters: [
-      { type: 'parametric', name: 'Filter', setting: 'parametric', nodes: [node, node, node, node] },
-      { type: 'buttons', name: 'Type', setting: 'type', props: { value: Number(p.type ?? 0), mode: 'filter' },
-        buttons: FILTER_TYPES.map(name => ({ name })) },
+      {
+        type: 'parametric',
+        name: 'Filter',
+        setting: 'parametric',
+        nodes: [node, node, node, node],
+      },
+      {
+        type: 'buttons',
+        name: 'Type',
+        setting: 'type',
+        props: { value: Number(p.type ?? 0), mode: 'filter' },
+        buttons: FILTER_TYPES.map((name) => ({ name })),
+      },
     ],
   };
 }
@@ -85,16 +129,23 @@ export function installFilterPanel(panel: any): void {
   function adaptGraph(g: any): void {
     for (const j of [0, 2, 3]) g.Handles[j].Position = new Point(PARKED, g.Handles[j].Position.y);
     g.PlotGraph = function (this: any) {
-      const h = this.Size.height, n = this.Smoothness, live = this.Handles[1], width = this.SubHandles[1];
+      const h = this.Size.height,
+        n = this.Smoothness,
+        live = this.Handles[1],
+        width = this.SubHandles[1];
       for (let j = 0; j < n; j++) {
         const hz = 20 * Math.pow(1000, (j + 1) / n);
         const db = filterResponseDb(type(), live.XValue, live.YValue, width.Value, hz);
-        this.LineGain[j] = Math.max(-0.35 * h, Math.min(0.35 * h, db * (0.7 * h) / (GAIN.max - GAIN.min)));
+        this.LineGain[j] = Math.max(
+          -0.35 * h,
+          Math.min(0.35 * h, (db * (0.7 * h)) / (GAIN.max - GAIN.min)),
+        );
       }
     };
-    const draw = g.Draw.bind(g), barDraw = g.SubHandles[1].Draw.bind(g.SubHandles[1]);
+    const draw = g.Draw.bind(g),
+      barDraw = g.SubHandles[1].Draw.bind(g.SubHandles[1]);
     g.Draw = (...args: any[]) => {
-      g.PlotGraph();  // the type may have changed since the last drag
+      g.PlotGraph(); // the type may have changed since the last drag
       g.SubHandles[1].Draw = hasWidth() ? barDraw : () => {};
       draw(...args);
     };
@@ -103,14 +154,24 @@ export function installFilterPanel(panel: any): void {
 
   function adaptButton(btn: any): void {
     const draw = btn.Draw.bind(btn);
-    btn.Draw = (ctx: CanvasRenderingContext2D, pnl: any, units: number, x: number, h: number, i: number, mode: string) => {
-      draw(ctx, pnl, units, x, h, i, mode === 'filter' ? 'none' : mode);  // v1's selection bar
+    btn.Draw = (
+      ctx: CanvasRenderingContext2D,
+      pnl: any,
+      units: number,
+      x: number,
+      h: number,
+      i: number,
+      mode: string,
+    ) => {
+      draw(ctx, pnl, units, x, h, i, mode === 'filter' ? 'none' : mode); // v1's selection bar
       if (mode !== 'filter') return;
-      const cx = x + btn.Position.x + btn.Size.width * 0.5, cy = btn.Position.y + h * 0.5;
+      const cx = x + btn.Position.x + btn.Size.width * 0.5,
+        cy = btn.Position.y + h * 0.5;
       ctx.save();
       App.StrokeColor(ctx, App.Palette[App.ThemeManager.Txt]);
-      ctx.translate(cx, cy); ctx.scale(units, units);
-      ctx.lineWidth = 2 / units;  // v1 draws the Wave icons 2 px wide
+      ctx.translate(cx, cy);
+      ctx.scale(units, units);
+      ctx.lineWidth = 2 / units; // v1 draws the Wave icons 2 px wide
       ctx.stroke(new Path2D(FILTER_ICONS[btn.Value] ?? ''));
       ctx.restore();
     };

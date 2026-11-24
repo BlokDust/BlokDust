@@ -1,11 +1,19 @@
 import type { Env } from './env.ts';
 
 export class HttpError extends Error {
-  constructor(readonly status: number, message: string) { super(message); }
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
 }
 
 export function json(body: unknown, status = 200, headers: Record<string, string> = {}): Response {
-  return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', ...headers } });
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'content-type': 'application/json; charset=utf-8', ...headers },
+  });
 }
 
 export function errorResponse(e: unknown): Response {
@@ -33,16 +41,24 @@ export function publicBase(env: Env, req: Request): string {
 }
 
 export const escapeHtml = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
 export function b64urlBytes(n: number): string {
   const b = crypto.getRandomValues(new Uint8Array(n));
-  return btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return btoa(String.fromCharCode(...b))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 }
 
 export async function sha256Hex(s: string): Promise<string> {
   const d = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)));
-  return [...d].map(x => x.toString(16).padStart(2, '0')).join('');
+  return [...d].map((x) => x.toString(16).padStart(2, '0')).join('');
 }
 
 /** Constant-time string compare (equal-length hex digests). */
@@ -54,7 +70,11 @@ export function sameDigest(a: string, b: string): boolean {
 }
 
 /** 429 when this client (by IP) is over a per-minute limit. Without the binding (old config) nothing is limited. */
-export async function limit(binding: RateLimit | undefined, req: Request, what: string): Promise<void> {
+export async function limit(
+  binding: RateLimit | undefined,
+  req: Request,
+  what: string,
+): Promise<void> {
   if (!binding) return;
   const key = `${what}:${req.headers.get('cf-connecting-ip') ?? 'local'}`;
   const { success } = await binding.limit({ key });

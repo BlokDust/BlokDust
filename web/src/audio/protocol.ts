@@ -2,7 +2,9 @@
 import type { Command, EngineEvent } from '../engine/wasmEngine.ts';
 
 export interface ProcessorOptions {
-  module: WebAssembly.Module; seed: number; commands: Command[];
+  module: WebAssembly.Module;
+  seed: number;
+  commands: Command[];
   /** Golden-fixture input for Audio In (tests); real input comes from the node's audio input. */
   testInput?: { frequency: number; gain: number };
 }
@@ -10,7 +12,14 @@ export interface ProcessorOptions {
 export type ToWorklet =
   | { type: 'commands'; commands: Command[] }
   /** Decoded audio for a source.sample block (the user's own file, DATA-0005); copied into WASM memory. */
-  | { type: 'sample'; id: number; left: Float32Array; right?: Float32Array; sampleRate: number; /** Inside this Stage block (CHG-0021). */ stage?: number }
+  | {
+      type: 'sample';
+      id: number;
+      left: Float32Array;
+      right?: Float32Array;
+      sampleRate: number;
+      /** Inside this Stage block (CHG-0021). */ stage?: number;
+    }
   /** v1 Recorder (RecorderJS on the master output): start / stop capturing the engine's output. */
   | { type: 'record'; on: boolean }
   /** Snapshots come from this Stage block's inner world (CHG-0021); 0: the outer world. */
@@ -41,5 +50,10 @@ export interface Snapshot {
   rms: number;
 }
 /** The master output captured between record on/off (v1 Recorder). */
-export interface Recording { type: 'recording'; left: Float32Array; right: Float32Array; sampleRate: number }
+export interface Recording {
+  type: 'recording';
+  left: Float32Array;
+  right: Float32Array;
+  sampleRate: number;
+}
 export type FromWorklet = Snapshot | Recording;
