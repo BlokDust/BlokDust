@@ -1,6 +1,5 @@
-// Plugin sign-in with a device code (CHG-0039, SHARING-0011), the plugin's side: ask for a code, show it (and open the
-// website at it where the plugin can), then ask every few seconds until it is approved there; the answer carries the
-// plugin's own key, once.
+// Plugin sign-in by device code (SHARING-0011), plugin side: get a code, show it (open the website
+// at it if possible), ask every few seconds until approved there; the answer carries the key, once.
 import { apiUrl } from '../patch/site.ts';
 
 export interface DeviceCode {
@@ -28,7 +27,8 @@ export async function startDevice(name: string): Promise<DeviceCode> {
     });
   return j;
 }
-/** The iPad app's native sign-in (SHARING-0011): POST to `/api/app/…` (no cookie; the answer carries the key). */
+/** The iPad app's native sign-in (SHARING-0011): POST to `/api/app/…` (no cookie; the answer
+ * carries the key). */
 export async function appPost<T>(path: string, body: unknown = {}): Promise<T> {
   const response = await fetch(apiUrl(path), {
     method: 'POST',

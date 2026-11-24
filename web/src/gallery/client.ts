@@ -50,9 +50,10 @@ async function call<T>(
 }
 
 export type GallerySort = 'popular' | 'top' | 'new' | 'examples' | 'tutorials';
-export const browse = (sort: GallerySort, q: string, page: number) =>
-  call<GalleryPage>('GET', `gallery?sort=${sort}&q=${encodeURIComponent(q)}&page=${page}`);
-/** Out of the gallery: the owning account, or this browser's edit token (publishing itself is part of saving). */
+export const browse = (sort: GallerySort, query: string, page: number) =>
+  call<GalleryPage>('GET', `gallery?sort=${sort}&q=${encodeURIComponent(query)}&page=${page}`);
+/** Out of the gallery: the owning account, or this browser's edit token (publishing itself is part
+ * of saving). */
 export const unpublish = (id: string, token?: string | null) =>
   call('DELETE', `gallery/${id}`, undefined, token);
 export const like = (id: string, on: boolean) =>
