@@ -1,9 +1,9 @@
 // SAVE's two ways to a share link (SHARING-0011): the website's, and the plugin's through the site.
+import type { PatchesHost } from '../../v1ui/patches/hosts.ts';
 import { toPatch } from '../model/toPatch.ts';
 import { appKey } from '../../account/appKey.ts';
 import { PUBLIC_SITE } from '../../patch/samples.ts';
 import { encodePatch } from '../../patch/share.ts';
-import type { PatchesHost } from '../../v1ui/patches.ts';
 import { juce } from '../boot/page.ts';
 import { ios } from '../model/engineLink.ts';
 import { contentOf, shareLink } from '../model/unsavedChanges.ts';

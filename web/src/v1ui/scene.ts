@@ -2,6 +2,9 @@
 // them in v1's display-list order onto the stage's static Canvas2D layer, and routes pointer input in v1's order
 // (MainScene._PointerDown/_PointerUp/_PointerMove). Blocks, connections and audio stay in the engine (ARCHITECTURE-0002):
 // the panels talk to the app through SceneHost.
+import { PatchesPanel } from './patches/panel.ts';
+import { drawUploadLink } from './patches/icons.ts';
+import { type PatchesHost } from './patches/hosts.ts';
 import type { Theme } from '../generated/palettes.gen.ts';
 import { App, Dimensions, Point, Size, TWEEN } from './shim.ts';
 import type { V1Block } from './blocks.ts';
@@ -43,7 +46,6 @@ import RELEASES from '../releases.json';
 import { OptionSample } from './ported/UI/Options/OptionSample';
 import { Slider } from './ported/UI/Options/OptionSlider';
 import type { FreesoundSound } from '../patch/samples.ts';
-import { PatchesPanel, drawUploadLink, type PatchesHost } from './patches.ts';
 import { ACCOUNT_TOP, AccountPage, pageWidth } from './accountPage.ts';
 
 export interface SceneHost extends PatchesHost {

@@ -1,8 +1,8 @@
+import { type VideoChoice, type VideoProgressInfo } from '../../v1ui/patches/hosts.ts';
 import { toPatch } from '../model/toPatch.ts';
 import { PUBLIC_SITE, type FreesoundRef, type SampleRef } from '../../patch/samples.ts';
 import { type Credit } from '../../video/frame.ts';
 import { type PatchSample, startSource } from '../../video/sources.ts';
-import { type VideoChoice, type VideoProgressInfo } from '../../v1ui/patches.ts';
 import { engineModule } from '../../audio/engineNode.ts';
 import { videoFileName } from '../../video/share.ts';
 import { theme } from '../boot/theme.ts';

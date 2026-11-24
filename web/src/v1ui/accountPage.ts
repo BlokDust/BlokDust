@@ -21,11 +21,11 @@
 //   plugins:    (SHARING-0011) signed out, SIGN IN WITH YOUR BROWSER: the code large, the browser opened (the AUv3,
 //               which can't open one: a QR code of the address), waiting with v1's spinner, BACK. Signed in: the
 //               stats, then SIGN OUT (methods and deleting are the website's); signing in goes back to the stage.
+import type { AccountHost, AccountInfo } from './patches/hosts.ts';
 import { App, Dimensions, Point } from './shim.ts';
 import { BLOCKS_BY_ID } from '../generated/blocks.gen.ts';
 import { activity } from '../account/activity.ts';
 import { Device } from './ported/Device';
-import type { AccountHost, AccountInfo } from './patches.ts';
 import type { SignInMethod, SignedInApp } from '../account/client.ts';
 import type { DeviceCode } from '../account/device.ts';
 import qrcode from 'qrcode-generator';

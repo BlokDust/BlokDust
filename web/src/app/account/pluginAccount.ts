@@ -1,8 +1,8 @@
 // The plugins' account (SHARING-0011): a key the plugin keeps (bd_account / bd_accountSave).
+import type { AccountHost } from '../../v1ui/patches/hosts.ts';
 import { appKey, setAppKey } from '../../account/appKey.ts';
 import * as account from '../../account/client.ts';
 import { pollDevice, startDevice } from '../../account/device.ts';
-import type { AccountHost } from '../../v1ui/patches.ts';
 import { App } from '../../v1ui/shim.ts';
 import { accountOwnedClear, sessionFor, type JuceBackend } from '../boot/page.ts';
 import { setShareLink, shareLink } from '../model/unsavedChanges.ts';

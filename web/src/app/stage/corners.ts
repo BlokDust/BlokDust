@@ -1,7 +1,7 @@
 // The stage's corner text: the patch's credit and the account (owner review 2026-11-15).
+import { drawUpArrow } from '../../v1ui/patches/icons.ts';
 import { type ButtonBox, inBox } from '../../stage/makeStageButton.ts';
 import { App } from '../../v1ui/shim.ts';
-import { drawUpArrow } from '../../v1ui/patches.ts';
 import { stage } from '../boot/pixi.ts';
 import { theme } from '../boot/theme.ts';
 import { inside } from '../model/stageWorlds.ts';
