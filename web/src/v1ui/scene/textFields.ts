@@ -1,7 +1,7 @@
 // The DOM text fields the panels place over the canvas.
 
-/** v1 index.html's share inputs (the Share panel positions real DOM text fields over the canvas) and their v1 CSS
- * (styles.css), with the link field changed as noted below. */
+/** v1 index.html's share inputs (the Share panel positions real DOM text fields over the canvas)
+ * and their v1 CSS (styles.css), with the link field changed as noted below. */
 export function ensureTextFields(): void {
   if (document.getElementById('shareUrl')) return;
   const style = document.createElement('style');
@@ -44,8 +44,8 @@ export function ensureTextFields(): void {
     element.addEventListener('submit', (event) => {
       event.preventDefault();
     });
-  // v1 used a scrolling <textarea>; v2 shows the link on one line like the title field, with no scrollbars, and a
-  // click selects the whole link (owner review 2026-11-06).
+  // v1 used a scrolling <textarea>; v2 shows the link on one line like the title field, with no
+  // scrollbars, and a click selects the whole link (owner review 2026-11-06).
   for (const id of ['shareUrlText', 'patchUrlText']) {
     const ta = document.getElementById(id) as HTMLInputElement;
     ta.addEventListener('click', () => {

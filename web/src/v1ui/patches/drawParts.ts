@@ -56,8 +56,8 @@ export abstract class PatchesDrawParts extends PatchesDom {
     ctx.stroke();
   }
 
-  /** v1 OptionSwitch.Draw, style 1, mode "offOn": the chosen side underlined in the options colour; its name after it,
-   * and (dimmed) a line saying why it can't be used. */
+  /** v1 OptionSwitch.Draw, style 1, mode "offOn": the chosen side underlined in the options colour;
+   * its name after it, and (dimmed) a line saying why it can't be used. */
   protected drawSwitch(
     b: { x: number; y: number; w: number; h: number },
     name: string,

@@ -10,8 +10,8 @@ export const COPY = {
   share: 'Create Share Link',
   shareLinePlugin: 'Create a shareable link. It opens in your web browser, ready to copy.',
   opened: 'Opened',
-  // Web (owner, 2026-11-11): three buttons, no help lines: SAVE (to the link: made the first time), SAVE AS (a new
-  // link), DOWNLOAD PATCH (the .blokdust file). Clicking the link copies it.
+  // Web (owner, 2026-11-11): three buttons, no help lines: SAVE (to the link: made the first time),
+  // SAVE AS (a new link), DOWNLOAD PATCH (the .blokdust file). Clicking the link copies it.
   saveLink: 'Save',
   saveAs: 'Save As',
   download: 'Download Patch',

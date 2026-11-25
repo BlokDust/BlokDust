@@ -4,8 +4,8 @@ import { COPY } from './copy.ts';
 import { PatchesDrawParts } from './drawParts.ts';
 
 export abstract class PatchesVideo extends PatchesDrawParts {
-  /** The video: SharePanel's spinner while it renders (CANCEL under it), then the portrait player with SHARE VIDEO
-   * (DOWNLOAD VIDEO on desktop) under it; BACK at the top right. */
+  /** The video: SharePanel's spinner while it renders (CANCEL under it), then the portrait player
+   * with SHARE VIDEO (DOWNLOAD VIDEO on desktop) under it; BACK at the top right. */
   protected drawVideo(): void {
     const ctx = this.Ctx,
       unit = App.Unit,
@@ -16,8 +16,8 @@ export abstract class PatchesVideo extends PatchesDrawParts {
     const m = this.videoMain(),
       pb = this.playerBox(),
       mid = pb.y + pb.h / 2;
-    // The player's frame, in every state (the DOM video sits inside it once made; its edge in the rule colour, as the
-    // URL box), so the page keeps its shape while the video is made.
+    // The player's frame, in every state (the DOM video sits inside it once made; its edge in the
+    // rule colour, as the URL box), so the page keeps its shape while the video is made.
     App.StrokeColor(ctx, App.Palette[1]);
     ctx.lineWidth = 2;
     ctx.strokeRect(pb.x - 1, pb.y - 1, pb.w + 2, pb.h + 2);

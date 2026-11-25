@@ -106,8 +106,8 @@ export abstract class PatchesGalleryTab extends PatchesOpenTab {
       this.drawBordered(b.open, txt);
       this.drawBordered(b.insert, App.Palette[1]);
     }
-    // More on the way: v1's spinner where the next row will be; more to fetch: SHOW MORE there (the list also fetches
-    // them by itself near its end).
+    // More on the way: v1's spinner where the next row will be; more to fetch: SHOW MORE there (the
+    // list also fetches them by itself near its end).
     if (n0 && this.GalleryLoading)
       App.AnimationsLayer.DrawSprite(
         ctx,

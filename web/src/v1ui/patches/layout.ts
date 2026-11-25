@@ -181,8 +181,8 @@ export abstract class PatchesLayout extends PatchesState {
       },
     };
   }
-  /** OPEN FROM YOUR DEVICE: bordered like RANDOMISE TITLE (owner, 2026-11-18), at the right of the row under the list
-   * (where GALLERY has its sorts). */
+  /** OPEN FROM YOUR DEVICE: bordered like RANDOMISE TITLE (owner, 2026-11-18), at the right of the
+   * row under the list (where GALLERY has its sorts). */
   protected fileButton() {
     const unit = App.Unit;
     return this.bordered(COPY.file, this.margin + this.pageW, this.listFoot - 14 * unit);
@@ -356,8 +356,8 @@ export abstract class PatchesLayout extends PatchesState {
     const unit = App.Unit,
       rule = this.listRule,
       top = rule - 2 * unit;
-    // The rows start right under the rule (a row's top is 2 units above its divider) and go under it as they scroll;
-    // the window shows whole rows and a half.
+    // The rows start right under the rule (a row's top is 2 units above its divider) and go under
+    // it as they scroll; the window shows whole rows and a half.
     return { rule, top, bottom: top + this.windowH(this.listFoot - 35 * unit - top) };
   }
   /** Row n's second line's baseline, scrolled. */
@@ -375,8 +375,8 @@ export abstract class PatchesLayout extends PatchesState {
   // v1 SoundcloudPanel's layout: SEARCH bordered above the rule at its right (the field is a DOM input over the rule),
   // five rows a page with their count bottom left, POPULAR / NEW bottom right where v1 had RANDOMISE, page arrows;
   // each row's bordered buttons (OPEN · LIKE · REPORT, or UNPUBLISH on your own).
-  /** SEARCH and its rule at the top, POPULAR · NEW · … at the bottom; on a phone, right under the tabs and at the foot of
-   * the screen, the list between them (owner, 2026-11-16). */
+  /** SEARCH and its rule at the top, POPULAR · NEW · … at the bottom; on a phone, right under the
+   * tabs and at the foot of the screen, the list between them (owner, 2026-11-16). */
   protected galleryLayout() {
     const unit = App.Unit,
       right = App.Width * 0.5 + 210 * unit,
@@ -428,8 +428,8 @@ export abstract class PatchesLayout extends PatchesState {
     const open = this.bordered(COPY.open, insert.x - 10 * unit, y - 19 * unit);
     return { open, insert, textRight: open.x - 6 * unit };
   }
-  /** POPULAR · NEW · EXAMPLES · TUTORIALS along the bottom (where v1 SoundcloudPanel had its count and RANDOMISE),
-   * spread across the page; the chosen one underlined. */
+  /** POPULAR · NEW · EXAMPLES · TUTORIALS along the bottom (where v1 SoundcloudPanel had its count
+   * and RANDOMISE), spread across the page; the chosen one underlined. */
   sortButtons() {
     const L = this.galleryLayout(),
       ctx = this.Ctx;

@@ -17,7 +17,7 @@ import { installNoteBars } from '../noteBars.ts';
 import { BlockSprites } from '../ported/Blocks/BlockSprites';
 import { checkTour, installTour } from '../tutorial.ts';
 import { relabelShareButton } from './shareSlot.ts';
-import { release1Settings } from './release1Settings.ts';
+import { release1Settings } from './settings/release1Settings.ts';
 import { locateMissingFiles } from './missingFiles.ts';
 import { cancellableOpen } from './cancellableOpen.ts';
 import { V1ScenePointer } from './pointer.ts';
@@ -77,8 +77,8 @@ export class V1Scene extends V1ScenePointer {
     };
     App.AnimationsLayer = this.AnimationsLayer;
     if (!this.initialised) {
-      // v1 order: panels are created before Metrics.Compute (App.Width is 0, so their Resize() bails out), then the
-      // first resize lays them out.
+      // v1 order: panels are created before Metrics.Compute (App.Width is 0, so their Resize()
+      // bails out), then the first resize lays them out.
       this.initialised = true;
       installNewBlockMenu(); // the post-2.0 blocks join v1's menu before the header reads it (SCOPE-0005)
       App.Width = 0;
@@ -103,8 +103,8 @@ export class V1Scene extends V1ScenePointer {
       ])
         o.Init(this);
       installTour(this.Tutorial, this.TutorialHotspots);
-      // v1's MessagePanel never sets _Alpha before its first fade-in tween; this tween library then gives NaN (nothing
-      // drawn). It starts hidden, at 0.
+      // v1's MessagePanel never sets _Alpha before its first fade-in tween; this tween library then
+      // gives NaN (nothing drawn). It starts hidden, at 0.
       (this.MessagePanel as any)._Alpha = 0;
       relabelShareButton(this.Header);
       // The header's Share slot opens Patches (CREATE SHARE LINK is in its SAVE tab, owner 2026-11-10).
@@ -265,8 +265,8 @@ export class V1Scene extends V1ScenePointer {
     this.Ctx.globalAlpha = 1;
   }
 
-  /** v1 CommandManager commands the panels issue: SAVE / SAVE_AS go to the sharing backend (CHG-0003); the Share
-   * panel then shows the id exactly as v1 showed a saved composition id. */
+  /** v1 CommandManager commands the panels issue: SAVE / SAVE_AS go to the sharing backend
+   * (CHG-0003); the Share panel then shows the id exactly as v1 showed a saved composition id. */
   protected command(c: unknown): void {
     const name = ((c as { value?: string })?.value ?? String(c)).toLowerCase(); // v1 StringValue lowercases
     if (name === 'save' || name === 'saveas') {

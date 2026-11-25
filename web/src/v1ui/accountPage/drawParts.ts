@@ -80,8 +80,8 @@ export abstract class AccountPageDrawParts extends AccountPageLayout {
     }
   }
 
-  /** A QR code of `url` in the square `b`: black on white whatever the theme (phone cameras read that), two
-   * modules of quiet zone. */
+  /** A QR code of `url` in the square `b`: black on white whatever the theme (phone cameras read
+   * that), two modules of quiet zone. */
   protected qrCache: { url: string; n: number; dark: boolean[] } | null = null;
   protected drawQr(url: string, b: { x: number; y: number; s: number }): void {
     if (this.qrCache?.url !== url) {

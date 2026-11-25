@@ -22,8 +22,8 @@ export function relabelShareButton(header: any): void {
     ctx.measureText = function (text: string) {
       return measureText.call(this, text === 'SHARE' ? SHARE_SLOT_LABEL : text);
     };
-    // Remove the overrides rather than assigning the originals back: an own property left on the context would shadow
-    // CanvasRenderingContext2D.prototype from then on.
+    // Remove the overrides rather than assigning the originals back: an own property left on the
+    // context would shadow CanvasRenderingContext2D.prototype from then on.
     try {
       fn();
     } finally {

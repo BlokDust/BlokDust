@@ -14,8 +14,8 @@ export abstract class V1SceneTouch extends V1ScenePlayheads {
   }
 
   // ---- multi-touch (CHG-0005 task 8; not in v1, which took one pointer) ----
-  /** Is (x, y) device px on the UI (an open panel, the header with its open menu, the options panel)? Another finger
-   * there doesn't grab the block underneath. */
+  /** Is (x, y) device px on the UI (an open panel, the header with its open menu, the options
+   * panel)? Another finger there doesn't grab the block underneath. */
   uiAt(x: number, y: number): boolean {
     if (
       this.SharePanel.Open ||
@@ -59,8 +59,8 @@ export abstract class V1SceneTouch extends V1ScenePlayheads {
         ),
     );
   }
-  /** Another finger drags slider `i` (v1 OptionsPanel.SliderSet). It is not marked Selected: v1 moves every selected
-   * slider to the first finger. */
+  /** Another finger drags slider `i` (v1 OptionsPanel.SliderSet). It is not marked Selected: v1
+   * moves every selected slider to the first finger. */
   setSlider(i: number, x: number): void {
     const optionsPanel = this.OptionsPanel as any;
     if (optionsPanel.Scale === 1 && optionsPanel.Options?.[i]) optionsPanel.SliderSet(i, x);
@@ -90,7 +90,8 @@ export abstract class V1SceneTouch extends V1ScenePlayheads {
     z.DelayTo?.(z, 0, 500, 700, 'ZoomAlpha');
   }
 
-  /** The slider row of the open options panel under (x, y) device px, using v1 OptionsPanel.HitTests' row rect. */
+  /** The slider row of the open options panel under (x, y) device px, using v1
+   * OptionsPanel.HitTests' row rect. */
   sliderAt(x: number, y: number): { block: V1Block; setting: string; name: string } | null {
     const optionsPanel = this.OptionsPanel,
       unit = App.Unit;

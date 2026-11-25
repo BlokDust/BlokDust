@@ -2,8 +2,8 @@
 import { App } from '../shim.ts';
 import { BLOCKS_BY_ID } from '../../generated/blocks.gen.ts';
 
-/** v1 SettingsPanel's menuWidth, About's text column: 4/7 of the panel; on a phone the width less 80 units (owner,
- * 2026-11-18). Settings › DOWNLOAD and ACCOUNT use it too (CHG-0035). */
+/** v1 SettingsPanel's menuWidth, About's text column: 4/7 of the panel; on a phone the width less
+ * 80 units (owner, 2026-11-18). Settings › DOWNLOAD and ACCOUNT use it too (CHG-0035). */
 export function pageWidth(): number {
   return App.SettingsMenuWidth(App.MainScene?.Width || App.Width);
 }
@@ -24,8 +24,8 @@ export const PHONE = {
 } as const;
 /** The account page's top, in units under Settings' tabs' top (scene.ts accountTop: 35 above v1's 120). */
 export const ACCOUNT_TOP = 85;
-/** Favourite blocks (from FAVOURITE BLOCKS' y): the icons at half v1's menu size (owner, 2026-11-16), centred 31 units
- * down; their names' baselines 62 down (a second line 14 under). */
+/** Favourite blocks (from FAVOURITE BLOCKS' y): the icons at half v1's menu size (owner,
+ * 2026-11-16), centred 31 units down; their names' baselines 62 down (a second line 14 under). */
 export const FAV = { scale: 0.5, icon: 42, name: 73 } as const;
 /** 1234 → 1,234; 12345 → 12.3K; 1234567 → 1.2M (the numbers are for fun: short beats exact). */
 export function shortNumber(n: number): string {

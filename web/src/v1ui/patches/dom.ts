@@ -117,8 +117,8 @@ export abstract class PatchesDom extends PatchesLayout {
     const pr = App.Metrics.PixelRatio,
       unit = App.Unit,
       mid = this.cy;
-    // The fields slide with their page and, like the canvas, are cut off at the tabs' foot (owner, 2026-11-18: the name
-    // showed above the tabs as SAVE / SHARE lifted out).
+    // The fields slide with their page and, like the canvas, are cut off at the tabs' foot (owner,
+    // 2026-11-18: the name showed above the tabs as SAVE / SHARE lifted out).
     const clipTop = this.OffsetY + 60 * unit;
     const at = (el: HTMLElement, top: number, h: number) => {
       el.style.top = `${top / pr}px`;

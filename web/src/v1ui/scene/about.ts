@@ -42,8 +42,8 @@ export const DOWNLOAD = {
 };
 /** The iPad app's App Store page (CHG-0025): null until it is listed; the iPad button says Coming soon until then. */
 export const IPAD_APP_STORE_URL: string | null = null;
-/** The About footer: the code (owner, 2026-11-11: the licences are viewable there, NOTICE.md, so no separate links;
- * every build also carries NOTICE.txt and LICENSE.txt). */
+/** The About footer: the code (owner, 2026-11-11: the licences are viewable there, NOTICE.md, so no
+ * separate links; every build also carries NOTICE.txt and LICENSE.txt). */
 export const FOOTER_LINKS = [SOURCE_LINK]; // no Privacy link until the page exists (owner, 2026-11-16)
 /** The footer links shown: none where links can't open (App.NoLinks). */
 export const footerLinks = () => (App.NoLinks ? [] : FOOTER_LINKS);

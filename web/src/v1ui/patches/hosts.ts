@@ -159,8 +159,8 @@ export interface PatchesHost {
     /** Plugin: the link is made in the web browser (its page has the bot check); nothing is kept here. */
     external?: boolean;
     current(): ShareLink | null;
-    /** v1 SAVE_AS (a new link) / SAVE (overwrite this browser's link); `gallery`: in the gallery or not (undefined:
-     * leave it). Resolves with what the server said about the gallery. */
+    /** v1 SAVE_AS (a new link) / SAVE (overwrite this browser's link); `gallery`: in the gallery or
+     * not (undefined: leave it). Resolves with what the server said about the gallery. */
     make(
       mode: 'saveAs' | 'save',
       title: string,

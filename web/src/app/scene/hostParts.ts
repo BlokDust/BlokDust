@@ -5,7 +5,7 @@ import { scene } from './scene.ts';
 
 export type SceneHostPart<Key extends keyof SceneHost> = Pick<SceneHost, Key>;
 
-/** What v1ui/scene/release1Settings.ts adds to v1's Settings panel: the account tab. */
+/** What v1ui/scene/settings/ adds to v1's Settings panel: the account tab. */
 interface AccountSettings {
   openAccount?: () => void;
   accountPage?: AccountPage | null;

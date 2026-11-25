@@ -53,8 +53,8 @@ export abstract class AccountPageState {
     void this.loadApps();
     this.mark();
   }
-  /** The website, opened at a plugin's code (`?link=CODE`, SHARING-0011): ask to approve it (signed out: sign in first;
-   * the code waits). */
+  /** The website, opened at a plugin's code (`?link=CODE`, SHARING-0011): ask to approve it (signed
+   * out: sign in first; the code waits). */
   showApprove(code: string): void {
     this.ApproveCode = code || null;
     this.ApproveName = null;
@@ -118,8 +118,8 @@ export abstract class AccountPageState {
     this.settle = performance.now() + 300;
   }
 
-  /** Ask who is signed in (opening the tab, and after any change); `stats` with the account's stats (R15: only for the
-   * tab, so loading the page asks for less). */
+  /** Ask who is signed in (opening the tab, and after any change); `stats` with the account's stats
+   * (R15: only for the tab, so loading the page asks for less). */
   async refresh(stats = true): Promise<void> {
     const m = await this.host.me(stats);
     const before = this.Account?.handle ?? null,
@@ -140,8 +140,8 @@ export abstract class AccountPageState {
       this.View = 'main';
     if (this.View === 'approve' && this.Account && this.ApproveCode && !this.ApproveName)
       void this.lookUpCode();
-    // SIGN-IN METHODS' APPS SIGNED IN, ready before it opens (owner, 2026-11-19: it jumped as the list arrived): it
-    // comes with the stats, in the one request (R15).
+    // SIGN-IN METHODS' APPS SIGNED IN, ready before it opens (owner, 2026-11-19: it jumped as the
+    // list arrived): it comes with the stats, in the one request (R15).
     if (this.Account?.apps) this.Apps = this.Account.apps;
     if (was === undefined || (this.Account?.handle ?? null) !== before || !!was !== !!this.Account)
       this.onChange();

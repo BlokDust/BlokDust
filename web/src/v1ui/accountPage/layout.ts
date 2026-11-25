@@ -25,8 +25,8 @@ export abstract class AccountPageLayout extends AccountPageState {
       textY: top + 14 * unit,
     };
   }
-  /** The page's width: About's text column (v1 SettingsPanel menuWidth: 4/7 of the panel, 5/7 on a phone; owner,
-   * 2026-11-17, CHG-0035: it was 420 units, narrower than About's). */
+  /** The page's width: About's text column (v1 SettingsPanel menuWidth: 4/7 of the panel, 5/7 on a
+   * phone; owner, 2026-11-17, CHG-0035: it was 420 units, narrower than About's). */
   protected pageW(): number {
     return pageWidth();
   }
@@ -98,8 +98,8 @@ export abstract class AccountPageLayout extends AccountPageState {
     const addsEnd = addsTop + this.addable().length * 55 * unit;
     // BACK at the top right, on the heading's line (owner, 2026-11-19: a button, not an arrow; the heading stays at the left).
     const methodsBack = this.bordered(COPY.back, R, top - 4 * unit);
-    // A plugin's code (SHARING-0011): the code large under the line, the QR code at the right, BACK (and OPEN BROWSER
-    // AGAIN) under them.
+    // A plugin's code (SHARING-0011): the code large under the line, the QR code at the right, BACK
+    // (and OPEN BROWSER AGAIN) under them.
     const qrSize = 130 * unit,
       code = {
         text: top + 118 * unit,

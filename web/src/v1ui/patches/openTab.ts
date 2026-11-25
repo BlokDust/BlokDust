@@ -61,8 +61,8 @@ export abstract class PatchesOpenTab extends PatchesSaveTab {
         };
       fit(item.name.toUpperCase(), y - this.rowGap);
       fit(item.detail, y);
-      // OPEN (text-colour border) and INSERT (the lighter rule colour): both explicit, Open the stronger.
-      // No hover mark: v1's bordered buttons (Randomise Title, Search) have none.
+      // OPEN (text-colour border) and INSERT (the lighter rule colour): both explicit, Open the
+      // stronger. No hover mark: v1's bordered buttons (Randomise Title, Search) have none.
       this.drawBordered(b.open, txt);
       this.drawBordered(b.insert, App.Palette[1]);
       if (item.removable)

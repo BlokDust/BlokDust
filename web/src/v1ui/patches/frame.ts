@@ -115,8 +115,8 @@ export abstract class PatchesFrame extends PatchesGalleryTab {
       ctx.textAlign = 'left';
       this.wordWrap(this.OpenError, this.margin, this.cy + 205 * unit, 14 * unit, this.pageW);
     }
-    // OPEN over unsaved changes asks first, from the OPEN tab or the gallery (bug, owner review 3: the gallery's
-    // question was never drawn nor answered, so OPEN did nothing after an INSERT).
+    // OPEN over unsaved changes asks first, from the OPEN tab or the gallery (bug, owner review 3:
+    // the gallery's question was never drawn nor answered, so OPEN did nothing after an INSERT).
     if (this.View === 'confirm') this.drawConfirm();
     else if (this.Tab === 0) this.drawSave();
     else if (this.Tab === 2) this.drawGallery();
