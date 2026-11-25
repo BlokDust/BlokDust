@@ -29,71 +29,7 @@
 #include "blokdust/patch_loader.hpp"
 #include "blokdust/test_signal.hpp"
 
-// --selftest-patches (CHG-0005): the plugin's patch files and Open/Insert merge, without a plugin.
-// Prints JSON.
-static int selftestPatches() {
-  using namespace blokdust::plugin::patchfiles;
-  const auto dir = juce::File::createTempFile("bd-patches");
-  dir.createDirectory();
-  nlohmann::json checks = nlohmann::json::object();
-  const nlohmann::json scene = {
-      {"format", "blokdust.patch"},
-      {"version", 2},
-      {"seed", 7},
-      {"blocks",
-       {{{"id", "a"}, {"type", "source.tone"}, {"x", 0}, {"y", 0}},
-        {{"id", "s"},
-         {"type", "source.sample"},
-         {"x", 3},
-         {"y", 0},
-         {"params", {{"track", "file:kick.wav"}}}}}},
-      {"refs",
-       {{"file:kick.wav", {{"provider", "file"}, {"name", "kick.wav"}, {"path", "/x/kick.wav"}}}}},
-      {"automation", {{{"slot", 1}, {"block", "a"}, {"param", "fine"}}}},
-      {"plugin", {{"dust", {0.5}}}}};
-  // save: one file per title, title kept inside, unsafe characters stripped, "plugin" state left
-  // out
-  const auto f1 = save(dir, "Keys: big/small?", scene);
-  const auto f2 = save(dir, "Keys: big/small?", scene);
-  const auto j = nlohmann::json::parse(f1.loadFileAsString().toStdString());
-  checks["saveName"] = f1.getFileName() == "Keys bigsmall.blokdust" && f1 == f2;
-  checks["saveTitle"] =
-      j["meta"]["title"] == "Keys: big/small?" && !j.contains("plugin") && j["blocks"].size() == 2;
-  save(dir, "Second", scene);
-  f1.setLastModificationTime(juce::Time::getCurrentTime() - juce::RelativeTime::hours(1));
-  const auto l = list(dir);
-  checks["list"] = l.size() == 2 && l[0]["name"] == "Second" && l[1]["name"] == "Keys: big/small?";
-  // insert: blocks and refs added, the scene's own blocks, refs, automation, seed and plugin state
-  // kept
-  const nlohmann::json part = {
-      {"blocks", {{{"id", "b1"}, {"type", "fx.filter"}, {"x", 9}, {"y", 9}}}},
-      {"refs", {{"freesound:1", {{"provider", "freesound"}, {"id", 1}}}}}};
-  const auto ins = merge(scene, part, false);
-  checks["insert"] = ins["blocks"].size() == 3 && ins["blocks"][2]["id"] == "b1" &&
-                     ins["refs"].size() == 2 && ins["automation"].size() == 1 && ins["seed"] == 7 &&
-                     ins.contains("plugin");
-  // open: blocks, refs and tempo replaced; automation dropped (it named the old blocks)
-  auto openPart = part;
-  openPart["tempo"] = 96;
-  const auto op = merge(scene, openPart, true);
-  checks["open"] = op["blocks"].size() == 1 && op["refs"].size() == 1 &&
-                   !op.contains("automation") && op["tempo"] == 96 && op["seed"] == 7;
-  dir.deleteRecursively();
-  // saveTo (the save dialog's choice): anywhere, any name ("+" kept), given the .blokdust extension
-  const auto elsewhere = juce::File::createTempFile("").getSiblingFile("bd-elsewhere");
-  elsewhere.createDirectory();
-  const auto f3 = saveTo(elsewhere.getChildFile("Bass + Bells.json"), "Bass + Bells", scene);
-  checks["saveTo"] =
-      f3.getFileName() == "Bass + Bells.blokdust" &&
-      nlohmann::json::parse(f3.loadFileAsString().toStdString())["meta"]["title"] == "Bass + Bells";
-  elsewhere.deleteRecursively();
-  bool ok = true;
-  for (const auto& [k, v] : checks.items())
-    ok = ok && v.get<bool>();
-  std::cout << nlohmann::json{{"selftest", "patches"}, {"ok", ok}, {"checks", checks}}.dump()
-            << "\n";
-  return ok ? 0 : 1;
-}
+int selftestPatches();  // selftest_patches.cpp
 
 /// CHG-0038: Stage blocks' inner worlds as the processor keeps them (StageWorlds): the page's edits
 /// inside a Stage go to its own world (made on first use), never the outer one; a removed Stage's

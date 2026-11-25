@@ -165,4 +165,28 @@ juce::File SampleLoader::relink(const nlohmann::json& ref, const juce::File& sam
   return {};
 }
 
+nlohmann::json defaultSound(const std::string& type) {
+  if (type == "source.sample")
+    return {{"provider", "freesound"},
+            {"id", 223835},
+            {"name", "[Synth] ambient key"},
+            {"username", "waveplaySFX"},
+            {"license", "CC0"},
+            {"licenseUrl", "http://creativecommons.org/publicdomain/zero/1.0/"},
+            {"duration", 7.68},
+            {"preview", "https://cdn.freesound.org/previews/223/223835_1676145-hq.mp3"},
+            {"url", "https://freesound.org/people/waveplaySFX/sounds/223835/"}};
+  if (type == "source.granular")
+    return {{"provider", "freesound"},
+            {"id", 191167},
+            {"name", "Piano drone"},
+            {"username", "laserlife"},
+            {"license", "CC0"},
+            {"licenseUrl", "http://creativecommons.org/publicdomain/zero/1.0/"},
+            {"duration", 14.8608},
+            {"preview", "https://cdn.freesound.org/previews/191/191167_2372469-hq.mp3"},
+            {"url", "https://freesound.org/people/laserlife/sounds/191167/"}};
+  return nullptr;
+}
+
 }  // namespace blokdust::plugin

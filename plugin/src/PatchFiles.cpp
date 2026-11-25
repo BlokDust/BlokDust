@@ -12,6 +12,52 @@ juce::File appGroup() {
 #endif
 }
 #endif
+
+/// Drops `key` from `object` when it is there with a type `ok` refuses.
+template <typename Accepts>
+void dropUnless(nlohmann::json& object, const char* key, Accepts ok) {
+  if (object.contains(key) && !ok(object[key]))
+    object.erase(key);
+}
+bool isString(const nlohmann::json& j) {
+  return j.is_string();
+}
+bool isNumber(const nlohmann::json& j) {
+  return j.is_number();
+}
+bool isObject(const nlohmann::json& j) {
+  return j.is_object();
+}
+bool isArray(const nlohmann::json& j) {
+  return j.is_array();
+}
+
+/// Keeps the entries of the array at `key` that `keep` accepts (after it fixes them up).
+template <typename Keeps>
+void filterArray(nlohmann::json& object, const char* key, Keeps keep) {
+  dropUnless(object, key, isArray);
+  if (!object.contains(key))
+    return;
+  auto kept = nlohmann::json::array();
+  for (auto& entry : object[key])
+    if (keep(entry))
+      kept.push_back(std::move(entry));
+  object[key] = std::move(kept);
+}
+
+/// A block needs a string id and type; its params, when there, are an object of the right kinds.
+bool wellFormedBlock(nlohmann::json& block) {
+  if (!block.is_object() || !block.value("id", nlohmann::json()).is_string() ||
+      !block.value("type", nlohmann::json()).is_string())
+    return false;
+  dropUnless(block, "x", isNumber);
+  dropUnless(block, "y", isNumber);
+  dropUnless(block, "params", isObject);
+  if (block.contains("params"))
+    for (const char* key : {"track", "trackName", "user", "permalink"})
+      dropUnless(block["params"], key, isString);
+  return true;
+}
 }  // namespace
 
 juce::File root() {
@@ -152,6 +198,43 @@ nlohmann::json merge(const nlohmann::json& current, const nlohmann::json& part, 
   if (out.contains("refs") && out["refs"].empty())
     out.erase("refs");
   return out;
+}
+
+nlohmann::json wellFormed(nlohmann::json patch) {
+  if (!patch.is_object())
+    return nullptr;
+  filterArray(patch, "blocks", wellFormedBlock);
+  dropUnless(patch, "refs", isObject);
+  if (patch.contains("refs")) {
+    auto& refs = patch["refs"];
+    for (auto it = refs.begin(); it != refs.end();)
+      it = it->is_object() ? std::next(it) : refs.erase(it);
+    for (auto& ref : refs) {
+      for (const char* key : {"provider", "name", "path", "preview"})
+        dropUnless(ref, key, isString);
+      dropUnless(ref, "id", isNumber);
+    }
+  }
+  filterArray(patch, "macros", [](nlohmann::json& macro) {
+    if (!macro.is_object() || !macro.value("block", nlohmann::json()).is_string())
+      return false;
+    filterArray(macro, "blocks", wellFormedBlock);
+    return true;
+  });
+  filterArray(patch, "automation", [](nlohmann::json& entry) {
+    if (!entry.is_object())
+      return false;
+    dropUnless(entry, "slot", isNumber);
+    dropUnless(entry, "block", isString);
+    dropUnless(entry, "param", isString);
+    return true;
+  });
+  dropUnless(patch, "plugin", isObject);
+  if (patch.contains("plugin")) {
+    dropUnless(patch["plugin"], "dust", isArray);
+    dropUnless(patch["plugin"], "powerMode", isNumber);
+  }
+  return patch;
 }
 
 }  // namespace blokdust::plugin::patchfiles

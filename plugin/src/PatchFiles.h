@@ -33,5 +33,8 @@ juce::File saveTo(const juce::File& file, const juce::String& title, nlohmann::j
 /// Insert: `part`'s blocks (already given free ids and positions by the page) and refs are added.
 /// The host's own fields (anything else in `current`) are kept either way.
 nlohmann::json merge(const nlohmann::json& current, const nlohmann::json& part, bool open);
+/// A patch from outside (a DAW project, an opened file) in the shape the plugin reads: a field of
+/// the wrong type is dropped, as if absent (SPEC-PATCH-FORMAT-V2 R3b). Not an object: null.
+nlohmann::json wellFormed(nlohmann::json patch);
 
 }  // namespace blokdust::plugin::patchfiles

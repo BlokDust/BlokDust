@@ -59,4 +59,8 @@ class SampleLoader {
   juce::ThreadPool pool_{2};
 };
 
+/// v2's default sounds (web/src/patch/samples.ts DEFAULT_SOUNDS): CC0 Freesound previews for new
+/// Sample/Granular blocks.
+nlohmann::json defaultSound(const std::string& type);
+
 }  // namespace blokdust::plugin

@@ -10,6 +10,7 @@ import {
   expected,
   hostRender,
   lastJsonLine,
+  malformedState,
   nativeRender,
   sampleState,
   type SelfTest,
@@ -70,6 +71,15 @@ export function test() {
       noRoundTripCheck: true,
       paramName: [0, 'Dust 1 \u00b7 Filter \u00b7 Gain'],
     }, // CHG-0004 3.9: lanes named after their target
+    // SPEC-PATCH-FORMAT-V2 R3b: a project with fields of the wrong type opens (it crashed the DAW);
+    // the bad parts are dropped and the demo plays as before.
+    {
+      name: 'state: malformed fields dropped',
+      plugin: VST3,
+      fixture: 'tests/golden/demo.json',
+      extra: ['--state', malformedState()],
+      noRoundTripCheck: true,
+    },
     {
       name: 'FX: Audio In with input',
       plugin: FX_VST3,

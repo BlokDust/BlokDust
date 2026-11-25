@@ -7,7 +7,7 @@
   "engine/tests/test_controllers.cpp": 5931,
   "engine/tests/test_note_effects.cpp": 5398,
   "plugin/src/PluginEditor.cpp": 8006,
-  "plugin/src/PluginProcessor.cpp": 13789,
-  "plugin/tests/host_render.cpp": 5983,
+  "plugin/src/PluginProcessor.cpp": 13567,
+  "plugin/tests/host_render.cpp": 5156,
   "tools/block-designer/page.html": 11923
 }

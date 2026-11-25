@@ -301,6 +301,6 @@
   "plugin/tests/host_render.cpp": {
     "bugprone-exception-escape": 1,
     "bugprone-incorrect-roundings": 1,
-    "readability-identifier-length": 21
+    "readability-identifier-length": 19
   }
 }

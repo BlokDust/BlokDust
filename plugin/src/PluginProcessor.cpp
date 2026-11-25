@@ -530,31 +530,6 @@ bool isDeadDefault(const nlohmann::json& track) {
   return t.empty() || t.rfind("https://files.blokdust.io/", 0) == 0 ||
          t.rfind("http://files.blokdust.io/", 0) == 0;
 }
-/// v2's default sounds (web/src/patch/samples.ts DEFAULT_SOUNDS): CC0 Freesound previews for new
-/// Sample/Granular blocks.
-nlohmann::json defaultSound(const std::string& type) {
-  if (type == "source.sample")
-    return {{"provider", "freesound"},
-            {"id", 223835},
-            {"name", "[Synth] ambient key"},
-            {"username", "waveplaySFX"},
-            {"license", "CC0"},
-            {"licenseUrl", "http://creativecommons.org/publicdomain/zero/1.0/"},
-            {"duration", 7.68},
-            {"preview", "https://cdn.freesound.org/previews/223/223835_1676145-hq.mp3"},
-            {"url", "https://freesound.org/people/waveplaySFX/sounds/223835/"}};
-  if (type == "source.granular")
-    return {{"provider", "freesound"},
-            {"id", 191167},
-            {"name", "Piano drone"},
-            {"username", "laserlife"},
-            {"license", "CC0"},
-            {"licenseUrl", "http://creativecommons.org/publicdomain/zero/1.0/"},
-            {"duration", 14.8608},
-            {"preview", "https://cdn.freesound.org/previews/191/191167_2372469-hq.mp3"},
-            {"url", "https://freesound.org/people/laserlife/sounds/191167/"}};
-  return nullptr;
-}
 std::int64_t rangeFor(const std::string& type, double maxSeconds) {
   if (maxSeconds <= 0 && type != "fx.convolver")
     return 0;
@@ -729,13 +704,19 @@ void BlokDustProcessor::getStateInformation(juce::MemoryBlock& dest) {
 }
 
 void BlokDustProcessor::setStateInformation(const void* data, int sizeInBytes) {
+  nlohmann::json state;
   try {
     const auto* p = static_cast<const char*>(data);
-    patch_ = nlohmann::json::parse(p, p + sizeInBytes);
+    state = patchfiles::wellFormed(nlohmann::json::parse(p, p + sizeInBytes));
   } catch (const std::exception& e) {
     DBG("BlokDust: bad state: " << e.what());
     return;
   }
+  if (state.is_null()) {
+    DBG("BlokDust: bad state: not a patch");
+    return;
+  }
+  patch_ = std::move(state);
   if (patch_.contains("plugin")) {
     const auto dust = patch_["plugin"].value("dust", nlohmann::json::array());
     for (std::size_t i = 0; i < dustParams_.size() && i < dust.size(); ++i)
@@ -756,7 +737,10 @@ void BlokDustProcessor::setStateInformation(const void* data, int sizeInBytes) {
 }
 
 void BlokDustProcessor::applyPatch(const nlohmann::json& part, bool open) {
-  patch_ = patchfiles::merge(patch_, part, open);
+  const auto checked = patchfiles::wellFormed(part);
+  if (checked.is_null())
+    return;  // not a patch
+  patch_ = patchfiles::merge(patch_, checked, open);
   if (open) {
     samples_.clear();
     missing_.clear();
@@ -955,7 +939,7 @@ void BlokDustProcessor::loadFreesound(BlockId id, const nlohmann::json& ref,
 void BlokDustProcessor::loadFreesoundKey(const std::string& key, const nlohmann::json& ref,
                                          const nlohmann::json& display, double maxSeconds) {
   auto* b = blockJson(key);
-  if (!b || !ref.contains("preview"))
+  if (!b || !ref.contains("preview") || !ref["preview"].is_string())
     return;
   loading_.insert(key);
   const int gen = ++loadGen_[key];

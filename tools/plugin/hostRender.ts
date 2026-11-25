@@ -97,3 +97,18 @@ export function sampleState(
   writeFileSync(out, JSON.stringify(fx.patch));
   return out;
 }
+
+/** SPEC-PATCH-FORMAT-V2 R3b: the demo with fields of the wrong type (they crashed the host). */
+export function malformedState(): string {
+  const fixture = JSON.parse(readFileSync('tests/golden/demo.json', 'utf8')) as {
+    patch: { blocks: unknown[] } & Record<string, unknown>;
+  };
+  const patch = fixture.patch;
+  patch.blocks.push(42, { id: 'far', type: 'source.sample', x: 400, y: 400, params: 'junk' });
+  patch.plugin = 'junk';
+  patch.macros = 'junk';
+  patch.automation = ['junk'];
+  const out = resolve('.cache/plugin-malformed-state.json');
+  writeFileSync(out, JSON.stringify(patch));
+  return out;
+}
