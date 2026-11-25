@@ -10,25 +10,31 @@ import {
 } from './patchesPanel.ts';
 import { readFileSync } from 'node:fs';
 
+/** A saved .blokdust file, as far as these tests read it. */
+interface SavedFile {
+  format?: string;
+  meta?: { title?: string };
+  blocks?: unknown[];
+}
+
 export const patchesOpenTests: Record<string, RegressionTest> = {
-  /** CHG-0005 (web; SAVE / OPEN tabs, owner 2026-11-10): OPEN lists the presets with OPEN and INSERT on each row.
-   * INSERT hands the blocks to the pointer (half transparent) until a click puts them down, where the pointer is;
-   * Cmd/Ctrl+Z takes them out again. SAVE TO COMPUTER downloads a `.blokdust` file where the browser has no save dialog.
-   * FROM YOUR COMPUTER and a dropped file ask Open or Insert. */
+  /** CHG-0005: OPEN's rows have OPEN and INSERT (the blocks follow the pointer till a click,
+   * Cmd/Ctrl+Z undoes); SAVE downloads a file; a picked or dropped file asks Open or Insert. */
   async 'patches-web'(errors: string[]) {
     const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    // A browser without a save dialog.
     await page.evaluate(() => {
       delete window.showSaveFilePicker;
-    }); // a browser without a save dialog
+    });
     await keepPresets(page);
     const count = async () => (await state(page)).patch.blocks.length;
     const centre = async (from: number) =>
-      page.evaluate((n) => {
-        const b = window.__bd_probe.state.patch.blocks.slice(n);
-        const xs = b.map((patchBlock) => patchBlock.x),
-          ys = b.map((patchBlock) => patchBlock.y);
+      page.evaluate((first): [number, number] => {
+        const blocks = window.__bd_probe.state.patch.blocks.slice(first);
+        const xs = blocks.map((patchBlock) => patchBlock.x ?? 0),
+          ys = blocks.map((patchBlock) => patchBlock.y ?? 0);
         return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
-      }, from) as Promise<[number, number]>;
+      }, from);
     await openPatches(page);
     const tab = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.Tab);
     const title = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.Title);
@@ -66,20 +72,20 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
     const dl = page.waitForEvent('download');
     await patchesClick(page, 'save');
     const download = await dl,
-      file = JSON.parse(readFileSync(await download.path(), 'utf8'));
+      file = JSON.parse(readFileSync(await download.path(), 'utf8')) as SavedFile;
     const saved = {
       name: download.suggestedFilename(),
       title: file.meta?.title,
       blocks: file.blocks?.length,
       format: file.format,
     };
-    // The saved patch is listed first (this browser only); OPEN a preset: just saved, so no question.
+    // The saved patch is listed first; OPEN a preset: just saved, so no question.
     await openList(page);
-    const mine = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.Items[0]);
+    const mine = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.Items.at(0));
     await rowButton(page, 'open', 'Computer Keys + 2 Tones');
     const afterOpen = await count();
     await openList(page);
-    await rowButton(page, 'open', title); // the saved one (nothing changed since the preset opened: no question)
+    await rowButton(page, 'open', title); // the saved one: nothing changed, so no question
     const reopened = {
       blocks: await count(),
       title: await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.Title),
@@ -160,7 +166,7 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
       items.length === 6 &&
       !!title &&
       mine?.name === title &&
-      /^Saved \d/.test(mine?.detail) &&
+      /^Saved \d/.test(mine.detail) &&
       reopened.blocks === 1 &&
       reopened.title === title &&
       placing?.ids.length === 6 &&
@@ -203,8 +209,8 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
       },
     ];
   },
-  /** Owner (2026-11-10): Open over unsaved changes asks first (CANCEL · SAVE FIRST · OPEN ANYWAY); an unchanged patch
-   * opens straight away, and Insert never asks. SAVE FIRST saves, then opens. */
+  /** Open over unsaved changes asks (CANCEL, SAVE FIRST, OPEN ANYWAY); an unchanged patch opens
+   * at once and Insert never asks. SAVE FIRST saves, then opens. */
   async 'open-confirms-unsaved'(errors: string[]) {
     const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     await page.evaluate(() => {
@@ -214,9 +220,11 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
     const count = async () => (await state(page)).patch.blocks.length;
     /** Drag the patch's first block 4 cells right: a change. */
     const change = async () => {
-      const b = (await state(page)).patch.blocks[0],
-        [x, y] = await toCss(page, b.x, b.y + 0.2),
-        [x2, y2] = await toCss(page, b.x + 4, b.y + 0.2);
+      const first = (await state(page)).patch.blocks[0],
+        bx = first.x ?? 0,
+        by = first.y ?? 0,
+        [x, y] = await toCss(page, bx, by + 0.2),
+        [x2, y2] = await toCss(page, bx + 4, by + 0.2);
       await page.mouse.move(x, y);
       await page.mouse.down();
       await page.mouse.move(x2, y2, { steps: 6 });
@@ -251,7 +259,8 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
     const dl = page.waitForEvent('download');
     await patchesClick(page, 'saveFirst', 0);
     const download = await dl,
-      savedBlocks = JSON.parse(readFileSync(await download.path(), 'utf8')).blocks.length;
+      savedBlocks = (JSON.parse(readFileSync(await download.path(), 'utf8')) as SavedFile).blocks
+        ?.length;
     await page.waitForTimeout(800);
     const afterSaveFirst = { view: await view(), blocks: await count() };
     // OPEN ANYWAY
@@ -262,7 +271,7 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
     await patchesClick(page, 'openAnyway', 600);
     const anyway = { view: await view(), blocks: await count() };
     await page.close();
-    // Rotating Sequencer has 10 blocks, Step Sequencer 21 (the owner's presets, 2026-11-12).
+    // Rotating Sequencer has 10 blocks, Step Sequencer 21.
     const ok =
       unchanged.view === 'closed' &&
       unchanged.blocks === 10 &&
@@ -282,13 +291,13 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
       { unchanged, asked, cancelled, inserted, savedBlocks, afterSaveFirst, asked2, anyway },
     ];
   },
-  /** CHG-0005: every built-in preset opens with all its blocks, and the self-playing ones (Rotating Sequencer, Step
-   * Sequencer: Power blocks run their laser and emitters) are heard without touching anything. Keys and Microphone presets wait for the player. */
+  /** CHG-0005: every preset opens with all its blocks; the self-playing ones (Power blocks run
+   * their lasers and emitters) sound untouched, and Keys and Microphone presets wait. */
   async 'presets-load'(errors: string[]) {
     const page = await open(browser, [], errors);
     await keepPresets(page);
     await openList(page);
-    const items: string[] = await page.evaluate(() =>
+    const items = await page.evaluate(() =>
       window.__bd_probe.scene.PatchesPanel.Items.map((i) => i.name),
     );
     const want: Record<string, number> = {
@@ -300,19 +309,17 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
       'Self Playing Scene': 29,
     };
     const selfPlaying = new Set(['Rotating Sequencer', 'Step Sequencer', 'Self Playing Scene']);
-    const got: Record<string, unknown> = {};
+    const got: Record<string, true | { blocks: number; rms?: number; toggles?: boolean[] }> = {};
     for (let i = 0; i < items.length; i++) {
       if (i) await openList(page);
       await rowButton(page, 'open', items[i], 400); // a preset just opened is saved: no confirm
       const pb = (await state(page)).patch.blocks,
         blocks = pb.length;
-      // Owner (PR #1 review, 2026-11-12): lasers and emitters are never self-powered; a Power block next to each runs it.
+      // Lasers and emitters are never self-powered; a Power block next to each runs it.
       if (pb.some((b) => /laser|emitter/.test(b.type) && b.params?.selfPoweredMode))
         got[`${items[i]}: self-powered`] = true;
-      // CHG-0013: the owner's Self Playing Scene opens with its two Toggles opposite (they flip together: the chords take turns).
-      const toggles = pb
-        .filter((b) => b.type === 'power.toggle')
-        .map((b) => !!b.params?.logic);
+      // CHG-0013: Self Playing Scene's two Toggles open opposite, so its chords take turns.
+      const toggles = pb.filter((b) => b.type === 'power.toggle').map((b) => !!b.params?.logic);
       const plays = selfPlaying.has(items[i]) ? await maxOver(page, 'rms', 3000) : null;
       got[items[i]] = {
         blocks,
@@ -321,25 +328,30 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
       };
     }
     await page.close();
+    const entry = (name: string) => {
+      const found = got[name] as (typeof got)[string] | undefined;
+      return found === true ? undefined : found;
+    };
+    const scene = entry('Self Playing Scene');
     const ok =
-      Object.entries(want).every(([key, k]) => (got[key] as any)?.blocks === k) &&
-      !Object.keys(got).some((k) => k.endsWith('self-powered')) &&
-      [...selfPlaying].every((name) => (got[name] as any)?.rms > 0.001) &&
-      (got['Self Playing Scene'] as any)?.toggles?.length === 2 &&
-      (got['Self Playing Scene'] as any).toggles[0] !==
-        (got['Self Playing Scene'] as any).toggles[1];
+      Object.entries(want).every(([key, count]) => entry(key)?.blocks === count) &&
+      !Object.keys(got).some((key) => key.endsWith('self-powered')) &&
+      [...selfPlaying].every((name) => (entry(name)?.rms ?? 0) > 0.001) &&
+      scene?.toggles?.length === 2 &&
+      scene.toggles[0] !== scene.toggles[1];
     return [ok, got];
   },
-  /** Owner (2026-11-10): the user's own saved patches have a bin (a small v1 trash can) right of INSERT; it asks first,
-   * then takes the patch off this browser's list. Owner review 3 (2026-11-16): OPEN lists only the user's own patches
-   * (no presets: they are @blokdust's in the gallery), so with that one gone it is empty. */
+  /** The user's saved patches have a bin right of INSERT: it asks, then takes the patch off this
+   * browser's list; OPEN lists only the user's own patches, so then it is empty. */
   async 'patch-delete'(errors: string[]) {
     const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     await page.evaluate(() => {
       delete window.showSaveFilePicker;
     });
     await openPatches(page);
-    await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.setTitle('Bass + Bells'));
+    await page.evaluate(() => {
+      window.__bd_probe.scene.PatchesPanel.setTitle('Bass + Bells');
+    });
     const dl = page.waitForEvent('download');
     await patchesClick(page, 'save', 600);
     await dl;
@@ -355,18 +367,20 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
     await page.screenshot({ path: `${OUT}/patch-delete.png` });
     await page.evaluate(() => {
       const seen: string[] = (window.__texts = []);
-      const drawText = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (text: string, ...a: any[]) {
+      const proto = CanvasRenderingContext2D.prototype,
+        drawText = Object.getOwnPropertyDescriptor(proto, 'fillText')
+          ?.value as typeof proto.fillText;
+      proto.fillText = function (text: string, ...rest: [number, number, number?]) {
         seen.push(text);
-        return (drawText as any).call(this, text, ...a);
+        drawText.call(this, text, ...rest);
       };
     });
     await page.mouse.click(bx, by);
     await page.waitForTimeout(400);
     const asked = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.View);
-    // Owner's wording (2026-11-10): "Delete <name>?", then what is and isn't touched.
+    // The owner's wording: "Delete <name>?", then what is and isn't touched.
     const words = await page.evaluate(() => {
-      const texts: string[] = window.__texts;
+      const texts = window.__texts ?? [];
       return {
         title: texts.includes('DELETE BASS + BELLS?'),
         line: texts
@@ -376,17 +390,15 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
     });
     await page.screenshot({ path: `${OUT}/patch-delete-confirm.png` });
     await patchesClick(page, 'removeCancel', 400);
-    const kept = await page.evaluate(
-      () => window.__bd_probe.scene.PatchesPanel.Items[0]?.name,
-    );
+    const kept = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.Items.at(0)?.name);
     await patchesClick(page, 'bin0', 400);
     await patchesClick(page, 'removeOk', 800);
     const after = await page.evaluate(() => ({
       items: window.__bd_probe.scene.PatchesPanel.Items.map((i) => i.name),
-      stored: JSON.parse(localStorage.getItem('blokdust.myPatches') ?? '[]').length,
+      stored: (JSON.parse(localStorage.getItem('blokdust.myPatches') ?? '[]') as unknown[]).length,
     }));
     await page.waitForTimeout(300);
-    const empty = await page.evaluate(() => window.__texts.includes('NO PATCHES YET'));
+    const empty = await page.evaluate(() => (window.__texts ?? []).includes('NO PATCHES YET'));
     await page.screenshot({ path: `${OUT}/open-empty.png` });
     await page.close();
     const ok =
