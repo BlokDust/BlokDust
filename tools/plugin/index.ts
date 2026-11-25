@@ -1,3 +1,15 @@
+// bd plugin — JUCE plugin build, pluginval, and headless host tests (CHG-0001 task 0.11).
+//   pnpm bd plugin build      web bundle (if missing) + VST3/AU/Standalone via the `plugin` CMake preset
+//   pnpm bd plugin validate   pluginval (strictness 5) on the VST3 (and AU when the host can see it)
+//   pnpm bd plugin au         macOS: install the AU *temporarily* in ~/Library/Audio/Plug-Ins/Components, run auval and
+//                             pluginval on it, render it in a JUCE host (must equal native), then uninstall it
+//   pnpm bd plugin sign       macOS: Developer ID sign (hardened runtime), notarise with Apple (keychain profile, default
+//                             `blokdust`), staple, Gatekeeper-check → build/plugin/dist/BlokDust-macOS.zip
+//   pnpm bd plugin package   macOS installer: universal, macOS 11+, signed, BlokDust-<version>-Mac.pkg notarised + stapled
+//                             (build/plugin-release/dist), with its .sha256 (CHG-0005 task 12)
+//   pnpm bd plugin ios build|test|device [--no-build]|log|archive   iPadOS AUv3: Simulator build/test, an iPad, its log, the App Store build (CHG-0025; ios.ts)
+//   pnpm bd plugin test       build + validate + load the BUILT VST3 like a DAW: golden fixtures must hash exactly
+//                             like the native engine, and the WebView editor must build the stage from the patch
 import { requiredSetting, setting } from '../lib/local-config.ts';
 import { iosCommand } from './ios.ts';
 import { build } from './build.ts';
