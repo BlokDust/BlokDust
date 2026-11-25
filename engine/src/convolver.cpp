@@ -9,6 +9,8 @@
 #include "blokdust/rng.hpp"
 
 namespace blokdust::dsp {
+// Block sizes and partition counts here are small ints (FFT ≤ 2048), so int products are exact.
+// NOLINTBEGIN(bugprone-implicit-widening-of-multiplication-result,bugprone-misplaced-widening-cast)
 namespace {
 
 constexpr int kFftMax = 2048;
@@ -16,7 +18,7 @@ constexpr int kFftMax = 2048;
 /// cos/sin(2πk/2048), k < 1024, from dmath (deterministic).
 struct Twiddles {
   std::array<float, kFftMax / 2> c{}, s{};
-  Twiddles() {
+  Twiddles() noexcept {
     for (int k = 0; k < kFftMax / 2; ++k) {
       c[static_cast<std::size_t>(k)] = static_cast<float>(dmath::cos(dmath::kTwoPi * k / kFftMax));
       s[static_cast<std::size_t>(k)] = static_cast<float>(dmath::sin(dmath::kTwoPi * k / kFftMax));
@@ -304,5 +306,6 @@ void Convolver::process(const ConvolutionKernel& k, float* left, float* right, i
     }
   }
 }
+// NOLINTEND(bugprone-implicit-widening-of-multiplication-result,bugprone-misplaced-widening-cast)
 
 }  // namespace blokdust::dsp

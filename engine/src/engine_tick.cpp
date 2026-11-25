@@ -38,6 +38,7 @@ void Engine::traceBeam(int laserSlot, double angleDeg, double len, std::bitset<k
     int depth;
     std::array<std::int16_t, kMaxPrismDepth> via;
   };
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init): scratch, pushed before read
   std::array<Seg, kMaxBeamSegments> stack;
   int sp = 0, cast = 0;
   Block& block = blocks_[static_cast<std::size_t>(laserSlot)];
@@ -58,7 +59,7 @@ void Engine::traceBeam(int laserSlot, double angleDeg, double len, std::bitset<k
         const int s = order_[i];
         const Block& v = blocks_[s];
         if ((v.kind() != BlockKind::Void && v.kind() != BlockKind::Path &&
-             !(v.kind() == BlockKind::Gate && !gateOpen(v))) ||
+             (v.kind() != BlockKind::Gate || gateOpen(v))) ||
             seen[static_cast<std::size_t>(s)])
           continue;
         if (segmentPolygonFirstHit(seg.x0, seg.y0, x1, y1, v.info().outline, v.info().outlineCount,
@@ -323,13 +324,15 @@ void Engine::runTick() noexcept BLOKDUST_NONBLOCKING {
   // particle and fires one at once. Those fire after this pass (in hit order), so a new particle
   // starts moving next tick, as an emitter's own do.
   int kept = 0, caughtCount = 0;
-  std::array<int, kMaxParticles> caught;  // block slots, filled before read
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init): block slots, filled before read
+  std::array<int, kMaxParticles> caught;
   struct SplitHit {
     int slot;
     double speed;
     int life;
   };
-  std::array<SplitHit, 256> splits;  // Prisms entered this tick, filled before read
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init): Prisms entered, filled before read
+  std::array<SplitHit, 256> splits;
   int splitCount = 0;
   for (int i = 0; i < particleCount_; ++i) {
     Particle particle = particles_[i];

@@ -205,7 +205,7 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
  private:
   static BusesProperties buses();
   void rebuildEngine();
-  void useSample(const std::string& key, std::shared_ptr<LoadedSample> s, bool fresh,
+  void useSample(const std::string& key, const std::shared_ptr<LoadedSample>& s, bool fresh,
                  const nlohmann::json& display);
   void attachSamples();
   void restoreSamples();

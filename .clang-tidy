@@ -47,3 +47,5 @@ CheckOptions:
   readability-identifier-naming.ConstexprVariableCase: CamelCase
   readability-identifier-naming.ConstexprVariablePrefix: k
   readability-identifier-naming.NamespaceCase: lower_case
+  # Constant products (48000 * 3, kMaxBlocks * 8) are checked at compile time; they never overflow.
+  bugprone-implicit-widening-of-multiplication-result.IgnoreConstantIntExpr: true

@@ -13,7 +13,7 @@ namespace {
 /// A sine Tone (1) heard by a Sound Laser (3) that points right at a second Tone (4). Power (2)
 /// arrives at `powerAt`. `first` are applied before it (the queue is FIFO: commands pushed after a
 /// timed one wait for it).
-std::unique_ptr<Engine> scene(std::int64_t powerAt = -1, std::vector<Command> first = {}) {
+std::unique_ptr<Engine> scene(std::int64_t powerAt = -1, const std::vector<Command>& first = {}) {
   auto engine = makeEngine(48000, 1, false);
   engine->push(Command::add(1, BlockType::SourceTone, 0, 0));
   engine->push(Command::setParam(1, P::SourceTone::waveform, 0));

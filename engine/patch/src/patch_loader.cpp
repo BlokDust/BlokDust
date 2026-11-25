@@ -45,12 +45,12 @@ bool addBlock(const nlohmann::json& b, Loaded& out, std::int64_t at, std::string
   out.commands.push_back(Command::add(id, t, b.value("x", 0.0), b.value("y", 0.0), at));
   if (b.contains("params")) {
     for (const auto& [pk, pv] : b["params"].items()) {
-      std::uint8_t idx;
-      double v;
+      std::uint8_t idx = 0;
+      double v = 0.0;
       // R3: a param this build doesn't know (a newer BlokDust saved it) is dropped with a warning;
       // the rest loads.
       if (!paramIndex(t, pk, idx)) {
-        out.warnings.push_back("unknown param " + pk + " on " + key);
+        out.warnings.push_back(std::string("unknown param ").append(pk).append(" on ").append(key));
         continue;
       }
       // An LFO's target (AUDIO-0003) is saved as "<block id>:<param key>"; the engine ids it
@@ -87,7 +87,7 @@ void resolveTargets(Loaded& out) {
         if (c.id == it->second)
           theirs = c.blockType;
       }
-    std::uint8_t tb, tp, idx;
+    std::uint8_t tb = 0, tp = 0, idx = 0;
     if (!paramIndex(own, "targetBlock", tb) || !paramIndex(own, "targetParam", tp) ||
         !paramIndex(theirs, text.substr(colon + 1), idx))
       continue;
@@ -241,8 +241,8 @@ bool loadScript(const nlohmann::json& script, Loaded& io, std::string& err) {
       for (const auto& c : io.commands)
         if (c.type == Command::Type::AddBlock && c.id == it->second)
           t = c.blockType;
-      std::uint8_t idx;
-      double v;
+      std::uint8_t idx = 0;
+      double v = 0.0;
       if (!paramIndex(t, s.value("param", std::string{}), idx) || !toNumber(s["value"], v)) {
         err = "bad set op for " + key;
         return false;

@@ -121,6 +121,7 @@ static int selftestStages() {
   return ok ? 0 : 1;
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape): a test tool; an exception ends the run
 int main(int argc, char** argv) {
   if (argc >= 2 && juce::String(argv[1]) == "--selftest-stages")
     return selftestStages();
@@ -232,7 +233,7 @@ int main(int argc, char** argv) {
     fx = nlohmann::json::parse(in);
   }
   const double sr = fx["render"].value("sampleRate", 48000);
-  const auto frames = static_cast<long>(fx["render"].value("seconds", 5.0) * sr + 0.5);
+  const auto frames = static_cast<long>(std::lround(fx["render"].value("seconds", 5.0) * sr));
   const nlohmann::json statePatch =
       stateFile.isNotEmpty()
           ? nlohmann::json::parse(juce::File(stateFile).loadFileAsString().toStdString())

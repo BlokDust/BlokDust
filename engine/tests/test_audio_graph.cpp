@@ -152,7 +152,8 @@ TEST_CASE("effect pools: more delay-memory effects than the pool holds are bypas
     const auto t = i % 3 == 0   ? BlockType::FxStereoDelay
                    : i % 3 == 1 ? BlockType::FxReverb
                                 : BlockType::FxChorus;
-    engine->push(Command::add(static_cast<BlockId>(10 + i), t, 3 + (i % 2), (i / 2) * 0.01));
+    const int pair = i / 2;  // two blocks per row
+    engine->push(Command::add(static_cast<BlockId>(10 + i), t, 3 + (i % 2), pair * 0.01));
   }
   const auto out = render(*engine, 24000);
   CHECK(rms(out) > 0.0);

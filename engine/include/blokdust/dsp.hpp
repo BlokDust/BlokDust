@@ -49,7 +49,7 @@ class Oscillator {
     return v;
   }
   double next() noexcept BLOKDUST_NONBLOCKING {
-    double v;
+    double v = 0.0;
     if (wave_ == Waveform::Sine || !bank_) {
       v = dmath::sin(dmath::kTwoPi * (idx_ / static_cast<double>(size_)));
     } else {
@@ -136,7 +136,7 @@ class Envelope {
   }
 
  private:
-  enum class Stage { Idle, Attack, Decay, Sustain, Release };
+  enum class Stage : std::uint8_t { Idle, Attack, Decay, Sustain, Release };
   Settings s_{};
   double sr_ = 48000.0;
   double level_ = 0.0;

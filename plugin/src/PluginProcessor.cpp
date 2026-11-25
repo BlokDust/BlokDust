@@ -111,14 +111,15 @@ void BlokDustProcessor::rebuildEngine() {
   }
   for (const auto& w : loaded.warnings)
     systemLog("patch: " + juce::String(w));  // R3: dropped, the rest loads
-  auto next = std::make_unique<Engine>(
-      EngineConfig{static_cast<int>(sampleRate_ + 0.5), loaded.seed, true, /*hostInput=*/true});
+  auto next = std::make_unique<Engine>(EngineConfig{static_cast<int>(std::lround(sampleRate_)),
+                                                    loaded.seed, true, /*hostInput=*/true});
   for (const auto& c : loaded.commands)
     next->push(c);
   next->prime();  // blocks exist now, so samples attach before the first audio block (CHG-0004 3.6)
   // Stage blocks' inner worlds (CHG-0021): made here, off the audio thread, and kept for as long as
   // the engine.
-  auto nextStages = patch::attachStagesById(*next, loaded, static_cast<int>(sampleRate_ + 0.5));
+  auto nextStages =
+      patch::attachStagesById(*next, loaded, static_cast<int>(std::lround(sampleRate_)));
   std::map<BlockId, std::map<BlockId, std::string>>
       innerKeys;  // each world's blocks' patch ids (CHG-0038)
   for (const auto& [stage, inner] : loaded.stages)
@@ -416,7 +417,7 @@ void BlokDustProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
       }
       for (std::size_t i = 0; i < dust_.size(); ++i)
         if (dust_[i].active && dust_[i].cc == (d[1] & 0x7F)) {
-          const float v = (d[2] & 0x7F) / 127.0f;
+          const float v = static_cast<float>(d[2] & 0x7F) / 127.0f;
           applyDust(i, v);
           dustParams_[i]->setValueNotifyingHost(v);  // the lane follows the knob
         }
@@ -436,7 +437,8 @@ void BlokDustProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
   }
   render(buffer, pos, n);
   engine_->clearEvents();
-  if ((samplesSinceSnapshot_ += n) >= samplesPerSnapshot_) {
+  samplesSinceSnapshot_ += n;
+  if (samplesSinceSnapshot_ >= samplesPerSnapshot_) {
     samplesSinceSnapshot_ %= samplesPerSnapshot_;
     publishSnapshot();
   }
@@ -456,12 +458,10 @@ void BlokDustProcessor::publishSnapshot() noexcept {
     }
   const auto parts = engine->particles();
   s.particleCount = static_cast<int>(std::min<std::size_t>(parts.size(), kMaxParticles));
-  for (int i = 0; i < s.particleCount; ++i) {
-    s.particles[static_cast<std::size_t>(i * 3)] =
-        static_cast<float>(parts[static_cast<std::size_t>(i)].x);
-    s.particles[static_cast<std::size_t>(i * 3 + 1)] =
-        static_cast<float>(parts[static_cast<std::size_t>(i)].y);
-    s.particles[static_cast<std::size_t>(i * 3 + 2)] = parts[static_cast<std::size_t>(i)].size;
+  for (std::size_t i = 0; i < static_cast<std::size_t>(s.particleCount); ++i) {
+    s.particles[i * 3] = static_cast<float>(parts[i].x);
+    s.particles[i * 3 + 1] = static_cast<float>(parts[i].y);
+    s.particles[i * 3 + 2] = parts[i].size;
   }
   const auto& blocks = engine->blocks();
   s.poweredCount = 0;
@@ -482,7 +482,7 @@ void BlokDustProcessor::publishSnapshot() noexcept {
   }
   s.beamCount = 0;
   for (const auto& beam : engine->beams()) {
-    const auto k = static_cast<std::size_t>(s.beamCount++ * 4);
+    const auto k = static_cast<std::size_t>(s.beamCount++) * 4;
     s.beams[k] = static_cast<float>(beam.x0);
     s.beams[k + 1] = static_cast<float>(beam.y0);
     s.beams[k + 2] = static_cast<float>(beam.x1);
@@ -491,20 +491,18 @@ void BlokDustProcessor::publishSnapshot() noexcept {
   {
     std::array<Engine::Playhead, 64> ph{};
     s.playheadCount = engine->playheads(ph.data(), 64);
-    for (int i = 0; i < s.playheadCount; ++i) {
-      s.playheads[static_cast<std::size_t>(i * 2)] =
-          static_cast<float>(ph[static_cast<std::size_t>(i)].block);
-      s.playheads[static_cast<std::size_t>(i * 2 + 1)] = ph[static_cast<std::size_t>(i)].seconds;
+    for (std::size_t i = 0; i < static_cast<std::size_t>(s.playheadCount); ++i) {
+      s.playheads[i * 2] = static_cast<float>(ph[i].block);
+      s.playheads[i * 2 + 1] = ph[i].seconds;
     }
   }
   {
     std::array<Engine::Monitor, 64> mon{};
     s.monitorCount = engine->monitors(mon.data(), 64);
-    for (int i = 0; i < s.monitorCount; ++i) {
-      s.monitors[static_cast<std::size_t>(i * 5)] =
-          static_cast<float>(mon[static_cast<std::size_t>(i)].block);
-      for (int k = 0; k < 4; ++k)
-        s.monitors[static_cast<std::size_t>(i * 5 + 1 + k)] = mon[static_cast<std::size_t>(i)].v[k];
+    for (std::size_t i = 0; i < static_cast<std::size_t>(s.monitorCount); ++i) {
+      s.monitors[i * 5] = static_cast<float>(mon[i].block);
+      for (std::size_t k = 0; k < 4; ++k)
+        s.monitors[i * 5 + 1 + k] = mon[i].v[k];
     }
   }
   s.pairCount = engine->connections(s.pairs.data(),
@@ -641,16 +639,16 @@ void BlokDustProcessor::applyUiCommands(const nlohmann::json& commands) {
         if (command.blockType == BlockType::InputComputerKeyboard && command.param < 128)
           pageKeys_.set(command.param, command.type == Command::Type::NoteOn);
         break;
+      // Not patch state: performance, session and transport. A Relink's order arrives whole
+      // (setConnectionOrder).
       case Command::Type::NoteExpression:
       case Command::Type::Press:
       case Command::Type::Reset:
-        break;  // performance, not patch state
       case Command::Type::Relink:
-        break;  // the order arrives whole (setConnectionOrder)
       case Command::Type::SetMaster:
       case Command::Type::Tempo:
       case Command::Type::WorldPower:
-        break;  // session and transport state, not blocks
+        break;
       case Command::Type::SetParam:
         if (auto* b = find(command.id)) {
           BlockType t{};
@@ -783,7 +781,7 @@ nlohmann::json* BlokDustProcessor::blockJson(const std::string& key) {
 
 EngineConfig BlokDustProcessor::childConfig() const {
   EngineConfig config;
-  config.sampleRate = static_cast<int>(sampleRate_ + 0.5);
+  config.sampleRate = static_cast<int>(std::lround(sampleRate_));
   config.seed = seed_;
   config.hostInput = true;
   return config;
@@ -877,6 +875,7 @@ void BlokDustProcessor::pickFile(BlockId id, BlockId stage) {
                                           false, pickerParent(getActiveEditor()));
   chooser_->launchAsync(
       juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+      // NOLINTNEXTLINE(bugprone-exception-escape): copying its strings throws only out of memory
       [this, key](const juce::FileChooser& fc) {
 #if JUCE_IOS
         // iPad (CHG-0025 task 6): the picked file is copied into the shared Samples folder and the
@@ -911,23 +910,24 @@ void BlokDustProcessor::loadFileKey(const std::string& key, const juce::File& fi
   const int gen = ++loadGen_[key];
   if (onSampleInfo)
     onSampleInfo(sampleInfo(key));
-  loader_.loadFile(
-      file, [this, key, fresh, gen](std::shared_ptr<LoadedSample> s, const std::string& err) {
-        if (loadGen_[key] != gen)
-          return;  // superseded by a newer choice
-        loading_.erase(key);
-        juce::ignoreUnused(err);
-        if (!s) {
-          DBG("BlokDust: " << err);
-          if (onSampleInfo)
-            onSampleInfo(sampleInfo(key));
-          return;
-        }
-        useSample(key, s, fresh,
-                  {{"trackName", s->ref.value("name", std::string{})},
-                   {"user", "Local file"},
-                   {"permalink", ""}});
-      });
+  // NOLINTNEXTLINE(bugprone-exception-escape): copying its strings throws only out of memory
+  loader_.loadFile(file, [this, key, fresh, gen](const std::shared_ptr<LoadedSample>& s,
+                                                 const std::string& err) {
+    if (loadGen_[key] != gen)
+      return;  // superseded by a newer choice
+    loading_.erase(key);
+    juce::ignoreUnused(err);
+    if (!s) {
+      DBG("BlokDust: " << err);
+      if (onSampleInfo)
+        onSampleInfo(sampleInfo(key));
+      return;
+    }
+    useSample(key, s, fresh,
+              {{"trackName", s->ref.value("name", std::string{})},
+               {"user", "Local file"},
+               {"permalink", ""}});
+  });
 }
 
 void BlokDustProcessor::loadFreesound(BlockId id, const nlohmann::json& ref,
@@ -947,7 +947,8 @@ void BlokDustProcessor::loadFreesoundKey(const std::string& key, const nlohmann:
     onSampleInfo(sampleInfo(key));
   loader_.loadUrl(
       ref["preview"].get<std::string>(), ref, rangeFor(b->value("type", std::string{}), maxSeconds),
-      [this, key, display, gen](std::shared_ptr<LoadedSample> s, const std::string& err) {
+      // NOLINTNEXTLINE(bugprone-exception-escape): copying its strings throws only out of memory
+      [this, key, display, gen](const std::shared_ptr<LoadedSample>& s, const std::string& err) {
         if (loadGen_[key] != gen)
           return;  // superseded by a newer choice
         loading_.erase(key);
@@ -961,8 +962,9 @@ void BlokDustProcessor::loadFreesoundKey(const std::string& key, const nlohmann:
       });
 }
 
-void BlokDustProcessor::useSample(const std::string& key, std::shared_ptr<LoadedSample> sample,
-                                  bool fresh, const nlohmann::json& display) {
+void BlokDustProcessor::useSample(const std::string& key,
+                                  const std::shared_ptr<LoadedSample>& sample, bool fresh,
+                                  const nlohmann::json& display) {
   auto* b = blockJson(key);
   if (!b)
     return;
@@ -1128,16 +1130,18 @@ void BlokDustProcessor::restoreSample(const std::string& key, const nlohmann::js
                               {"permalink", b["params"].value("permalink", std::string{})}};
     loading_.insert(key);
     const int gen = ++loadGen_[key];
-    loader_.loadUrl(ref.value("preview", std::string{}), ref, rangeFor(type, 0),
-                    [this, key, display, gen](std::shared_ptr<LoadedSample> s, const std::string&) {
-                      if (loadGen_[key] != gen)
-                        return;
-                      loading_.erase(key);
-                      if (s)
-                        useSample(key, s, false, display);
-                      else
-                        markMissing(key);
-                    });
+    loader_.loadUrl(
+        ref.value("preview", std::string{}), ref, rangeFor(type, 0),
+        // NOLINTNEXTLINE(bugprone-exception-escape): copying its strings throws only out of memory
+        [this, key, display, gen](const std::shared_ptr<LoadedSample>& s, const std::string&) {
+          if (loadGen_[key] != gen)
+            return;
+          loading_.erase(key);
+          if (s)
+            useSample(key, s, false, display);
+          else
+            markMissing(key);
+        });
   } else if (ref.value("provider", std::string{}) == "file") {
 #if JUCE_IOS
     const auto f = SampleLoader::relink(ref, patchfiles::root().getChildFile("Samples"));
@@ -1157,7 +1161,8 @@ void BlokDustProcessor::restoreSample(const std::string& key, const nlohmann::js
                               {"permalink", ""}};
     const int gen = ++loadGen_[key];
     loader_.loadFile(
-        f, [this, key, display, gen](std::shared_ptr<LoadedSample> s, const std::string&) {
+        // NOLINTNEXTLINE(bugprone-exception-escape): copying its strings throws only out of memory
+        f, [this, key, display, gen](const std::shared_ptr<LoadedSample>& s, const std::string&) {
           if (loadGen_[key] != gen)
             return;
           loading_.erase(key);
@@ -1230,7 +1235,7 @@ juce::File writeWav(const juce::File& dir, const juce::String& stem,
                     const std::vector<std::vector<float>>& ch, double sr) {
   if (ch.empty() || ch[0].empty())
     return {};
-  const auto file = dir.getNonexistentChildFile(
+  auto file = dir.getNonexistentChildFile(
       stem + " " + juce::Time::getCurrentTime().formatted("%Y-%m-%d %H-%M-%S"), ".wav", false);
   juce::AudioBuffer<float> buf(static_cast<int>(ch.size()), static_cast<int>(ch[0].size()));
   for (std::size_t c = 0; c < ch.size(); ++c)
@@ -1249,7 +1254,7 @@ juce::File writeWav(const juce::File& dir, const juce::String& stem,
 }  // namespace
 
 void BlokDustProcessor::captureRecording(const float* left, const float* right, int n) noexcept {
-  int s1, n1, s2, n2;
+  int s1 = 0, n1 = 0, s2 = 0, n2 = 0;
   recFifo_.prepareToWrite(n, s1, n1, s2, n2);
   if (n1 > 0) {
     recFifoBuf_.copyFrom(0, s1, left, n1);
@@ -1263,7 +1268,7 @@ void BlokDustProcessor::captureRecording(const float* left, const float* right, 
 }
 
 void BlokDustProcessor::drainRecording() {
-  int s1, n1, s2, n2;
+  int s1 = 0, n1 = 0, s2 = 0, n2 = 0;
   recFifo_.prepareToRead(recFifo_.getNumReady(), s1, n1, s2, n2);
   for (int c = 0; c < 2; ++c) {
     auto& v = recorded_[static_cast<std::size_t>(c)];

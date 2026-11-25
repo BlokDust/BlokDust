@@ -76,7 +76,7 @@ int unregisterWebViews(NSView* v) {
     [v unregisterDraggedTypes];
     ++n;
   }
-  for (NSView* s in [v subviews])
+  for (NSView* s in [v subviews])  // NOLINT(cppcoreguidelines-init-variables): fast enumeration
     n += unregisterWebViews(s);
   return n;
 }

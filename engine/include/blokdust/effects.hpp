@@ -107,6 +107,7 @@ class Biquad {
         const double c = t == Type::Bandpass ? std::max(0.0, f) : std::clamp(f, 0.0, 1.0);
         q = std::max(0.0, q);
         const double a = dmath::exp10(gainDb / 40.0);
+        // NOLINTNEXTLINE(readability-simplify-boolean-expr): written so NaN is caught too
         if (!(c > 0.0 && c < 1.0)) {
           if (t == Type::Bandpass)
             norm(0, 0, 0, 1, 0, 0);
@@ -242,7 +243,7 @@ class Lfo {
   double next(const WavetableBank& bank) noexcept BLOKDUST_NONBLOCKING {
     double p = pos_ - phase_;
     p -= std::floor(p);
-    double v;
+    double v = 0.0;
     if (wave_ == Waveform::Sine)
       v = dmath::sin(dmath::kTwoPi * p);
     else {

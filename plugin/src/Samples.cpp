@@ -65,27 +65,29 @@ void SampleLoader::loadFile(const juce::File& file, SampleResult done) {
 
 void SampleLoader::loadUrl(const std::string& url, nlohmann::json ref, std::int64_t maxBytes,
                            SampleResult done) {
-  pool_.addJob([this, url, sampleRef = std::move(ref), maxBytes, onDone = done]() mutable {
-    const auto opts =
-        juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
-            .withConnectionTimeoutMs(20000)
-            .withExtraHeaders(maxBytes > 0 ? "Range: bytes=0-" + juce::String(maxBytes)
-                                           : juce::String());
-    juce::MemoryBlock bytes;
-    std::string err;
-    if (auto in = juce::URL(juce::String(url)).createInputStream(opts))
-      in->readIntoMemoryBlock(bytes);
-    std::shared_ptr<LoadedSample> sample;
-    if (bytes.getSize() == 0)
-      err = "download failed";
-    else
-      sample = decode(std::make_unique<juce::MemoryInputStream>(bytes, true), err);
-    if (sample) {
-      sample->ref = sampleRef;
-      sample->track = "freesound:" + std::to_string(sampleRef.value("id", 0));
-    }
-    onMessageThread(std::move(onDone), sample, err);
-  });
+  pool_.addJob(
+      // NOLINTNEXTLINE(bugprone-exception-escape): copying its strings throws only out of memory
+      [this, url, sampleRef = std::move(ref), maxBytes, onDone = std::move(done)]() mutable {
+        const auto opts =
+            juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+                .withConnectionTimeoutMs(20000)
+                .withExtraHeaders(maxBytes > 0 ? "Range: bytes=0-" + juce::String(maxBytes)
+                                               : juce::String());
+        juce::MemoryBlock bytes;
+        std::string err;
+        if (auto in = juce::URL(juce::String(url)).createInputStream(opts))
+          in->readIntoMemoryBlock(bytes);
+        std::shared_ptr<LoadedSample> sample;
+        if (bytes.getSize() == 0)
+          err = "download failed";
+        else
+          sample = decode(std::make_unique<juce::MemoryInputStream>(bytes, true), err);
+        if (sample) {
+          sample->ref = sampleRef;
+          sample->track = "freesound:" + std::to_string(sampleRef.value("id", 0));
+        }
+        onMessageThread(std::move(onDone), sample, err);
+      });
 }
 
 nlohmann::json SampleLoader::fingerprint(const juce::File& file) {
@@ -144,7 +146,7 @@ void SampleLoader::copyIn(const juce::URL& url, const juce::File& dir,
 }
 
 juce::File SampleLoader::relink(const nlohmann::json& ref, const juce::File& samplesDir) {
-  const juce::File last(juce::String(ref.value("path", std::string{})));
+  juce::File last(juce::String(ref.value("path", std::string{})));
   if (last.existsAsFile())
     return last;
   const auto name = juce::String(ref.value("name", std::string{}));

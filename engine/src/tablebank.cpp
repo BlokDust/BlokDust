@@ -23,7 +23,7 @@ const std::vector<cplx>& twiddles() {
 }
 constexpr int kH = TableBank::kMaxPartials;
 
-enum : int { kBell, kChime, kGlass, kGong, kVoice, kSweep, kSync, kFold, kPwm };
+enum : std::uint8_t { kBell, kChime, kGlass, kGong, kVoice, kSweep, kSync, kFold, kPwm };
 constexpr std::array<const char*, TableBank::kTables> kNames = {
     "BELL", "CHIME", "GLASS", "GONG", "VOICE", "SWEEP", "SYNC", "FOLD", "PULSE"};
 // Note cycles per table cycle: the inharmonic tables put their partials at h / period of the note.

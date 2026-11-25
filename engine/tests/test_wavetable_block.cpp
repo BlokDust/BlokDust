@@ -87,6 +87,7 @@ TEST_CASE(
     "SPEC-AUDIO-WAVETABLE R2: the bands read for a pitch never hold a harmonic above Nyquist") {
   for (int sr : {44100, 48000, 96000, 192000}) {
     const TableBank bank(sr);
+    // NOLINTNEXTLINE(bugprone-float-loop-counter,cert-flp30-c): a geometric sweep
     for (double hz = 0.5; hz < sr / 2.0; hz *= 1.03) {
       const auto bd = bank.bands(hz);
       const int top = TableBank::kMaxPartials >> bd.k,

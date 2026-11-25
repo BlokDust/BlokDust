@@ -152,8 +152,8 @@ TEST_CASE(
   for (int i = 0; i < 3; ++i) {
     const auto l = eventsOf(*engine, Event::Type::Logic, static_cast<BlockId>(10 + i));
     const auto g = eventsOf(*engine, Event::Type::GateOn, static_cast<BlockId>(20 + i));
-    REQUIRE(l.size() >= 1);
-    REQUIRE(g.size() >= 1);
+    REQUIRE(!l.empty());
+    REQUIRE(!g.empty());
     hit[i] = l[0].tick;
     on[i] = g[0].tick;
   }

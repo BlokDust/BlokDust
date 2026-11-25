@@ -89,7 +89,7 @@ TEST_CASE("R10: lasers power emitters and other lasers") {
   engine->push(Command::add(2, BlockType::PowerEmitter, 0,
                             0));  // not self-powered: runs only while the beam hits it
   render(*engine, 48000 * 2);
-  CHECK(eventsOf(*engine, Event::Type::Emit, 2).size() >= 1);
+  CHECK(!eventsOf(*engine, Event::Type::Emit, 2).empty());
 
   auto chain = makeEngine();
   addLaser(*chain, 1, -10, 0, 0);

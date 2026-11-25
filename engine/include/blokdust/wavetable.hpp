@@ -8,6 +8,7 @@
 // and shared read-only by every oscillator. Deterministic: the inverse FFT uses dmath twiddles and
 // IEEE basic operations only.
 #include <complex>
+#include <cstdint>
 #include <span>
 #include <vector>
 
@@ -24,7 +25,7 @@ void inverseFft(std::vector<std::complex<double>>& a,
 std::vector<std::complex<double>> fftTwiddles(std::size_t maxSize);
 
 /// v1 App.Audio.WaveformTypeIndex: 0 sine, 1 square, 2 triangle, 3 sawtooth.
-enum class Waveform : int { Sine = 0, Square = 1, Triangle = 2, Saw = 3 };
+enum class Waveform : std::uint8_t { Sine = 0, Square = 1, Triangle = 2, Saw = 3 };
 
 class WavetableBank {
  public:

@@ -11,7 +11,8 @@ using namespace bdtest;
 
 namespace {
 /// Samples at which a synced, self-powered emitter fires over `seconds`.
-std::vector<std::int64_t> emissions(double division, std::vector<Command> extra, double seconds) {
+std::vector<std::int64_t> emissions(double division, const std::vector<Command>& extra,
+                                    double seconds) {
   auto engine = makeEngine(48000, 1, false);
   engine->push(Command::add(1, BlockType::PowerEmitter, 0, 0));
   engine->push(Command::setParam(1, P::PowerEmitter::selfPoweredMode, 1));
@@ -227,7 +228,8 @@ void tone(Engine& engine, BlockId id) {
 }
 /// A powered tone through a Stereo Delay; `setup` sets the delay's params, `later` is pushed after
 /// 0.5 s.
-std::vector<float> delayed(std::vector<Command> setup, std::vector<Command> later = {}) {
+std::vector<float> delayed(const std::vector<Command>& setup,
+                           const std::vector<Command>& later = {}) {
   auto engine = makeEngine();
   tone(*engine, 1);
   engine->push(Command::add(2, BlockType::PowerPower, -3, 0));

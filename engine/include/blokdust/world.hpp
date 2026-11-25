@@ -141,11 +141,11 @@ struct Block {
   // bend: a slide (semitones). rnd: the note Random Note picked for this key (−1: none yet;
   // CHG-0040).
   struct ArrKey {
-    std::int16_t key;
-    std::int16_t channel;
-    BlockId controller;
-    bool pitchOnly;
-    bool poly;
+    std::int16_t key = 0;
+    std::int16_t channel = 0;
+    BlockId controller = 0;
+    bool pitchOnly = false;
+    bool poly = false;
     double bend = 0.0;
     std::int16_t rnd = -1;
     Voicing voicing{};

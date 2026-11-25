@@ -14,6 +14,7 @@ inline constexpr int kTicksPerV1Frame = kTickRate / kV1FrameRate;
 inline constexpr double kV1UnitsPerGrid = 15.0;  // v1 drawing units per grid cell
 inline constexpr double kPulseSeconds = 0.15;    // v1 Config.PulseLength
 inline constexpr int kPulseTicks = 36;           // kPulseSeconds * kTickRate
+// NOLINTNEXTLINE(bugprone-incorrect-roundings): positive, at compile time (lround is not constexpr)
 static_assert(kPulseTicks == static_cast<int>(kPulseSeconds * kTickRate + 0.5));
 
 inline constexpr int kMaxBlocks = 512;

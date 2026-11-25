@@ -87,6 +87,7 @@ void Engine::runModulators() noexcept BLOKDUST_NONBLOCKING {
     std::uint8_t param;
     double sum;
   };
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init): scratch, filled before read
   std::array<Target, 64> targets;
   int n = 0;
   for (int k = 0; k < orderCount_; ++k) {
@@ -112,7 +113,7 @@ void Engine::runModulators() noexcept BLOKDUST_NONBLOCKING {
       continue;  // idle until its target is connected
     const Block& t = blocks_[static_cast<std::size_t>(ts)];
     const int param = static_cast<int>(std::lround(p[P::FxLfo::targetParam]));
-    double unused;
+    double unused = 0.0;
     if (param < 0 || param >= t.info().paramCount || param >= 32 ||
         !toSlider(t.info().params[param], 0.0, unused))
       continue;
@@ -405,8 +406,8 @@ int Engine::connections(std::uint32_t* pairs, int maxPairs) const noexcept BLOKD
   }
   std::sort(pairScratch_.begin(), pairScratch_.begin() + n,
             [](const PairAge& x, const PairAge& y) { return x.since < y.since; });
-  for (int k = 0; k < n; ++k) {
-    const auto& p = pairScratch_[static_cast<std::size_t>(k)];
+  for (std::size_t k = 0; k < static_cast<std::size_t>(n); ++k) {
+    const auto& p = pairScratch_[k];
     pairs[k * 2] = blocks_[p.a].id;
     pairs[k * 2 + 1] = blocks_[p.b].id;
   }

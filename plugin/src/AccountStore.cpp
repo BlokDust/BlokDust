@@ -25,7 +25,7 @@ bool validKey(const std::string& k) {
   if (k.size() < 24 || k.size() > 68 || k.rfind("bdk_", 0) != 0)
     return false;
   for (const char c : k)
-    if (!(std::isalnum(static_cast<unsigned char>(c)) || c == '_' || c == '-'))
+    if (!std::isalnum(static_cast<unsigned char>(c)) && c != '_' && c != '-')
       return false;
   return true;
 }
@@ -39,7 +39,7 @@ nlohmann::json read() {
     auto j = nlohmann::json::parse(f.loadFileAsString().toStdString());
     if (j.is_object() && validKey(j.value("key", std::string{})))
       return {{"key", j["key"]}, {"handle", j.value("handle", std::string{})}};
-  } catch (...) {
+  } catch (...) {  // NOLINT(bugprone-empty-catch): an unreadable file is no account
   }
   return nlohmann::json::object();
 }

@@ -39,7 +39,8 @@ bool are(const std::vector<double>& got, std::vector<double> want) {
 }
 /// A Tone (1) with a Computer Keyboard (2) beside it; `fx` blocks join the Tone's chain as ids 10,
 /// 11, ….
-std::unique_ptr<Engine> toneAndKeys(std::vector<BlockType> fx = {}, bool keysSetPitch = false) {
+std::unique_ptr<Engine> toneAndKeys(const std::vector<BlockType>& fx = {},
+                                    bool keysSetPitch = false) {
   auto engine = makeEngine(48000, 1, false);
   engine->push(Command::add(1, BlockType::SourceTone, 0, 0));
   engine->push(Command::add(2, KB, 0, -3));

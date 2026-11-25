@@ -1,13 +1,13 @@
 {
-  "engine/include/blokdust/effects.hpp": 7800,
+  "engine/include/blokdust/effects.hpp": 7824,
   "engine/include/blokdust/engine.hpp": 6497,
   "engine/src/engine_commands.cpp": 5103,
   "engine/src/engine_render.cpp": 5436,
-  "engine/src/engine_tick.cpp": 5018,
+  "engine/src/engine_tick.cpp": 5065,
   "engine/tests/test_controllers.cpp": 5931,
-  "engine/tests/test_note_effects.cpp": 5398,
+  "engine/tests/test_note_effects.cpp": 5409,
   "plugin/src/PluginEditor.cpp": 8006,
-  "plugin/src/PluginProcessor.cpp": 13567,
-  "plugin/tests/host_render.cpp": 5156,
+  "plugin/src/PluginProcessor.cpp": 13631,
+  "plugin/tests/host_render.cpp": 5179,
   "tools/block-designer/page.html": 11923
 }

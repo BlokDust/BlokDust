@@ -138,7 +138,8 @@ TEST_CASE("MPE: pressure changes glide, no zipper crackle (owner, Logic)") {
     e.push(Command::setParam(2, P::SourceTone::waveform, 0));
     e.push(Command::noteOn(MIDI, 48, 0.0, -1, 1));
     for (int i = 0; i < 360; ++i)
-      e.push(Command::noteExpression(MIDI, 48, 1, X::Pressure, i % 2 ? 0.0 : 1.0, i * 64));
+      e.push(Command::noteExpression(MIDI, 48, 1, X::Pressure, i % 2 ? 0.0 : 1.0,
+                                     std::int64_t{i} * 64));
   });
   CHECK(roughness(stepped) < 1.3 * roughness(steady));
 }

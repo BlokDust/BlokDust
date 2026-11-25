@@ -131,6 +131,7 @@ TEST_CASE(
   const auto r = ch.chains[0];
   REQUIRE(r.count == 4);
   std::vector<BlockId> ids;
+  ids.reserve(static_cast<std::size_t>(r.count));
   for (int i = 0; i < r.count; ++i)
     ids.push_back(engine->blocks()[ch.members[r.start + i]].id);
   CHECK(ids == std::vector<BlockId>{1, 2, 3, 4});
@@ -161,6 +162,7 @@ std::vector<BlockId> chainOf(const Engine& engine, BlockId first) {
   for (int c = 0; c < ch.chainCount; ++c) {
     const auto r = ch.chains[c];
     std::vector<BlockId> ids;
+    ids.reserve(static_cast<std::size_t>(r.count));
     for (int i = 0; i < r.count; ++i)
       ids.push_back(engine.blocks()[ch.members[r.start + i]].id);
     if (!ids.empty() && ids[0] == first)

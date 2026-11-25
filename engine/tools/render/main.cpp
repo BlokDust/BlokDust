@@ -131,7 +131,7 @@ static bool readWav(const std::string& path, std::vector<float>& left, std::vect
             std::uint32_t w = u32(at);
             std::memcpy(&v, &w, 4);
           } else if (fmt == 1 && bits == 16)
-            v = static_cast<std::int16_t>(u16(at)) / 32768.0f;
+            v = static_cast<float>(static_cast<std::int16_t>(u16(at))) / 32768.0f;
           else
             return false;
           (c == 0 ? left : right)[i] = v;
@@ -143,6 +143,7 @@ static bool readWav(const std::string& path, std::vector<float>& left, std::vect
   return false;
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape): a command-line tool; an exception ends the run
 int main(int argc, char** argv) {
   if (argc < 2) {
     std::cerr << "usage: blokdust_render <fixture.json> [--wav out.wav] [--events out.jsonl] "

@@ -109,9 +109,9 @@ nlohmann::json list(const juce::File& dir) {
     try {
       const auto j = nlohmann::json::parse(f.loadFileAsString().toStdString());
       if (j.contains("meta") && j["meta"].is_object() &&
-          j["meta"].value("title", std::string{}).size())
+          !j["meta"].value("title", std::string{}).empty())
         name = juce::String(j["meta"]["title"].get<std::string>());
-    } catch (...) {
+    } catch (...) {  // NOLINT(bugprone-empty-catch): not a patch: the file name stays
     }
     out.push_back({{"name", name.toStdString()},
                    {"path", f.getFullPathName().toStdString()},

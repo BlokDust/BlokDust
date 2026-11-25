@@ -39,7 +39,7 @@ inline double reduce(double x, int& quadrant) noexcept {
 }  // namespace detail
 
 inline double sin(double x) noexcept {
-  int q;
+  int q = 0;
   const double r = detail::reduce(x, q);
   switch (q) {
     case 0:
@@ -53,7 +53,7 @@ inline double sin(double x) noexcept {
   }
 }
 inline double cos(double x) noexcept {
-  int q;
+  int q = 0;
   const double r = detail::reduce(x, q);
   switch (q) {
     case 0:

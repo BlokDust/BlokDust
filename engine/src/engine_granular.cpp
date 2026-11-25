@@ -90,7 +90,8 @@ int Engine::monitors(Monitor* out, int max) const noexcept BLOKDUST_NONBLOCKING 
       out[n++] = {block.id, {block.mon[0], block.mon[1], block.mon[2], block.mon[3]}};
     else if (block.type == BlockType::FxLfo)
       out[n++] = {block.id, {block.mon[0], block.mon[1], block.mon[2], 0.0f}};
-    else if (block.type == BlockType::PowerSoundLaser)
+    else if (block.type == BlockType::PowerSoundLaser || block.type == BlockType::FxRandomNote ||
+             block.type == BlockType::FxChord)
       out[n++] = {block.id, {block.mon[0], block.mon[1], 0.0f, 0.0f}};
     else if (block.type == BlockType::PowerChance)
       out[n++] = {block.id, {0.0f, block.counterFired ? 1.0f : 0.0f, 0.0f, 0.0f}};
@@ -100,8 +101,6 @@ int Engine::monitors(Monitor* out, int max) const noexcept BLOKDUST_NONBLOCKING 
           {static_cast<float>(block.counterStep), block.counterFired ? 1.0f : 0.0f, 0.0f, 0.0f}};
     else if (block.type == BlockType::PowerGate)
       out[n++] = {block.id, {gateOpen(block) ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f}};
-    else if (block.type == BlockType::FxRandomNote || block.type == BlockType::FxChord)
-      out[n++] = {block.id, {block.mon[0], block.mon[1], 0.0f, 0.0f}};
     else if (block.type == BlockType::PowerPrism)
       out[n++] = {block.id,
                   {static_cast<float>(block.params[P::PowerPrism::angle]), 0.0f, 0.0f, 0.0f}};

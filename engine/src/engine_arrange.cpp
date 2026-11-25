@@ -52,7 +52,8 @@ int pickRandom(Block& rn, int fallback) noexcept {
     if (w <= 0.0)
       continue;
     last = m;
-    if ((r -= w) < 0.0)
+    r -= w;
+    if (r < 0.0)
       return m;
   }
   return last;
@@ -251,7 +252,7 @@ void Engine::arrange(int slot, bool trigger, bool keyPress) noexcept BLOKDUST_NO
         }
         noteShown(ch, root + tuning);
         if (vc.count > 1) {  // a chord (not a lone note) is what the next one leads from
-          block.lastChordCount = vc.count;
+          block.lastChordCount = static_cast<std::uint8_t>(vc.count);  // 2..4
           for (int k = 0; k < vc.count; ++k)
             block.lastChord[static_cast<std::size_t>(k)] =
                 root + vc.off[static_cast<std::size_t>(k)];

@@ -166,8 +166,8 @@ TEST_CASE(
   const auto off = eventsOf(*engine, Event::Type::GateOff, 3);
   REQUIRE(hits.size() >= 2);
   CHECK(hits[1].tick - hits[0].tick == 10);
-  REQUIRE(on.size() >= 1);
-  REQUIRE(off.size() >= 1);
+  REQUIRE(!on.empty());
+  REQUIRE(!off.empty());
   CHECK(on[0].tick == hits[0].tick);
   CHECK(off[0].tick == hits[1].tick + kPulseTicks);  // one continuous gate across both pulses
   REQUIRE(on.size() >= 2);
@@ -213,7 +213,7 @@ TEST_CASE(
              cuts = eventsOf(*on, Event::Type::Logic, 3);
   REQUIRE(cuts.size() >= 2);
   CHECK(gateOns.size() == cuts.size() + 1);  // on at the start, then again after every cut
-  REQUIRE(gateOffs.size() >= 1);
+  REQUIRE(!gateOffs.empty());
   CHECK(gateOffs[0].tick == cuts[0].tick);  // the cut lets go at once ...
   CHECK(gateOns[1].tick - cuts[0].tick ==
         36);  // ... and power comes back after a hit's 0.15 s (36 ticks)
@@ -257,11 +257,11 @@ TEST_CASE(
   engine->push(Command::setParam(1, P::PowerEmitter::rate, 5));
   engine->push(Command::setParam(1, P::PowerEmitter::speed, 1));
   render(*engine, 24000);
-  REQUIRE(engine->particles().size() > 0);
+  REQUIRE(!engine->particles().empty());
   engine->push(Command::remove(1));
   render(*engine, 128);
-  CHECK(engine->particles().size() > 0);  // trashing an emitter leaves its particles flying (v1)
+  CHECK(!engine->particles().empty());  // trashing an emitter leaves its particles flying (v1)
   engine->push(Command::reset(kInvalidBlock));
   render(*engine, 128);
-  CHECK(engine->particles().size() == 0);
+  CHECK(engine->particles().empty());
 }

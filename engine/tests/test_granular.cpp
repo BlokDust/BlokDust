@@ -9,13 +9,15 @@
 using namespace bdtest;
 
 namespace {
+// NOLINTNEXTLINE(bugprone-throwing-static-initialization): test data; out of memory ends the run
 std::vector<float> ramp(48000 *
                         4);  // 4 s rising ramp: a grain's level shows where in the file it read
 struct Run {
   std::vector<float> out;
   std::uint64_t hash;
 };
-Run run(std::uint64_t seed, bool powered, std::vector<Command> extra = {}, double seconds = 3.0) {
+Run run(std::uint64_t seed, bool powered, const std::vector<Command>& extra = {},
+        double seconds = 3.0) {
   for (std::size_t i = 0; i < ramp.size(); ++i)
     ramp[i] = static_cast<float>(i) / static_cast<float>(ramp.size());
   auto engine = makeEngine(48000, seed, false);
