@@ -29,3 +29,8 @@ export interface TutorialText {
 export interface SceneSplash {
   splash: Splash | null;
 }
+
+/** SettingsPanel's private open tab (v1 SettingsPanel._OpenTab). */
+export interface SettingsOpenTab {
+  _OpenTab: number;
+}

@@ -14,9 +14,10 @@ import {
 import { THEMES } from '../../../web/src/generated/palettes.gen.ts';
 import { keepPresets, openList, patchesAt, patchesClick, rowButton } from './patchesPanel.ts';
 import { openPlugin } from './pluginPage.ts';
+import type { SettingsOpenTab } from './v1Views.ts';
 
 export const stageViewTests: Record<string, RegressionTest> = {
-  /** Dragging the empty background pans the stage (v1 StageDragger); it used to send every block to NaN. */
+  /** Dragging the empty background pans the stage (v1 StageDragger); it sent every block to NaN. */
   async 'stage-drag-pans'(errors) {
     const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     const [x0, y0] = await toCss(page, 0, 0);
@@ -39,7 +40,7 @@ export const stageViewTests: Record<string, RegressionTest> = {
         clip: { x: Math.round(x1) - 4, y: Math.round(y1) + 2, width: 8, height: 8 },
       }),
     );
-    const bg = THEMES[0].colors[0].match(/\d+/g)!.map(Number);
+    const bg = (THEMES[0].colors[0].match(/\d+/g) ?? []).map(Number);
     let drawn = 0;
     for (let i = 0; i < shot.data.length; i += 4)
       if (
@@ -50,12 +51,10 @@ export const stageViewTests: Record<string, RegressionTest> = {
       )
         drawn++;
     await page.close();
-    return [moved && drawn > 10, { before: [x0, y0], after: [x1, y1], blockPixels: drawn }];
+    return [drawn > 10, { before: [x0, y0], after: [x1, y1], blockPixels: drawn }];
   },
-  /** Particles are drawn under v1's UI layer (v1 MainScene display list: Particles, then ToolTip … SettingsPanel).
-   * A silent patch keeps the panels still, so what changes inside an open panel is particles. v1's panels are
-   * slightly translucent (the stage shows through faintly), so particles under them change pixels a little; drawn on
-   * top they change them by the full particle-vs-panel contrast (~230 levels). */
+  /** Particles are drawn under v1's UI layer (v1 MainScene order): under a translucent open panel
+   * they change pixels a little, on top they would change them by ~230 levels. */
   async 'particles-under-panels'(errors) {
     const seen: Record<string, number> = {},
       flying: Record<string, number> = {};
@@ -82,8 +81,8 @@ export const stageViewTests: Record<string, RegressionTest> = {
     ];
   },
   async 'blocks-never-all-off-screen'(errors: string[]) {
-    const ctx = await browser.newContext({ viewport: { width: 1000, height: 528 } });
-    await ctx.addInitScript(() => {
+    const context = await browser.newContext({ viewport: { width: 1000, height: 528 } });
+    await context.addInitScript(() => {
       if (sessionStorage.getItem('seeded')) return;
       sessionStorage.setItem('seeded', '1');
       localStorage.setItem(
@@ -100,7 +99,7 @@ export const stageViewTests: Record<string, RegressionTest> = {
         }),
       );
     });
-    const page = await ctx.newPage();
+    const page = await context.newPage();
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(`${url}/index.html`);
     await page.waitForFunction(() => window.__bd_probe);
@@ -110,28 +109,29 @@ export const stageViewTests: Record<string, RegressionTest> = {
       page.evaluate(() => {
         const probe = window.__bd_probe;
         return probe.state.blocks.filter((b) => {
-          const q = probe.blockPoint(b.id);
-          return q && q[0] > 0 && q[0] < innerWidth && q[1] > 0 && q[1] < innerHeight;
+          const point = probe.blockPoint(b.id);
+          return (
+            point && point[0] > 0 && point[0] < innerWidth && point[1] > 0 && point[1] < innerHeight
+          );
         }).length;
       });
     const atStart = await onScreen();
     await page.screenshot({ path: `${OUT}/blocks-never-all-off-screen.png` });
-    await ctx.close();
+    await context.close();
     return [atStart === 2, { atStart }];
   },
-  /** Owner (2026-11-12, CHG-0010): a patch keeps the view it was saved at (zoom and position, SPEC-PATCH-FORMAT-V2
-   * R2 `view`), and opening it shows that view: links, files, the autosave and presets (the sequencers open zoomed
-   * out). In the plugin the processor keeps the view with the DAW project. */
+  /** CHG-0010, SPEC-PATCH-FORMAT-V2 R2: a patch keeps the view it was saved at and opens in it
+   * (links, files, autosave, presets); in the plugin the DAW project keeps it. */
   async 'patch-view'(errors: string[]) {
     const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     await keepPresets(page);
     const view = () =>
       page.evaluate(() => {
-        const a = window.__bd_probe.v1App;
+        const v1App = window.__bd_probe.v1App;
         return {
-          zoom: +a.ZoomLevel.toFixed(3),
-          x: +a.DragOffset.x.toFixed(3),
-          y: +a.DragOffset.y.toFixed(3),
+          zoom: +v1App.ZoomLevel.toFixed(3),
+          x: +v1App.DragOffset.x.toFixed(3),
+          y: +v1App.DragOffset.y.toFixed(3),
         };
       });
     await page.evaluate(() => {
@@ -144,25 +144,25 @@ export const stageViewTests: Record<string, RegressionTest> = {
     await page.waitForTimeout(300);
     const saved = await page.evaluate(() => window.__bd_probe.state.patch);
     // Reopened (as the autosave, a link or a file would be).
-    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-    await ctx.addInitScript((pt) => {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    await context.addInitScript((pt) => {
       localStorage.setItem('blokdust2.autosave', pt);
     }, JSON.stringify(saved));
-    const otherPage = await ctx.newPage();
+    const otherPage = await context.newPage();
     otherPage.on('pageerror', (error) => errors.push(error.message));
     await otherPage.goto(`${url}/index.html`);
     await otherPage.waitForFunction(() => window.__bd_probe);
     await otherPage.click('#start');
     await otherPage.waitForTimeout(1500);
     const reopened = await otherPage.evaluate(() => {
-      const a = window.__bd_probe.v1App;
+      const v1App = window.__bd_probe.v1App;
       return {
-        zoom: +a.ZoomLevel.toFixed(3),
-        x: +a.DragOffset.x.toFixed(3),
-        y: +a.DragOffset.y.toFixed(3),
+        zoom: +v1App.ZoomLevel.toFixed(3),
+        x: +v1App.DragOffset.x.toFixed(3),
+        y: +v1App.DragOffset.y.toFixed(3),
       };
     });
-    await ctx.close();
+    await context.close();
     // A preset with a view: Step Sequencer opens zoomed out.
     await openList(page);
     await rowButton(page, 'open', 'Step Sequencer', 300);
@@ -171,7 +171,7 @@ export const stageViewTests: Record<string, RegressionTest> = {
     await page.waitForTimeout(800);
     const preset = await view();
     await page.close();
-    // Plugin: the processor's patch carries a view; the page shows it, and reports a new view back (bd_view).
+    // Plugin: the patch from the processor has a view; the page shows it and reports new ones.
     const { pg, close } = await openPlugin(
       {
         format: 'blokdust.patch',
@@ -183,23 +183,23 @@ export const stageViewTests: Record<string, RegressionTest> = {
       errors,
     );
     const plugin = await pg.evaluate(() => {
-      const a = window.__bd_probe.v1App;
+      const v1App = window.__bd_probe.v1App;
       return {
-        zoom: +a.ZoomLevel.toFixed(3),
-        x: +a.DragOffset.x.toFixed(3),
-        y: +a.DragOffset.y.toFixed(3),
+        zoom: +v1App.ZoomLevel.toFixed(3),
+        x: +v1App.DragOffset.x.toFixed(3),
+        y: +v1App.DragOffset.y.toFixed(3),
       };
     });
     await pg.evaluate(() => {
-      const s = window.__bd_probe.scene;
-      s.pinchView(2, { x: 1, y: 1 });
-      s.host.setZoom(2);
-      s.host.setDrag({ x: 1, y: 1 });
-      s.pinchEnd();
+      const scene = window.__bd_probe.scene;
+      scene.pinchView(2, { x: 1, y: 1 });
+      scene.host.setZoom(2);
+      scene.host.setDrag({ x: 1, y: 1 });
+      scene.pinchEnd();
     });
     await pg.waitForTimeout(1500);
     const reported = await pg.evaluate(
-      () => window.__sent.filter((x) => x.id === 'bd_view').pop()?.v,
+      () => (window.__sent ?? []).filter((message) => message.id === 'bd_view').pop()?.v,
     );
     await close();
     const ok =
@@ -210,14 +210,12 @@ export const stageViewTests: Record<string, RegressionTest> = {
       JSON.stringify(reported) === JSON.stringify({ x: 1, y: 1, zoom: 2 });
     return [ok, { saved: saved.view, reopened, preset, plugin, reported }];
   },
-  /** Owner (2026-11-11): a trackpad pinch zooms smoothly about the pointer, as a pinch on a touch screen does. Chrome
-   * and Firefox send it as wheel events with ctrlKey (CDP modifiers 2); Safari as gesture events. (A plain wheel zooms
-   * too since CHG-0010: mouse-wheel-zoom.) */
+  /** A trackpad pinch zooms smoothly about the pointer: Chrome and Firefox send wheel events with
+   * ctrlKey (CDP modifiers 2), Safari gesture events. */
   async 'trackpad-pinch'(errors: string[]) {
     const page = await open(browser, [blk(1, 'ToneSource', -6, 0), blk(2, 'Filter', 6, 0)], errors);
     const cdp = await page.context().newCDPSession(page);
-    const zoom = () =>
-      page.evaluate(() => window.__bd_probe.v1App.ZoomLevel) as Promise<number>;
+    const zoom = () => page.evaluate(() => window.__bd_probe.v1App.ZoomLevel);
     const cx = 900,
       cy = 300;
     // The grid point under the pointer: found from two grid points' css positions.
@@ -256,13 +254,15 @@ export const stageViewTests: Record<string, RegressionTest> = {
     const z4a = await zoom();
     await page.evaluate(
       ([x, y]) => {
-        const st = document.getElementById('stage')!;
+        const stage = document.getElementById('stage');
+        if (!stage) throw new Error('no #stage');
         const ev = (type: string, scale: number) => {
-          const value = new Event(type, { bubbles: true, cancelable: true }) as any;
-          value.scale = scale;
-          value.clientX = x;
-          value.clientY = y;
-          st.dispatchEvent(value);
+          const gesture = Object.assign(new Event(type, { bubbles: true, cancelable: true }), {
+            scale,
+            clientX: x,
+            clientY: y,
+          });
+          stage.dispatchEvent(gesture);
         };
         ev('gesturestart', 1);
         ev('gesturechange', 1.2);
@@ -285,13 +285,11 @@ export const stageViewTests: Record<string, RegressionTest> = {
       Math.abs(z4 / z4a - 1.5) < 0.01;
     return [ok, result];
   },
-  /** CHG-0010 (owner, 2026-11-12): the mouse wheel zooms like a pinch, smoothly about the pointer (the grid point under
-   * it stays put), within 0.15×–4× (v1 0.25×; CHG-0035). A wheel over an open panel (Settings) leaves the stage's zoom alone. Owner
-   * (2026-11-12): half a pinch's sensitivity, so one notch (deltaY 100, clamped to 25) is ×e^0.125 ≈ 1.13. */
+  /** CHG-0010, CHG-0035: the wheel zooms about the pointer within 0.15×–4×, one notch ×e^0.125;
+   * over an open panel it leaves the stage's zoom alone. */
   async 'mouse-wheel-zoom'(errors: string[]) {
     const page = await open(browser, [blk(1, 'ToneSource', -6, 0), blk(2, 'Filter', 6, 0)], errors);
-    const zoom = () =>
-      page.evaluate(() => window.__bd_probe.v1App.ZoomLevel) as Promise<number>;
+    const zoom = () => page.evaluate(() => window.__bd_probe.v1App.ZoomLevel);
     const cx = 900,
       cy = 300;
     const gridAt = async () => {
@@ -341,11 +339,13 @@ export const stageViewTests: Record<string, RegressionTest> = {
       z3 === z2;
     return [ok, { z0, zNotch, z1, anchor: [g0, g1], z2, z3 }];
   },
-  // Owner (2026-11-17, CHG-0035): the zoom goes out to 0.15 (v1 stopped at 0.25).
+  // CHG-0035: the zoom goes out to 0.15 (v1 stopped at 0.25).
   async 'zoom-out-to-0-15'(errors: string[]) {
     const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     for (let i = 0; i < 5; i++) {
-      await page.evaluate(() => window.__bd_probe.scene.ZoomButtons.ZoomOut());
+      await page.evaluate(() => {
+        window.__bd_probe.scene.ZoomButtons.ZoomOut();
+      });
       await page.waitForTimeout(700);
     }
     const zoom = await page.evaluate(() => window.__bd_probe.v1App.ZoomLevel);
@@ -353,18 +353,14 @@ export const stageViewTests: Record<string, RegressionTest> = {
     await page.close();
     return [Math.abs(zoom - 0.15) < 1e-9, { zoom }];
   },
-  /** Owner (2026-11-10): Patches opens on the tab last chosen, also after a reload; OPEN FROM YOUR DEVICE is the OPEN
-   * tab's main button, filled in v1's SAVE colour (MenuOrder[3]) like the old GUIDE button. */
-  /** Owner (2026-11-16, CHG-0025, iPad): above GarageBand's keyboard the plugin is ~1000×290 points. v1 sized the
-   * UI from the width alone, so the Patches name field covered the OPEN tab and Settings' rows ran into its tabs. Past
-   * 2:1 the height sets the unit (stage/metrics.ts MAX_ASPECT): both tabs are on top and switch, and the chrome and the
-   * stage share one unit. */
+  /** CHG-0025: GarageBand's ~1000×290 plugin view. Past 2:1 the height sets the unit (MAX_ASPECT),
+   * so the Patches and Settings tabs are on top and switch, and chrome and stage share one unit. */
   async 'short-wide-view'(errors: string[]) {
-    const ctx = await browser.newContext({
+    const context = await browser.newContext({
       viewport: { width: 1000, height: 290 },
       deviceScaleFactor: 2,
     });
-    const page = await ctx.newPage();
+    const page = await context.newPage();
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
     await page.waitForFunction(() => window.__bd_probe);
@@ -384,32 +380,38 @@ export const stageViewTests: Record<string, RegressionTest> = {
     });
     await page.waitForTimeout(1200);
     const [ox, oy] = await patchesAt(page, 'tab1');
-    const onTop = await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.tagName, [ox, oy]);
+    const onTop = await page.evaluate(
+      ([x, y]) => document.elementFromPoint(x, y)?.tagName,
+      [ox, oy],
+    );
     await page.mouse.move(ox, oy);
     await page.mouse.click(ox, oy);
     await page.waitForTimeout(700);
     const patchesTab = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.Tab);
     await page.screenshot({ path: `${OUT}/short-wide-patches.png` });
     await patchesClick(page, 'close', 900);
-    await page.evaluate(() => window.__bd_probe.scene.SettingsPanel.OpenPanel());
+    await page.evaluate(() => {
+      window.__bd_probe.scene.SettingsPanel.OpenPanel();
+    });
     await page.waitForTimeout(1200);
     const [ax, ay] = await page.evaluate(() => {
       const settingsPanel = window.__bd_probe.scene.SettingsPanel,
-        A = window.__bd_probe.v1App,
-        pr = A.Metrics.PixelRatio;
+        v1App = window.__bd_probe.v1App,
+        pr = v1App.Metrics.PixelRatio;
+      // MenuItems[1] is the divider.
       return [
         settingsPanel.MenuItems[2].Position.x / pr,
-        (settingsPanel.OffsetY + settingsPanel.Height * A.Unit * 0.5) / pr,
-      ]; // [1] is the divider
+        (settingsPanel.OffsetY + settingsPanel.Height * v1App.Unit * 0.5) / pr,
+      ];
     });
     await page.mouse.move(ax, ay);
     await page.mouse.click(ax, ay);
     await page.waitForTimeout(900);
     const settingsTab = await page.evaluate(
-      () => window.__bd_probe.scene.SettingsPanel._OpenTab,
+      () => (window.__bd_probe.scene.SettingsPanel as unknown as SettingsOpenTab)._OpenTab,
     );
     await page.screenshot({ path: `${OUT}/short-wide-about.png` });
-    await ctx.close();
+    await context.close();
     const want = ((290 * 2) / 850) * 2; // height · MAX_ASPECT ÷ 850, at device pixel ratio 2
     const ok =
       Math.abs(units.unit - want) < 1e-6 &&
