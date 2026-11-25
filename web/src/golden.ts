@@ -1,4 +1,5 @@
-// Test harness page: render a golden fixture through the real AudioWorklet + WASM path and hash the output.
+// Test harness page: render a golden fixture through the real AudioWorklet + WASM path and hash the
+// output.
 import { EngineNode } from './audio/engineNode.ts';
 import { hashAudio, hashStereo, hex } from './engine/wasmEngine.ts';
 import { loadPatch, type Patch, type ScriptOp } from './patch/loadPatch.ts';

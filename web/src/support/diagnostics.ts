@@ -5,7 +5,8 @@ import {
   type DiagnosticKind,
 } from '../../../shared/support.ts';
 
-/** UI-thread only; no engine timing, filesystem access, persistent logs or arbitrary object serialisation. */
+/** UI-thread only; no engine timing, filesystem access, persistent logs or arbitrary object
+ * serialisation. */
 export class Diagnostics {
   private events: Diagnostic[] = [];
   onError?: (event: Diagnostic) => void;
@@ -22,8 +23,11 @@ export class Diagnostics {
     window.addEventListener('error', (errorEvent) => {
       if (errorEvent instanceof ErrorEvent) this.add('error', errorEvent.message);
     });
-    window.addEventListener('unhandledrejection', (e) => {
-      this.add('unhandledrejection', e.reason instanceof Error ? e.reason.message : e.reason);
+    window.addEventListener('unhandledrejection', (event) => {
+      this.add(
+        'unhandledrejection',
+        event.reason instanceof Error ? event.reason.message : event.reason,
+      );
     });
     const original = console.error.bind(console);
     console.error = (...args: unknown[]) => {

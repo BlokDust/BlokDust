@@ -6,10 +6,8 @@ import { dpr } from './pointerState.ts';
 import { ZOOM_MAX, ZOOM_MIN } from '../model/view.ts';
 import { scene } from '../scene/scene.ts';
 
-// ---- multi-touch (CHG-0005 task 8, owner): the first finger is v1's one pointer (menus, panels, selecting, dragging
-// the stage). Each further finger takes what it lands on: a block (dragged by that finger, powered while held, as
-// v1's pressed block), or a slider of the open options panel. A second finger while the first drags the stage
-// turns it into a pinch: zoom about the fingers' midpoint, which stays put, and pan with it. ----
+// Multi-touch (CHG-0005 task 8): the first finger is v1's pointer; each further finger takes the
+// block or panel slider it lands on. A second finger on a stage drag makes a pinch (zoom and pan).
 export type Extra =
   | { kind: 'block'; id: number; grabX: number; grabY: number; from: XY }
   | { kind: 'slider'; index: number }
@@ -19,7 +17,8 @@ export type Extra =
 
 export let primaryId: number | null = null;
 
-/** What the first finger is doing; 'gone': it was in a pinch that ended, so it does nothing until it lifts. */
+/** What the first finger is doing; 'gone': it was in a pinch that ended, so it does nothing until
+ * it lifts. */
 export let primaryRole: 'ui' | 'block' | 'stage' | 'placing' | 'gone' | 'box' | 'select' | null =
   null;
 
@@ -44,8 +43,9 @@ export let pinch: {
 } | null = null;
 
 export function pinchState() {
-  const a = touchAt.get(pinch!.a)!,
-    b = touchAt.get(pinch!.b)!;
+  const a = pinch && touchAt.get(pinch.a),
+    b = pinch && touchAt.get(pinch.b);
+  if (!a || !b) throw new Error('no pinch in progress');
   return {
     mid: { x: ((a.x + b.x) / 2) * dpr(), y: ((a.y + b.y) / 2) * dpr() },
     dist: Math.hypot(a.x - b.x, a.y - b.y),
@@ -56,23 +56,23 @@ export function startPinch(a: number, b: number): void {
   scene.endStageDrag();
   pinch = { a, b, z0: stage.zoom, d0: 1, w: { x: 0, y: 0 } };
   const { mid, dist } = pinchState(),
-    m = stage.metrics;
+    metrics = stage.metrics;
   pinch.d0 = Math.max(dist, 1);
   // The stage point under the midpoint, in v1 units: (screen − centre) / (zoom · unit) − drag.
   pinch.w = {
-    x: (mid.x - m.width / 2) / (stage.zoom * m.unit) - stage.drag.x,
-    y: (mid.y - m.height / 2) / (stage.zoom * m.unit) - stage.drag.y,
+    x: (mid.x - metrics.width / 2) / (stage.zoom * metrics.unit) - stage.drag.x,
+    y: (mid.y - metrics.height / 2) / (stage.zoom * metrics.unit) - stage.drag.y,
   };
 }
 
 export function movePinch(): void {
   if (!pinch) return;
   const { mid, dist } = pinchState(),
-    m = stage.metrics;
+    metrics = stage.metrics;
   const zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, (pinch.z0 * dist) / pinch.d0));
   const drag = {
-    x: (mid.x - m.width / 2) / (zoom * m.unit) - pinch.w.x,
-    y: (mid.y - m.height / 2) / (zoom * m.unit) - pinch.w.y,
+    x: (mid.x - metrics.width / 2) / (zoom * metrics.unit) - pinch.w.x,
+    y: (mid.y - metrics.height / 2) / (zoom * metrics.unit) - pinch.w.y,
   };
   scene.pinchView(zoom, drag);
   stage.setView(zoom, drag);
@@ -88,8 +88,8 @@ export function endPinch(): void {
   scene.pinchEnd();
 }
 
-// Two fingers on a waveform in the options panel (owner, 2026-11-15; waveZoom.ts): they zoom and slide that
-// waveform, not the stage. The first finger's press may have moved a handle or the slider: that is put back.
+// Two fingers on a panel waveform zoom and slide it, not the stage (waveZoom.ts); whatever the
+// first finger's press moved (a handle, the slider) is put back.
 export let wavePinch: (WavePinch & { a: number; b: number }) | null = null;
 
 export let waveTouch: { row: number; undo: () => void } | null = null;

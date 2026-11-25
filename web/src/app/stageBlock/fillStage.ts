@@ -27,8 +27,8 @@ declare global {
   }
 }
 
-/** Can blocks `ids` go inside a Stage? All of them or none: not with a Stage among them (one level, SCOPE-0006), so
- * no block is left behind with its connections cut (owner, 2026-11-14). */
+/** Can blocks `ids` go inside a Stage? All of them or none: not with a Stage among them (one level,
+ * SCOPE-0006), so no block is left behind with its connections cut (owner, 2026-11-14). */
 export const canGoInside = (ids: Iterable<number>, except?: number) =>
   !inside && [...ids].every((id) => id === except || model.get(id)?.type !== 'source.stage');
 
@@ -42,8 +42,8 @@ export const audioOf = (ids: number[], uidOf: (b: ModelBlock) => string) =>
     }),
   );
 
-/** Selected blocks become what is inside a new Stage block at (x, y): they leave this stage and carry on in there,
- * with their audio. Not undoable. */
+/** Selected blocks become what is inside a new Stage block at (x, y): they leave this stage and
+ * carry on in there, with their audio. Not undoable. */
 export function wrapInStage(
   ids: number[],
   x: number,
@@ -52,7 +52,7 @@ export function wrapInStage(
 ): number | null {
   const picked = ids.filter((id) => model.has(id));
   if (!canGoInside(picked) || !picked.length) return null;
-  const bs = picked.map((id) => model.get(id)!),
+  const bs = picked.flatMap((id) => model.get(id) ?? []),
     uids = new Set(bs.map((b) => b.uid));
   const cx = Math.round(bs.reduce((a, b) => a + b.x, 0) / bs.length),
     cy = Math.round(bs.reduce((a, b) => a + b.y, 0) / bs.length);
@@ -67,7 +67,8 @@ export function wrapInStage(
     ),
   }));
   const audio = audioOf(picked, (b) => b.uid);
-  const going = takeLabels(labelIds, -cx, -cy); // selected labels go in too, where they were among the blocks
+  // selected labels go in too, where they were among the blocks
+  const going = takeLabels(labelIds, -cx, -cy);
   for (const id of picked) removeBlock(id);
   undoStack.length = 0;
   redoStack.length = 0;
@@ -85,8 +86,6 @@ export function wrapInStage(
   return addBlock('source.stage', x, y, {}, uid);
 }
 
-/** Blocks dropped onto Stage block `stageId` go inside it (owner, 2026-11-14), to the right of what is there, keeping
- * their layout and their connections. Its inner world starts again. Not undoable (as wrapping). */
 /** Labels `ids` leave this stage (for a Stage's inside), moved by (dx, dy). */
 export function takeLabels(ids: string[], dx: number, dy: number): Label[] {
   const going = labels.filter((label) => ids.includes(label.id));
@@ -117,29 +116,33 @@ export function deleteLabels(ids: Iterable<string>): void {
   labelsChanged();
 }
 
+/** Blocks dropped onto Stage block `stageId` go inside it, right of what is there, keeping their
+ * layout and connections. Its inner world starts again. Not undoable (as wrapping). */
 export function addToStage(stageId: number, ids: number[], labelIds: string[] = []): void {
-  const s = model.get(stageId);
+  const stageBlock = model.get(stageId);
   const picked = ids.filter((id) => id !== stageId && model.has(id));
-  if (!s || s.type !== 'source.stage' || !canGoInside(picked) || !picked.length) return;
-  const was = macros.get(s.uid) ?? { block: s.uid, blocks: [] };
-  const bs = picked.map((id) => model.get(id)!),
+  if (stageBlock?.type !== 'source.stage' || !canGoInside(picked) || !picked.length) return;
+  const was = macros.get(stageBlock.uid) ?? { block: stageBlock.uid, blocks: [] };
+  const bs = picked.flatMap((id) => model.get(id) ?? []),
     taken = new Set(was.blocks.map((b) => b.id)),
     rename = new Map<string, string>();
   for (const b of bs) {
-    let u = b.uid;
-    for (let k = 2; taken.has(u); k++) u = `${b.uid}_${k}`;
-    taken.add(u);
-    rename.set(b.uid, u);
+    let innerUid = b.uid;
+    for (let k = 2; taken.has(innerUid); k++) innerUid = `${b.uid}_${k}`;
+    taken.add(innerUid);
+    rename.set(b.uid, innerUid);
   }
-  const mean = (v: number[]) => Math.round(v.reduce((a, b) => a + b, 0) / v.length);
+  // Every picked block's uid is in `rename`.
+  const renamed = (outerUid: string) => rename.get(outerUid) ?? outerUid;
+  const mean = (values: number[]) => Math.round(values.reduce((a, b) => a + b, 0) / values.length);
   const minX = Math.min(...bs.map((b) => b.x)),
     maxX = Math.max(...bs.map((b) => b.x)),
     gy = mean(bs.map((b) => b.y));
   const there = was.blocks.map((b) => ({ x: b.x ?? 0, y: b.y ?? 0 }));
   const ox = there.length
-    ? Math.max(...there.map((p) => p.x)) + 4 - minX
+    ? Math.max(...there.map((point) => point.x)) + 4 - minX
     : -Math.round((minX + maxX) / 2);
-  const oy = there.length ? mean(there.map((p) => p.y)) - gy : -gy;
+  const oy = there.length ? mean(there.map((point) => point.y)) - gy : -gy;
   const moved = bs.map((b) => {
     const params = Object.fromEntries(
       Object.entries(structuredClone(b.params)).filter(([k]) => !SESSION_PARAMS.has(k)),
@@ -148,21 +151,21 @@ export function addToStage(stageId: number, ids: number[], labelIds: string[] = 
       const [key, k] = params.target.split(':');
       if (rename.has(key)) params.target = `${rename.get(key)}:${k}`;
     } // an LFO going in with its target
-    return { id: rename.get(b.uid)!, type: b.type, x: b.x + ox, y: b.y + oy, params };
+    return { id: renamed(b.uid), type: b.type, x: b.x + ox, y: b.y + oy, params };
   });
   const order = [
     ...(was.connectionOrder ?? []),
     ...connectionOrder
       .filter(([a, b]) => rename.has(a) && rename.has(b))
-      .map(([a, b]) => [rename.get(a)!, rename.get(b)!] as [string, string]),
+      .map(([a, b]) => [renamed(a), renamed(b)] as [string, string]),
   ];
   const audio = new Map([
-    ...(innerSamples.get(s.uid) ?? []),
-    ...audioOf(picked, (b) => rename.get(b.uid)!),
+    ...(innerSamples.get(stageBlock.uid) ?? []),
+    ...audioOf(picked, (b) => renamed(b.uid)),
   ]);
   const going = takeLabels(labelIds, ox, oy);
   for (const id of picked) removeBlock(id);
-  const { uid, x, y, params } = s;
+  const { uid, x, y, params } = stageBlock;
   scene.OptionsPanel.Close();
   removeBlock(stageId);
   macros.set(uid, {

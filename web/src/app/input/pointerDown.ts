@@ -44,9 +44,8 @@ import { exitStage, insideFrame } from '../stageBlock/lookInside.ts';
 export function init(): void {
   if (!embedId)
     app.canvas.addEventListener('pointerdown', (event) => {
-      // Only the main button works the stage (owner, 2026-11-19): a right-click's press began a pan that never ended
-      // (the menu it opened took the release), so moving to the menu dragged the stage away. Right-clicks have their own
-      // handler (contextmenu).
+      // Only the main button works the stage: a right-click's pan never ended (its menu took the
+      // release). Right-clicks have their own handler (contextmenu).
       if (event.pointerType === 'mouse' && event.button !== 0) return;
       app.canvas.setPointerCapture(event.pointerId);
       if (primaryId === null && cornerPress(event.offsetX * dpr(), event.offsetY * dpr())) {
@@ -77,19 +76,19 @@ export function init(): void {
         stage.redraw();
         return;
       }
-      // Inside a Stage (UI-0009): the × or a press outside its window (not on the header, a panel or the bottom
-      // controls) goes back out.
+      // Inside a Stage (UI-0009): the × or a press outside its window (not on the header, a panel
+      // or the bottom controls) goes back out.
       if (inside && !placing) {
-        const f = insideFrame(),
+        const frame = insideFrame(),
           x = event.offsetX * dpr(),
           y = event.offsetY * dpr(),
-          m = stage.metrics;
+          metrics = stage.metrics;
         if (
-          onClose(f, x, y) ||
-          (!inWindow(f, x, y) &&
+          onClose(frame, x, y) ||
+          (!inWindow(frame, x, y) &&
             !scene.uiAt(x, y) &&
-            y < m.height - 75 * m.unit &&
-            y > f.y - 24 * m.unit)
+            y < metrics.height - 75 * metrics.unit &&
+            y > frame.y - 24 * metrics.unit)
         ) {
           exitStage();
           setPrimaryId(event.pointerId);
@@ -97,7 +96,8 @@ export function init(): void {
           return; // this press does nothing more
         }
       }
-      // A label (CHG-0020): where no panel or block is in the way, a press on one takes the pointer until it lifts.
+      // A label (CHG-0020): where no panel or block is in the way, a press on one takes the pointer
+      // until it lifts.
       if (
         !placing &&
         !labelDrag &&
@@ -115,7 +115,8 @@ export function init(): void {
         if (label) {
           const [gx, gy] = stage.cssToGrid(event.offsetX, event.offsetY);
           scene.OptionsPanel.Close();
-          // Shift: add the label to the selection (and drag it with the rest at once) or take it out (owner, 2026-11-14).
+          // Shift: add the label to the selection (and drag it with the rest at once) or take it
+          // out (owner, 2026-11-14).
           if (event.shiftKey && selectedLabels.has(label.id)) {
             selectedLabels.delete(label.id);
             setPrimaryId(event.pointerId);
@@ -126,7 +127,8 @@ export function init(): void {
             return;
           }
           if (event.shiftKey) selectedLabels.add(label.id);
-          else if (!selectedLabels.has(label.id) && selectionSize()) setSelection([]); // another label: the selection is let go
+          // another label: the selection is let go
+          else if (!selectedLabels.has(label.id) && selectionSize()) setSelection([]);
           const group =
             selectedLabels.has(label.id) && selectionSize() > 1
               ? new Map(
@@ -141,7 +143,7 @@ export function init(): void {
             pointer: event.pointerId,
             grabX: gx - label.x,
             grabY: gy - label.y,
-            moved: !!event.shiftKey,
+            moved: event.shiftKey,
             fresh: false,
             downX: event.offsetX,
             downY: event.offsetY,
@@ -163,10 +165,11 @@ export function init(): void {
       setPrimaryRole(null);
       setLastPointerType(event.pointerType);
       setLastPointer((([x, y]) => ({ x, y }))(stage.cssToGrid(event.offsetX, event.offsetY)));
-      App.PointerInputManager.TouchAssumed = event.pointerType === 'touch'; // v1: which tour (keys or touch) to give
+      // v1: which tour (keys or touch) to give
+      App.PointerInputManager.TouchAssumed = event.pointerType === 'touch';
       if (placing) {
-        // Placing inserted blocks: a click puts them down; a finger drags them (from wherever it lands) and lifting it
-        // puts them down. Nothing else takes this press.
+        // Placing inserted blocks: a click puts them down; a finger drags them (from wherever it
+        // lands) and lifting it puts them down. Nothing else takes this press.
         if (!placing.touch && event.pointerType === 'mouse') {
           endPlacing(false);
           setSwallowUp(true);
@@ -184,7 +187,8 @@ export function init(): void {
       setPointerIsDown(true);
       const pressedAt = setDownAt({ x: event.offsetX, y: event.offsetY });
       if (event.shiftKey && !scene.uiAt(event.offsetX * dpr(), event.offsetY * dpr())) {
-        // Shift: add or remove a block (a block just added can be dragged straight away, with the others), or draw a box.
+        // Shift: add or remove a block (a block just added can be dragged straight away, with the
+        // others), or draw a box.
         const hit = stage.hitTest(event.offsetX, event.offsetY);
         scene.OptionsPanel.Close();
         if (hit && selection.has(hit.id)) {
@@ -228,8 +232,9 @@ export function init(): void {
         }
       }
       setPrimaryRole(tookUi ? 'ui' : drag ? 'block' : 'stage');
-      if (drag && !selection.has(drag.id) && selection.size) setSelection([]); // another block: back to v1's one
-      if (grouped()) for (const id of selection) if (id !== drag!.id) stage.held.add(id);
+      // another block: back to v1's one
+      if (drag && !selection.has(drag.id) && selection.size) setSelection([]);
+      if (drag && grouped()) for (const id of selection) if (id !== drag.id) stage.held.add(id);
       // A finger held still on the stage starts a box instead of moving the stage.
       if (primaryRole === 'stage' && event.pointerType === 'touch') {
         const id = event.pointerId,

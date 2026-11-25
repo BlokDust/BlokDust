@@ -1,5 +1,5 @@
-// Sharing backend client (CHG-0003, SPEC-SHARING-BACKEND): v1's SAVE / SAVE_AS against the Worker API.
-// v1 kept a composition's SessionId (the right to overwrite it) in localStorage; v2 keeps the edit token the same way.
+// Sharing backend client (CHG-0003, SPEC-SHARING-BACKEND): v1's SAVE / SAVE_AS against the Worker.
+// As v1 kept a SessionId (the right to overwrite) in localStorage, v2 keeps the edit token there.
 import { apiUrl } from './site.ts';
 import type { Patch } from './loadPatch.ts';
 import { activity } from '../account/activity.ts';
@@ -13,10 +13,12 @@ export interface ServerConfig {
   turnstileSiteKey: string;
   saving: boolean;
   freesound: boolean;
-  /** SPEC-SHARING-ACCOUNTS R16: the page-close activity request is on (off: saves still carry it). */ activityBeacon?: boolean;
+  /** SPEC-SHARING-ACCOUNTS R16: the page-close activity request is on (off: saves carry it). */
+  activityBeacon?: boolean;
 }
 let configPromise: Promise<ServerConfig | null> | null = null;
-/** null when there is no backend (static hosting, the plugin, the Tailscale review build): sharing falls back to URLs. */
+/** null when there is no backend (static hosting, the plugin, the Tailscale review build): sharing
+ * falls back to URLs. */
 export function serverConfig(): Promise<ServerConfig | null> {
   configPromise ??= fetch(api('config'), { cache: 'no-store' })
     .then((response) =>
@@ -29,9 +31,10 @@ export function serverConfig(): Promise<ServerConfig | null> {
 }
 
 /** Server share ids (never start with "p": Phase 1 `?c=p…` links carry the patch itself). */
-export const isServerId = (c: string) => /^[0-9A-Za-oq-z][0-9A-Za-z]{9}$/.test(c);
+export const isServerId = (id: string) => /^[0-9A-Za-oq-z][0-9A-Za-z]{9}$/.test(id);
 
-/** Whether a save left the patch in the gallery, and why not when it couldn't be (SPEC-SHARING-GALLERY R1). */
+/** Whether a save left the patch in the gallery, and why not when it couldn't be
+ * (SPEC-SHARING-GALLERY R1). */
 export interface GalleryState {
   published: boolean;
   reason?: string;
@@ -50,11 +53,16 @@ export interface LoadedPatch {
   parent: string | null;
   updated: number;
   patch: Patch;
-  /** The signed-in account owns it (SPEC-SHARING-ACCOUNTS R9). */ mine?: boolean;
-  /** Its account's handle. */ by?: string | null;
-  /** Roughly how often it was opened (SPEC-SHARING-GALLERY R14), and whether it is in the gallery. */ views?: number;
+  /** The signed-in account owns it (SPEC-SHARING-ACCOUNTS R9). */
+  mine?: boolean;
+  /** Its account's handle. */
+  by?: string | null;
+  /** Roughly how often it was opened (SPEC-SHARING-GALLERY R14), and whether it is in the
+   * gallery. */
+  views?: number;
   published?: boolean;
-  /** Its likes, and whether the signed-in user liked it. */ likes?: number;
+  /** Its likes, and whether the signed-in user liked it. */
+  likes?: number;
   liked?: boolean;
 }
 
@@ -67,7 +75,8 @@ function tokens(): Record<string, string> {
 }
 /** v1 App.SessionId: the edit token for this composition, if this browser created it. */
 export const editToken = (id: string | null): string | null => (id ? (tokens()[id] ?? null) : null);
-/** Patches the signed-in account owns (SPEC-SHARING-ACCOUNTS R9): saved over from any device, without a token. */
+/** Patches the signed-in account owns (SPEC-SHARING-ACCOUNTS R9): saved over from any device,
+ * without a token. */
 export const accountOwned = new Set<string>();
 /** This browser may save over `id`: it made it (edit token), or the signed-in account owns it. */
 export const canOverwrite = (id: string | null): boolean =>
@@ -85,30 +94,36 @@ function keepToken(id: string, token: string): void {
 
 // ---- Turnstile (invisible): one fresh token per save ----
 interface TurnstileApi {
-  render(el: HTMLElement, o: Record<string, unknown>): string;
+  render(el: HTMLElement, options: Record<string, unknown>): string;
   execute(id: string): void;
   reset(id: string): void;
   remove(id: string): void;
 }
+declare global {
+  interface Window {
+    /** Cloudflare Turnstile, once its script has loaded. */
+    turnstile?: TurnstileApi;
+  }
+}
 let turnstileLoad: Promise<TurnstileApi> | null = null;
 function loadTurnstile(): Promise<TurnstileApi> {
   turnstileLoad ??= new Promise((resolve, reject) => {
-    const w = window as unknown as { turnstile?: TurnstileApi };
-    if (w.turnstile) {
-      resolve(w.turnstile);
+    if (window.turnstile) {
+      resolve(window.turnstile);
       return;
     }
-    const hTMLScriptElement = document.createElement('script');
-    hTMLScriptElement.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-    hTMLScriptElement.async = true;
-    hTMLScriptElement.onload = () => {
-      w.turnstile ? resolve(w.turnstile) : reject(new Error('turnstile missing'));
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    script.async = true;
+    script.onload = () => {
+      if (window.turnstile) resolve(window.turnstile);
+      else reject(new Error('turnstile missing'));
     };
-    hTMLScriptElement.onerror = () => {
+    script.onerror = () => {
       turnstileLoad = null;
       reject(new Error('could not load the bot check'));
     };
-    document.head.appendChild(hTMLScriptElement);
+    document.head.appendChild(script);
   });
   return turnstileLoad;
 }
@@ -170,12 +185,11 @@ export interface SaveInput {
   patch: Patch;
   title: string;
   thumb: string | null;
-  /** In the gallery or not (undefined: leave it). */ gallery?: boolean;
+  /** In the gallery or not (undefined: leave it). */
+  gallery?: boolean;
 }
-/**
- * v1 SAVE (overwrite `id` when this browser holds its edit token) or SAVE_AS (a new id, `parent` = the patch it
- * came from). Returns null when the backend is unavailable, so the caller can fall back to a URL link.
- */
+/** v1 SAVE (overwrite `id` if this browser has its token) or SAVE_AS (new id, `parent`: the one it
+ * came from). Null when the backend is unavailable, so the caller can fall back to a URL link. */
 export async function save(
   mode: 'save' | 'saveAs',
   currentId: string | null,
@@ -183,15 +197,17 @@ export async function save(
 ): Promise<Saved | null> {
   const cfg = await serverConfig();
   if (!cfg?.saving) return null;
-  // A signed-in plugin saves with its key and no bot check (its page can't run Turnstile; SHARING-0011).
+  // A signed-in plugin saves with its key and no bot check (its page can't run Turnstile;
+  // SHARING-0011).
   const bot = () => (appKey() ? Promise.resolve(undefined) : turnstileToken(cfg.turnstileSiteKey));
   const turnstile = await bot();
   const token = editToken(currentId);
-  // R16 of accounts: the running totals go with the save (added when signed in; otherwise they keep waiting here).
+  // R16 of accounts: the running totals go with the save (added when signed in; otherwise they keep
+  // waiting here).
   const sending = activity.toSend(),
-    credit = <T extends { activity?: boolean }>(r: T) => {
-      if (r.activity && sending) activity.sent(sending);
-      return r;
+    credit = <T extends { activity?: boolean }>(reply: T) => {
+      if (reply.activity && sending) activity.sent(sending);
+      return reply;
     };
   input = { ...input, ...(sending ? { activity: sending } : {}) };
   if (mode === 'save' && currentId && canOverwrite(currentId)) {
@@ -210,23 +226,30 @@ export async function save(
         (error as { status?: number }).status !== 404
       )
         throw error;
-      // Not ours any more (token lost or patch deleted): save as new, as v1 did when it had no SessionId.
+      // Not ours any more (token lost or patch deleted): save as new, as v1 did when it had no
+      // SessionId.
     }
   }
   const fresh = mode === 'save' && currentId && canOverwrite(currentId) ? await bot() : turnstile;
-  const r = credit(
+  const saved = credit(
     await call<Saved & { editToken: string; activity?: boolean }>('POST', 'patches', {
       ...input,
       parent: currentId ?? undefined,
       turnstile: fresh,
     }),
   );
-  keepToken(r.id, r.editToken);
-  return { id: r.id, rev: r.rev, url: r.url, parent: r.parent, gallery: r.gallery };
+  keepToken(saved.id, saved.editToken);
+  return {
+    id: saved.id,
+    rev: saved.rev,
+    url: saved.url,
+    parent: saved.parent,
+    gallery: saved.gallery,
+  };
 }
 
-/** Why a link opened no patch (owner, 2026-11-18): deleted by its creator, never a patch (or a malformed link), or the
- * server couldn't be reached. Shown in the message bar. */
+/** Why a link opened no patch (owner, 2026-11-18): deleted by its creator, never a patch (or a
+ * malformed link), or the server couldn't be reached. Shown in the message bar. */
 export type Missing = 'deleted' | 'unknown' | 'offline';
 export const MISSING_TEXT: Record<Missing, string> = {
   deleted: 'This patch has been deleted.',
@@ -244,8 +267,8 @@ export async function loadOrWhy(id: string): Promise<LoadedPatch | { missing: Mi
     return { missing: status === 410 ? 'deleted' : status === 404 ? 'unknown' : 'offline' };
   }
 }
-/** Delete one of the user's saved patches (the account owns it, or this browser holds its edit token): its link stops
- * opening it and it leaves the gallery (SPEC-SHARING-ACCOUNTS R8a). Already gone counts as done. */
+/** Delete a saved patch the account owns or this browser holds the token of: its link stops working
+ * and it leaves the gallery (SPEC-SHARING-ACCOUNTS R8a). Already gone counts as done. */
 export async function remove(id: string): Promise<void> {
   try {
     await call('DELETE', `patches/${id}`, undefined, editToken(id));
@@ -256,6 +279,6 @@ export async function remove(id: string): Promise<void> {
 }
 /** A shared patch by id (latest revision); null if it does not exist or there is no backend. */
 export async function load(id: string): Promise<LoadedPatch | null> {
-  const r = await loadOrWhy(id);
-  return 'missing' in r ? null : r;
+  const loaded = await loadOrWhy(id);
+  return 'missing' in loaded ? null : loaded;
 }

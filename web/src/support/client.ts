@@ -6,9 +6,8 @@ import {
 } from '../../../shared/support.ts';
 import { diagnostics } from './diagnostics.ts';
 
-declare const __BD_VERSION__: string;
-declare const __BD_BUILD__: string;
-declare const __BD_SUPPORT_URL__: string;
+/** Read each time: the connection can drop while a report is being sent. */
+const isOffline = () => !navigator.onLine;
 const CONSENT_KEY = 'blokdust2.automaticErrors';
 export interface SupportContext {
   patch(): unknown;
@@ -21,7 +20,8 @@ export class SupportClient {
   private automaticPending = false;
   private enabled = false;
   constructor(private context: SupportContext) {
-    // Connect's attachment switch is independent of automatic-error consent; never reinterpret the old preference.
+    // Connect's attachment switch is independent of automatic-error consent; never reinterpret the
+    // old preference.
     this.enabled = false;
     diagnostics.onError = (diagnostic) => {
       void this.automatic(diagnostic);
@@ -49,8 +49,8 @@ export class SupportClient {
       kind,
       message,
       email,
-      version: __BD_VERSION__,
-      build: __BD_BUILD__,
+      version: import.meta.env.BD_VERSION,
+      build: import.meta.env.BD_BUILD,
       includeContext,
       patch: includeContext ? supportPatch(this.context.patch()) : null,
       diagnostics: includeContext ? diagnostics.recent() : [],
@@ -69,9 +69,9 @@ export class SupportClient {
     };
   }
   async send(report: SupportReport, website = ''): Promise<string> {
-    if (!navigator.onLine)
+    if (isOffline())
       throw new Error('You need to be connected to the internet to send this support query.');
-    const configured = __BD_SUPPORT_URL__;
+    const configured = import.meta.env.BD_SUPPORT_URL;
     if (this.context.plugin && !configured)
       throw new Error('Support is not configured in this build.');
     const endpoint = this.context.plugin
@@ -104,10 +104,12 @@ export class SupportClient {
         throw new Error('Your support query couldn’t be sent. Please try again.');
       return result.id;
     } catch (error) {
-      if (!navigator.onLine)
-        throw new Error('You need to be connected to the internet to send this support query.');
+      if (isOffline())
+        throw new Error('You need to be connected to the internet to send this support query.', {
+          cause: error,
+        });
       if (error instanceof Error && error.message.startsWith('Too many reports')) throw error;
-      throw new Error('Your support query couldn’t be sent. Please try again.');
+      throw new Error('Your support query couldn’t be sent. Please try again.', { cause: error });
     } finally {
       clearTimeout(timeout);
     }

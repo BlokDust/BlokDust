@@ -18,7 +18,7 @@ declare global {
   }
 }
 
-// ---- fx.convolver: the built-in impulse response's waveform (v1 showed its loaded response) ----
+/** fx.convolver: the built-in impulse response's waveform (v1 showed its loaded response). */
 export async function showBuiltInImpulse(id: number): Promise<void> {
   const v1Block = v1Blocks.get(id);
   if (!v1Block || samples.has(id)) return;
@@ -32,10 +32,8 @@ export async function showBuiltInImpulse(id: number): Promise<void> {
   }
 }
 
-/**
- * Decoded audio for a sampler (Sample, Granular, Convolver) with its reference. `fresh`: a newly chosen sample (v1
- * LoadTrack / SetBuffers: region reset); otherwise a saved one being restored (its region params are kept).
- */
+/** Decoded audio for a sampler with its reference. `fresh`: newly chosen (v1 LoadTrack/SetBuffers:
+ * region reset); otherwise a saved one being restored (its region params are kept). */
 export async function useSample(
   id: number,
   ref: SampleRef,
@@ -80,9 +78,8 @@ export async function useSample(
   if (v1Block) Object.assign(v1Block.Params, meta);
   changed();
   if (b.type === 'source.granular' || b.type === 'fx.convolver') {
-    // Granular: the LOCATION slider draws the file and the grains play it. Convolver: the impulse response (v1 SetBuffer).
-    // v1 Granular: a new sound puts the spawn point half way (a saved one keeps its own); the LOCATION slider spans
-    // the file (v1 GetDuration of its first buffer), so the spawn and spread lines and dragging work.
+    // Granular: grains play it and LOCATION spans it (v1 GetDuration), a new sound spawning half
+    // way. Convolver: the impulse response (v1 SetBuffer).
     if (b.type === 'source.granular' && (fresh || typeof b.params.region !== 'number'))
       setParams(id, { region: buffer.duration * 0.5 });
     if (v1Block) {
@@ -90,13 +87,13 @@ export async function useSample(
       v1Block._WaveForm = new Waveform().GetWaveformFromBuffer(buffer, 200, 5, 95);
       v1Block.RefreshOptionsPanel();
     }
-    sendSample(id, buffer); // Granular plays it (CHG-0004 3.8); Convolver uses it as the impulse response
+    // Granular plays it (CHG-0004 3.8); Convolver uses it as the impulse response
+    sendSample(id, buffer);
     stage.redraw();
     return;
   }
-  // v1 Sample.SetBuffers: a new sample resets the region (start 0, end = length, loop from half way). It lives in
-  // the patch and goes to the engine, so playback loops exactly what the panel shows (owner review 2026-11-07, bug 1).
-  // A restored patch that never saved a region gets the same defaults.
+  // v1 Sample.SetBuffers: a new or never-saved region is the whole sample, looping from half way;
+  // the patch and the engine hold it, so playback loops exactly what the panel shows.
   const dur = buffer.duration;
   if (fresh)
     setParams(id, {
@@ -111,7 +108,8 @@ export async function useSample(
   if (v1Block) {
     v1Block.PrimaryBuffer = buffer;
     const wave = new Waveform().GetWaveformFromBuffer(buffer, 200, 5, 95); // v1 SamplerBase
-    v1Block.WaveForm = b.params.reverse ? wave.reverse() : wave; // v1 shows the reversed buffer's waveform
+    // v1 shows the reversed buffer's waveform
+    v1Block.WaveForm = b.params.reverse ? wave.reverse() : wave;
     v1Block.RefreshOptionsPanel();
   }
   sendSample(id, buffer);

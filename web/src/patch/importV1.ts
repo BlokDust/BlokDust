@@ -1,4 +1,5 @@
-// v1 composition (save file) → v2 patch + view (DATA-0004). Flattens v1's recursive Effects/Sources nesting.
+// v1 composition (save file) → v2 patch + view (DATA-0004). Flattens v1's recursive Effects/Sources
+// nesting.
 import { BLOCKS } from '../generated/blocks.gen.ts';
 import type { Patch, PatchBlock } from './loadPatch.ts';
 
@@ -29,7 +30,9 @@ const V1_ALIASES: Record<string, string> = {
   Delay: 'StereoDelay',
   Convolution: 'Convolver',
 };
-const byV1Type = new Map(BLOCKS.filter((b) => b.v1Type).map((b) => [b.v1Type!, b]));
+const byV1Type = new Map(
+  BLOCKS.flatMap((block) => (block.v1Type ? [[block.v1Type, block] as const] : [])),
+);
 
 export function importV1(comp: V1Composition): {
   patch: Patch;

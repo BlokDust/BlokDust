@@ -9,8 +9,8 @@ import { scene } from '../scene/scene.ts';
 // ---- v1 Recorder (RecorderPanel button): record the master output into the block ----
 export async function toggleRecording(id: number): Promise<void> {
   const v1Block = v1Blocks.get(id);
-  // Plugin: the processor records its own output and loads the take into the block (as a file the project keeps).
-  // v1 Recorder.StartRecording / StopRecording: a one-second line in the message bar each way.
+  // v1 Recorder.StartRecording / StopRecording: a one-second line in the message bar each way. (In
+  // the plugin the processor records its output and loads the take as a file the project keeps.)
   const say = (on: boolean) => {
     scene.message(on ? 'Started Recording' : 'Stopped Recording', { seconds: 1 });
   };

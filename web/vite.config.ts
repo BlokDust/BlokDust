@@ -4,7 +4,9 @@ import { execFileSync } from 'node:child_process';
 import { setting } from '../tools/lib/local-config.ts';
 import { resolve } from 'node:path';
 
-const pkg = JSON.parse(readFileSync(resolve(import.meta.dirname, '../package.json'), 'utf8'));
+const pkg = JSON.parse(readFileSync(resolve(import.meta.dirname, '../package.json'), 'utf8')) as {
+  version: string;
+};
 const sha = execFileSync('git', ['rev-parse', '--short=12', 'HEAD'], {
   cwd: import.meta.dirname,
   encoding: 'utf8',
@@ -17,7 +19,8 @@ const supportBase = setting(
   'BLOKDUST_SUPPORT_PUBLIC_URL',
   setting('BLOKDUST_PRODUCTION_PUBLIC_URL'),
 );
-// The plugins' server (site.ts, CHG-0039): BLOKDUST_PLUGIN_SITE_URL (review builds: staging), else the live site.
+// The plugins' server (site.ts, CHG-0039): BLOKDUST_PLUGIN_SITE_URL (review builds: staging), else
+// the live site.
 const pluginSiteSetting = setting(
   'BLOKDUST_PLUGIN_SITE_URL',
   setting('BLOKDUST_PRODUCTION_PUBLIC_URL'),
@@ -39,10 +42,12 @@ if (
 )
   throw new Error('Support URL must use HTTPS');
 
-// Relative base so the build works under any path (e.g. a placeholder workers.dev URL or /blokdust, SHARING-0004).
+// Relative base so the build works under any path (e.g. a placeholder workers.dev URL or /blokdust,
+// SHARING-0004).
 export default defineConfig({
   base: './',
-  // Every build carries the licences (CHG-0005 task 11): v1's MIT notice and the others (NOTICE.md), and the AGPL.
+  // Every build carries the licences (CHG-0005 task 11): v1's MIT notice and the others
+  // (NOTICE.md), and the AGPL.
   plugins: [
     {
       name: 'blokdust-notices',
@@ -62,12 +67,13 @@ export default defineConfig({
     },
   ],
   define: {
-    __BD_VERSION__: JSON.stringify(pkg.version),
-    __BD_BUILD__: JSON.stringify(sha + (dirty ? '-dirty' : '')),
-    __BD_SUPPORT_URL__: JSON.stringify(supportUrl),
-    __BD_PLUGIN_SITE__: JSON.stringify(pluginSite),
+    'import.meta.env.BD_VERSION': JSON.stringify(pkg.version),
+    'import.meta.env.BD_BUILD': JSON.stringify(sha + (dirty ? '-dirty' : '')),
+    'import.meta.env.BD_SUPPORT_URL': JSON.stringify(supportUrl),
+    'import.meta.env.BD_PLUGIN_SITE': JSON.stringify(pluginSite),
   },
-  // Review over Tailscale Serve (`tailscale serve --https=<port> http://127.0.0.1:<port>`): allow tailnet hostnames.
+  // Review over Tailscale Serve (`tailscale serve --https=<port> http://127.0.0.1:<port>`): allow
+  // tailnet hostnames.
   server: { allowedHosts: ['.ts.net'] },
   preview: { allowedHosts: ['.ts.net'] },
   build: {

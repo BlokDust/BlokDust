@@ -1,6 +1,5 @@
-// Usage analytics client (SHARING-0010, SPEC-SHARING-USAGE-ANALYTICS). Sends only the events in server/src/events.ts,
-// batched, to this page's Worker (POST api/events). Nothing is stored on the device except the user's own choice to
-// turn it off (R7); no cookies, no ids. The Worker decides the share of sessions that send anything (R5).
+// Usage analytics (SPEC-SHARING-USAGE-ANALYTICS): server/src/events.ts's events, batched
+// to POST api/events. No cookies or ids; only the user's opt-out (R7) is stored on the device.
 import {
   EVENTS,
   type EventBatch,
@@ -11,7 +10,8 @@ import { VERSION } from '../version.ts';
 
 const OPT_OUT_KEY = 'blokdust2.analytics';
 
-/** The user's choice (R7): what they chose here; otherwise off when their browser asks sites not to track (GPC). */
+/** The user's choice (R7): what they chose here; otherwise off when their browser asks sites not to
+ * track (GPC). */
 export function analyticsAllowed(): boolean {
   try {
     const item = localStorage.getItem(OPT_OUT_KEY);
@@ -51,19 +51,28 @@ class Client {
       this.flush(true);
     });
   }
-  track(e: EventName, s?: Record<string, string>, n?: Record<string, number>): void {
-    if (this.stopped || !(e in EVENTS)) return;
-    this.queue.push({ e, ...(s ? { s } : {}), ...(n ? { n } : {}) });
+  track(
+    event: EventName,
+    strings?: Record<string, string>,
+    numbers?: Record<string, number>,
+  ): void {
+    if (this.stopped || !(event in EVENTS)) return;
+    this.queue.push({
+      e: event,
+      ...(strings ? { s: strings } : {}),
+      ...(numbers ? { n: numbers } : {}),
+    });
     if (this.queue.length >= 20) this.flush(false);
     else
       this.timer ??= setTimeout(() => {
         this.flush(false);
       }, 60_000);
   }
-  /** Counted per key and sent as one event per key on flush (block_added by type): R2's low volume. */
-  count(e: EventName, key: string, by = 1): void {
+  /** Counted per key and sent as one event per key on flush (block_added by type): R2's low
+   * volume. */
+  count(event: EventName, key: string, by = 1): void {
     if (this.stopped) return;
-    const k = `${e}\u0000${key}`;
+    const k = `${event}\u0000${key}`;
     this.counts.set(k, (this.counts.get(k) ?? 0) + by);
     this.timer ??= setTimeout(() => {
       this.flush(false);
@@ -74,11 +83,13 @@ class Client {
     this.timer = undefined;
     if (this.stopped) return;
     for (const [k, value] of this.counts) {
-      const [e, key] = k.split('\u0000') as [EventName, string];
+      const [event, key] = k.split('\u0000') as [EventName, string];
       const prop = Object.keys(
-        EVENTS[e] && 'strings' in EVENTS[e] ? (EVENTS[e] as { strings: object }).strings : {},
+        Object.hasOwn(EVENTS, event) && 'strings' in EVENTS[event]
+          ? (EVENTS[event] as { strings: object }).strings
+          : {},
       )[0];
-      if (prop) this.queue.push({ e, s: { [prop]: key }, n: { count: value } });
+      if (prop) this.queue.push({ e: event, s: { [prop]: key }, n: { count: value } });
     }
     this.counts.clear();
     while (this.queue.length) {
@@ -89,10 +100,11 @@ class Client {
         events: this.queue.splice(0, 50),
       };
       const body = JSON.stringify(batch);
-      // Leaving: a beacon survives the page closing. Otherwise a normal request (keepalive in case it closes).
+      // Leaving: a beacon survives the page closing; else a request (keepalive in case it closes).
       if (
         leaving &&
-        navigator.sendBeacon?.(this.url, new Blob([body], { type: 'application/json' }))
+        'sendBeacon' in navigator &&
+        navigator.sendBeacon(this.url, new Blob([body], { type: 'application/json' }))
       )
         continue;
       void fetch(this.url, {
@@ -113,10 +125,8 @@ class Client {
 
 let client: Client | null = null;
 
-/**
- * Start for this page (R5): `rate` from the Worker (meta tag); a session sends events with that probability, each
- * standing for 1/rate sessions. Nothing at all when the rate is 0 (the kill switch) or the user said no.
- */
+/** Start for this page (R5): a session sends events with probability `rate` (from the Worker), each
+ * standing for 1/rate sessions. Nothing when the rate is 0 (kill switch) or the user said no. */
 export function startAnalytics(surface: Surface, rate: number, random = Math.random): boolean {
   if (!(rate > 0) || !analyticsAllowed() || random() >= rate) return false;
   client = new Client(
@@ -126,15 +136,19 @@ export function startAnalytics(surface: Surface, rate: number, random = Math.ran
   );
   return true;
 }
-/** The Worker's rate for this page (the `blokdust-analytics` meta tag); 0 without one (static hosting, the plugin). */
+/** The Worker's rate for this page (the `blokdust-analytics` meta tag); 0 without one (static
+ * hosting, the plugin). */
 export const pageRate = () =>
   Number(
     document.querySelector<HTMLMetaElement>('meta[name="blokdust-analytics"]')?.content ?? 0,
   ) || 0;
 
-export const track = (e: EventName, s?: Record<string, string>, n?: Record<string, number>) =>
-  client?.track(e, s, n);
-export const count = (e: EventName, key: string, by = 1) => client?.count(e, key, by);
+export const track = (
+  event: EventName,
+  strings?: Record<string, string>,
+  numbers?: Record<string, number>,
+) => client?.track(event, strings, numbers);
+export const count = (event: EventName, key: string, by = 1) => client?.count(event, key, by);
 export const flushAnalytics = (leaving = false) => client?.flush(leaving);
 export const analyticsActive = () => !!client;
 
@@ -142,8 +156,8 @@ export const analyticsActive = () => !!client;
 export function hostOf(url: string | undefined | null): string | undefined {
   if (!url) return undefined;
   try {
-    const h = new URL(url).hostname.toLowerCase().replace(/^www\./, '');
-    return h && h !== location.hostname ? h : undefined;
+    const host = new URL(url).hostname.toLowerCase().replace(/^www\./, '');
+    return host && host !== location.hostname ? host : undefined;
   } catch {
     return undefined;
   }

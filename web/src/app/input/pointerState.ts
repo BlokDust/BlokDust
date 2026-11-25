@@ -35,14 +35,16 @@ export const v1At = (cssX: number, cssY: number) => {
   return hit ? (v1Blocks.get(hit.id) ?? null) : null;
 };
 
-/** `fresh`: the block was just made (menu, Alt-copy): its add step covers where it is put, so no move step. */
+/** `fresh`: the block was just made (menu, Alt-copy): its add step covers where it is put, so no
+ * move step. */
 export function startDrag(id: number, grabX: number, grabY: number, fresh = false): void {
   drag = { id, grabX, grabY, moved: false, fresh };
   dragFrom = new Map([...model].map(([i, b]) => [i, { x: b.x, y: b.y }]));
   labelDragFrom = labelPlaces(selectedLabels);
   stage.pressed = id;
   stage.toFront(id);
-  send([{ type: CommandType.Press, id, value: 1 }]); // v1 Block.MouseDown: a held source powers itself
+  // v1 Block.MouseDown: a held source powers itself
+  send([{ type: CommandType.Press, id, value: 1 }]);
 }
 
 export function setPointerIsDown<Value extends typeof pointerIsDown>(value: Value): Value {

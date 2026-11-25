@@ -1,11 +1,9 @@
 // Audio comes back after iOS interrupts it.
 
-/** iOS interrupts the AudioContext when another app plays (a video, a podcast) and leaves it so when the page comes
- * back: the engine runs in it, so sound, connections and particles all stood still (owner, 2026-11-14). Coming back to
- * the page and every press resume it; a press also kicks a context that says it runs but has rendered nothing for a
- * while (suspend, then resume), which iOS sometimes leaves behind. Never the plugin (JUCE runs the engine). */
 export let lastSnapshot = 0;
 
+/** iOS leaves the AudioContext interrupted after another app plays (web only, not the plugin).
+ * Returning and every press resume it; a press also kicks (suspend, resume) a stuck context. */
 export function keepAwake(ctx: AudioContext): void {
   let kicking = false;
   const wake = (press: boolean) => {
@@ -36,9 +34,9 @@ export function keepAwake(ctx: AudioContext): void {
   ctx.addEventListener('statechange', () => {
     wake(false);
   });
-  for (const t of ['pointerdown', 'pointerup', 'touchend', 'keydown'] as const)
+  for (const eventType of ['pointerdown', 'pointerup', 'touchend', 'keydown'] as const)
     window.addEventListener(
-      t,
+      eventType,
       () => {
         wake(true);
       },

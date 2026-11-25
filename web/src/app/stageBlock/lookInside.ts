@@ -39,19 +39,26 @@ import { missing, resolveSample, samples } from '../samples/userSamples.ts';
 import { scene } from '../scene/scene.ts';
 import { setUiSync } from '../stage/overlays.ts';
 
-// ---- inside a Stage block (CHG-0021, UI-0009) ----
-/** Menu items not offered inside a Stage: Stage itself (one level, SCOPE-0006). Stage In is offered only there. */
+// Inside a Stage block (CHG-0021, UI-0009).
+
+/** Menu items not offered inside a Stage: Stage itself (one level, SCOPE-0006). Stage In is offered
+ * only there. */
 export const INSIDE_HIDDEN = new Set(['Stage']),
   OUTSIDE_HIDDEN = new Set(['StageIn']);
 
 export const insideFrame = () => {
-  const m = stage.metrics,
+  if (!inside) throw new Error('not inside a Stage block');
+  const metrics = stage.metrics,
     header = scene.Header as unknown as { Height: number; Rows?: number };
-  return frameFor(m.width, m.height, m.unit, header.Height * (header.Rows ?? 1) * m.unit, {
-    x: inside!.blockX,
-    y: inside!.blockY,
+  const headerBottom = header.Height * (header.Rows ?? 1) * metrics.unit;
+  return frameFor(metrics.width, metrics.height, metrics.unit, headerBottom, {
+    x: inside.blockX,
+    y: inside.blockY,
   });
 };
+
+/** What cancellableOpen (v1ui/scene.ts) adds to v1's Options panel. */
+const cancellableOptions = () => scene.OptionsPanel as unknown as { CancelOpen(): void };
 
 export function clearWorld(): void {
   for (const id of [...model.keys()]) {
@@ -67,13 +74,15 @@ export function clearWorld(): void {
   stage.held.clear();
 }
 
-/** Look into Stage block `id`: its inner world takes the page (in a window over the outer stage). The plugins too (CHG-0038). */
+/** Look into Stage block `id`: its inner world takes the page (in a window over the outer stage).
+ * The plugins too (CHG-0038). */
 export function enterStage(id: number): void {
   const b = model.get(id);
-  if (inside || embedId || !b || b.type !== 'source.stage') return;
+  if (inside || embedId || b?.type !== 'source.stage') return;
   endLabelEdit(true);
   endPlacing(false);
-  (scene.OptionsPanel as any).CancelOpen(); // a double click's first click set the panel on its way open: it stays shut
+  // a double click's first click set the panel on its way open: it stays shut
+  cancellableOptions().CancelOpen();
   scene.OptionsPanel.Close();
   const [bx, by] = gridToPx(stage.metrics, b.x, b.y),
     image = stage.snapshot();
@@ -120,13 +129,14 @@ export function enterStage(id: number): void {
   setConnectionOrder([...(macro.connectionOrder ?? [])]);
   addLabels(readLabels(macro.labels));
   viewWorld(id);
-  if (juce) juce.emitEvent('bd_samplesHello', {}); // the processor reports the inner samplers' sounds
-  const m = stage.metrics; // opening it shows its blocks (owner, 2026-11-14)
+  // the processor reports the inner samplers' sounds
+  if (juce) juce.emitEvent('bd_samplesHello', {});
+  const metrics = stage.metrics; // opening it shows its blocks
   applyView(
     frameBlocks([...model.values()], macro.view, {
-      width: m.width,
-      height: m.height,
-      unit: m.unit,
+      width: metrics.width,
+      height: metrics.height,
+      unit: metrics.unit,
       area: insideFrame(),
     }),
   );
@@ -136,7 +146,8 @@ export function enterStage(id: number): void {
   stage.redraw();
 }
 
-/** Back to the outer world. `keep`: what is inside is kept as the Stage's macro (not when the patch is being replaced). */
+/** Back to the outer world. `keep`: what is inside is kept as the Stage's macro (not when the patch
+ * is being replaced). */
 export function leaveStage(keep: boolean): void {
   const i = inside;
   if (!i) return;
@@ -162,8 +173,8 @@ export function leaveStage(keep: boolean): void {
   clearWorld();
   setInside(null);
   viewWorld(0);
-  const o = i.outer;
-  for (const [id, b] of o.model) {
+  const outer = i.outer;
+  for (const [id, b] of outer.model) {
     model.set(id, b);
     stage.upsertBlock({
       id,
@@ -173,17 +184,17 @@ export function leaveStage(keep: boolean): void {
       starPos: b.type === 'power.void' ? starPos(id) : undefined,
     });
   }
-  for (const [id, v1Block] of o.v1Blocks) v1Blocks.set(id, v1Block);
-  for (const [id, buffer] of o.samples) samples.set(id, buffer);
-  for (const id of o.missing) missing.add(id);
-  labels.push(...o.labels);
-  setConnectionOrder(o.connectionOrder);
-  setNextId(o.nextId);
+  for (const [id, v1Block] of outer.v1Blocks) v1Blocks.set(id, v1Block);
+  for (const [id, buffer] of outer.samples) samples.set(id, buffer);
+  for (const id of outer.missing) missing.add(id);
+  labels.push(...outer.labels);
+  setConnectionOrder(outer.connectionOrder);
+  setNextId(outer.nextId);
   undoStack.length = 0;
   redoStack.length = 0;
-  undoStack.push(...(o.undo as typeof undoStack));
-  redoStack.push(...(o.redo as typeof redoStack));
-  applyView(o.view);
+  undoStack.push(...(outer.undo as typeof undoStack));
+  redoStack.push(...(outer.redo as typeof redoStack));
+  applyView(outer.view);
   setMenuHidden(OUTSIDE_HIDDEN);
   scene.setBlocks([...v1Blocks.values()]);
   setUiSync(true);

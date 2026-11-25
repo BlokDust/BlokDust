@@ -14,11 +14,8 @@ declare global {
   }
 }
 
-// ---- multi-select (CHG-0005 task 9, owner): Shift+click adds or removes a block; Shift+drag on the stage (or, on a
-// touch screen, holding a finger still on the stage for a moment, then dragging) draws a box that selects the blocks
-// in it. Dragging a selected block moves them all; Alt+drag copies them all; dropping them on the trash, or
-// Delete/Backspace, deletes them; Cmd/Ctrl+D duplicates them, Cmd/Ctrl+A selects everything, Esc or a tap on the stage
-// clears it. v1 had one selected block (its options panel); that is unchanged. ----
+// Multi-select (CHG-0005 task 9): Shift+click toggles a block, Shift+drag (touch: hold, then drag)
+// boxes blocks; drag, Alt+drag, bin, Cmd/Ctrl+D act on them all. v1's one selected block stays.
 export let selection!: Set<number>;
 
 export let box: { x0: number; y0: number; x1: number; y1: number; add: boolean } | null = null;
@@ -71,7 +68,8 @@ export function finishBox(): void {
   showBox();
 }
 
-/** Copies of the selected blocks (same params and audio), offset by (dx, dy); returns the copies' ids by original. */
+/** Copies of the selected blocks (same params and audio), offset by (dx, dy); returns the copies'
+ * ids by original. */
 export function copyBlocks(ids: number[], dx: number, dy: number): Map<number, number> {
   const made = new Map<number, number>();
   for (const id of ids) {
@@ -80,8 +78,10 @@ export function copyBlocks(ids: number[], dx: number, dy: number): Map<number, n
     const copy = addBlock(b.type, b.x + dx, b.y + dy, structuredClone(b.params));
     if (b.type === 'source.stage' && macros.has(b.uid)) {
       // a copy of a Stage has a copy of what is inside
-      const uid = model.get(copy)!.uid;
-      macros.set(uid, { ...structuredClone(macros.get(b.uid)!), block: uid });
+      const uid = model.get(copy)?.uid;
+      const inner = macros.get(b.uid);
+      if (uid === undefined || !inner) continue;
+      macros.set(uid, { ...structuredClone(inner), block: uid });
       if (innerSamples.has(b.uid)) innerSamples.set(uid, new Map(innerSamples.get(b.uid)));
       buildStage(copy, uid);
     }

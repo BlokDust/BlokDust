@@ -33,18 +33,18 @@ export class EngineNode {
   static async create(ctx: BaseAudioContext, opts: EngineOptions = {}): Promise<EngineNode> {
     return EngineNode.build(ctx, await EngineNode.prepare(ctx), opts);
   }
-  /** The slow part, done once per context: load the worklet and compile the WASM. A suspended context (made before any
-   * click) can do this, so the web app prepares it while the start screen shows and START has nothing to wait for. */
+  /** The slow part, once per context: load the worklet, compile the WASM. Suspended contexts can
+   * do it, so the app prepares while the start screen shows and START has nothing to wait for. */
   static prepare(ctx: BaseAudioContext): Promise<WebAssembly.Module> {
-    let p = prepared.get(ctx);
-    if (!p)
+    let preparing = prepared.get(ctx);
+    if (!preparing)
       prepared.set(
         ctx,
-        (p = Promise.all([ctx.audioWorklet.addModule(processorUrl), engineModule()]).then(
+        (preparing = Promise.all([ctx.audioWorklet.addModule(processorUrl), engineModule()]).then(
           ([, value]) => value,
         )),
       );
-    return p;
+    return preparing;
   }
   /** The node, from a prepared context: synchronous and quick. */
   static build(
@@ -69,7 +69,8 @@ export class EngineNode {
     return new EngineNode(node);
   }
 
-  /** Look inside Stage block `stage` (CHG-0021): snapshots come from its inner world; 0: back to the outer one. */
+  /** Look inside Stage block `stage` (CHG-0021): snapshots come from its inner world; 0: back to
+   * the outer one. */
   setView(stage: number): void {
     this.node.port.postMessage({ type: 'view', stage } satisfies ToWorklet);
   }
@@ -92,7 +93,8 @@ export class EngineNode {
       [left.buffer, ...(right ? [right.buffer] : [])],
     );
   }
-  /** Live input for Microphone / Audio In blocks: ask for the microphone once and feed the worklet's input. */
+  /** Live input for Microphone / Audio In blocks: ask for the microphone once and feed the
+   * worklet's input. */
   private input: Promise<void> | null = null;
   private stream: MediaStream | null = null;
   private source: MediaStreamAudioSourceNode | null = null;
@@ -111,14 +113,14 @@ export class EngineNode {
         this.source = (this.node.context as AudioContext).createMediaStreamSource(stream);
         this.source.connect(this.node);
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         console.warn('microphone unavailable:', err);
         if (this.input === asked) this.input = null;
       }));
     return asked;
   }
-  /** No block listens any more (the last Microphone or Audio In is gone): stop the microphone, so the browser no
-   * longer shows it in use (owner, 2026-11-17, CHG-0035). Asked for again by the next one. */
+  /** No block listens any more: stop the microphone, so the browser no longer shows it in use
+   * (CHG-0035). The next Microphone or Audio In asks again. */
   disconnectMicrophone(): void {
     if (!this.input) return;
     this.input = null;
@@ -128,15 +130,13 @@ export class EngineNode {
     this.stream = null;
     setAudioSession('playback');
   }
-  /**
-   * Someone else's patch on the website (CHG-0041, owner 2026-11-19): its sound goes through a safety limit before the
-   * speakers: a slow compressor that turns sustained loudness down, then a limiter for sudden peaks. After the engine,
-   * so the patch's own sound (and every golden hash) is untouched. Off: straight to the speakers again.
-   */
+  /** Someone else's patch on the website (CHG-0041): a slow compressor then a peak limiter before
+   * the speakers, after the engine so its sound (and every golden hash) is untouched. */
   private guardNodes: AudioNode[] | null = null;
   setGuard(on: boolean): void {
     const ctx = this.node.context as AudioContext;
-    if (on === !!this.guardNodes) return;
+    const guard = this.guardNodes;
+    if (on === !!guard) return;
     if (on) {
       const loud = ctx.createDynamicsCompressor();
       loud.threshold.value = -24;
@@ -155,8 +155,8 @@ export class EngineNode {
       loud.connect(limit);
       limit.connect(ctx.destination);
       this.guardNodes = [loud, limit];
-    } else {
-      const [loud, limit] = this.guardNodes!;
+    } else if (guard) {
+      const [loud, limit] = guard;
       this.node.disconnect(loud);
       loud.disconnect();
       limit.disconnect();

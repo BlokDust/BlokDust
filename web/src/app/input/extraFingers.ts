@@ -50,14 +50,14 @@ export function extraDown(event: PointerEvent): void {
     return;
   } // not while the pads are played
   const first = primaryId !== null ? touchAt.get(primaryId) : undefined;
-  if (primaryRole === 'ui' && waveTouch && first) {
+  if (primaryRole === 'ui' && waveTouch && first && primaryId !== null) {
     const { row, undo } = waveTouch;
     setWaveTouch(null);
     undo();
     setPrimaryRole('gone');
     extras.set(event.pointerId, { kind: 'wavepinch' });
     setWavePinch({
-      a: primaryId!,
+      a: primaryId,
       b: event.pointerId,
       ...startWavePinch(
         scene.OptionsPanel,
@@ -83,7 +83,8 @@ export function extraDown(event: PointerEvent): void {
   }
   const hit = stage.hitTest(x, y);
   const taken = (id: number) =>
-    drag?.id === id || [...extras.values()].some((t) => t.kind === 'block' && t.id === id);
+    drag?.id === id ||
+    [...extras.values()].some((touch) => touch.kind === 'block' && touch.id === id);
   if (hit && !taken(hit.id) && !scene.uiAt(x * dpr(), y * dpr())) {
     const [gx, gy] = stage.cssToGrid(x, y);
     extras.set(event.pointerId, {

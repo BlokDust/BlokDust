@@ -1,6 +1,5 @@
-// On the website an Audio In block is the visitor's microphone, so it loads as a Microphone, which needs power (CHG-0041,
-// owner 2026-11-19: a patch made in the FX plugin played the microphone, unpowered, as loud feedback). The plugins keep
-// Audio In: there it is the DAW track and needs no power.
+// On the website Audio In loads as a Microphone, which needs power (CHG-0041: unpowered, an FX
+// patch played loud feedback). The plugins keep Audio In: the DAW track, needing no power.
 import type { Patch, PatchBlock } from './loadPatch.ts';
 
 const swap = (b: PatchBlock): PatchBlock =>

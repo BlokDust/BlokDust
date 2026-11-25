@@ -3,11 +3,8 @@ import { toPatch } from '../model/toPatch.ts';
 import { type Patch } from '../../patch/loadPatch.ts';
 import { embedId, juce } from '../boot/page.ts';
 
-/**
- * Web: the patches this browser saved (to a file or a link) are listed in OPEN above the presets (owner, 2026-11-10),
- * as the plugin lists its patches folder. One per title, newest first; kept in this browser only (localStorage, which
- * holds a few MB: patches are small, as audio is never in them, DATA-0005). The oldest go past MINE_MAX.
- */
+/** Web: what this browser saved (file or link), in OPEN above the presets; one per title, newest
+ * first, oldest dropped past MINE_MAX. localStorage suffices: patches hold no audio (DATA-0005). */
 export const MINE_KEY = 'blokdust.myPatches',
   MINE_MAX = 100;
 
@@ -21,8 +18,8 @@ export interface Mine {
 
 export function myPatches(): Mine[] {
   try {
-    const v = JSON.parse(localStorage.getItem(MINE_KEY) ?? '[]');
-    return Array.isArray(v) ? v : [];
+    const stored: unknown = JSON.parse(localStorage.getItem(MINE_KEY) ?? '[]');
+    return Array.isArray(stored) ? (stored as Mine[]) : [];
   } catch {
     return [];
   }

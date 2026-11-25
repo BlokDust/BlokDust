@@ -1,10 +1,10 @@
-// v1 stage geometry (app/Metrics.ts), in canvas backing-store (device) pixels.
-// unit = min(cssWidth, cssHeight · MAX_ASPECT) / 850 · dpr; grid cell = 15 units; zoom snaps to 0.15 | 0.25 | 0.5 | 1 | 2 | 4; C = canvas centre.
+// v1 stage geometry (app/Metrics.ts), in canvas backing-store (device) pixels. unit = min(cssWidth,
+// cssHeight · MAX_ASPECT) / 850 · dpr; grid cell = 15 units; C = canvas centre.
 export const ZOOM_SLOTS = [0.15, 0.25, 0.5, 1, 2, 4] as const; // 0.15: owner, 2026-11-17 (CHG-0035)
 export const SCREEN_DIVISION = 850;
 export const UNITS_PER_GRID = 15;
-/** Widest view shape (width ÷ height) sized from its width, as v1 did. Wider (a plugin above GarageBand's keyboard on
- * an iPad), the height sets the unit so panels and blocks fit (owner, 2026-11-16). The v1 chrome reads App.MaxAspect. */
+/** Widest view shape (width ÷ height) sized from its width, as v1 did; wider (a plugin over an
+ * iPad's keyboard), the height sets the unit so all fits. The v1 chrome reads App.MaxAspect. */
 export const MAX_ASPECT = 2;
 
 export interface MetricsInput {
@@ -42,7 +42,8 @@ export function computeMetrics(i: MetricsInput): Metrics {
     gridSize,
     scaledUnit: unit * i.zoom,
     scaledGridSize: gridSize * i.zoom,
-    // v1 PointOnGrid: C + ScaledDragOffset·Unit + p·ScaledGridSize, with ScaledDragOffset = DragOffset·Zoom
+    // v1 PointOnGrid: C + ScaledDragOffset·Unit + p·ScaledGridSize (ScaledDragOffset =
+    // DragOffset·Zoom)
     originX: width * 0.5 + i.drag.x * i.zoom * unit,
     originY: height * 0.5 + i.drag.y * i.zoom * unit,
   };

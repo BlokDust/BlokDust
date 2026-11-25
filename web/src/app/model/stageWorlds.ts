@@ -9,7 +9,8 @@ import { currentView } from './view.ts';
 export const macros = new Map<string, Macro>();
 /** The engine ids each Stage's inner blocks have in this session. */
 export const innerIds = new Map<string, { ids: Record<string, number>; nextId: number }>();
-/** Each Stage's samplers' audio, by patch id: sent when its world is built, shown when looked into. */
+/** Each Stage's samplers' audio, by patch id: sent when its world is built, shown when looked
+ * into. */
 export const innerSamples = new Map<string, Map<string, AudioBuffer>>();
 /** How often each Stage's inner world was built: audio for an older build is dropped. */
 export const stageBuilds = new Map<string, number>();
