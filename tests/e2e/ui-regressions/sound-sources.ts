@@ -14,7 +14,7 @@ import { sineWav } from './wav.ts';
 import type { V1BlockView } from './v1Views.ts';
 
 export const soundSourcesTests: Record<string, RegressionTest> = {
-  /** SampleGen makes its sound (v1 generator) and plays it while held; the patch keeps its recipe. */
+  /** SampleGen makes a sound (v1 SampleGen) and plays it while held; the patch keeps the recipe. */
   async 'samplegen-plays'(errors) {
     const page = await open(browser, [blk(1, 'SampleGen', 0, 0)], errors);
     const [x, y] = await toCss(page, 0, 0.5);
