@@ -60,3 +60,8 @@ export interface PatchesPanelInternals {
   backArrow(): { x: number; y: number };
   mainAction(): { kind: 'save' | 'video' | null; label: string; off: boolean };
 }
+
+/** The scene's private UPLOAD FILE button box (V1Scene.fileButtonRect). */
+export interface SceneFileButton {
+  fileButtonRect(): Box & { label: string };
+}

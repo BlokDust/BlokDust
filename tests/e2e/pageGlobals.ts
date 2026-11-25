@@ -45,6 +45,8 @@ export interface SupportDrawing {
 /** The options a page passed to the File System Access save picker. */
 export interface SavePickerOptions {
   suggestedName?: string;
+  startIn?: string;
+  id?: string;
   types?: { description?: string; accept: Record<string, string[]> }[];
 }
 
