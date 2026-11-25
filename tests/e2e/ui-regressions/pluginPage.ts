@@ -54,11 +54,9 @@ export async function openPlugin(
   const pg = await context.newPage();
   pg.on('pageerror', (error) => errors.push(error.message));
   await pg.goto(`${url}/index.html`);
-  await pg.waitForFunction(
-    () => (window as Partial<Window>).__bd_probe?.state.started,
-    null,
-    { timeout: 15000 },
-  );
+  await pg.waitForFunction(() => (window as Partial<Window>).__bd_probe?.state.started, null, {
+    timeout: 15000,
+  });
   await pg.waitForTimeout(1500);
   return { pg, close: () => context.close() };
 }
