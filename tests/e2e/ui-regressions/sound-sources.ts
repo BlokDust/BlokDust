@@ -1,4 +1,4 @@
-// ui-regressions: Generated and downloaded sounds: SampleGen, Granular, the convolver, Freesound, envelopes.
+// ui-regressions: made and downloaded sounds: SampleGen, Granular, Convolver, Freesound, Envelope.
 import {
   OUT,
   blk,
@@ -11,9 +11,10 @@ import {
   type RegressionTest,
 } from './harness.ts';
 import { sineWav } from './wav.ts';
+import type { V1BlockView } from './v1Views.ts';
 
 export const soundSourcesTests: Record<string, RegressionTest> = {
-  /** SampleGen generates its sound (v1's own generator) and plays it while held; the recipe is saved in the patch. */
+  /** SampleGen makes its sound (v1 generator) and plays it while held; the patch keeps its recipe. */
   async 'samplegen-plays'(errors) {
     const page = await open(browser, [blk(1, 'SampleGen', 0, 0)], errors);
     const [x, y] = await toCss(page, 0, 0.5);
@@ -21,14 +22,16 @@ export const soundSourcesTests: Record<string, RegressionTest> = {
     await page.mouse.down();
     const held = await maxOver(page, 'rms', 1000);
     await page.mouse.up();
-    const seed = (await state(page)).patch.blocks[0].params.seed;
+    const seed = (await state(page)).patch.blocks[0].params?.seed as
+      { waveVoices?: unknown } | undefined;
     await page.close();
+    const voices = Array.isArray(seed?.waveVoices) ? seed.waveVoices.length : undefined;
     return [
-      held > 0.002 && Array.isArray(seed?.waveVoices) && seed.waveVoices.length > 0,
-      { holdingSampleGen: held, savedVoices: seed?.waveVoices?.length },
+      held > 0.002 && voices !== undefined && voices > 0,
+      { holdingSampleGen: held, savedVoices: voices },
     ];
   },
-  /** Granular with a loaded file plays grains while held (KNOWN from Phase 1 until the grain engine, CHG-0004 3.8). */
+  /** Granular with a loaded file plays grains while held (CHG-0004). */
   async 'granular-plays'(errors) {
     const page = await open(browser, [blk(1, 'Granular', 0, 0)], errors);
     const id = (await state(page)).blocks[0].id;
@@ -44,37 +47,32 @@ export const soundSourcesTests: Record<string, RegressionTest> = {
     await page.close();
     return [held > 0.005, { holdingGranular: held }];
   },
-  /** 6. The Convolver only uses the first 2.5 s of an impulse response (engine kMaxImpulseSeconds), so it downloads
-   * only the start of a Freesound preview (an HTTP Range request), not the whole file. Audio goes to the browser only. */
+  /** The Convolver uses only 2.5 s of an impulse response (kMaxImpulseSeconds), so it downloads
+   * only the start of a Freesound preview (an HTTP Range request). */
   async 'convolver-downloads-only-what-it-uses'(errors: string[]) {
     cdn.seconds = 1;
     cdn.requests = [];
     const page = await open(browser, [blk(1, 'Convolver', 0, 0)], errors);
     const id = (await state(page)).blocks[0].id;
-    await page.evaluate(
-      (i) =>
-        window.__bd_probe.scene.host.loadFreesound(
-          i,
-          {
-            id: 42,
-            name: 'Big Hall IR',
-            username: 'someone',
-            license: 'CC0',
-            licenseUrl: '',
-            duration: 12,
-            preview: 'https://cdn.freesound.org/previews/0/42_1-hq.mp3',
-            url: 'https://freesound.org/s/42/',
-          },
-          { trackName: 'BIG HALL IR', user: 'Someone', permalink: '' },
-        ),
-      id,
-    );
+    await page.evaluate((i) => {
+      window.__bd_probe.scene.host.loadFreesound(
+        i,
+        {
+          id: 42,
+          name: 'Big Hall IR',
+          username: 'someone',
+          license: 'CC0',
+          licenseUrl: '',
+          duration: 12,
+          preview: 'https://cdn.freesound.org/previews/0/42_1-hq.mp3',
+          url: 'https://freesound.org/s/42/',
+        },
+        { trackName: 'BIG HALL IR', user: 'Someone', permalink: '' },
+      );
+    }, id);
     await page
       .waitForFunction(
-        () =>
-          window.__bd_probe.samples.some(
-            (x) => x.loaded && x.track === 'freesound:42',
-          ),
+        () => window.__bd_probe.samples.some((x) => x.loaded && x.track === 'freesound:42'),
         null,
         { timeout: 10000 },
       )
@@ -84,7 +82,7 @@ export const soundSourcesTests: Record<string, RegressionTest> = {
     const end = Number(req?.range?.match(/^bytes=0-(\d+)$/)?.[1] ?? NaN);
     return [Number.isFinite(end) && end < 200_000, { range: req?.range ?? 'none (whole file)' }];
   },
-  // Owner (2026-11-14): the Freesound results show each sound's length after its author ("By User · 1:05").
+  // The Freesound results show each sound's length after its author ("By User · 1:05").
   async 'freesound-results-show-length'(errors: string[]) {
     const page = await open(browser, [blk(1, 'Sample', 0, 0)], errors);
     const [x, y] = await toCss(page, 0, 0);
@@ -93,90 +91,98 @@ export const soundSourcesTests: Record<string, RegressionTest> = {
     await page.evaluate(() => {
       const scene = window.__bd_probe.scene,
         seen: string[] = (window.__texts = []);
-      const drawText = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (text: string, ...a: any[]) {
+      const proto = CanvasRenderingContext2D.prototype,
+        drawText = Object.getOwnPropertyDescriptor(proto, 'fillText')
+          ?.value as typeof proto.fillText;
+      proto.fillText = function (text: string, ...rest: [number, number, number?]) {
         seen.push(text);
-        return (drawText as any).call(this, text, ...a);
+        drawText.call(this, text, ...rest);
       };
       const sound = (id: number, name: string, username: string, duration: number) => ({
-        provider: 'freesound',
+        provider: 'freesound' as const,
         id,
         name,
         username,
         duration,
-        license: 'CC0',
+        license: 'CC0' as const,
         licenseUrl: 'http://creativecommons.org/publicdomain/zero/1.0/',
         preview: `https://cdn.freesound.org/previews/${id}.mp3`,
         url: `https://freesound.org/s/${id}/`,
       });
       scene.host.searchSamples = () =>
         Promise.resolve([sound(1, 'Short hit', 'alice', 0.4), sound(2, 'Long pad', 'bob', 65.2)]);
-      scene.OptionsPanel.SelectedBlock.SearchString = 'pad';
+      (scene.OptionsPanel.SelectedBlock as V1BlockView).SearchString = 'pad';
       scene.SoundcloudPanel.OpenPanel();
       scene.SoundcloudPanel.Submit();
     });
     await page.waitForTimeout(1500);
     const result = await page.evaluate(() => ({
       open: window.__bd_probe.scene.SoundcloudPanel.Open,
-      texts: [...new Set((window.__texts as string[]).filter((t) => t.startsWith('By ')))],
+      texts: [...new Set((window.__texts ?? []).filter((text) => text.startsWith('By ')))],
     }));
     await page.screenshot({ path: `${OUT}/freesound-results-show-length.png` });
     await page.close();
-    return [result.open && result.texts.includes('By Alice · 0:01') && result.texts.includes('By Bob · 1:05'), result];
+    return [
+      result.open &&
+        result.texts.includes('By Alice · 0:01') &&
+        result.texts.includes('By Bob · 1:05'),
+      result,
+    ];
   },
-  // Owner (2026-11-17, CHG-0035): SampleGen's GENERATE WAVE rolled a new random wave; a SOUND slider picks one by
-  // number instead, and a number is always the same wave.
+  // CHG-0035: SampleGen's SOUND slider picks a wave by number (GENERATE WAVE rolled a random one),
+  // and a number is always the same wave.
   async 'sample-gen-sound-slider'(errors: string[]) {
     const page = await open(browser, [blk(1, 'SampleGen', 0, 0)], errors);
     const [x, y] = await toCss(page, 0, 0);
     await page.mouse.click(x + 8, y + 8);
     await page.waitForTimeout(1200);
     const form = await page.evaluate(() =>
-      (window.__bd_probe.scene.OptionsPanel.Options as any[]).map((o) => o.Setting),
+      window.__bd_probe.scene.OptionsPanel.Options.map((option) => option.Setting),
     );
     const now = () =>
       page.evaluate(() => {
-        const b = window.__bd_probe.scene.OptionsPanel.SelectedBlock;
-        return { wave: (b.WaveForm as number[]).join(), sound: b.Params.sound as number };
+        const b = window.__bd_probe.scene.OptionsPanel.SelectedBlock as V1BlockView;
+        return { wave: b.WaveForm.join(), sound: b.Params.sound as number };
       });
-    const wave = async (n: number) => {
-      // a number set and let go (as a release does)
+    const wave = async (sound: number) => {
+      // A number set and let go, as a release does.
       await page.evaluate((k) => {
         const scene = window.__bd_probe.scene,
-          b = scene.OptionsPanel.SelectedBlock;
+          b = scene.OptionsPanel.SelectedBlock as V1BlockView;
         b.SetParam('sound', k);
         scene.host.setSound(b.Id, k, true);
-      }, n);
+      }, sound);
       await page.waitForFunction(
         (k) => {
-          const b = window.__bd_probe.scene.OptionsPanel.SelectedBlock;
+          const b = window.__bd_probe.scene.OptionsPanel.SelectedBlock as V1BlockView;
           return b.Params.sound === k && b.WaveForm.length > 0;
         },
-        n,
+        sound,
         { timeout: 10000 },
       );
       await page.waitForTimeout(300);
       return page.evaluate(() => {
-        const b = window.__bd_probe.scene.OptionsPanel.SelectedBlock;
+        const b = window.__bd_probe.scene.OptionsPanel.SelectedBlock as V1BlockView;
         return {
-          wave: (b.WaveForm as number[]).join(),
-          sound: window.__bd_probe.state.patch.blocks[0].params.sound,
+          wave: b.WaveForm.join(),
+          sound: window.__bd_probe.state.patch.blocks[0].params?.sound,
         };
       });
     };
     const a = await wave(5),
       b2 = await wave(6),
       a2 = await wave(5);
-    // Owner (2026-11-17): the wave is made on release, not while dragging; the number stays on show.
+    // The wave is made on release, not while dragging; the number stays on show.
     const row = await page.evaluate(() => {
       const optionsPanel = window.__bd_probe.scene.OptionsPanel,
         pr = window.__bd_probe.v1App.Metrics.PixelRatio,
-        q = (optionsPanel.Options as any[]).find((x) => x.Setting === 'sound');
+        slider = optionsPanel.Options.find((x) => x.Setting === 'sound');
+      if (!slider) throw new Error('no SOUND slider');
       return {
         x0: (optionsPanel.Position.x + optionsPanel.Margin) / pr,
         w: optionsPanel.Range / pr,
-        y: (optionsPanel.Position.y + q.Position.y + q.Size.height / 2) / pr,
-        handle: (optionsPanel.Position.x + optionsPanel.Margin + q.Position.x) / pr,
+        y: (optionsPanel.Position.y + slider.Position.y + slider.Size.height / 2) / pr,
+        handle: (optionsPanel.Position.x + optionsPanel.Margin + slider.Position.x) / pr,
       };
     });
     const before = await now();
@@ -189,9 +195,9 @@ export const soundSourcesTests: Record<string, RegressionTest> = {
     await page.mouse.up();
     await page
       .waitForFunction(
-        (w) => {
-          const b = window.__bd_probe.scene.OptionsPanel.SelectedBlock;
-          return b.WaveForm.length > 0 && (b.WaveForm as number[]).join() !== w;
+        (previous) => {
+          const b = window.__bd_probe.scene.OptionsPanel.SelectedBlock as V1BlockView;
+          return b.WaveForm.length > 0 && b.WaveForm.join() !== previous;
         },
         before.wave,
         { timeout: 10000 },
@@ -201,17 +207,19 @@ export const soundSourcesTests: Record<string, RegressionTest> = {
     const after = await now();
     await page.evaluate(() => {
       const seen: string[] = (window.__texts = []),
-        drawText = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (text: string, ...q: any[]) {
+        proto = CanvasRenderingContext2D.prototype,
+        drawText = Object.getOwnPropertyDescriptor(proto, 'fillText')
+          ?.value as typeof proto.fillText;
+      proto.fillText = function (text: string, ...rest: [number, number, number?]) {
         seen.push(text);
-        return (drawText as any).call(this, text, ...q);
+        drawText.call(this, text, ...rest);
       };
-      window.__bd_probe.scene.OptionsPanel.SelectedBlock.RefreshOptionsPanel();
+      (window.__bd_probe.scene.OptionsPanel.SelectedBlock as V1BlockView).RefreshOptionsPanel();
     });
     await page.mouse.move(row.x0 - 200, row.y + 200);
     await page.waitForTimeout(600);
     const shown = await page.evaluate(
-      (n) => (window.__texts as string[]).includes(`#${n}`),
+      (sound) => (window.__texts ?? []).includes(`#${sound}`),
       after.sound,
     );
     await page.screenshot({ path: `${OUT}/sample-gen-sound-slider.png` });
@@ -241,9 +249,8 @@ export const soundSourcesTests: Record<string, RegressionTest> = {
       },
     ];
   },
-  // Owner (2026-11-17): short attacks were hard to set on the Envelope's graph (v1's straight 10 ms – 5 s axis put
-  // everything under 100 ms in 2 px). The time handles now sit on a log axis, follow the pointer from where they are
-  // grabbed, move a tenth as fast with Shift, and a press where handles overlap takes the nearest one (adsrPanel.ts).
+  // Envelope time handles sit on a log axis (v1's put all under 100 ms in 2 px), follow the pointer
+  // from where grabbed, move a tenth as fast with Shift; overlapping, the nearest wins (adsrPanel).
   async 'envelope-short-attack'(errors: string[]) {
     const page = await open(browser, [blk(1, 'Envelope', 0, 0)], errors);
     const [bx, by] = await toCss(page, 0, 0.5);
@@ -253,11 +260,12 @@ export const soundSourcesTests: Record<string, RegressionTest> = {
       page.evaluate(() => {
         const probe = window.__bd_probe,
           optionsPanel = probe.scene.OptionsPanel,
-          e = (optionsPanel.Options as any[]).find((x) => x.Type === 'ADSR'),
-          handles = e.Handles;
+          envelope = optionsPanel.Options.find((x) => x.Type === 'ADSR');
+        if (!envelope) throw new Error('no envelope graph');
+        const handles = envelope.Handles;
         const x0 = optionsPanel.Position.x + optionsPanel.Margin,
-          y0 = optionsPanel.Position.y + e.Position.y,
-          ht = e.Size.height;
+          y0 = optionsPanel.Position.y + envelope.Position.y,
+          ht = envelope.Size.height;
         return {
           attack: handles[0].XValue,
           decay: handles[1].XValue,
@@ -268,10 +276,10 @@ export const soundSourcesTests: Record<string, RegressionTest> = {
             x0 + handles[0].Position.x + handles[1].Position.x,
             y0 + ht * 0.9 - handles[1].Position.y,
           ],
-          engine: probe.state.patch.blocks.find((b) => b.type === 'fx.envelope').params,
+          engine: probe.state.patch.blocks.find((b) => b.type === 'fx.envelope')?.params ?? {},
         };
       });
-    const result: Record<string, any> = {};
+    const result: Record<string, unknown> = {};
     const g0 = await geo();
     result.start = { attack: g0.attack, x: g0.a[0], range: g0.range };
     // 1. a press beside the handle moves nothing
@@ -282,16 +290,18 @@ export const soundSourcesTests: Record<string, RegressionTest> = {
     await page.waitForTimeout(100);
     const g1 = await geo();
     result.press = g1.attack;
-    // 2. dragged to a tenth of its track: ~19 ms on the log axis (v1's straight axis: 0.5 s)
+    // 2. Dragged to a tenth of its track: ~19 ms on the log axis (v1's straight axis: 0.5 s).
     await page.mouse.move(g1.a[0], g1.a[1]);
     await page.mouse.down();
-    const track0 = g1.a[0] - (g1.range * Math.log(100)) / Math.log(500); // attack 1 s sits at ln(100)/ln(500) of the track
+    // Attack 1 s sits at ln(100)/ln(500) of the track.
+    const track0 = g1.a[0] - (g1.range * Math.log(100)) / Math.log(500);
     await page.mouse.move(track0 + g1.range * 0.1, g1.a[1], { steps: 8 });
     await page.mouse.up();
     await page.waitForTimeout(200);
     const g2 = await geo();
-    result.tenth = { attack: g2.attack, engine: g2.engine.attack };
-    // 3. with Shift, 40 px of pointer is 4 px of handle
+    const tenth = { attack: g2.attack, engine: Number(g2.engine.attack) };
+    result.tenth = tenth;
+    // 3. With Shift, 40 px of pointer is 4 px of handle.
     await page.mouse.move(g2.a[0], g2.a[1]);
     await page.mouse.down();
     await page.keyboard.down('Shift');
@@ -300,17 +310,19 @@ export const soundSourcesTests: Record<string, RegressionTest> = {
     await page.mouse.up();
     await page.waitForTimeout(100);
     const g3 = await geo();
-    result.fine = { moved: g3.a[0] - g2.a[0], attack: g3.attack };
+    const fine = { moved: g3.a[0] - g2.a[0], attack: g3.attack };
+    result.fine = fine;
     await page.screenshot({ path: `${OUT}/envelope-short-attack.png` });
-    // 4. attack and decay short, sustain high: the decay handle sits on the attack's; a press on it takes decay only
+    // 4. Attack and decay short, sustain high: the decay handle sits on the attack's; a press on it
+    // takes decay only.
     await page.evaluate(() => {
       const optionsPanel = window.__bd_probe.scene.OptionsPanel;
-      for (const [k, value] of [
+      for (const [param, value] of [
         ['attack', 0.01],
         ['decay', 0.01],
         ['sustain', 0.9],
-      ])
-        optionsPanel.SelectedBlock.SetParam(k, value);
+      ] as const)
+        (optionsPanel.SelectedBlock as V1BlockView).SetParam(param, value);
       optionsPanel.Refresh();
     });
     await page.waitForTimeout(100);
@@ -318,34 +330,35 @@ export const soundSourcesTests: Record<string, RegressionTest> = {
     await page.mouse.move(g4.d[0], g4.d[1]);
     await page.mouse.down();
     const held = await page.evaluate(() =>
-      (window.__bd_probe.scene.OptionsPanel.Options as any[])
-        .find((x) => x.Type === 'ADSR')
-        .Handles.map((Handle) => Handle.Selected),
+      (
+        window.__bd_probe.scene.OptionsPanel.Options.find((x) => x.Type === 'ADSR')?.Handles ?? []
+      ).map((handle) => handle.Selected),
     );
     await page.mouse.move(g4.d[0] + 30, g4.d[1], { steps: 6 });
     await page.mouse.up();
     await page.waitForTimeout(100);
     const g5 = await geo();
-    result.overlap = {
+    const overlap = {
       gap: Math.hypot(g4.a[0] - g4.d[0], g4.a[1] - g4.d[1]),
       held,
       attack: g5.attack,
       decay: g5.decay,
     };
+    result.overlap = overlap;
     await page.close();
     const near = (a: number, b: number, rel: number) => Math.abs(a - b) <= Math.abs(b) * rel;
     const pass =
       near(g0.attack, 1, 1e-6) &&
-      near(result.press, 1, 1e-6) &&
-      near(result.tenth.attack, 0.01 * Math.pow(500, 0.1), 0.05) &&
-      near(result.tenth.engine, result.tenth.attack, 1e-3) &&
-      Math.abs(result.fine.moved - 4) < 0.6 &&
-      result.fine.attack > result.tenth.attack &&
-      result.fine.attack < 0.025 &&
-      result.overlap.gap < 20 &&
+      near(g1.attack, 1, 1e-6) &&
+      near(tenth.attack, 0.01 * Math.pow(500, 0.1), 0.05) &&
+      near(tenth.engine, tenth.attack, 1e-3) &&
+      Math.abs(fine.moved - 4) < 0.6 &&
+      fine.attack > tenth.attack &&
+      fine.attack < 0.025 &&
+      overlap.gap < 20 &&
       held.join() === 'false,true,false' &&
-      near(result.overlap.attack, 0.01, 1e-6) &&
-      result.overlap.decay > 0.02;
+      near(overlap.attack, 0.01, 1e-6) &&
+      overlap.decay > 0.02;
     return [pass, result];
   },
 };
