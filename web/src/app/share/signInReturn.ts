@@ -7,16 +7,24 @@ import { model } from '../model/patchModel.ts';
 import { scene } from '../scene/scene.ts';
 import { accountPage } from '../stage/corners.ts';
 
-/** Signed in after SAVE / SHARE › SIGN IN: Settings closes and SAVE opens again, ADD TO GALLERY on, the name kept. */
+/** Signed in after SAVE / SHARE › SIGN IN: Settings closes and SAVE opens again, ADD TO GALLERY on,
+ * the name kept. */
+interface AfterSignIn {
+  to?: string;
+  title?: string;
+  at?: number;
+}
+
 export function backToSave(): void {
-  let want: { to?: string; title?: string; at?: number } | null = null;
+  let want: AfterSignIn | null = null;
   try {
-    want = JSON.parse(sessionStorage.getItem(AFTER_SIGN_IN) ?? 'null');
+    want = JSON.parse(sessionStorage.getItem(AFTER_SIGN_IN) ?? 'null') as AfterSignIn | null;
     sessionStorage.removeItem(AFTER_SIGN_IN);
   } catch {
     want = null;
   }
-  // Only a sign-in finished soon after (10 minutes): one begun from SAVE and given up on is forgotten.
+  // Only a sign-in finished soon after (10 minutes): one begun from SAVE and given up on is
+  // forgotten.
   if (want?.to !== 'save' || !(Date.now() - (want.at ?? 0) < 10 * 60_000)) return;
   const t0 = performance.now();
   const go = () => {
@@ -25,9 +33,9 @@ export function backToSave(): void {
       setTimeout(go, 150);
       return;
     }
-    (scene.SettingsPanel as any).ClosePanel?.();
+    scene.SettingsPanel.ClosePanel();
     const pp = scene.PatchesPanel;
-    if (want?.title) pp.setTitle(want.title);
+    if (want.title) pp.setTitle(want.title);
     pp.GalleryOn = true;
     pp.OpenPanel(0);
     stage.redraw();

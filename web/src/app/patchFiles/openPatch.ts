@@ -25,34 +25,34 @@ declare global {
   }
 }
 
-/** Open a server patch by id as the current composition (the account's, or one from the gallery: SAVE then saves
- * over it if this device may, else makes a new link with `parent` set: a remix). Insert just adds its blocks. */
-/** Open or insert a saved patch; when it can't be had, the message bar's words for why (owner, 2026-11-18). */
+/** Open a server patch as the composition (SAVE saves over it if this device may, else remixes);
+ * insert adds its blocks. Returns true, or the message bar's words for why it can't be had. */
 export async function openShared(id: string, mode: 'open' | 'insert'): Promise<true | string> {
-  const r = await loadOrWhy(id);
-  if ('missing' in r) return MISSING_TEXT[r.missing];
+  const loaded = await loadOrWhy(id);
+  if ('missing' in loaded) return MISSING_TEXT[loaded.missing];
   // Someone else's (CHG-0041): opened, or inserted into yours, it is guarded until saved as yours.
-  const theirs = !r.mine && !canOverwrite(id);
+  const theirs = !loaded.mine && !canOverwrite(id);
   if (mode === 'open' || theirs) setGuarded(mode === 'open' ? theirs : true);
-  usePatch(r.patch, r.title, mode, {
+  usePatch(loaded.patch, loaded.title, mode, {
     id,
-    rev: r.rev,
-    ...(r.title ? { title: r.title } : {}),
-    ...(r.by ? { by: r.by } : {}),
+    rev: loaded.rev,
+    ...(loaded.title ? { title: loaded.title } : {}),
+    ...(loaded.by ? { by: loaded.by } : {}),
   });
   if (mode !== 'open') return true;
-  // The plugins (CHG-0039): the processor has the patch now; the DAW project keeps it, so no link or session here.
+  // The plugins (CHG-0039): the processor has the patch now; the DAW project keeps it, so no link
+  // or session here.
   if (juce) {
     setCredit(
-      r.by && !r.mine
+      loaded.by && !loaded.mine
         ? {
             id,
-            title: r.title || 'Untitled',
-            by: r.by,
-            published: !!r.published,
-            liked: !!r.liked,
-            likes: r.likes ?? 0,
-            views: r.views ?? 0,
+            title: loaded.title || 'Untitled',
+            by: loaded.by,
+            published: !!loaded.published,
+            liked: !!loaded.liked,
+            likes: loaded.likes ?? 0,
+            views: loaded.views ?? 0,
           }
         : null,
     );
@@ -62,24 +62,24 @@ export async function openShared(id: string, mode: 'open' | 'insert'): Promise<t
   App.SessionId = sessionFor(id);
   setSession({ id, dirty: false });
   saveSession(session);
-  const url = `${location.origin}${location.pathname}?c=${id}${r.title ? `&t=${encodeURIComponent(r.title)}` : ''}`;
+  const url = `${location.origin}${location.pathname}?c=${id}${loaded.title ? `&t=${encodeURIComponent(loaded.title)}` : ''}`;
   history.replaceState(null, '', url);
-  setShareLink({ url, owned: !!App.SessionId, at: contentOf(toPatch()), title: r.title ?? '' });
+  setShareLink({ url, owned: !!App.SessionId, at: contentOf(toPatch()), title: loaded.title });
   setBaseline();
   setCredit(
-    r.by && !r.mine
+    loaded.by && !loaded.mine
       ? {
           id,
-          title: r.title || 'Untitled',
-          by: r.by,
-          published: !!r.published,
-          liked: !!r.liked,
-          likes: r.likes ?? 0,
-          views: r.views ?? 0,
+          title: loaded.title || 'Untitled',
+          by: loaded.by,
+          published: !!loaded.published,
+          liked: !!loaded.liked,
+          likes: loaded.likes ?? 0,
+          views: loaded.views ?? 0,
         }
       : null,
   );
-  scene.PatchesPanel.galleryKnown(r.mine ? !!r.published : null);
+  scene.PatchesPanel.galleryKnown(loaded.mine ? !!loaded.published : null);
   return true;
 }
 
@@ -105,11 +105,12 @@ export async function openPatchItem(
   key: string,
   mode: 'open' | 'insert',
 ): Promise<boolean | string> {
-  if (key.startsWith('acct:')) return openShared(key.slice(5), mode); // saved over from this device (R9)
+  // saved over from this device (R9)
+  if (key.startsWith('acct:')) return openShared(key.slice(5), mode);
   if (key.startsWith('preset:')) {
-    const p = PRESETS.find((x) => `preset:${x.file}` === key),
-      patch = p && parsePatchFile(p.text);
-    if (p && patch) usePatch(patch, p.name, mode, undefined, 'preset');
+    const preset = PRESETS.find((x) => `preset:${x.file}` === key),
+      patch = preset && parsePatchFile(preset.text);
+    if (preset && patch) usePatch(patch, preset.name, mode, undefined, 'preset');
     return !!patch;
   }
   if (key.startsWith('mine:')) {
@@ -119,11 +120,11 @@ export async function openPatchItem(
     return !!patch;
   }
   if (juce && key.startsWith('file:')) {
-    const r = await nativeReply<{ text: string; name: string }>((req) =>
+    const reply = await nativeReply<{ text: string; name: string }>((req) =>
       juce?.emitEvent('bd_patchRead', { req, path: key.slice(5) }),
     );
-    const patch = r && parsePatchFile(r.text);
-    if (r && patch) usePatch(patch, patchTitle(patch, r.name), mode);
+    const patch = reply && parsePatchFile(reply.text);
+    if (reply && patch) usePatch(patch, patchTitle(patch, reply.name), mode);
     return !!patch;
   }
   return false;
@@ -174,7 +175,8 @@ export function usePatch(
   from?: Omit<PatchSource, 'blocks'>,
   source: 'file' | 'preset' | 'link' = from ? 'link' : 'file',
 ): void {
-  if (mode === 'open' && source !== 'link') setGuarded(false); // a file or a preset: not someone else's (CHG-0041)
+  // a file or a preset: not someone else's (CHG-0041)
+  if (mode === 'open' && source !== 'link') setGuarded(false);
   applyPatch(patch, mode, from);
   track('patch_opened', { source });
   if (mode === 'open') scene.PatchesPanel.setTitle(title);

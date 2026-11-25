@@ -1,15 +1,21 @@
-// Hand the video to the system share sheet, or download it (SPEC-SHARING-VIDEO-EXPORT R13–R14). Nothing is uploaded.
+// Hand the video to the system share sheet, or download it (SPEC-SHARING-VIDEO-EXPORT R13–R14).
+// Nothing is uploaded.
 
 /** The share sheet takes this file here (phones, Safari, Chrome on Windows and ChromeOS…). */
 export function canShareFile(file: File): boolean {
   try {
-    return typeof navigator.share === 'function' && !!navigator.canShare?.({ files: [file] });
+    return (
+      typeof navigator.share === 'function' &&
+      'canShare' in navigator &&
+      navigator.canShare({ files: [file] })
+    );
   } catch {
     return false;
   }
 }
 
-/** Must run in a click (the share sheet needs a user gesture). Resolves false if the user closed the sheet. */
+/** Must run in a click (the share sheet needs a user gesture). Resolves false if the user closed
+ * the sheet. */
 export async function shareFile(file: File, title: string, text: string): Promise<boolean> {
   try {
     await navigator.share({ files: [file], title, text });

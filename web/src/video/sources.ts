@@ -1,5 +1,5 @@
-// What a video plays (SPEC-SHARING-VIDEO-EXPORT R1–R2): the patch as it is now, from a fresh engine, as it plays when
-// it has just loaded (owner, 2026-11-15).
+// What a video plays (SPEC-SHARING-VIDEO-EXPORT R1–R2): the patch as it is now, from a fresh
+// engine, as it plays when it has just loaded (owner, 2026-11-15).
 import type { Command } from '../engine/wasmEngine.ts';
 import { QUANTUM, type LogEntry, type ReplaySource } from './replay.ts';
 
@@ -10,10 +10,8 @@ export interface PatchSample {
   buffer: AudioBuffer;
 }
 
-/**
- * The engine built from the patch (`commands`, as the worklet is at START), its samples attached after the first
- * quantum, when their blocks exist (as the app's offline render does).
- */
+/** The engine built from the patch (`commands`, as the worklet is at START), its samples attached
+ * after the first quantum, once their blocks exist (as the app's offline render does). */
 export function startSource(
   sampleRate: number,
   seed: number,
@@ -29,7 +27,7 @@ export function startSource(
     seed,
     entries,
     sample: (i) => {
-      const patchSample = samples[i];
+      const patchSample = samples.at(i);
       return (
         patchSample && {
           id: patchSample.id,

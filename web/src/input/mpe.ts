@@ -1,9 +1,5 @@
-// MPE / MIDI → engine note commands (PLUGIN-0004). Mirrors engine/include/blokdust/mpe.hpp line by line (the plugin
-// uses that); both run the recorded streams in tests/mpe/*.json. One parser per MIDI Input block, targeting it by id.
-//   MPE on:  zones from the MPE Configuration Message (RPN 6 on channel 1 / 16); lower zone with 15 members until one
-//            arrives. Member notes follow their channel's bend (± per-note range, RPN 0, default 48), channel pressure
-//            or poly aftertouch (pressure) and CC74 (slide); the master channel's bend (± 2) adds to the whole zone.
-//   MPE off: plain MIDI: the pitch wheel bends every note on its channel (± 2); no pressure/slide.
+// MPE / MIDI → engine note commands (PLUGIN-0004): engine/include/blokdust/mpe.hpp line for line
+// (its header explains zones and bend ranges); both run tests/mpe/*.json. One per MIDI Input block.
 import { CommandType, type Command } from '../engine/wasmEngine.ts';
 
 export interface MpeSettings {
@@ -22,7 +18,7 @@ interface Channel {
   rpnLsb: number;
 }
 const freshChannel = (): Channel => ({
-  notes: new Array(128).fill(false),
+  notes: new Array<boolean>(128).fill(false),
   bend: 0,
   pressure: -1,
   slide: -1,
@@ -31,7 +27,7 @@ const freshChannel = (): Channel => ({
 });
 
 export class MpeParser {
-  private s: MpeSettings = { mpe: false, memberBendRange: 48, plainBendRange: 2 };
+  private settings: MpeSettings = { mpe: false, memberBendRange: 48, plainBendRange: 2 };
   private ch: Channel[] = [];
   private lowerMembers = 15;
   private upperMembers = 0;
@@ -46,8 +42,8 @@ export class MpeParser {
     this.reset();
   }
 
-  setSettings(s: Partial<MpeSettings>): void {
-    this.s = { ...this.s, ...s };
+  setSettings(changes: Partial<MpeSettings>): void {
+    this.settings = { ...this.settings, ...changes };
   }
   setTarget(id: number): void {
     this.target = id;
@@ -69,44 +65,48 @@ export class MpeParser {
     if (kind === 0x90 && d2 > 0) {
       channel.notes[d1] = true;
       out.push(this.cmd(CommandType.NoteOn, d1, ch, d2 / 127, at));
-      if (this.s.mpe || this.bendOf(ch) !== 0)
+      if (this.settings.mpe || this.bendOf(ch) !== 0)
         out.push(this.expr(d1, ch, EXPR.bend, this.bendOf(ch), at));
-      if (this.s.mpe && channel.pressure >= 0)
+      if (this.settings.mpe && channel.pressure >= 0)
         out.push(this.expr(d1, ch, EXPR.pressure, channel.pressure, at));
-      if (this.s.mpe && channel.slide >= 0)
+      if (this.settings.mpe && channel.slide >= 0)
         out.push(this.expr(d1, ch, EXPR.slide, channel.slide, at));
       return out;
     }
     if (kind === 0x80 || kind === 0x90) {
       channel.notes[d1] = false;
-      if (!channel.notes.includes(true)) channel.pressure = -1; // pressure is the note's: the next note on this channel starts fresh
+      // pressure is the note's: the next note on this channel starts fresh
+      if (!channel.notes.includes(true)) channel.pressure = -1;
       out.push(this.cmd(CommandType.NoteOff, d1, ch, 0, at));
       return out;
     }
     if (kind === 0xe0) {
       channel.bend = ((d2 << 7) | d1) - 8192;
-      if (this.s.mpe && this.isMaster(ch)) {
-        for (const m of this.zoneMembers(ch)) this.bendNotes(m, at, out);
+      if (this.settings.mpe && this.isMaster(ch)) {
+        for (const member of this.zoneMembers(ch)) this.bendNotes(member, at, out);
         this.bendNotes(ch, at, out);
       } else this.bendNotes(ch, at, out);
       return out;
     }
     if (kind === 0xd0) {
-      if (this.s.mpe) {
+      if (this.settings.mpe) {
         channel.pressure = d1 / 127;
-        this.eachNote(ch, (n) => out.push(this.expr(n, ch, EXPR.pressure, channel.pressure, at)));
+        this.eachNote(ch, (note) =>
+          out.push(this.expr(note, ch, EXPR.pressure, channel.pressure, at)),
+        );
       }
       return out;
     }
     if (kind === 0xa0) {
-      if (this.s.mpe && channel.notes[d1]) out.push(this.expr(d1, ch, EXPR.pressure, d2 / 127, at));
+      if (this.settings.mpe && channel.notes[d1])
+        out.push(this.expr(d1, ch, EXPR.pressure, d2 / 127, at));
       return out;
     }
     if (kind === 0xb0) {
       if (d1 === 74) {
-        if (this.s.mpe) {
+        if (this.settings.mpe) {
           channel.slide = d2 / 127;
-          this.eachNote(ch, (n) => out.push(this.expr(n, ch, EXPR.slide, channel.slide, at)));
+          this.eachNote(ch, (note) => out.push(this.expr(note, ch, EXPR.slide, channel.slide, at)));
         }
         return out;
       }
@@ -123,9 +123,9 @@ export class MpeParser {
         return out;
       }
       if (d1 === 123) {
-        this.eachNote(ch, (n) => {
-          channel.notes[n] = false;
-          out.push(this.cmd(CommandType.NoteOff, n, ch, 0, at));
+        this.eachNote(ch, (note) => {
+          channel.notes[note] = false;
+          out.push(this.cmd(CommandType.NoteOff, note, ch, 0, at));
         });
         return out;
       }
@@ -160,10 +160,10 @@ export class MpeParser {
     return (ch === 0 && this.lowerMembers > 0) || (ch === 15 && this.upperMembers > 0);
   }
   private zoneMembers(master: number): number[] {
-    const m: number[] = [];
-    if (master === 0) for (let i = 1; i <= this.lowerMembers; i++) m.push(i);
-    else for (let i = 0; i < this.upperMembers; i++) m.push(14 - i);
-    return m;
+    const members: number[] = [];
+    if (master === 0) for (let i = 1; i <= this.lowerMembers; i++) members.push(i);
+    else for (let i = 0; i < this.upperMembers; i++) members.push(14 - i);
+    return members;
   }
   private zoneMasterOf(ch: number): number {
     if (this.lowerMembers > 0 && ch >= 1 && ch <= this.lowerMembers) return 0;
@@ -172,19 +172,23 @@ export class MpeParser {
   }
   private bendOf(ch: number): number {
     const channel = this.ch[ch];
-    if (!this.s.mpe) return (channel.bend / 8192) * this.s.plainBendRange;
+    if (!this.settings.mpe) return (channel.bend / 8192) * this.settings.plainBendRange;
     if (this.isMaster(ch)) return (channel.bend / 8192) * this.masterRange[ch === 0 ? 0 : 1];
     const own =
-      (channel.bend / 8192) * (this.memberRange >= 0 ? this.memberRange : this.s.memberBendRange);
-    const m = this.zoneMasterOf(ch);
-    return own + (m < 0 ? 0 : (this.ch[m].bend / 8192) * this.masterRange[m === 0 ? 0 : 1]);
+      (channel.bend / 8192) *
+      (this.memberRange >= 0 ? this.memberRange : this.settings.memberBendRange);
+    const master = this.zoneMasterOf(ch);
+    return (
+      own +
+      (master < 0 ? 0 : (this.ch[master].bend / 8192) * this.masterRange[master === 0 ? 0 : 1])
+    );
   }
-  private eachNote(ch: number, f: (n: number) => void): void {
-    for (let n = 0; n < 128; n++) if (this.ch[ch].notes[n]) f(n);
+  private eachNote(ch: number, visit: (n: number) => void): void {
+    for (let note = 0; note < 128; note++) if (this.ch[ch].notes[note]) visit(note);
   }
   private bendNotes(ch: number, at: number, out: Command[]): void {
     const b = this.bendOf(ch);
-    this.eachNote(ch, (n) => out.push(this.expr(n, ch, EXPR.bend, b, at)));
+    this.eachNote(ch, (note) => out.push(this.expr(note, ch, EXPR.bend, b, at)));
   }
   private dataEntry(ch: number, value: number): void {
     const channel = this.ch[ch];
@@ -201,9 +205,9 @@ export class MpeParser {
         this.memberRange = -1;
       }
     } else if (channel.rpnMsb === 0 && channel.rpnLsb === 0) {
-      if (this.s.mpe && this.isMaster(ch)) this.masterRange[ch === 0 ? 0 : 1] = value;
-      else if (this.s.mpe) this.memberRange = value;
-      else this.s.plainBendRange = value;
+      if (this.settings.mpe && this.isMaster(ch)) this.masterRange[ch === 0 ? 0 : 1] = value;
+      else if (this.settings.mpe) this.memberRange = value;
+      else this.settings.plainBendRange = value;
     }
   }
 }

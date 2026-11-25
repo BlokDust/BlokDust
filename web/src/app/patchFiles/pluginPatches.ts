@@ -7,7 +7,8 @@ import { showPicked } from './openPatch.ts';
 /** Built-in presets: `web/src/patch/presets/*.blokdust`, listed by their title. */
 export let PRESETS!: { file: string; text: string; name: string }[];
 
-/** Plugin: one reply per request, matched by `req` (`wait` ms; the save dialog waits for the user). */
+/** Plugin: one reply per request, matched by `req` (`wait` ms; the save dialog waits for the
+ * user). */
 export let patchReq = 0;
 
 export const nativeReply = <T>(send: (req: number) => void, wait = 10000): Promise<T | null> =>
@@ -17,25 +18,25 @@ export const nativeReply = <T>(send: (req: number) => void, wait = 10000): Promi
         pendingReplies.delete(req);
         res(null);
       }, wait);
-    pendingReplies.set(req, (v) => {
+    pendingReplies.set(req, (reply) => {
       clearTimeout(timeout);
-      res(v as T);
+      res(reply as T);
     });
     send(req);
   });
 
-export const pendingReplies = new Map<number, (v: unknown) => void>();
+export const pendingReplies = new Map<number, (reply: unknown) => void>();
 
 export const savedOn = (ms: number) =>
   `Saved ${new Date(ms).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`;
 
 export async function nativePatches() {
-  const r = await nativeReply<{ items: { name: string; path: string; modified: number }[] }>(
+  const reply = await nativeReply<{ items: { name: string; path: string; modified: number }[] }>(
     (req) => {
-      juce!.emitEvent('bd_patchList', { req });
+      juce?.emitEvent('bd_patchList', { req });
     },
   );
-  return (r?.items ?? []).map((i) => ({
+  return (reply?.items ?? []).map((i) => ({
     name: i.name,
     detail: savedOn(i.modified),
     key: `file:${i.path}`,
@@ -46,11 +47,11 @@ export async function nativePatches() {
 const fileNameOf = (path: string) => path.slice(path.lastIndexOf('/') + 1);
 
 export function init(): void {
-  const presetFiles = import.meta.glob('../../patch/presets/*.blokdust', {
+  const presetFiles = import.meta.glob<string>('../../patch/presets/*.blokdust', {
     query: '?raw',
     import: 'default',
     eager: true,
-  }) as Record<string, string>;
+  });
   // A glob that matches nothing is no build error: say so here.
   if (Object.keys(presetFiles).length === 0) throw new Error('BlokDust: no preset patches found');
   PRESETS = Object.entries(presetFiles)
@@ -60,22 +61,26 @@ export function init(): void {
       name: patchTitle(parsePatchFile(text), fileNameOf(path).replace(/\.blokdust$/, '')),
     }))
     .sort((a, b) => a.file.localeCompare(b.file));
-  // The plugin's page can't open browser windows: links (Settings › About, the code) open in the user's browser.
+  // The plugin's page can't open browser windows: links (Settings › About, the code) open in the
+  // user's browser.
   if (juce)
-    window.open = (u?: string | URL) => {
-      juce?.emitEvent('bd_openUrl', { url: String(u ?? '').replace(/^http:\/\//, 'https://') });
+    window.open = (target?: string | URL) => {
+      juce?.emitEvent('bd_openUrl', {
+        url: String(target ?? '').replace(/^http:\/\//, 'https://'),
+      });
       return null;
     };
   if (juce)
     for (const ev of ['bd_patchList', 'bd_patchSaved', 'bd_patchFile', 'bd_patchDeleted'])
-      juce.addEventListener(ev, (e: { req?: number }) => {
-        const f = e.req !== undefined ? pendingReplies.get(e.req) : undefined;
-        if (f) {
-          pendingReplies.delete(e.req!);
-          f(e);
+      juce.addEventListener(ev, (message: { req?: number }) => {
+        const resolveReply =
+          message.req !== undefined ? pendingReplies.get(message.req) : undefined;
+        if (resolveReply && message.req !== undefined) {
+          pendingReplies.delete(message.req);
+          resolveReply(message);
         } else if (ev === 'bd_patchFile') {
-          const r = e as { text: string; name: string; file?: string; stage?: number };
-          showPicked(r.text, r.file ?? `${r.name}.${PATCH_EXT}`);
+          const picked = message as { text: string; name: string; file?: string; stage?: number };
+          showPicked(picked.text, picked.file ?? `${picked.name}.${PATCH_EXT}`);
         }
       });
 }

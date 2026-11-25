@@ -1,6 +1,5 @@
-// Optional accounts, browser side (SPEC-SHARING-ACCOUNTS, SHARING-0008): passkeys through SimpleWebAuthn's browser
-// helpers (loaded only when used), Google through a redirect, and the account's patches. The session is an HttpOnly
-// cookie the page never sees.
+// Optional accounts in the browser (SPEC-SHARING-ACCOUNTS, SHARING-0008): passkeys (SimpleWebAuthn,
+// loaded when used), Google by redirect, the account's patches. The session cookie is HttpOnly.
 import { apiUrl } from '../patch/site.ts';
 import { accountOwned, allEditTokens, serverConfig, turnstileToken } from '../patch/server.ts';
 import { activity } from './activity.ts';
@@ -38,7 +37,8 @@ export interface Account {
   providers: string[];
   methods?: SignInMethod[];
   stats?: AccountStats;
-  /** The plugins signed in (SHARING-0011), with the stats (the website's ACCOUNT). */ apps?: SignedInApp[];
+  /** The plugins signed in (SHARING-0011), with the stats (the website's ACCOUNT). */
+  apps?: SignedInApp[];
 }
 export interface Me {
   user: Account | null;
@@ -71,8 +71,8 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
   return j as T;
 }
 
-/** Who is signed in; null when there is no backend (static hosting, the plugin). `stats`: with the account's stats
- * (R15), in the same request. */
+/** Who is signed in; null when there is no backend (static hosting, the plugin). `stats`: with the
+ * account's stats (R15), in the same request. */
 export async function me(stats = false): Promise<Me | null> {
   try {
     return await call<Me>('GET', stats ? 'me?stats=1' : 'me');
@@ -81,16 +81,22 @@ export async function me(stats = false): Promise<Me | null> {
   }
 }
 
-/** Back from Google or Apple with `?account=limit`: this network has made its new accounts for today (R1b; the server
- * says the same in server/src/auth/newAccounts.ts when a passkey account is refused). */
+/** Back from Google or Apple with `?account=limit`: this network made its new accounts for today
+ * (R1b; server/src/auth/newAccounts.ts says the same for passkeys). */
 export const ACCOUNT_LIMIT_MESSAGE = 'Cannot create any more new accounts today.';
 
-/** The passkey ceremony was cancelled by the user (closed the system dialog): not an error to show. */
-export const cancelled = (e: unknown) =>
-  ['NotAllowedError', 'AbortError'].includes((e as Error).name) ||
-  /cancel|not allowed/i.test((e as Error).message ?? '');
+/** The passkey ceremony was cancelled by the user (closed the system dialog): not an error to
+ * show. */
+export const cancelled = (error: unknown) => {
+  const { name, message } = (error ?? {}) as { name?: unknown; message?: unknown };
+  return (
+    (typeof name === 'string' && ['NotAllowedError', 'AbortError'].includes(name)) ||
+    (typeof message === 'string' && /cancel|not allowed/i.test(message))
+  );
+};
 
-/** A new account with a passkey (R1): the name, the bot check, then the device makes the passkey. */
+/** A new account with a passkey (R1): the name, the bot check, then the device makes the
+ * passkey. */
 export async function signUpWithPasskey(handle: string): Promise<Account> {
   const cfg = await serverConfig();
   if (!cfg?.saving) throw new Error('Accounts are not available here.');
@@ -129,7 +135,8 @@ export async function signInWithPasskey(): Promise<Account> {
   return (await call<{ user: Account }>('POST', 'auth/passkey/login/verify', { response })).user;
 }
 
-/** Sign in with Google (R2a) or Apple (R2b): leaves the page and comes back here with `?account=in|new`. */
+/** Sign in with Google (R2a) or Apple (R2b): leaves the page and comes back here with
+ * `?account=in|new`. */
 export function signInWith(provider: 'google' | 'apple'): void {
   const back =
     location.pathname + location.search.replace(/([?&])account=[^&]*&?/, '$1').replace(/[?&]$/, '');
@@ -165,10 +172,10 @@ export const removeMethod = (signInMethod: SignInMethod) =>
   });
 /** Back from Google or Apple (R7a, R7b): what `?account=` says, as a line for SIGN-IN METHODS. */
 export function linkMessage(account: string): string | null {
-  const m = /^(linked|taken)-(google|apple)$/.exec(account);
-  if (!m) return null;
-  const name = m[2] === 'google' ? 'Google' : 'Apple';
-  return m[1] === 'linked'
+  const match = /^(linked|taken)-(google|apple)$/.exec(account);
+  if (!match) return null;
+  const name = match[2] === 'google' ? 'Google' : 'Apple';
+  return match[1] === 'linked'
     ? `${name} added.`
     : `That ${name} account is already used by another BlokDust account. Sign in with it to use that account instead.`;
 }
@@ -196,7 +203,8 @@ export async function accountPatches(): Promise<AccountPatch[]> {
   return patches;
 }
 
-/** R16: whether the server takes the page-close request (ACTIVITY_BEACON); known before the page closes. */
+/** R16: whether the server takes the page-close request (ACTIVITY_BEACON); known before the page
+ * closes. */
 let beacon = false;
 export function watchActivityBeacon(): void {
   void serverConfig().then((serverConfig) => {
@@ -204,8 +212,8 @@ export function watchActivityBeacon(): void {
   });
 }
 
-/** R16: the page is closing; send what it counted, once, when signed in and the server takes it. Synchronous (a
- * pagehide handler), with keepalive so the request outlives the page. */
+/** R16: the page is closing; send what it counted, once, when signed in and the server takes it.
+ * Synchronous (a pagehide handler), with keepalive so the request outlives the page. */
 export function sendActivityOnClose(signedIn: boolean): void {
   if (!beacon || !signedIn) {
     activity.keep();
@@ -213,7 +221,8 @@ export function sendActivityOnClose(signedIn: boolean): void {
   }
   const a = activity.toSend();
   if (!a) return;
-  activity.sent(a); // counted as sent now: the page may be gone before the answer (rather lose a little than count it twice)
+  // Counted as sent now: the page may be gone before the answer (better lose a little than twice).
+  activity.sent(a);
   void fetch(api('me/activity'), {
     method: 'POST',
     keepalive: true,

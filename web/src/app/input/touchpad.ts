@@ -11,8 +11,8 @@ declare global {
   }
 }
 
-// The Touchpad's pads (CHG-0019, UI-0010): any pointer that lands on a pad plays it and belongs to the pads until it
-// lifts; it never becomes v1's pointer or an extra finger. Notes go to that Touchpad block; a slide is a bend.
+// The Touchpad's pads (CHG-0019, UI-0010): a pointer on a pad plays it and is the pads' until
+// it lifts, never v1's pointer or an extra finger. Notes go to that Touchpad; a slide is a bend.
 export let TOUCHPAD_TYPE!: number;
 
 export let padHost!: PadHost;

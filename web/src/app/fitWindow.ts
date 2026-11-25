@@ -3,7 +3,8 @@ import type { Application } from 'pixi.js';
 
 export function fitToWindow(app: Application): void {
   const touchScreen = matchMedia('(pointer: coarse)').matches;
-  // A touch keyboard only shrinks the window; laying out for it left the app tiny after it closed (iPhone, 2026-11-18).
+  // A touch keyboard only shrinks the window; laying out for it left the app tiny after it closed
+  // (iPhone, 2026-11-18).
   const typingOnTouch = () => {
     const field = document.activeElement;
     return touchScreen && !!field && (field.tagName === 'INPUT' || field.tagName === 'TEXTAREA');

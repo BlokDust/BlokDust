@@ -1,5 +1,5 @@
-// Rasterise a block with Canvas2D exactly as v1's BlockSprites does (UI-0005), for compositing as a Pixi texture.
-// The same path calls at the same sub-pixel position give pixel-identical results (proven by `pnpm bd v1 verify`).
+// Rasterise a block with Canvas2D exactly as v1's BlockSprites does (UI-0005), as a Pixi texture:
+// the same path calls at the same sub-pixel position match pixel for pixel (`pnpm bd v1 verify`).
 import type { BlockDef, GeometryLayer } from '../generated/blocks.gen.ts';
 
 export interface BakedBlock {
@@ -14,14 +14,16 @@ export interface BakeOptions {
   colors: readonly string[];
   /** Device pixels per grid cell (v1 App.ScaledGridSize). */
   gridPx: number;
-  /** Fractional part of the block origin in device pixels, so baked edges anti-alias identically to v1. */
+  /** Fractional part of the block origin in device pixels, so baked edges anti-alias identically to
+   * v1. */
   fracX?: number;
   fracY?: number;
   /** Void's per-instance star position (v1 units). */
   starPos?: { x: number; y: number };
 }
 
-/** Layer points in grid units (pixel layers are stored in v1 units, optionally anchored to the random star). */
+/** Layer points in grid units (pixel layers are stored in v1 units, optionally anchored to the
+ * random star). */
 export function layerPoints(
   layer: GeometryLayer,
   unitsPerGrid: number,
@@ -39,7 +41,8 @@ interface Poly {
   points: [number, number][];
 } // points in device px relative to origin
 
-/** Rasterise polygons (device px relative to an origin with fractional part fx, fy) exactly like v1's Canvas2D calls. */
+/** Rasterise polygons (device px relative to an origin with fractional part fx, fy) exactly like
+ * v1's Canvas2D calls. */
 function bakePolys(polys: Poly[], fx: number, fy: number): BakedBlock {
   const xs = polys.flatMap((poly) => poly.points.map((point) => point[0])),
     ys = polys.flatMap((poly) => poly.points.map((point) => point[1]));
@@ -51,7 +54,8 @@ function bakePolys(polys: Poly[], fx: number, fy: number): BakedBlock {
   const canvas = document.createElement('canvas');
   canvas.width = maxX - minX;
   canvas.height = maxY - minY;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('no 2D canvas context');
   for (const poly of polys) {
     ctx.beginPath();
     poly.points.forEach(([x, y], i) => {
@@ -82,7 +86,8 @@ export function bakeBlock(def: BlockDef, opts: BakeOptions): BakedBlock {
   );
 }
 
-/** Screen-scaled block overlays (e.g. Recorder's record button): sized by the *unscaled* grid, drawn after all blocks. */
+/** Screen-scaled block overlays (e.g. Recorder's record button): sized by the *unscaled* grid,
+ * drawn after all blocks. */
 export function bakeOverlays(
   def: BlockDef,
   state: string,

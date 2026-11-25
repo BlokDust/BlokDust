@@ -1,4 +1,4 @@
-// v1 UI/ConnectionLines.UpdateList: a straight run then a 45° diagonal from source to effect (grid units).
+// v1 UI/ConnectionLines.UpdateList: a straight run then a 45° diagonal, source to effect (grid).
 export function routeConnection(
   sx: number,
   sy: number,

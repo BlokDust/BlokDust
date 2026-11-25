@@ -19,12 +19,14 @@ import { model, refs, v1Blocks } from '../model/patchModel.ts';
 import { useSample } from './useSample.ts';
 import { scene } from '../scene/scene.ts';
 
-// ---- samples: the user's own files, decoded here, attached in the engine; never uploaded (DATA-0005) ----
+// ---- samples: the user's own files, decoded here, attached in the engine; never uploaded
+// (DATA-0005) ----
 export const samples = new Map<number, AudioBuffer>();
 
 export const missing = new Set<number>();
 
-/** v1 App.AnimationsLayer.AddToList / RemoveFromList: the spinning loading bubble beside a block while its audio loads. */
+/** v1 App.AnimationsLayer.AddToList / RemoveFromList: the spinning loading bubble beside a block
+ * while its audio loads. */
 export async function whileLoading<T>(id: number, work: () => Promise<T>): Promise<T> {
   const v1Block = v1Blocks.get(id);
   if (v1Block) {
@@ -45,17 +47,19 @@ export async function whileLoading<T>(id: number, work: () => Promise<T>): Promi
 
 export const SAMPLERS = new Set(['source.sample', 'source.granular', 'fx.convolver']);
 
-/**
- * Reverse a sampler (owner review 2026-11-07, bugs 2 + 3): the waveform flips at once (v1 SwitchBuffer) and the
- * start/end and loop points are mirrored, so the same stretch of audio stays selected and plays backwards (v1 kept the
- * numbers, which selected different audio). The engine reads the region in reversed time and restarts sounding voices.
- */
+/** Reverse a sampler: the waveform flips at once (v1 SwitchBuffer) and the region and loop are
+ * mirrored, so the same audio stays selected and plays backwards (v1 kept the numbers). */
 export function reverseSample(id: number, on: boolean): void {
   const b = model.get(id),
     v1Block = v1Blocks.get(id),
-    dur = samples.get(id)?.duration ?? v1Block?.PrimaryBuffer?.duration;
+    dur =
+      samples.get(id)?.duration ??
+      (v1Block?.PrimaryBuffer as AudioBuffer | null | undefined)?.duration;
   if (!b || !!b.params.reverse === on) return;
-  const num = (k: string, d: number) => (typeof b.params[k] === 'number' ? b.params[k] : d);
+  const num = (key: string, fallback: number) => {
+    const value = b.params[key];
+    return typeof value === 'number' ? value : fallback;
+  };
   const mirrored = dur
     ? {
         startPosition: dur - num('endPosition', dur),
@@ -72,15 +76,17 @@ export function reverseSample(id: number, on: boolean): void {
   stage.redraw();
 }
 
-/** "Your file" (sample panel), drag-and-drop, or relinking a missing file: never uploaded (DATA-0005). */
+/** "Your file" (sample panel), drag-and-drop, or relinking a missing file: never uploaded
+ * (DATA-0005). */
 export async function pickSample(id: number): Promise<void> {
   if (juce) {
     juce.emitEvent('bd_pickFile', { id, ...atStage() });
     return;
   } // plugin: a native chooser keeps the file's path
-  const t = model.get(id)?.params.track,
-    ref = typeof t === 'string' ? refs.get(t) : undefined;
-  // A missing remembered file: this click is the user gesture the browser needs to allow reading it again.
+  const track = model.get(id)?.params.track,
+    ref = typeof track === 'string' ? refs.get(track) : undefined;
+  // A missing remembered file: this click is the user gesture the browser needs to allow reading it
+  // again.
   if (missing.has(id) && ref?.provider === 'file' && ref.hash) {
     const file = await openRemembered(ref.hash, true);
     if (file) {
@@ -110,16 +116,17 @@ export async function useFile(
   await whileLoading(id, async () => useSample(id, ref, await file.arrayBuffer(), fresh));
 }
 
-/** A sampler whose reference can't be loaded here (someone else's file, or a sound that's gone): the options panel says
- * so, and the reference stays in the patch until the user picks another sample. */
+/** A sampler whose reference can't load here (someone else's file, a sound that's gone): the panel
+ * says so; the reference stays in the patch until the user picks another sample. */
 export function markMissing(id: number): void {
   const b = model.get(id),
     v1Block = v1Blocks.get(id),
-    t = b?.params.track;
-  if (!b || !v1Block || typeof t !== 'string') return;
+    track = b?.params.track;
+  if (!b || !v1Block || typeof track !== 'string') return;
   missing.add(id);
-  const ref = refs.get(t);
-  const name = ref?.provider === 'freesound' ? ref.name : (ref?.name ?? t.replace(/^file:/, ''));
+  const ref = refs.get(track);
+  const name =
+    ref?.provider === 'freesound' ? ref.name : (ref?.name ?? track.replace(/^file:/, ''));
   Object.assign(v1Block.Params, {
     trackName: `MISSING · ${name.toUpperCase().slice(0, 24)}`,
     user: ref?.provider === 'freesound' ? 'Freesound' : 'Local file',
@@ -127,11 +134,13 @@ export function markMissing(id: number): void {
   v1Block.RefreshOptionsPanel();
 }
 
-/** The Convolver only uses its impulse response's first kMaxImpulseSeconds (engine config.hpp): download just that. */
+/** The Convolver only uses its impulse response's first kMaxImpulseSeconds (engine config.hpp):
+ * download just that. */
 export const maxSecondsFor = (id: number) =>
   model.get(id)?.type === 'fx.convolver' ? 2.5 : undefined;
 
-/** Load a block's saved reference (patch open, share link): Freesound from its preview, a file from its remembered handle. */
+/** Load a block's saved reference (patch open, share link): Freesound from its preview, a file from
+ * its remembered handle. */
 export async function resolveSample(id: number, isNew = false): Promise<void> {
   if (juce) {
     if (isNew) juce.emitEvent('bd_samplesHello', {});
@@ -139,27 +148,29 @@ export async function resolveSample(id: number, isNew = false): Promise<void> {
   } // plugin: the processor restores samples
   const b = model.get(id);
   if (!b || !SAMPLERS.has(b.type) || samples.has(id)) return;
-  const t =
+  const track =
     b.params.track ??
     BLOCKS_BY_ID.get(b.type)?.params.find((param) => param.key === 'track')?.default;
-  if (isDeadDefault(t)) {
-    // v2's default sound (DEFAULT_SOUNDS) for a new block, or one still on v1's default (v1 import, Phase 1 patch).
-    const d = DEFAULT_SOUNDS[b.type];
-    if (!d) return;
+  if (isDeadDefault(track)) {
+    // v2's default sound (DEFAULT_SOUNDS) for a new block, or one still on v1's default (v1 import,
+    // Phase 1 patch).
+    const defaultSound = DEFAULT_SOUNDS[b.type];
+    if (!defaultSound) return;
     try {
-      const ref = { ...d },
+      const ref = { ...defaultSound },
         bytes = await whileLoading(id, () => fetchFreesound(ref, maxSecondsFor(id)));
       // Something else was chosen meanwhile (a file, a search result): it wins.
-      if (samples.has(id) || !model.has(id) || !isDeadDefault(model.get(id)!.params.track)) return;
+      const now = model.get(id);
+      if (samples.has(id) || !now || !isDeadDefault(now.params.track)) return;
       await useSample(id, ref, bytes, isNew);
     } catch (error) {
       console.warn('BlokDust: default sound unavailable', error);
     }
     return;
   }
-  if (typeof t !== 'string') return;
-  const ref = refs.get(t);
-  if (t.startsWith('freesound:')) {
+  if (typeof track !== 'string') return;
+  const ref = refs.get(track);
+  if (track.startsWith('freesound:')) {
     if (ref?.provider !== 'freesound') {
       markMissing(id);
       return;
@@ -172,7 +183,7 @@ export async function resolveSample(id: number, isNew = false): Promise<void> {
       console.warn('BlokDust: Freesound sound unavailable', error);
       markMissing(id);
     }
-  } else if (t.startsWith('file:')) {
+  } else if (track.startsWith('file:')) {
     const file =
       ref?.provider === 'file' && ref.hash ? await openRemembered(ref.hash, false) : null;
     if (file && ref?.provider === 'file')
@@ -181,7 +192,8 @@ export async function resolveSample(id: number, isNew = false): Promise<void> {
   }
 }
 
-/** Update params in the model, the v1 block and the engine (numbers and switches only reach the engine). */
+/** Update params in the model, the v1 block and the engine (numbers and switches only reach the
+ * engine). */
 export function setParams(id: number, values: Record<string, unknown>): void {
   const b = model.get(id),
     v1Block = v1Blocks.get(id),
@@ -200,14 +212,16 @@ export function setParams(id: number, values: Record<string, unknown>): void {
   changed();
 }
 
-/** A sampler's new audio (v1 SamplerBase.SetBuffers / Recorder.SetBuffers / SampleGen.PopulateBuffer). */
+/** A sampler's new audio (v1 SamplerBase.SetBuffers / Recorder.SetBuffers /
+ * SampleGen.PopulateBuffer). */
 export function useBuffer(
   id: number,
   buffer: AudioBuffer,
   region: 'keep' | 'reset' | 'half',
   waveDetail = 5,
 ): void {
-  // Plugin: the processor plays it, from a file it saves (a reopened project needs no editor); its report shows it.
+  // Plugin: the processor plays it, from a file it saves (a reopened project needs no editor); its
+  // report shows it.
   if (juce) {
     juce.emitEvent('bd_sampleData', {
       id,

@@ -1,5 +1,5 @@
-// One video frame (SPEC-SHARING-VIDEO-EXPORT R6–R9): the world drawn by the stage's own code (drawWorld.ts) through a
-// fixed camera framed on the blocks, then the end card. Works on any 2D context (a canvas or an OffscreenCanvas).
+// One video frame (SPEC-SHARING-VIDEO-EXPORT R6–R9): the world drawn by the stage code through a
+// fixed camera on the blocks, then the end card. Any 2D context (a canvas or an OffscreenCanvas).
 import { BLOCKS_BY_ID } from '../generated/blocks.gen.ts';
 import type { Theme } from '../generated/palettes.gen.ts';
 import {
@@ -29,30 +29,28 @@ export const END_SECONDS = 3;
 type Ctx = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 const as2d = (ctx: Ctx) => ctx as CanvasRenderingContext2D;
 
-/**
- * The fixed camera (R7): every block in `b` (grid units) in view with 2 cells of margin, centred. Blocks are never drawn
- * bigger than a cell of width/14 (a lone block would fill the frame otherwise).
- */
+/** The fixed camera (R7): every block in `bounds` (grid) in view with 2 cells of margin, centred; a
+ * cell is at most width/14 (a lone block would fill the frame otherwise). */
 export function cameraFor(
-  b: Bounds | null,
+  bounds: Bounds | null,
   width: number,
   height: number,
   labels: Label[] = [],
 ): Metrics {
-  const r = b ? { ...b } : { x0: -3, y0: -3, x1: 3, y1: 3 };
+  const box = bounds ? { ...bounds } : { x0: -3, y0: -3, x1: 3, y1: 3 };
   for (const label of labels) {
-    r.x0 = Math.min(r.x0, label.x);
-    r.y0 = Math.min(r.y0, label.y);
-    r.x1 = Math.max(r.x1, label.x + Math.max(2, label.text.length * 0.6));
-    r.y1 = Math.max(r.y1, label.y);
+    box.x0 = Math.min(box.x0, label.x);
+    box.y0 = Math.min(box.y0, label.y);
+    box.x1 = Math.max(box.x1, label.x + Math.max(2, label.text.length * 0.6));
+    box.y1 = Math.max(box.y1, label.y);
   }
   const margin = 2,
-    w = r.x1 - r.x0 + margin * 2,
-    h = r.y1 - r.y0 + margin * 2;
-  const grid = Math.min(width / w, height / h, width / 14);
+    spanX = box.x1 - box.x0 + margin * 2,
+    spanY = box.y1 - box.y0 + margin * 2;
+  const grid = Math.min(width / spanX, height / spanY, width / 14);
   const unit = grid / UNITS_PER_GRID,
-    cx = (r.x0 + r.x1) / 2,
-    cy = (r.y0 + r.y1) / 2;
+    cx = (box.x0 + box.x1) / 2,
+    cy = (box.y0 + box.y1) / 2;
   return {
     dpr: 1,
     width,
@@ -76,7 +74,8 @@ export function drawnBlocks(blocks: Map<number, StageBlock>): Map<number, DrawnB
   return out;
 }
 
-/** R6: the stage as the live canvas renderer draws it (Stage.drawLines + drawBlocksAndOverlays), without the UI. */
+/** R6: the stage as the live canvas renderer draws it (Stage.drawLines + drawBlocksAndOverlays),
+ * without the UI. */
 export function drawWorldFrame(
   ctx: Ctx,
   metrics: Metrics,
@@ -86,22 +85,22 @@ export function drawWorldFrame(
   labels: Label[],
   jitter: number,
 ): void {
-  const c = as2d(ctx);
-  c.fillStyle = theme.colors[0];
-  c.fillRect(0, 0, metrics.width, metrics.height);
+  const canvas2d = as2d(ctx);
+  canvas2d.fillStyle = theme.colors[0];
+  canvas2d.fillRect(0, 0, metrics.width, metrics.height);
   drawConnections(
-    c,
+    canvas2d,
     metrics,
     theme,
     blocks,
     worldSnapshot.connections,
     new Set(worldSnapshot.powered),
   );
-  drawBlocks(c, metrics, theme, blocks.values());
-  drawBeams(c, metrics, theme, worldSnapshot.beams, jitter);
-  drawOverlays(c, metrics, theme, blocks.values());
-  drawParticles(c, metrics, theme, worldSnapshot.particles);
-  if (labels.length) drawLabels(c, metrics, labels, theme.colors[theme.roles.txt], null);
+  drawBlocks(canvas2d, metrics, theme, blocks.values());
+  drawBeams(canvas2d, metrics, theme, worldSnapshot.beams, jitter);
+  drawOverlays(canvas2d, metrics, theme, blocks.values());
+  drawParticles(canvas2d, metrics, theme, worldSnapshot.particles);
+  if (labels.length) drawLabels(canvas2d, metrics, labels, theme.colors[theme.roles.txt], null);
 }
 
 export interface Credit {
@@ -115,7 +114,8 @@ export interface EndCard {
   credits: Credit[];
 }
 
-/** Fill `text` at (x, y), narrowed to `max` px wide if it is longer (as the Patches panel's heading does). */
+/** Fill `text` at (x, y), narrowed to `max` px wide if it is longer (as the Patches panel's heading
+ * does). */
 function fitText(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -123,52 +123,50 @@ function fitText(
   y: number,
   max: number,
 ): void {
-  const w = ctx.measureText(text).width;
-  if (w <= max) {
+  const textWidth = ctx.measureText(text).width;
+  if (textWidth <= max) {
     ctx.fillText(text, x, y);
     return;
   }
   ctx.save();
   ctx.translate(x, y);
-  ctx.scale(max / w, 1);
+  ctx.scale(max / textWidth, 1);
   ctx.fillText(text, 0, 0);
   ctx.restore();
 }
 
-/**
- * R8: the end card over the last world frame. `t` runs 0 → 1 over its first half second: the world fades to the
- * background colour and the card fades in. v1's type: Dosis 200 for the title, Dosis 400 for the rest.
- */
+/** R8: the end card over the last world frame; as `progress` runs 0 → 1 (its first half second) the
+ * world fades to the background and the card in. Dosis 200 for the title, 400 for the rest. */
 export function drawEndCard(
   ctx: Ctx,
   width: number,
   height: number,
   theme: Theme,
   card: EndCard,
-  t: number,
+  progress: number,
 ): void {
-  const c = as2d(ctx),
-    a = Math.min(1, Math.max(0, t)),
-    u = Math.min(width, height) / 475; // v1's phone unit at this width
-  c.save();
-  c.globalAlpha = a * 0.92;
-  c.fillStyle = theme.colors[0];
-  c.fillRect(0, 0, width, height);
-  c.globalAlpha = a;
-  c.fillStyle = theme.colors[theme.roles.txt];
-  c.textAlign = 'center';
-  c.textBaseline = 'alphabetic';
-  const max = width - 40 * u,
+  const canvas2d = as2d(ctx),
+    alpha = Math.min(1, Math.max(0, progress)),
+    unit = Math.min(width, height) / 475; // v1's phone unit at this width
+  canvas2d.save();
+  canvas2d.globalAlpha = alpha * 0.92;
+  canvas2d.fillStyle = theme.colors[0];
+  canvas2d.fillRect(0, 0, width, height);
+  canvas2d.globalAlpha = alpha;
+  canvas2d.fillStyle = theme.colors[theme.roles.txt];
+  canvas2d.textAlign = 'center';
+  canvas2d.textBaseline = 'alphabetic';
+  const max = width - 40 * unit,
     lines = card.credits.slice(0, 8);
-  let y = height / 2 - (lines.length ? 40 + lines.length * 8 : 0) * u;
-  c.font = `200 ${Math.round(36 * u)}px Dosis`;
-  fitText(c, card.title.toUpperCase(), width / 2, y, max);
-  y += 26 * u;
-  c.font = `400 ${Math.round(12 * u)}px Dosis`;
-  fitText(c, 'MADE WITH BLOKDUST', width / 2, y, max);
-  y += 18 * u;
+  let y = height / 2 - (lines.length ? 40 + lines.length * 8 : 0) * unit;
+  canvas2d.font = `200 ${Math.round(36 * unit)}px Dosis`;
+  fitText(canvas2d, card.title.toUpperCase(), width / 2, y, max);
+  y += 26 * unit;
+  canvas2d.font = `400 ${Math.round(12 * unit)}px Dosis`;
+  fitText(canvas2d, 'MADE WITH BLOKDUST', width / 2, y, max);
+  y += 18 * unit;
   fitText(
-    c,
+    canvas2d,
     card.link
       .replace(/^https?:\/\//, '')
       .replace(/\/$/, '')
@@ -178,26 +176,33 @@ export function drawEndCard(
     max,
   );
   if (lines.length) {
-    y += 34 * u;
-    c.font = `400 ${Math.round(9 * u)}px Dosis`;
-    fitText(c, 'SOUNDS FROM FREESOUND.ORG', width / 2, y, max);
-    for (const cr of lines) {
-      y += 15 * u;
-      fitText(c, `${cr.name} BY ${cr.user} (${cr.license})`.toUpperCase(), width / 2, y, max);
+    y += 34 * unit;
+    canvas2d.font = `400 ${Math.round(9 * unit)}px Dosis`;
+    fitText(canvas2d, 'SOUNDS FROM FREESOUND.ORG', width / 2, y, max);
+    for (const credit of lines) {
+      y += 15 * unit;
+      fitText(
+        canvas2d,
+        `${credit.name} BY ${credit.user} (${credit.license})`.toUpperCase(),
+        width / 2,
+        y,
+        max,
+      );
     }
     if (card.credits.length > lines.length) {
-      y += 15 * u;
-      fitText(c, `AND ${card.credits.length - lines.length} MORE`, width / 2, y, max);
+      y += 15 * unit;
+      fitText(canvas2d, `AND ${card.credits.length - lines.length} MORE`, width / 2, y, max);
     }
   }
-  c.restore();
+  canvas2d.restore();
 }
 
-/** A seeded beam jitter per frame (R12): v1 draws a random width each frame; the video must be repeatable. */
+/** A seeded beam jitter per frame (R12): v1 draws a random width each frame; the video must be
+ * repeatable. */
 export function jitterAt(frame: number): number {
-  let s = (Math.imul(frame, 2654435761) + 0x9e3779b9) >>> 0;
-  s = Math.imul(s ^ (s >>> 16), 0x45d9f3b) >>> 0;
-  s = Math.imul(s ^ (s >>> 16), 0x45d9f3b) >>> 0;
-  s ^= s >>> 16;
-  return (s >>> 0) / 4294967296;
+  let hash = (Math.imul(frame, 2654435761) + 0x9e3779b9) >>> 0;
+  hash = Math.imul(hash ^ (hash >>> 16), 0x45d9f3b) >>> 0;
+  hash = Math.imul(hash ^ (hash >>> 16), 0x45d9f3b) >>> 0;
+  hash ^= hash >>> 16;
+  return (hash >>> 0) / 4294967296;
 }

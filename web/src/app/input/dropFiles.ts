@@ -5,11 +5,16 @@ import { setLastPointer, setLastPointerType } from '../editing/placing.ts';
 import { showPicked } from '../patchFiles/openPatch.ts';
 import { SAMPLERS, useFile } from '../samples/userSamples.ts';
 
-// ---- drop an audio file: onto a sampler → it loads there; onto the stage → a new Sample block holds it (v1 had this
-// planned, MainScene "FILE DRAGGING", commented out). The file is read locally, never uploaded (DATA-0005). ----
+// A dropped audio file loads into the sampler under it, or a new Sample block (v1 had this planned:
+// MainScene "FILE DRAGGING"). It is read locally, never uploaded (DATA-0005).
 export const isAudioFile = (file: File) =>
   file.type.startsWith('audio/') ||
   /\.(wav|mp3|ogg|oga|flac|aiff?|m4a|aac|opus|webm)$/i.test(file.name);
+
+/** Chromium can give a dropped file's File System Access handle. */
+type HandleItem = DataTransferItem & {
+  getAsFileSystemHandle?: () => Promise<FileSystemHandle | null>;
+};
 
 export function init(): void {
   if (!embedId) {
@@ -38,14 +43,15 @@ export function init(): void {
         return;
       }
       if (!isAudioFile(file)) return;
-      // Chromium: a File System Access handle (asked for during the event) lets the file reload next visit.
-      const item = [...(event.dataTransfer?.items ?? [])].find((i) => i.kind === 'file') as
-        | (DataTransferItem & { getAsFileSystemHandle?: () => Promise<FileSystemHandle | null> })
-        | undefined;
+      // Chromium: a File System Access handle (asked for during the event) lets the file reload
+      // next visit.
+      const item: HandleItem | undefined = [...event.dataTransfer.items].find(
+        (entry) => entry.kind === 'file',
+      );
       const handle = item?.getAsFileSystemHandle?.().catch(() => null) ?? Promise.resolve(null);
-      const r = app.canvas.getBoundingClientRect(),
-        x = event.clientX - r.left,
-        y = event.clientY - r.top;
+      const canvasRect = app.canvas.getBoundingClientRect(),
+        x = event.clientX - canvasRect.left,
+        y = event.clientY - canvasRect.top;
       const hit = stage.hitTest(x, y);
       let id = hit && SAMPLERS.has(hit.type) ? hit.id : null;
       if (id === null) {
@@ -63,7 +69,7 @@ export function init(): void {
       );
     });
   }
-  // No browser menu on a right-click (owner, 2026-11-17): it took the pointer's release, leaving a held block stuck
+  // No browser menu on a right-click: it took the pointer's release, leaving a held block stuck
   // down. Links keep theirs (open in a new tab, copy the address), and text fields theirs (paste).
   document.addEventListener('contextmenu', (event) => {
     if (

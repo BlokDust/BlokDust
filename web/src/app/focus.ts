@@ -1,6 +1,5 @@
-// Work to do once each time the page comes back into focus (the iPad app back in front, a plugin window, a browser
-// tab): things another program may have changed meanwhile, such as a value another BlokDust set, or later the newest
-// version on the server. Becoming visible and getting focus usually arrive together: one run for the pair. No timers.
+// Work for each return of focus (iPad app, plugin window, browser tab): what another program may
+// have changed meanwhile. Visible and focus usually arrive together: one run for both, no timers.
 const jobs: (() => void)[] = [];
 let last = -Infinity;
 

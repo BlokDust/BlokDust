@@ -1,7 +1,5 @@
-// Running totals for Settings › ACCOUNT (SPEC-SHARING-ACCOUNTS R16, CHG-0027): time played, blocks added, particles
-// emitted (the engine's own count: pressed, powered, hit by a laser, played from keys) and laser turns, estimated here
-// from the blocks' params and what is powered (the owner: rough is fine for turns, few requests matter). What isn't sent yet waits in localStorage and goes with the
-// next save, or in one request when the page is closed.
+// Running totals for Settings › ACCOUNT (SPEC-SHARING-ACCOUNTS R16): play time, blocks, particles,
+// laser turns (estimated). Unsent totals wait in localStorage for the next save or the page close.
 
 export interface Activity {
   playMs: number;
@@ -29,12 +27,14 @@ export interface TallyFrame {
   tempo: number;
   /** The page is shown (time played counts only then). */
   visible: boolean;
-  /** Particles the engine emitted since the last frame (owner, 2026-11-16: every particle counts, not an estimate). */
+  /** Particles the engine emitted since the last frame (owner, 2026-11-16: every particle counts,
+   * not an estimate). */
   emitted: number;
 }
 
-const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
-const on = (v: unknown) => v === true || v === 1 || v === 'true';
+const num = (value: unknown, fallback: number) =>
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+const on = (value: unknown) => value === true || value === 1 || value === 'true';
 const add = (a: Activity, b: Activity): Activity => ({
   playMs: a.playMs + b.playMs,
   blocks: a.blocks + b.blocks,
@@ -63,28 +63,28 @@ export function rates(
   powered: boolean,
   tempo: number,
 ): { particles: number; turns: number } {
-  const p = b.params,
+  const params = b.params,
     beatsPerSec = tempo / 60;
   if (b.type === 'power.emitter') {
-    if (!powered && !on(p.selfPoweredMode)) return { particles: 0, turns: 0 };
-    const perSec = on(p.sync)
-      ? beatsPerSec / Math.max(1 / 64, Math.abs(num(p.division, 1)))
-      : V1_FPS / Math.max(1, Math.round(num(p.rate, 80)));
+    if (!powered && !on(params.selfPoweredMode)) return { particles: 0, turns: 0 };
+    const perSec = on(params.sync)
+      ? beatsPerSec / Math.max(1 / 64, Math.abs(num(params.division, 1)))
+      : V1_FPS / Math.max(1, Math.round(num(params.rate, 80)));
     return { particles: perSec, turns: 0 };
   }
   if (b.type === 'power.laser') {
     // As the engine: synced turns while running; otherwise Rotate turns it only while powered (v1).
-    if (on(p.sync))
+    if (on(params.sync))
       return {
         particles: 0,
         turns:
-          powered || on(p.selfPoweredMode)
-            ? beatsPerSec / Math.max(0.25, Math.abs(num(p.turnBeats, 4)))
+          powered || on(params.selfPoweredMode)
+            ? beatsPerSec / Math.max(0.25, Math.abs(num(params.turnBeats, 4)))
             : 0,
       };
     return {
       particles: 0,
-      turns: powered ? ((Math.abs(Math.round(num(p.rotate, 0))) / 100) * V1_FPS) / 360 : 0,
+      turns: powered ? ((Math.abs(Math.round(num(params.rotate, 0))) / 100) * V1_FPS) / 360 : 0,
     };
   }
   return { particles: 0, turns: 0 };
@@ -114,8 +114,8 @@ export class ActivityTally {
     }
   }
   /** The user added a block (from the menu, a paste or a duplicate; not opening a patch). */
-  blockAdded(n = 1): void {
-    this.fresh.blocks += n;
+  blockAdded(count = 1): void {
+    this.fresh.blocks += count;
   }
 
   private stored(): Activity {
@@ -133,7 +133,8 @@ export class ActivityTally {
       /* private mode: kept in memory only */
     }
   }
-  /** Move this page's count into localStorage (the page is hidden; other tabs add to the same store). */
+  /** Move this page's count into localStorage (the page is hidden; other tabs add to the same
+   * store). */
   keep(): void {
     this.store(add(this.stored(), this.fresh));
     this.fresh = { ...NO_ACTIVITY };

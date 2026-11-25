@@ -1,21 +1,22 @@
-// Error reports for the web app (SHARING-0010, SPEC-SHARING-USAGE-ANALYTICS R9): Sentry, EU region, loaded only when the
-// Worker names a DSN and the user hasn't turned usage stats off. No cookies, no IPs (dataCollection off; the project also drops IPs), no session
-// replay, no breadcrumbs (they would carry share links, titles and file names), and URLs lose their query strings.
+// Web error reports (SPEC-SHARING-USAGE-ANALYTICS R9): Sentry EU, with a DSN and usage stats on.
+// No cookies, IPs, replay or breadcrumbs (they carry links, titles, file names); URLs lose queries.
 import { analyticsAllowed } from './client.ts';
 import { VERSION } from '../version.ts';
 
-/** Strip what could identify a patch or a file: query strings and fragments; the path keeps only its shape. */
-export function scrubUrl(u: string): string {
+/** Strip what could identify a patch or a file: query strings and fragments; the path keeps only
+ * its shape. */
+export function scrubUrl(url: string): string {
   try {
-    const x = new URL(u, location.href);
+    const x = new URL(url, location.href);
     return `${x.origin}${x.pathname.replace(/\/embed\/[^/]+/, '/embed/:id')}`;
   } catch {
     return '';
   }
 }
-/** File and sample names, share ids and home-folder user names in messages ("… unavailable: kick.wav") become a placeholder. */
-export const scrubText = (s: string) =>
-  s
+/** File and sample names, share ids and home-folder user names in messages ("… unavailable:
+ * kick.wav") become a placeholder. */
+export const scrubText = (text: string) =>
+  text
     .replace(/[^\s"'`/\\:]+\.(wav|mp3|aif|aiff|flac|ogg|m4a|blokdust|json)\b/gi, '<file>')
     .replace(/[?&]c=[^&\s]+/g, '?c=<id>')
     .replace(/([/\\](?:Users|home)[/\\])[^/\\\s]+/gi, '$1<user>');
@@ -31,7 +32,8 @@ export async function startSentry(surface: string): Promise<void> {
     dsn,
     environment: env,
     release: `blokdust@${VERSION}`,
-    // Collect nothing about the person or the request (Sentry 11's dataCollection; `sendDefaultPii` before it).
+    // Collect nothing about the person or the request (Sentry 11's dataCollection; `sendDefaultPii`
+    // before it).
     dataCollection: {
       userInfo: false,
       cookies: false,

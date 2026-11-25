@@ -13,7 +13,8 @@ export const hostSystem: Record<string, unknown> = {};
 
 export let supportClient!: SupportClient | null;
 
-// FEEDBACK's REPORT A PATCH (CHG-0041): the gallery patch on the stage that isn't yours; the gallery's moderation.
+// FEEDBACK's REPORT A PATCH (CHG-0041): the gallery patch on the stage that isn't yours; the
+// gallery's moderation.
 export let feedbackPanel!: FeedbackPanel | null;
 
 export function init(): void {
