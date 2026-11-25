@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 import type { Browser, Page } from 'playwright';
 
+
 export const V1_REPO = 'https://github.com/BlokDust/BlokDust.git';
 export const V1_SHA = 'c427998a3f88bb11cb8cb9c8061b2d6723fee67e';
 export const V1_DIR = '.cache/v1';
@@ -36,9 +37,9 @@ export const V1_BLOCKS: Record<string, string[]> = {
   interaction: ['ComputerKeyboard', 'MIDIController'],
 };
 
-const sh = (cmd: string, args: string[]) => {
-  const result = spawnSync(cmd, args, { stdio: 'inherit' });
-  if (result.status !== 0) throw new Error(`${cmd} ${args.join(' ')} failed`);
+const runOrThrow = (command: string, args: string[]) => {
+  const result = spawnSync(command, args, { stdio: 'inherit' });
+  if (result.status !== 0) throw new Error(`${command} ${args.join(' ')} failed`);
 };
 
 export function fetchV1() {
@@ -47,9 +48,9 @@ export function fetchV1() {
     return;
   }
   mkdirSync(V1_DIR, { recursive: true });
-  sh('git', ['-C', V1_DIR, 'init', '-q']);
-  sh('git', ['-C', V1_DIR, 'fetch', '-q', '--depth', '1', V1_REPO, V1_SHA]);
-  sh('git', ['-C', V1_DIR, 'checkout', '-q', 'FETCH_HEAD']);
+  runOrThrow('git', ['-C', V1_DIR, 'init', '-q']);
+  runOrThrow('git', ['-C', V1_DIR, 'fetch', '-q', '--depth', '1', V1_REPO, V1_SHA]);
+  runOrThrow('git', ['-C', V1_DIR, 'checkout', '-q', 'FETCH_HEAD']);
 }
 
 const MIME: Record<string, string> = {
@@ -70,20 +71,20 @@ const MIME: Record<string, string> = {
 export function serve(port: number): Promise<Server> {
   if (!existsSync(join(DIST, 'index.html')))
     throw new Error('v1 not fetched: run `pnpm bd v1 fetch`');
-  const server = createServer((req, res) => {
-    let p = normalize(decodeURIComponent((req.url ?? '/').split('?')[0])).replace(
+  const server = createServer((request, response) => {
+    let urlPath = normalize(decodeURIComponent((request.url ?? '/').split('?')[0])).replace(
       /^(\.\.[/\\])+/,
       '',
     );
-    if (p.endsWith('/')) p += 'index.html';
-    const f = join(DIST, p);
-    if (!existsSync(f)) {
-      res.writeHead(404).end();
+    if (urlPath.endsWith('/')) urlPath += 'index.html';
+    const file = join(DIST, urlPath);
+    if (!existsSync(file)) {
+      response.writeHead(404).end();
       return;
     }
-    res
-      .writeHead(200, { 'content-type': MIME[extname(f)] ?? 'application/octet-stream' })
-      .end(readFileSync(f));
+    response
+      .writeHead(200, { 'content-type': MIME[extname(file)] ?? 'application/octet-stream' })
+      .end(readFileSync(file));
   });
   return new Promise((resolve) =>
     server.listen(port, () => {
@@ -101,12 +102,12 @@ export interface V1Session {
   close: () => Promise<void>;
 }
 
-/** Boot v1 on virtual time with seeded randomness, tutorial suppressed and the loading splash finished. */
 export interface OfflineAudio {
   seconds: number;
   sampleRate: number;
 }
 
+/** Boot v1 on virtual time, seeded randomness, no tutorial, loading splash finished. */
 export async function bootV1(
   browser: Browser,
   port: number,
@@ -115,54 +116,53 @@ export async function bootV1(
   offline?: OfflineAudio,
   prepare?: (page: Page) => Promise<void>,
 ): Promise<V1Session> {
-  const ctx = await browser.newContext({ viewport, deviceScaleFactor: dpr });
-  const page = await ctx.newPage();
+  const context = await browser.newContext({ viewport, deviceScaleFactor: dpr });
+  const page = await context.newPage();
   if (offline) {
-    // Audio references (CHG-0002 1.1): Tone.js creates its context with `new AudioContext` when v1's bundle loads.
-    // Hand it an OfflineAudioContext instead, so v1's own DSP (Tone.js on Chromium's Web Audio) renders
-    // deterministically, as fast as possible, when the tool calls startRendering(). It reports "running" so v1's
-    // start-up checks (hasAudioContextStarted) pass before rendering begins.
+    // Audio references (CHG-0002 1.1): Tone.js gets an OfflineAudioContext that says "running"
+    // (hasAudioContextStarted), so v1's own DSP renders deterministically on startRendering().
     await page.addInitScript(({ seconds, sampleRate }) => {
       const Offline = window.OfflineAudioContext;
       function FakeAudioContext() {
         const offline = new Offline(2, Math.round(seconds * sampleRate), sampleRate);
         Object.defineProperty(offline, 'state', { get: () => 'running' });
-        (offline as any).resume = () => Promise.resolve();
-        (window as any).__bdOffline = offline;
+        offline.resume = () => Promise.resolve();
+        window.__bdOffline = offline;
         return offline;
       }
       FakeAudioContext.prototype = Offline.prototype;
-      (window as any).AudioContext = FakeAudioContext;
-      (window as any).webkitAudioContext = FakeAudioContext;
+      Object.assign(window, { AudioContext: FakeAudioContext, webkitAudioContext: FakeAudioContext });
     }, offline);
   }
-  // v1 loads its fonts from files.blokdust.io, a domain this project no longer controls. Serve the vendored copies
-  // (web/public/fonts, identical bytes, OFL) so references never depend on it.
+  // v1's fonts came from files.blokdust.io (no longer ours): serve the identical web/public/fonts.
   await page.route('https://files.blokdust.io/fonts/**', (route) => {
-    const name = route.request().url().split('/').pop()!.split(/[?#]/)[0];
+    const name = (route.request().url().split('/').pop() ?? '').split(/[?#]/)[0];
     const local = join('web/public/fonts', name);
     if (name.endsWith('.woff2') && existsSync(local))
       return route.fulfill({ body: readFileSync(local), contentType: 'font/woff2' });
     return route.abort();
   });
-  if (prepare) await prepare(page); // extra routes / init scripts (e.g. bd ui's mocked SoundCloud search)
+  // Extra routes or init scripts (e.g. bd ui's mocked SoundCloud search).
+  if (prepare) await prepare(page);
   const errors: string[] = [];
-  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('pageerror', (error) => errors.push(error.message));
   await page.addInitScript(() => {
-    let s = 42;
-    Math.random = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    let seed = 42;
+    Math.random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
     try {
       localStorage.setItem(
         'SkipTutorial',
         JSON.stringify({ value: true, expiresAt: 4102444800000 }),
       );
-    } catch {}
+    } catch {
+      // storage blocked: the tutorial shows, which bootV1 closes anyway
+    }
   });
-  // Virtual time: v1 animates per frame and with timers, so we drive the clock for byte-identical results.
+  // Virtual time: v1 animates per frame and with timers; driving the clock makes results identical.
   await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
-  const until = async (fn: () => boolean, maxMs: number, label: string) => {
-    for (let t = 0; t <= maxMs; t += 50) {
-      if (await page.evaluate(fn).catch(() => false)) return;
+  const until = async (condition: () => boolean, maxMs: number, label: string) => {
+    for (let elapsed = 0; elapsed <= maxMs; elapsed += 50) {
+      if (await page.evaluate(condition).catch(() => false)) return;
       await page.clock.runFor(50);
       await page.waitForTimeout(5); // let real I/O (scripts, fonts, images) progress
     }
@@ -170,47 +170,51 @@ export async function bootV1(
   };
   await page.goto(`http://localhost:${port}/`, { waitUntil: 'load' });
   await until(
-    () => !!((window as any).App?.MainScene && (window as any).App?.Blocks),
+    () => !!(window.App?.MainScene && window.App.Blocks),
     20000,
     'App',
   );
   await page.evaluate(() => {
-    (window as any).App.SkipTutorial = true;
+    if (window.App) window.App.SkipTutorial = true;
   });
   // Wait for the loading splash to finish and slide off-screen (LoadOffset tweens to 1).
   await until(
     () => {
-      const splash = (window as any).App?.Stage?.Splash;
+      const splash = window.App?.Stage?.Splash;
       return !!(splash?.IsAnimationFinished && splash.LoadOffset >= 1);
     },
     30000,
     'splash',
   );
   await page.clock.runFor(300);
-  return { page, errors, advance: (ms) => page.clock.runFor(ms), close: () => ctx.close() };
+  return { page, errors, advance: (ms) => page.clock.runFor(ms), close: () => context.close() };
 }
 
 /** Load a v1 composition (save-file JSON shape) into the running app. Returns the block count. */
-export async function loadComposition(s: V1Session, composition: any): Promise<number> {
-  return s.page.evaluate((c) => {
-    const App = (window as any).App;
+export async function loadComposition(session: V1Session, composition: unknown): Promise<number> {
+  return session.page.evaluate((saved) => {
+    const App = window.App;
+    if (!App) throw new Error('v1 has not booted');
     try {
       App.MainScene.Tutorial?.ClosePanel?.();
-    } catch {}
-    // Reseed: the number of random() calls during boot varies with I/O timing; block init (e.g. Void stars) must not.
+    } catch {
+      // no tutorial panel open
+    }
+    // Reseed: boot's random() count varies with I/O timing; block init (e.g. Void stars) must not.
     let seed = 1234;
     Math.random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    App.CompositionLoadComplete(JSON.stringify(c));
+    App.CompositionLoadComplete(JSON.stringify(saved));
     const tutorial = App.MainScene.Tutorial;
-    if (tutorial?.SplashOpen) tutorial.CloseSplash(); // tour prompt ("Welcome to the Tour") is not part of the stage
+    if (tutorial?.SplashOpen) tutorial.CloseSplash(); // the tour prompt is not part of the stage
     return App.Blocks.length;
   }, composition);
 }
 
-/** Geometry + colour state needed to re-render the stage exactly as v1 does (canvas backing-store pixels). */
-export async function stageInfo(s: V1Session) {
-  return s.page.evaluate(() => {
-    const App = (window as any).App;
+/** Geometry and colours needed to re-render the stage exactly as v1 does (backing-store pixels). */
+export async function stageInfo(session: V1Session) {
+  return session.page.evaluate(() => {
+    const App = window.App;
+    if (!App) throw new Error('v1 has not booted');
     const metrics = App.Metrics;
     return {
       c: { x: metrics.C.x, y: metrics.C.y },
@@ -223,12 +227,12 @@ export async function stageInfo(s: V1Session) {
       pixelRatio: metrics.PixelRatio,
       canvas: { width: App.Canvas.Width, height: App.Canvas.Height },
       theme: App.ThemeManager.CurrentThemeNo,
-      palette: App.Palette.map((c: any) => App.ColorManager.ColorString(c)),
-      blocks: App.Blocks.map((b: any) => ({
-        type: b.constructor.name,
-        x: b.Position.x,
-        y: b.Position.y,
-        ...(b.StarPos ? { starPos: { x: b.StarPos.x, y: b.StarPos.y } } : {}),
+      palette: App.Palette.map((color) => App.ColorManager.ColorString(color)),
+      blocks: App.Blocks.map((block) => ({
+        type: block.constructor.name,
+        x: block.Position.x,
+        y: block.Position.y,
+        ...(block.StarPos ? { starPos: { x: block.StarPos.x, y: block.StarPos.y } } : {}),
       })),
     };
   });
