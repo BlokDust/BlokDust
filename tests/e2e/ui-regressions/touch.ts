@@ -3,16 +3,15 @@ import { OUT, blk, browser, comp, state, toCss, type RegressionTest, url } from 
 import { keepPresets, patchesAt } from './patchesPanel.ts';
 
 export const touchTests: Record<string, RegressionTest> = {
-  /** Owner (2026-11-08, mobile): after dragging a block onto the trash, tapping another block deleted it too. The
-   * trash only noticed where the pointer was on pointermove; a finger lifts and lands elsewhere without one, so the
-   * next drag "ended over the trash". Real touches through CDP (Input.dispatchTouchEvent). */
+  /** After a block was dragged to the trash, tapping another deleted it too: a finger lands
+   * elsewhere with no pointermove, so the trash still saw the last spot. Real touches (CDP). */
   async 'touch-trash-once'(errors) {
-    const ctx = await browser.newContext({
+    const context = await browser.newContext({
       viewport: { width: 1280, height: 800 },
       deviceScaleFactor: 1,
       hasTouch: true,
     });
-    const page = await ctx.newPage();
+    const page = await context.newPage();
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(
       `${url}/index.html?v1=${comp([blk(1, 'ToneSource', -6, 0), blk(2, 'Filter', 6, 0)])}`,
@@ -21,7 +20,7 @@ export const touchTests: Record<string, RegressionTest> = {
     await page.click('#start');
     await page.waitForFunction(() => window.__bd_probe.state.snapshots > 10);
     await page.waitForTimeout(1200);
-    const cdp = await ctx.newCDPSession(page);
+    const cdp = await context.newCDPSession(page);
     const touch = (
       type: 'touchStart' | 'touchMove' | 'touchEnd' | 'touchCancel',
       x: number,
@@ -47,25 +46,25 @@ export const touchTests: Record<string, RegressionTest> = {
     await page.waitForTimeout(600);
     const afterTap = (await state(page)).blocks.length;
     await page.screenshot({ path: `${OUT}/touch-trash-once.png` });
-    await ctx.close();
+    await context.close();
     return [afterTrash === 1 && afterTap === 1, { afterTrash, afterTap }];
   },
-  /** Owner (2026-11-10): on a touch screen an Insert lands in the middle of the view; a finger drags it (from wherever
-   * it lands, without jumping) and lifting the finger puts it down. */
+  /** On a touch screen an Insert lands mid-view; a finger drags it from wherever it lands, without
+   * jumping, and lifting the finger puts it down. */
   async 'insert-touch'(errors: string[]) {
-    const ctx = await browser.newContext({
+    const context = await browser.newContext({
       viewport: { width: 1280, height: 800 },
       deviceScaleFactor: 1,
       hasTouch: true,
     });
-    const page = await ctx.newPage();
+    const page = await context.newPage();
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', -6, 0)])}`);
     await page.waitForFunction(() => window.__bd_probe);
     await page.click('#start');
     await page.waitForFunction(() => window.__bd_probe.state.snapshots > 10);
     await page.waitForTimeout(1200);
-    const cdp = await ctx.newCDPSession(page);
+    const cdp = await context.newCDPSession(page);
     const touch = (
       type: 'touchStart' | 'touchMove' | 'touchEnd' | 'touchCancel',
       x: number,
@@ -82,13 +81,17 @@ export const touchTests: Record<string, RegressionTest> = {
       await page.waitForTimeout(700);
     };
     await keepPresets(page);
-    await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.OpenPanel(1));
+    await page.evaluate(() => {
+      window.__bd_probe.scene.PatchesPanel.OpenPanel(1);
+    });
     await page.waitForTimeout(1200);
     const [ix, iy] = await patchesAt(page, 'ins0');
     await tap(ix, iy);
     const blocks = () =>
       page.evaluate(() =>
-        window.__bd_probe.state.patch.blocks.slice(1).map((b) => [b.x, b.y]),
+        window.__bd_probe.state.patch.blocks
+          .slice(1)
+          .map((b): [number, number] => [b.x ?? 0, b.y ?? 0]),
       );
     const atStart = await blocks(),
       placing = await page.evaluate(() => window.__bd_placing());
@@ -102,9 +105,10 @@ export const touchTests: Record<string, RegressionTest> = {
     await page.waitForTimeout(400);
     const after = await blocks(),
       done = await page.evaluate(() => window.__bd_placing());
-    const selected = await page.evaluate(() => window.__bd_selection()); // owner, 2026-11-11: an Insert is not selected
+    // An Insert is not selected.
+    const selected = await page.evaluate(() => window.__bd_selection());
     await page.screenshot({ path: `${OUT}/insert-touch.png` });
-    await ctx.close();
+    await context.close();
     const [gx0, gy0] = atStart[0] ?? [0, 0],
       [gx1, gy1] = after[0] ?? [0, 0];
     const ok =
@@ -118,16 +122,15 @@ export const touchTests: Record<string, RegressionTest> = {
       selected.length === 0;
     return [ok, { placing, atStart, after, selected }];
   },
-  /** CHG-0005 task 8 (owner): multi-touch. Each finger drags its own block (powered while held, drawn pressed); two
-   * fingers on the stage pinch-zoom about their midpoint (which stays over the same spot) within 0.15×–4× (v1 0.25×; CHG-0035);
-   * two fingers on two sliders of the open options panel move each its own. One finger behaves as before. */
+  /** CHG-0005, CHG-0035: each finger drags its own block; two on the stage pinch-zoom about their
+   * midpoint within 0.15×–4×; two on two sliders move each its own. */
   async multitouch(errors: string[]) {
-    const ctx = await browser.newContext({
+    const context = await browser.newContext({
       viewport: { width: 1280, height: 800 },
       deviceScaleFactor: 1,
       hasTouch: true,
     });
-    const page = await ctx.newPage();
+    const page = await context.newPage();
     page.on('pageerror', (error) => errors.push(error.message));
     // Distortion: an effect with two sliders (the Filter's became a graph in CHG-0010).
     await page.goto(
@@ -137,7 +140,7 @@ export const touchTests: Record<string, RegressionTest> = {
     await page.click('#start');
     await page.waitForFunction(() => window.__bd_probe.state.snapshots > 10);
     await page.waitForTimeout(1200);
-    const cdp = await ctx.newCDPSession(page);
+    const cdp = await context.newCDPSession(page);
     const down = new Map<number, { x: number; y: number }>();
     const send = (type: 'touchStart' | 'touchMove' | 'touchEnd' | 'touchCancel') =>
       cdp.send('Input.dispatchTouchEvent', {
@@ -150,14 +153,18 @@ export const touchTests: Record<string, RegressionTest> = {
       await page.waitForTimeout(30);
     };
     const move = async (moves: [number, number, number][], steps = 8) => {
-      const from = moves.map(([id]) => ({ ...down.get(id)! }));
+      const from = moves.map(([id]) => {
+        const point = down.get(id);
+        if (!point) throw new Error(`finger ${id} is not down`);
+        return { ...point };
+      });
       for (let i = 1; i <= steps; i++) {
-        moves.forEach(([id, x, y], k) =>
+        moves.forEach(([id, x, y], k) => {
           down.set(id, {
             x: from[k].x + ((x - from[k].x) * i) / steps,
             y: from[k].y + ((y - from[k].y) * i) / steps,
-          }),
-        );
+          });
+        });
         await send('touchMove');
         await page.waitForTimeout(16);
       }
@@ -175,20 +182,22 @@ export const touchTests: Record<string, RegressionTest> = {
     const pos = () =>
       page.evaluate(() =>
         Object.fromEntries(
-          window.__bd_probe.state.patch.blocks.map((b) => [b.id, [b.x, b.y]]),
+          window.__bd_probe.state.patch.blocks.map((b): [string, [number, number]] => [
+            b.id,
+            [b.x ?? 0, b.y ?? 0],
+          ]),
         ),
       );
     const at = (id: number) =>
       page.evaluate((i) => window.__bd_probe.blockPoint(i), id) as Promise<[number, number]>;
     const view = () =>
       page.evaluate(() => {
-        const a = window.__bd_probe.v1App;
-        return { zoom: a.ZoomLevel, drag: { x: a.DragOffset.x, y: a.DragOffset.y } };
+        const v1App = window.__bd_probe.v1App;
+        return { zoom: v1App.ZoomLevel, drag: { x: v1App.DragOffset.x, y: v1App.DragOffset.y } };
       });
-    const ids = Object.keys(await pos()); // tone, tone, distortion (patch ids)
-    const eid = await page.evaluate(() =>
-      window.__bd_probe.state.blocks.map((b) => b.id),
-    ); // engine ids, same order
+    // Patch ids, then engine ids in the same order: tone, tone, distortion.
+    const ids = Object.keys(await pos());
+    const eid = await page.evaluate(() => window.__bd_probe.state.blocks.map((b) => b.id));
 
     // 1. Two fingers, two blocks.
     const before = await pos();
@@ -203,18 +212,21 @@ export const touchTests: Record<string, RegressionTest> = {
     ]);
     await endAll();
     const after = await pos();
-    const moved = (id: string, dx: number) =>
-      Math.sign(after[id][0] - before[id][0]) === dx && after[id][1] < before[id][1];
+    const moved = (id: string, dx: number) => {
+      const from = before[id] as [number, number] | undefined,
+        to = after[id] as [number, number] | undefined;
+      return !!from && !!to && Math.sign(to[0] - from[0]) === dx && to[1] < from[1];
+    };
     const twoBlocks =
       moved(ids[0], -1) &&
       moved(ids[1], 1) &&
       held.primaryRole === 'block' &&
-      held.extras[0]?.[1]?.kind === 'block';
+      (held.extras[0]?.[1] as { kind?: string } | undefined)?.kind === 'block';
 
-    // 2. Pinch on the empty stage: spread to twice the distance → 2×, the midpoint keeps the same stage point.
+    // 2. Pinch on the empty stage: twice the distance is 2×; the midpoint keeps its stage point.
     const v0 = await view(),
       probeAt = (x: number, y: number) =>
-        page.evaluate(([x, y]) => window.__bd_probe.cssToGrid?.(x, y) ?? null, [x, y]);
+        page.evaluate(([cssX, cssY]) => window.__bd_probe.cssToGrid(cssX, cssY), [x, y]);
     const mid0 = await probeAt(640, 560);
     await start(1, 590, 560);
     await start(2, 690, 560);
@@ -244,7 +256,8 @@ export const touchTests: Record<string, RegressionTest> = {
     const pinch =
       pinched.pinch &&
       Math.abs(v1.zoom - 2 * v0.zoom) < 0.05 &&
-      (!mid0 || (Math.abs(mid0[0] - mid1[0]) < 0.2 && Math.abs(mid0[1] - mid1[1]) < 0.2)) &&
+      Math.abs(mid0[0] - mid1[0]) < 0.2 &&
+      Math.abs(mid0[1] - mid1[1]) < 0.2 &&
       v2.zoom === 0.15;
     await page.evaluate(() => {
       const scene = window.__bd_probe.scene;
@@ -280,15 +293,15 @@ export const touchTests: Record<string, RegressionTest> = {
       [2, r2.x0 + r2.w * 0.9, r2.y],
     ]);
     const sliders = await page.evaluate(() =>
-      window.__bd_probe.scene.OptionsPanel.Options.filter(
-        (Option) => Option.Type === 'slider',
-      ).map((option) => option.Position.x / window.__bd_probe.scene.OptionsPanel.Range),
+      window.__bd_probe.scene.OptionsPanel.Options.filter((Option) => Option.Type === 'slider').map(
+        (option) => option.Position.x / window.__bd_probe.scene.OptionsPanel.Range,
+      ),
     );
     await page.screenshot({ path: `${OUT}/multitouch-sliders.png` });
     await endAll();
     const twoSliders =
       rows.length >= 2 && Math.abs(sliders[0] - 0.1) < 0.03 && Math.abs(sliders[1] - 0.9) < 0.03;
-    await ctx.close();
+    await context.close();
     return [
       twoBlocks && pinch && twoSliders,
       {

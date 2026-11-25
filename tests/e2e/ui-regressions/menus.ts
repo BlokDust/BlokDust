@@ -2,13 +2,13 @@
 import { OUT, browser, open, type RegressionTest, url } from './harness.ts';
 
 export const menusTests: Record<string, RegressionTest> = {
-  // Owner (2026-11-17, CHG-0035): Sources, Powers and Interactions list the most used blocks first, in the owner's
-  // order; Effects stay alphabetical (it was every category alphabetical, 2026-11-14).
+  // CHG-0035: Sources, Powers and Interactions list the most used blocks first, in the owner's
+  // order; Effects stay alphabetical.
   async 'menus-in-owner-order'(errors: string[]) {
     const page = await open(browser, [], errors);
     const cats = await page.evaluate(() =>
-      (window.__bd_probe.scene.Header.MenuItems as any[]).map((c) =>
-        (c.Items as any[]).map((i) => String(i.Name).toLowerCase()),
+      window.__bd_probe.scene.Header.MenuItems.map((category) =>
+        category.Items.map((item) => item.Name.toLowerCase()),
       ),
     );
     await page.close();
@@ -44,7 +44,8 @@ export const menusTests: Record<string, RegressionTest> = {
     const inOrder = (got: string[], want: string[]) => {
       const order = want.map((name) => name.toLowerCase());
       return (
-        got.join() === order.filter((n) => got.includes(n)).join() && got.length >= order.length - 1
+        got.join() === order.filter((name) => got.includes(name)).join() &&
+        got.length >= order.length - 1
       );
     };
     return [
@@ -56,14 +57,14 @@ export const menusTests: Record<string, RegressionTest> = {
       { cats },
     ];
   },
-  // Owner (2026-11-17, CHG-0035): the menu's ? hints said SoundCloud (Granular, Sample: "must be creative commons or
-  // tagged #blokdust"), "Chrome only" (MIDI); every hint is now the block's manifest description, in the owner's words.
+  // CHG-0035: the menu's ? hints said SoundCloud and "Chrome only"; every hint is now the block's
+  // manifest description, in the owner's words.
   async 'menu-hints-in-owner-words'(errors: string[]) {
     const page = await open(browser, [], errors);
     const hints = await page.evaluate(() =>
       Object.fromEntries(
-        (window.__bd_probe.scene.Header.MenuItems as any[]).flatMap((c) =>
-          (c.Items as any[]).map((i) => [String(i.Name).toLowerCase(), String(i.Description)]),
+        window.__bd_probe.scene.Header.MenuItems.flatMap((category) =>
+          category.Items.map((item) => [item.Name.toLowerCase(), item.Description]),
         ),
       ),
     );
@@ -82,16 +83,16 @@ export const menusTests: Record<string, RegressionTest> = {
   async 'block-menu-short-view'(errors: string[]) {
     const out: Record<string, unknown> = {};
     let ok = true;
-    for (const [name, w, h] of [
+    for (const [name, width, height] of [
       ['garageband', 1000, 290],
       ['laptop', 1000, 528],
       ['tall', 1280, 800],
     ] as const) {
-      const ctx = await browser.newContext({
-        viewport: { width: w, height: h },
+      const context = await browser.newContext({
+        viewport: { width, height },
         deviceScaleFactor: 2,
       });
-      const page = await ctx.newPage();
+      const page = await context.newPage();
       page.on('pageerror', (error) => errors.push(error.message));
       await page.goto(`${url}/index.html`);
       await page.waitForFunction(() => window.__bd_probe);
@@ -101,7 +102,10 @@ export const menusTests: Record<string, RegressionTest> = {
         const hd = window.__bd_probe.scene.Header,
           menuCategory = hd.MenuItems[0],
           unit = window.__bd_probe.v1App.Unit;
-        return [menuCategory.Position.x / devicePixelRatio, (hd.Height * 0.5 * unit) / devicePixelRatio];
+        return [
+          menuCategory.Position.x / devicePixelRatio,
+          (hd.Height * 0.5 * unit) / devicePixelRatio,
+        ];
       });
       await page.mouse.move(at[0], at[1]);
       await page.mouse.down();
@@ -119,10 +123,10 @@ export const menusTests: Record<string, RegressionTest> = {
         };
       });
       await page.screenshot({ path: `${OUT}/block-menu-${name}.png` });
-      await ctx.close();
+      await context.close();
       const centred = Math.abs(result.itemY - result.centre) < 1;
       // Up to MaxAspect (2:1) v1's height; past it, in proportion (GarageBand 1000×290: 58%).
-      const want = result.full * Math.min(1, (h * 2) / w);
+      const want = result.full * Math.min(1, (height * 2) / width);
       const good = result.drop > 0 && Math.abs(result.drop - want) < 0.5 && centred;
       out[name] = { good, drop: Math.round(result.drop), full: Math.round(result.full), centred };
       ok &&= good;
