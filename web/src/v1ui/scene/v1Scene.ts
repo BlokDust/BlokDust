@@ -80,7 +80,8 @@ export class V1Scene extends V1ScenePointer {
       // v1 order: panels are created before Metrics.Compute (App.Width is 0, so their Resize()
       // bails out), then the first resize lays them out.
       this.initialised = true;
-      installNewBlockMenu(); // the post-2.0 blocks join v1's menu before the header reads it (SCOPE-0005)
+      // the post-2.0 blocks join v1's menu before the header reads it (SCOPE-0005)
+      installNewBlockMenu();
       App.Width = 0;
       App.Height = 0;
       for (const o of [
@@ -116,10 +117,13 @@ export class V1Scene extends V1ScenePointer {
       cancellableOpen(this.OptionsPanel);
       installSelectors(this.OptionsPanel);
       installLiveRows(this.OptionsPanel);
-      installTouchpad(this.OptionsPanel); // it lays the Touchpad's rows out again after the others adapt them
+      // it lays the Touchpad's rows out again after the others adapt them
+      installTouchpad(this.OptionsPanel);
       installNoteBars(this.OptionsPanel); // Random Note's and Chord's bars and Range (UI-0016)
-      installAdsr(this.OptionsPanel); // the Envelope's graph: curved time axis, readout, fine drags (adsrPanel.ts)
-      installWaveZoom(this.OptionsPanel); // outermost: it narrows the form the others are given (waveZoom.ts)
+      // the Envelope's graph: curved time axis, readout, fine drags (adsrPanel.ts)
+      installAdsr(this.OptionsPanel);
+      // outermost: it narrows the form the others are given (waveZoom.ts)
+      installWaveZoom(this.OptionsPanel);
       locateMissingFiles(this);
     }
     this.Metrics.Compute();
@@ -142,7 +146,8 @@ export class V1Scene extends V1ScenePointer {
     this.OptionsPanel.Close();
     this.Header.Populate(this.Header.MenuJson);
     this.SettingsPanel.Populate(this.SettingsPanel.MenuJson);
-    this.CreateNew.CheckState(); // v1 calls it whenever the block list changes (icon + logo margin when > 1 block)
+    // v1 calls it whenever the block list changes (icon + logo margin when > 1 block)
+    this.CreateNew.CheckState();
   }
 
   /** Advance tweens; true while anything animates (the stage then redraws every frame). */
@@ -240,7 +245,8 @@ export class V1Scene extends V1ScenePointer {
       this.PatchesPanel,
       this.MessagePanel,
     ]) {
-      if (o === this.OptionsPanel) drawPrismExits(this.Ctx, this.OptionsPanel); // under the panel, over the stage
+      // under the panel, over the stage
+      if (o === this.OptionsPanel) drawPrismExits(this.Ctx, this.OptionsPanel);
       this.Ctx.save();
       o.Draw();
       this.Ctx.restore();
@@ -268,7 +274,8 @@ export class V1Scene extends V1ScenePointer {
   /** v1 CommandManager commands the panels issue: SAVE / SAVE_AS go to the sharing backend
    * (CHG-0003); the Share panel then shows the id exactly as v1 showed a saved composition id. */
   protected command(c: unknown): void {
-    const name = ((c as { value?: string })?.value ?? String(c)).toLowerCase(); // v1 StringValue lowercases
+    // v1 StringValue lowercases
+    const name = ((c as { value?: string })?.value ?? String(c)).toLowerCase();
     if (name === 'save' || name === 'saveas') {
       void this.host
         .share(name === 'save' ? 'save' : 'saveAs', this.SharePanel.SessionTitle ?? '')
@@ -325,7 +332,8 @@ export class V1Scene extends V1ScenePointer {
     scaled: boolean,
     name: string,
   ): void {
-    if (!scaled && drawNewSprite(ctx, pos, name)) return; // the post-2.0 blocks: from their manifests
+    // the post-2.0 blocks: from their manifests
+    if (!scaled && drawNewSprite(ctx, pos, name)) return;
     this.sprites.DrawSprite(
       { Ctx: ctx, Width: this.Width, Height: this.Height },
       pos,

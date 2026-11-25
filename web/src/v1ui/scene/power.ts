@@ -22,7 +22,8 @@ export abstract class V1ScenePower extends V1SceneSplash {
   protected hintDrawn = false;
   setPowerMode(mode: 0 | 1 | 2): void {
     this.powerMode = mode;
-    this.host.setPowerMode?.(mode); // first: the processor drops the page's power commands in host mode
+    // first: the processor drops the page's power commands in host mode
+    this.host.setPowerMode?.(mode);
     if (mode < 2) this.setWorldPower(mode === 1);
     else this.worldPower = this.hostPlaying;
   }

@@ -50,7 +50,8 @@ export abstract class AccountPageDraw extends AccountPageDrawParts {
       c.textAlign = 'left';
       c.font = App.Metrics.TxtSlider;
       c.fillText(device.userCode, Lo.L, Lo.code.text);
-      if (!plug.canOpenBrowser) this.drawQr(device.verifyUrl, Lo.code.qr); // only where the browser can't be opened (owner, 2026-11-19)
+      // only where the browser can't be opened (owner, 2026-11-19)
+      if (!plug.canOpenBrowser) this.drawQr(device.verifyUrl, Lo.code.qr);
       App.AnimationsLayer.DrawSprite(
         c,
         'loading',
@@ -203,9 +204,11 @@ export abstract class AccountPageDraw extends AccountPageDrawParts {
       App.FillColor(c, txt);
       c.textAlign = 'left';
       c.font = App.Metrics.TxtMid;
-      c.fillText(COPY.stats.toUpperCase(), Lo.L, top + 10 * unit); // the corner already says who (owner, 2026-11-18)
+      // the corner already says who (owner, 2026-11-18)
+      c.fillText(COPY.stats.toUpperCase(), Lo.L, top + 10 * unit);
       this.drawStats(top, Lo.L, Lo.R);
-      const plugin = !!this.host.plugin; // the plugins: methods and deleting are the website's (SHARING-0011)
+      // the plugins: methods and deleting are the website's (SHARING-0011)
+      const plugin = !!this.host.plugin;
       // The plugins: SIGN OUT only (owner, 2026-11-19: the account's methods are on the website, and it is reached there).
       if (!plugin)
         this.filled(

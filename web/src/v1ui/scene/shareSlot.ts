@@ -3,7 +3,8 @@
 /** The Share panel's warning (v1 l10n UI.SharePanel.SaveWarning, reworded: SoundCloud is gone; local files added). */
 export const SAVE_WARNING =
   "Note: Recorder recordings and your own audio samples aren't saved in the link. " +
-  'To share audio, download a recording from its options panel or use samples from Freesound.'; // owner, PR #1 review 2026-11-12
+  // owner, PR #1 review 2026-11-12
+  'To share audio, download a recording from its options panel or use samples from Freesound.';
 
 /**
  * The header's Share slot reads PATCHES (CHG-0005): the Patches panel opens from it on the web and in the plugin (the
