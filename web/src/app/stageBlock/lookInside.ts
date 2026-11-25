@@ -57,7 +57,7 @@ export const insideFrame = () => {
   });
 };
 
-/** What cancellableOpen (v1ui/scene.ts) adds to v1's Options panel. */
+/** What v1ui/scene/cancellableOpen.ts adds to v1's Options panel. */
 const cancellableOptions = () => scene.OptionsPanel as unknown as { CancelOpen(): void };
 
 export function clearWorld(): void {
