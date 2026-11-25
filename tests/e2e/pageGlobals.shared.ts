@@ -13,6 +13,7 @@ import type {} from '../../web/src/patch/site.ts';
 import type { AccountPage } from '../../web/src/v1ui/accountPage.ts';
 import type { PatchItem, PatchesHost } from '../../web/src/v1ui/patches.ts';
 import type { OptionsPanel } from '../../web/src/v1ui/ported/UI/OptionsPanel';
+import type { Option } from '../../web/src/v1ui/ported/UI/Options/Option';
 import type { SettingsPanel } from '../../web/src/v1ui/ported/UI/SettingsPanel';
 
 /** A message the page sent to a test's stand-in plugin backend (window.__JUCE__). */
@@ -43,6 +44,17 @@ declare global {
   }
 }
 
+/** Private members of the Patches panel that tests use (web/src/v1ui/patches.ts). */
+export interface PatchesPanelPrivates {
+  makeVideo(): Promise<void>;
+  readonly videoOn: boolean;
+}
+
+/** v1's message bar's private text (ported MessagePanel._Value). */
+export interface MessagePanelPrivates {
+  _Value?: { string?: string };
+}
+
 /** What release1Settings (web/src/v1ui/scene.ts) adds to v1's Settings panel at run time. */
 export type AppSettingsPanel = SettingsPanel & {
   accountPage: AccountPage;
@@ -56,6 +68,46 @@ export type AppSettingsPanel = SettingsPanel & {
 /** The Options panel with the Prism's exit lines drawn on it (web/src/v1ui/newBlockRows.ts). */
 export type PrismOptionsPanel = OptionsPanel & { PrismExits?: [number, number][] };
 
+/** What a live options row last drew, kept for tests (web/src/v1ui/newBlockRows.ts, noteBars.ts,
+ * touchpadPanel.ts); each row kind fills its own fields. */
+export interface RowShown {
+  level?: number;
+  reduction?: number;
+  on?: boolean;
+  thresholdX?: number;
+  width?: number;
+  pattern?: string;
+  next?: number;
+  values?: number[];
+  key?: number;
+  held?: number | number[] | string | null;
+  cells?: number[];
+  cell?: number;
+  top?: number;
+  bottom?: number;
+  low?: number;
+  high?: number;
+  lowX?: number;
+  highX?: number;
+  table?: string;
+  position?: number;
+  drawn?: boolean;
+  first?: number[];
+  cols?: number;
+  rows?: number;
+}
+/** One of v1's options rows with what a live row drew; the Touchpad's row has its pads. */
+export type OptionRow = Omit<Option, 'DisplayConversion'> & {
+  /** The words a slider shows for a value (v1 leaves it untyped). */
+  DisplayConversion(value: number): unknown;
+  Shown?: RowShown;
+  Pads?: { x: number; y: number; w: number; h: number; note?: number }[];
+  /** The value a slider row last took from a modulator (the LFO's target). */
+  Followed?: number;
+  /** An action button's words. */
+  _Text?: string;
+};
+
 /** v1's selected block as tests read it (v1's IBlock is untyped): a Sample's search and credit. */
 export interface SelectedBlockView {
   Id: number;
@@ -63,6 +115,22 @@ export interface SelectedBlockView {
   SearchString?: string;
   SearchResults: unknown[];
   Params: { user?: string; permalink?: string; trackName?: string };
+}
+
+/** The block whose options panel is open, as tests drive it (web/src/v1ui/blocks.ts V1Block). */
+export interface OptionsBlock {
+  Id: number;
+  /** v1's SetParam: a slider's or switch's value. */
+  SetParam(key: string, value: number | boolean): void;
+  OptionsForm: {
+    parameters: { type: string; name: string; switches?: { name: string; value?: unknown }[] }[];
+  };
+  /** Redraw the open panel from the block's params. */
+  RefreshOptionsPanel(): void;
+  /** The note a Random Note or Chord last lit (web/src/v1ui/noteBars.ts). */
+  __bdLit?: { note: number; until: number };
+  /** The LFO's targets (web/src/v1ui/newBlocks.ts). */
+  LfoTargets?: { label: string }[];
 }
 
 /** v1 panels' private state that tests read; the classes don't expose it. */

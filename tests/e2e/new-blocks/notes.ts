@@ -1,71 +1,105 @@
 // Silent Keys, the note effects and Random Note's and Chord's bars (CHG-0017, CHG-0040), run by
 // tests/e2e/new-blocks.ts.
+import type { Page } from 'playwright';
 import {
   OUT,
   blk,
   browser,
-  idOf,
   menuItems,
   open,
   openPanel,
   rows,
   state,
   type Tests,
+  savedParams,
+  setParam,
+  pointOf,
 } from './harness.ts';
+import type { OptionRow, OptionsBlock, RowShown } from '../pageGlobals.shared.ts';
+
+/** What the open panel's row `setting` last drew. */
+const shownOf = (page: Page, setting: string) =>
+  page.evaluate((key): RowShown => {
+    const row = (window.__bd_probe.scene.OptionsPanel.Options as OptionRow[]).find(
+      (each) => each.Setting === key,
+    );
+    if (!row?.Shown) throw new Error(`no drawn row ${key}`);
+    return row.Shown;
+  }, setting);
+/** css px of bar `bar` of the open panel's note bars, `level` of the way up and `raise` device px
+ * higher. */
+const barAt = (page: Page, bar: number, level: number, raise = 0) =>
+  page.evaluate(
+    ([index, fraction, up]): [number, number] => {
+      const probe = window.__bd_probe,
+        optionsPanel = probe.scene.OptionsPanel,
+        pixelRatio = probe.v1App.Metrics.PixelRatio,
+        shown = (optionsPanel.Options as OptionRow[]).find(
+          (row) => row.Setting === 'noteBars',
+        )?.Shown;
+      if (!shown?.cells || shown.bottom === undefined || shown.top === undefined)
+        throw new Error('no note bars drawn');
+      return [
+        (optionsPanel.Position.x + shown.cells[index]) / pixelRatio,
+        (optionsPanel.Position.y + shown.bottom - (shown.bottom - shown.top) * fraction - up) /
+          pixelRatio,
+      ];
+    },
+    [bar, level, raise] as const,
+  );
 
 export const noteTests: Tests = {
-  // CHG-0017: Silent Keys is a switch on the keyboards, off by default; on, held keys are silent and a press
-  // (power) on the Tone plays them.
+  // CHG-0017: Silent Keys is a switch on the keyboards, off by default; on, held keys are silent
+  // and a press (power) on the Tone plays them.
   async 'keys-set-pitch'(errors) {
-    const p = await open(
+    const page = await open(
       browser,
       [blk('t', 'source.tone', 0, 0), blk('k', 'input.computer-keyboard', 0, -3)],
       errors,
     );
-    await openPanel(p, 'k');
-    const sw = await p.evaluate(() =>
-      ((window as any).__bd_probe.scene.OptionsPanel.Options as any[])
-        .find((o) => o.Type === 'switches')
-        .Switches.map((Switche: any) => ({ name: Switche.Name, on: !!Switche.Selected })),
-    );
-    await p.evaluate(() =>
-      (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('keysSetPitch', true),
-    );
-    await p.mouse.click(200, 650); // close the panel
-    await p.waitForTimeout(500);
-    const before = (await state(p)).gateOns;
-    await p.keyboard.down('KeyZ');
-    await p.keyboard.down('KeyC');
-    await p.keyboard.down('KeyB'); // C E G
-    await p.waitForTimeout(400);
-    const held = (await state(p)).gateOns - before,
-      quiet = (await state(p)).rms < 0.0005;
-    const at = (await p.evaluate(
-      (i) => (window as any).__bd_probe.blockPoint(i),
-      await idOf(p, 't'),
-    )) as [number, number];
-    await p.mouse.move(at[0], at[1]);
-    await p.mouse.down();
-    await p.waitForTimeout(400);
-    const struck = (await state(p)).gateOns - before,
-      loud = (await state(p)).rms > 0.005;
-    await p.mouse.up();
-    for (const k of ['KeyZ', 'KeyC', 'KeyB']) await p.keyboard.up(k);
-    const saved = (await state(p)).patch.blocks.find((b: any) => b.id === 'k').params.keysSetPitch;
-    await p.close();
+    await openPanel(page, 'k');
+    const switches = await page.evaluate(() => {
+      const row = (window.__bd_probe.scene.OptionsPanel.Options as OptionRow[]).find(
+        (each) => each.Type === 'switches',
+      );
+      if (!row) throw new Error('the keyboard has no switches');
+      return row.Switches.map((each) => ({ name: each.Name, on: each.Selected }));
+    });
+    await setParam(page, 'keysSetPitch', true);
+    // Close the panel.
+    await page.mouse.click(200, 650);
+    await page.waitForTimeout(500);
+    const before = (await state(page)).gateOns;
+    // C E G.
+    await page.keyboard.down('KeyZ');
+    await page.keyboard.down('KeyC');
+    await page.keyboard.down('KeyB');
+    await page.waitForTimeout(400);
+    const held = (await state(page)).gateOns - before,
+      quiet = (await state(page)).rms < 0.0005;
+    const at = await pointOf(page, 't');
+    await page.mouse.move(at[0], at[1]);
+    await page.mouse.down();
+    await page.waitForTimeout(400);
+    const struck = (await state(page)).gateOns - before,
+      loud = (await state(page)).rms > 0.005;
+    await page.mouse.up();
+    for (const key of ['KeyZ', 'KeyC', 'KeyB']) await page.keyboard.up(key);
+    const saved = (await savedParams(page, 'k')).keysSetPitch;
+    await page.close();
     const pass =
-      sw.some((s: any) => s.name === 'Silent Keys' && !s.on) &&
+      switches.some((each) => each.name === 'Silent Keys' && !each.on) &&
       held === 0 &&
       quiet &&
       struck === 3 &&
       loud &&
       !!saved;
-    return [pass, { sw, held, quiet, struck, loud, saved }];
+    return [pass, { sw: switches, held, quiet, struck, loud, saved }];
   },
-  // CHG-0017: Chord, Arpeggiator and Random Note are in the Effect menu; a Chord by a powered Tone sounds three voices;
-  // the Arpeggiator's panel has Speed, and Per Hit hides it.
+  // CHG-0017: Chord, Arpeggiator and Random Note are in the Effect menu; a Chord by a powered Tone
+  // sounds three voices; the Arpeggiator's panel has Speed, and Per Hit hides it.
   async 'note-effects'(errors) {
-    const p = await open(
+    const page = await open(
       browser,
       [
         blk('t', 'source.tone', 0, 0),
@@ -78,41 +112,40 @@ export const noteTests: Tests = {
       ],
       errors,
     );
-    const menu = await menuItems(p, 'Effect');
-    const s0 = await state(p);
-    await p.waitForTimeout(1000);
-    const s1 = await state(p);
-    await openPanel(p, 'arp');
-    const timed = (await rows(p)).map((x) => x.name);
-    await p.screenshot({ path: `${OUT}/arpeggiator.png` });
-    await p.evaluate(() =>
-      (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('perHit', true),
-    );
-    await p.waitForTimeout(300);
-    const perHit = (await rows(p)).map((x) => x.name);
-    await p.close();
-    const q = await open(browser, [blk('rn', 'fx.random-note', 0, 0)], errors);
-    await openPanel(q, 'rn');
-    const random = (await rows(q)).map((x) => ({ name: x.name, type: x.type }));
-    await q.screenshot({ path: `${OUT}/random-note.png` });
-    await q.close();
-    const steps = s1.gateOns - s0.gateOns; // the arpeggiated Tone strikes about 10 notes a second
+    const menu = await menuItems(page, 'Effect');
+    const gateOns0 = (await state(page)).gateOns;
+    await page.waitForTimeout(1000);
+    const gateOns1 = (await state(page)).gateOns;
+    await openPanel(page, 'arp');
+    const timed = (await rows(page)).map((row) => row.name);
+    await page.screenshot({ path: `${OUT}/arpeggiator.png` });
+    await setParam(page, 'perHit', true);
+    await page.waitForTimeout(300);
+    const perHit = (await rows(page)).map((row) => row.name);
+    await page.close();
+    const randomPage = await open(browser, [blk('rn', 'fx.random-note', 0, 0)], errors);
+    await openPanel(randomPage, 'rn');
+    const random = (await rows(randomPage)).map((row) => ({ name: row.name, type: row.type }));
+    await randomPage.screenshot({ path: `${OUT}/random-note.png` });
+    await randomPage.close();
+    // The arpeggiated Tone strikes about 10 notes a second.
+    const steps = gateOns1 - gateOns0;
     const pass =
-      ['Chord', 'Arpeggiator', 'Random Note'].every((n) => menu.includes(n)) &&
+      ['Chord', 'Arpeggiator', 'Random Note'].every((name) => menu.includes(name)) &&
       steps >= 8 &&
       steps <= 12 &&
       timed.includes('Speed') &&
       timed.includes('Pattern') &&
       timed.includes('Octaves') &&
       !perHit.includes('Speed') &&
-      random.map((r) => r.name).join() === 'Notes,Key,Range'; // CHG-0040 (UI-0016)
+      // CHG-0040 (UI-0016)
+      random.map((row) => row.name).join() === 'Notes,Key,Range';
     return [pass, { menu, steps, timed, perHit, random }];
   },
-  // CHG-0040 (UI-0016, R10f, R10h): Random Note's and Chord's bars. A press on a bar sets it (to the patch and the
-  // engine) and shows its value above the row; Key slides the bars; Range's handles move by semitone and never cross;
-  // a played note lights its bar.
+  // CHG-0040 (UI-0016, R10f, R10h): a press on a note bar sets it and shows its value; Key slides
+  // the bars; Range's handles step by semitone, never crossing; a played note lights its bar.
   async 'note-bars'(errors) {
-    const p = await open(
+    const page = await open(
       browser,
       [
         blk('e', 'power.emitter', -8, 0, { angle: 0, selfPoweredMode: true, rate: 30, speed: 12 }),
@@ -121,128 +154,87 @@ export const noteTests: Tests = {
       ],
       errors,
     );
-    await openPanel(p, 'rn');
-    const bars = () =>
-      p.evaluate(
-        () =>
-          ((window as any).__bd_probe.scene.OptionsPanel.Options as any[]).find(
-            (o) => o.Setting === 'noteBars',
-          ).Shown,
+    await openPanel(page, 'rn');
+    const lastLit = () =>
+      page.evaluate(
+        () => (window.__bd_probe.scene.OptionsPanel.SelectedBlock as OptionsBlock).__bdLit,
       );
-    const barAt = (n: number, f: number) =>
-      p.evaluate(
-        ([key, value]) => {
-          const P = (window as any).__bd_probe,
-            optionsPanel = P.scene.OptionsPanel,
-            pr = P.v1App.Metrics.PixelRatio,
-            shown = (optionsPanel.Options as any[]).find((x) => x.Setting === 'noteBars').Shown;
-          return [
-            (optionsPanel.Position.x + shown.cells[key]) / pr,
-            (optionsPanel.Position.y + shown.bottom - (shown.bottom - shown.top) * value) / pr,
-          ] as [number, number];
-        },
-        [n, f],
-      );
-    const saved = async (uid: string) =>
-      (await state(p)).patch.blocks.find((b: any) => b.id === uid).params;
-    await p
+    await page
       .waitForFunction(
-        () => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.__bdLit,
+        () => (window.__bd_probe.scene.OptionsPanel.SelectedBlock as OptionsBlock).__bdLit,
         null,
         { timeout: 5000 },
       )
       .catch(() => null);
-    const lit = (await bars()).values,
-      litNow = await p.evaluate(
-        () => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.__bdLit?.note,
-      ); // a hit played G
-    // drag A (bar 9) to about half
-    const [x, y] = await barAt(9, 0.5);
-    await p.mouse.move(x, y);
-    await p.mouse.down();
-    await p.mouse.move(x + 30, y - 2, { steps: 4 }); // sideways stays on A
-    const held = await bars();
-    await p.screenshot({ path: `${OUT}/note-bars-drag.png` });
-    await p.mouse.up();
-    await p.waitForTimeout(200);
-    const afterDrag = await saved('rn');
-    // Key D: the pattern slides two bars right
-    await p.evaluate(() =>
-      (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('key', 2),
-    );
-    await p.waitForTimeout(200);
-    const shifted = (await bars()).values;
-    // Range: the low handle dragged past the high one stops on it
-    const range = () =>
-      p.evaluate(
-        () =>
-          ((window as any).__bd_probe.scene.OptionsPanel.Options as any[]).find(
-            (o) => o.Setting === 'noteRange',
-          ).Shown,
-      );
-    const r0 = await range();
-    const py = await p.evaluate(() => {
-      const P = (window as any).__bd_probe,
-        optionsPanel = P.scene.OptionsPanel,
-        r = (optionsPanel.Options as any[]).find((x) => x.Setting === 'noteRange');
+    const lit = (await shownOf(page, 'noteBars')).values,
+      // A hit played G.
+      litNow = (await lastLit())?.note;
+    // Drag A (bar 9) to about half; sideways stays on A.
+    const [x, y] = await barAt(page, 9, 0.5);
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + 30, y - 2, { steps: 4 });
+    const held = await shownOf(page, 'noteBars');
+    await page.screenshot({ path: `${OUT}/note-bars-drag.png` });
+    await page.mouse.up();
+    await page.waitForTimeout(200);
+    const afterDrag = await savedParams(page, 'rn');
+    const draggedA = Number(afterDrag.w9);
+    // Key D: the pattern slides two bars right.
+    await setParam(page, 'key', 2);
+    await page.waitForTimeout(200);
+    const shifted = (await shownOf(page, 'noteBars')).values;
+    // Range: the low handle dragged past the high one stops on it.
+    const range0 = await shownOf(page, 'noteRange');
+    const rangeY = await page.evaluate(() => {
+      const probe = window.__bd_probe,
+        optionsPanel = probe.scene.OptionsPanel,
+        rangeRow = (optionsPanel.Options as OptionRow[]).find((row) => row.Setting === 'noteRange');
+      if (!rangeRow) throw new Error('no Range row');
       return (
-        (optionsPanel.Position.y + r.Position.y + r.Size.height / 2) / P.v1App.Metrics.PixelRatio
+        (optionsPanel.Position.y + rangeRow.Position.y + rangeRow.Size.height / 2) /
+        probe.v1App.Metrics.PixelRatio
       );
     });
-    const pr = await p.evaluate(() => (window as any).__bd_probe.v1App.Metrics.PixelRatio),
-      ox = await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.Position.x);
-    await p.mouse.move((ox + r0.lowX) / pr, py);
-    await p.mouse.down();
-    await p.mouse.move((ox + r0.highX) / pr + 80, py, { steps: 6 });
-    const r1 = await range();
-    await p.mouse.up();
-    await p.waitForTimeout(200);
-    const afterRange = await saved('rn');
-    await p.close();
-    // Chord: its bars are stepped and name their chord
-    const c = await open(browser, [blk('ch', 'fx.chord', 0, 0)], errors);
-    await openPanel(c, 'ch');
-    const cb = () =>
-      c.evaluate(
-        () =>
-          ((window as any).__bd_probe.scene.OptionsPanel.Options as any[]).find(
-            (o) => o.Setting === 'noteBars',
-          ).Shown,
-      );
-    const c0 = (await cb()).values;
-    const [cx, cy] = await c.evaluate(() => {
-      const P = (window as any).__bd_probe,
-        optionsPanel = P.scene.OptionsPanel,
-        pr = P.v1App.Metrics.PixelRatio,
-        shown = (optionsPanel.Options as any[]).find((x) => x.Setting === 'noteBars').Shown;
-      return [
-        (optionsPanel.Position.x + shown.cells[2]) / pr,
-        (optionsPanel.Position.y + shown.bottom - (shown.bottom - shown.top) * (2 / 7) - 2) / pr,
-      ];
-    });
-    await c.mouse.move(cx, cy);
-    await c.mouse.down();
-    await c.mouse.up();
-    await c.waitForTimeout(200);
-    const chordSaved = (await state(c)).patch.blocks.find((b: any) => b.id === 'ch').params;
-    const names = (await rows(c)).map((r) => r.name ?? r.type);
-    await c.close();
+    const pixelRatio = await page.evaluate(() => window.__bd_probe.v1App.Metrics.PixelRatio),
+      panelX = await page.evaluate(() => window.__bd_probe.scene.OptionsPanel.Position.x);
+    await page.mouse.move((panelX + (range0.lowX ?? 0)) / pixelRatio, rangeY);
+    await page.mouse.down();
+    await page.mouse.move((panelX + (range0.highX ?? 0)) / pixelRatio + 80, rangeY, { steps: 6 });
+    const range1 = await shownOf(page, 'noteRange');
+    await page.mouse.up();
+    await page.waitForTimeout(200);
+    const afterRange = await savedParams(page, 'rn');
+    await page.close();
+    // Chord: its bars are stepped and name their chord.
+    const chordPage = await open(browser, [blk('ch', 'fx.chord', 0, 0)], errors);
+    await openPanel(chordPage, 'ch');
+    const chords = (await shownOf(chordPage, 'noteBars')).values;
+    // Bar 2, 2/7 of the way up and 2 px higher.
+    const [chordX, chordY] = await barAt(chordPage, 2, 2 / 7, 2);
+    await chordPage.mouse.move(chordX, chordY);
+    await chordPage.mouse.down();
+    await chordPage.mouse.up();
+    await chordPage.waitForTimeout(200);
+    const chordSaved = await savedParams(chordPage, 'ch');
+    const names = (await rows(chordPage)).map((row) => row.name);
+    await chordPage.close();
     const pass =
-      lit[7] === 1 &&
+      lit?.[7] === 1 &&
       litNow === 7 &&
       held.held === 9 &&
-      afterDrag.w9 > 0.4 &&
-      afterDrag.w9 < 0.6 &&
+      draggedA > 0.4 &&
+      draggedA < 0.6 &&
       afterDrag.w10 === undefined &&
-      shifted[11] === afterDrag.w9 &&
-      shifted[9] === 1 &&
-      r0.low === 60 &&
-      r0.high === 71 &&
-      r1.low === 71 &&
-      r1.high === 71 &&
+      shifted?.[11] === afterDrag.w9 &&
+      shifted?.[9] === 1 &&
+      range0.low === 60 &&
+      range0.high === 71 &&
+      range1.low === 71 &&
+      range1.high === 71 &&
       afterRange.low === 71 &&
       (afterRange.high ?? 71) === 71 &&
-      c0.join() === '3,7,5,3,2,7,7,6,7,5,3,2' &&
+      chords?.join() === '3,7,5,3,2,7,7,6,7,5,3,2' &&
       chordSaved.q2 === 2 &&
       names.includes('Key') &&
       names.includes('Chords');
@@ -254,10 +246,10 @@ export const noteTests: Tests = {
         held: held.held,
         afterDrag,
         shifted,
-        r0,
-        r1,
+        r0: range0,
+        r1: range1,
         afterRange,
-        c0,
+        c0: chords,
         chordSaved,
         names,
       },

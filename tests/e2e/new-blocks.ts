@@ -1,6 +1,5 @@
-// Black-box tests for the post-2.0 blocks (SCOPE-0005, CHG-0014 … CHG-0021): the real app, pointer and AudioWorklet.
-//   pnpm test:new-blocks [--only name,name]
-// Each test opens a v2 patch from a `?c=p…` link, so it also proves the blocks load from a shared patch.
+// pnpm test:new-blocks [--only name,name]: the post-2.0 blocks (SCOPE-0005, CHG-0014 … CHG-0021)
+// in the real app; each test opens a `?c=p…` link, so the blocks also load from a shared patch.
 import { writeFileSync } from 'node:fs';
 import { OUT, browser, server, type Tests } from './new-blocks/harness.ts';
 import { blockPanelTests } from './new-blocks/blockPanels.ts';

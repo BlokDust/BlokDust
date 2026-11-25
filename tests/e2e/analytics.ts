@@ -12,6 +12,7 @@ import { createServer, type Server } from 'node:http';
 import { generateKeyPairSync, createSign, randomUUID, type KeyObject } from 'node:crypto';
 import { chromium, type Page } from 'playwright';
 import { startLocal, type LocalServer } from '../../tools/server/lib.ts';
+import type { AppSettingsPanel } from './pageGlobals.shared.ts';
 
 const results: { name: string; ok: boolean; detail?: unknown }[] = [];
 function check(name: string, ok: boolean, detail?: unknown) {
@@ -298,9 +299,9 @@ async function main() {
     });
     const app = await ctx.newPage();
     await app.goto(`${base}/?demo`);
-    await app.waitForFunction(() => (window as any).__bd_probe);
+    await app.waitForFunction(() => window.__bd_probe);
     await app.click('#start');
-    await app.waitForFunction(() => (window as any).__bd_probe.state.started, null, {
+    await app.waitForFunction(() => window.__bd_probe.state.started, null, {
       timeout: 20000,
     });
     await eventsFrom(app);
@@ -321,7 +322,7 @@ async function main() {
     });
     for (
       let i = 0;
-      i < 6 && !(await app.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.Open));
+      i < 6 && !(await app.evaluate(() => window.__bd_probe.scene.SettingsPanel.Open));
       i++
     ) {
       await app.mouse.click(1233, 45);
@@ -329,8 +330,8 @@ async function main() {
     }
     await app.waitForTimeout(1200);
     const about = await app.evaluate(() => {
-      const m = (window as any).__bd_probe.scene.SettingsPanel.MenuItems[2],
-        pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio;
+      const m = window.__bd_probe.scene.SettingsPanel.MenuItems[2],
+        pr = window.__bd_probe.v1App.Metrics.PixelRatio;
       return [m.Position.x / pr, 30];
     });
     await app.waitForTimeout(1200);
@@ -338,7 +339,7 @@ async function main() {
     await app.mouse.click(about[0], about[1]);
     await app.waitForTimeout(1200);
     const sw = await app.evaluate(() =>
-      (window as any).__bd_probe.scene.SettingsPanel.usageStatsSwitch(),
+      (window.__bd_probe.scene.SettingsPanel as AppSettingsPanel).usageStatsSwitch(),
     );
     check(
       'R7 the switch shows on the About tab, on',
@@ -352,7 +353,7 @@ async function main() {
       await app.waitForTimeout(300);
     }
     const after = await app.evaluate(() => ({
-      label: (window as any).__bd_probe.scene.SettingsPanel.usageStatsSwitch()?.label,
+      label: (window.__bd_probe.scene.SettingsPanel as AppSettingsPanel).usageStatsSwitch()?.label,
       stored: localStorage.getItem('blokdust2.analytics'),
     }));
     check(
@@ -363,9 +364,9 @@ async function main() {
     await app.screenshot({ path: 'tests/e2e/output/analytics-about.png' });
     sent.length = 0;
     await app.reload();
-    await app.waitForFunction(() => (window as any).__bd_probe);
+    await app.waitForFunction(() => window.__bd_probe);
     await app.click('#start');
-    await app.waitForFunction(() => (window as any).__bd_probe.state.started, null, {
+    await app.waitForFunction(() => window.__bd_probe.state.started, null, {
       timeout: 20000,
     });
     await eventsFrom(app);

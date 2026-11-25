@@ -7,16 +7,18 @@ import {
   open,
   openPanel,
   rows,
+  savedParams,
+  setParam,
   state,
   type Tests,
 } from './harness.ts';
+import type { OptionsBlock, PrismOptionsPanel } from '../pageGlobals.shared.ts';
 
 export const powerGateTests: Tests = {
-  // CHG-0015: a Prism splits a laser's beam into its streams, and its panel draws the exit lines on the stage.
-  // CHG-0015 (SPEC-SIMULATION R2d): a Chance at 100% switches the Tone beside it on and holds it (one note); at 0% it
-  // switches it off and it never sounds again.
+  // CHG-0015 (SPEC-SIMULATION R2d): a Chance at 100% switches the Tone beside it on and holds it
+  // (one note); at 0% it switches it off and it never sounds again.
   async 'chance-fires'(errors) {
-    const p = await open(
+    const page = await open(
       browser,
       [
         blk('e', 'power.emitter', -8, 0, { angle: 0, selfPoweredMode: true, rate: 30, speed: 12 }),
@@ -25,28 +27,30 @@ export const powerGateTests: Tests = {
       ],
       errors,
     );
-    const inMenu = (await menuItems(p, 'Power')).includes('Chance');
-    await p.waitForTimeout(1500);
-    const s = await state(p),
-      notes = s.gateOns;
-    await openPanel(p, 'c');
-    const names = (await rows(p)).map((x) => x.name);
-    await p.evaluate(() =>
-      (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('chance', 0),
-    );
-    await p.waitForTimeout(300);
-    const g0 = (await state(p)).gateOns;
-    await p.waitForTimeout(1500);
-    const never = (await state(p)).gateOns - g0;
-    await p.close();
+    const inMenu = (await menuItems(page, 'Power')).includes('Chance');
+    await page.waitForTimeout(1500);
+    const snapshot = await state(page),
+      notes = snapshot.gateOns;
+    await openPanel(page, 'c');
+    const names = (await rows(page)).map((row) => row.name);
+    await setParam(page, 'chance', 0);
+    await page.waitForTimeout(300);
+    const gateOnsAtZero = (await state(page)).gateOns;
+    await page.waitForTimeout(1500);
+    const never = (await state(page)).gateOns - gateOnsAtZero;
+    await page.close();
     const pass =
-      inMenu && s.connections.length > 0 && notes === 1 && names.includes('Chance') && never === 0;
-    return [pass, { inMenu, connections: s.connections, notes, names, never }];
+      inMenu &&
+      snapshot.connections.length > 0 &&
+      notes === 1 &&
+      names.includes('Chance') &&
+      never === 0;
+    return [pass, { inMenu, connections: snapshot.connections, notes, names, never }];
   },
-  // CHG-0032 (SPEC-SIMULATION R7c, SIMULATION-0011): the Gate is in the Power menu and stops a beam until a Power
-  // beside it opens it; Invert swaps that.
+  // CHG-0032 (SPEC-SIMULATION R7c, SIMULATION-0011): the Gate is in the Power menu and stops a beam
+  // until a Power beside it opens it; Invert swaps that.
   async gate(errors) {
-    const p = await open(
+    const page = await open(
       browser,
       [
         blk('l', 'power.laser', -8, 0, { angle: 0, selfPoweredMode: true }),
@@ -55,34 +59,32 @@ export const powerGateTests: Tests = {
       ],
       errors,
     );
-    const inMenu = (await menuItems(p, 'Power')).includes('Gate');
-    await p.waitForTimeout(500);
-    const closed = (await state(p)).rms;
-    await p.screenshot({ path: `${OUT}/gate-closed.png` });
-    await openPanel(p, 'g');
-    const names = await p.evaluate(
-      () =>
-        (
-          (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.OptionsForm
-            .parameters as any[]
-        ).flatMap((r) =>
-          r.type === 'switches' ? r.switches.map((x: any) => x.name) : [r.name],
-        ) as string[],
+    const inMenu = (await menuItems(page, 'Power')).includes('Gate');
+    await page.waitForTimeout(500);
+    const closed = (await state(page)).rms;
+    await page.screenshot({ path: `${OUT}/gate-closed.png` });
+    await openPanel(page, 'g');
+    const names = await page.evaluate(() =>
+      (
+        window.__bd_probe.scene.OptionsPanel.SelectedBlock as OptionsBlock
+      ).OptionsForm.parameters.flatMap((param) =>
+        param.type === 'switches' ? (param.switches ?? []).map((each) => each.name) : [param.name],
+      ),
     );
-    await p.evaluate(() =>
-      (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('invert', true),
-    );
-    await p.waitForTimeout(600);
-    const inverted = (await state(p)).rms;
-    const saved = (await state(p)).patch.blocks.find((b: any) => b.id === 'g').params.invert;
-    await p.screenshot({ path: `${OUT}/gate.png` });
-    await p.close();
+    await setParam(page, 'invert', true);
+    await page.waitForTimeout(600);
+    const inverted = (await state(page)).rms;
+    const saved = (await savedParams(page, 'g')).invert;
+    await page.screenshot({ path: `${OUT}/gate.png` });
+    await page.close();
     const pass =
       inMenu && closed < 0.0005 && inverted > 0.001 && names.includes('Invert') && saved === 1;
     return [pass, { inMenu, closed, inverted, names, saved }];
   },
+  // CHG-0015: a Prism splits a laser's beam into its streams, and its panel draws the exit lines on
+  // the stage.
   async 'prism-splits-beam'(errors) {
-    const p = await open(
+    const page = await open(
       browser,
       [
         blk('l', 'power.laser', -6, 0, { angle: 0, selfPoweredMode: true, range: 300 }),
@@ -91,25 +93,27 @@ export const powerGateTests: Tests = {
       ],
       errors,
     );
-    await p.waitForTimeout(400);
-    const beams = await p.evaluate(() => (window as any).__bd_probe.beams as number);
-    const sounding = (await state(p)).rms > 0.001; // the middle stream points at the Tone
-    await openPanel(p, 'pr');
-    await p.waitForTimeout(300);
-    const exits = await p.evaluate(
-      () => (window as any).__bd_probe.scene.OptionsPanel.PrismExits as [number, number][],
+    await page.waitForTimeout(400);
+    const beams = await page.evaluate(() => window.__bd_probe.beams);
+    // The middle stream points at the Tone.
+    const sounding = (await state(page)).rms > 0.001;
+    await openPanel(page, 'pr');
+    await page.waitForTimeout(300);
+    const exits = await page.evaluate(
+      () => (window.__bd_probe.scene.OptionsPanel as PrismOptionsPanel).PrismExits,
     );
-    const names = (await rows(p)).map((x) => x.name);
-    await p.screenshot({ path: `${OUT}/prism.png` });
-    await p.close();
+    const names = (await rows(page)).map((row) => row.name);
+    await page.screenshot({ path: `${OUT}/prism.png` });
+    await page.close();
     const up = exits?.[1],
       pass =
         beams === 4 &&
         sounding &&
         exits?.length === 3 &&
+        !!up &&
         Math.abs(up[0]) < 0.5 &&
         up[1] < 0 &&
-        ['Angle', 'Rotate', 'Streams', 'Spread'].every((n) => names.includes(n));
+        ['Angle', 'Rotate', 'Streams', 'Spread'].every((name) => names.includes(name));
     return [pass, { beams, sounding, exits, names }];
   },
 };

@@ -7,15 +7,18 @@ import {
   open,
   openPanel,
   rows,
+  savedParams,
+  setParam,
   state,
   type Tests,
 } from './harness.ts';
+import type { OptionRow, OptionsBlock } from '../pageGlobals.shared.ts';
 
 export const lfoTests: Tests = {
-  // CHG-0018: an LFO beside a Volume aims at its Level; the Volume's open slider follows; the patch keeps the target by
-  // block id and the Level where it was set. The carousel lists "Block · Param" for what is connected.
+  // CHG-0018: an LFO beside a Volume aims at its Level; the Volume's open slider follows; the patch
+  // keeps the target by block id and the Level where it was set. Targets read "Block · Param".
   async lfo(errors) {
-    const p = await open(
+    const page = await open(
       browser,
       [
         blk('t', 'source.tone', 0, 0),
@@ -25,30 +28,31 @@ export const lfoTests: Tests = {
       ],
       errors,
     );
-    const menu = await menuItems(p, 'Effect');
+    const menu = await menuItems(page, 'Effect');
     // Heard: the level swings, so the loudness differs between moments.
     const levels: number[] = [];
     for (let i = 0; i < 12; i++) {
-      await p.waitForTimeout(90);
-      levels.push((await state(p)).rms);
+      await page.waitForTimeout(90);
+      levels.push((await state(page)).rms);
     }
-    await openPanel(p, 'v');
+    await openPanel(page, 'v');
     const seen: number[] = [];
     for (let i = 0; i < 8; i++) {
-      await p.waitForTimeout(80);
+      await page.waitForTimeout(80);
       seen.push(
-        await p.evaluate(
-          () =>
-            ((window as any).__bd_probe.scene.OptionsPanel.Options as any[]).find(
-              (o) => o.Setting === 'gain',
-            ).Followed as number,
-        ),
+        await page.evaluate(() => {
+          const gain = (window.__bd_probe.scene.OptionsPanel.Options as OptionRow[]).find(
+            (row) => row.Setting === 'gain',
+          );
+          if (gain?.Followed === undefined) throw new Error('the Volume has no followed Level row');
+          return gain.Followed;
+        }),
       );
     }
-    await p.screenshot({ path: `${OUT}/lfo-follow.png` });
-    await p.mouse.click(200, 650);
-    await p.waitForTimeout(500);
-    const q = await open(
+    await page.screenshot({ path: `${OUT}/lfo-follow.png` });
+    await page.mouse.click(200, 650);
+    await page.waitForTimeout(500);
+    const panelPage = await open(
       browser,
       [
         blk('t', 'source.tone', 0, 0),
@@ -57,31 +61,31 @@ export const lfoTests: Tests = {
       ],
       errors,
     );
-    await openPanel(q, 'l');
+    await openPanel(panelPage, 'l');
     const target = () =>
-      q.evaluate(() => {
-        const o = ((window as any).__bd_probe.scene.OptionsPanel.Options as any[]).find(
-          (x) => x.Setting === 'lfoTarget',
+      panelPage.evaluate(() => {
+        const row = (window.__bd_probe.scene.OptionsPanel.Options as OptionRow[]).find(
+          (option) => option.Setting === 'lfoTarget',
         );
-        return String(o.DisplayConversion(o.Value));
+        if (!row) throw new Error('the LFO has no Target row');
+        return String(row.DisplayConversion(row.Value));
       });
     const first = await target();
-    const list = await q.evaluate(() =>
-      ((window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.LfoTargets as any[]).map(
-        (t) => t.label,
+    const list = await panelPage.evaluate(() =>
+      ((window.__bd_probe.scene.OptionsPanel.SelectedBlock as OptionsBlock).LfoTargets ?? []).map(
+        (lfoTarget) => lfoTarget.label,
       ),
     );
-    await q.evaluate(() =>
-      (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('lfoTarget', 1),
-    ); // the first entry: the Tone's Note
-    await q.waitForTimeout(300);
+    // The first entry: the Tone's Note.
+    await setParam(panelPage, 'lfoTarget', 1);
+    await panelPage.waitForTimeout(300);
     const second = await target();
-    const names = (await rows(q)).map((x) => x.name);
-    await q.screenshot({ path: `${OUT}/lfo-panel.png` });
-    const saved = (await state(q)).patch.blocks.find((b: any) => b.id === 'l').params;
-    const savedGain = (await state(p)).patch.blocks.find((b: any) => b.id === 'v').params.gain;
-    await p.close();
-    await q.close();
+    const names = (await rows(panelPage)).map((row) => row.name);
+    await panelPage.screenshot({ path: `${OUT}/lfo-panel.png` });
+    const saved = await savedParams(panelPage, 'l');
+    const savedGain = (await savedParams(page, 'v')).gain;
+    await page.close();
+    await panelPage.close();
     const swing = Math.max(...levels) / Math.max(1e-6, Math.min(...levels));
     const pass =
       menu.includes('LFO') &&
@@ -92,7 +96,7 @@ export const lfoTests: Tests = {
       list.join() === 'TONE · NOTE,TONE · FINE,VOLUME · LEVEL' &&
       second === 'TONE · NOTE' &&
       saved.target === 't:transpose' &&
-      ['Target', 'Shape', 'Rate', 'Depth', 'Phase'].every((n) => names.includes(n));
+      ['Target', 'Shape', 'Rate', 'Depth', 'Phase'].every((name) => names.includes(name));
     return [pass, { swing, seen, savedGain, first, list, second, saved, names }];
   },
 };

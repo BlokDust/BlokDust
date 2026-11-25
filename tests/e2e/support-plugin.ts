@@ -1,11 +1,25 @@
-// CHG-0036 R1/R2/R6: actual native plugin WebView -> deployed staging support API -> dedicated D1.
-// Requires a plugin built with BLOKDUST_SUPPORT_PUBLIC_URL pointing to staging. Removes its own report afterward.
+// CHG-0036 R1/R2/R6: the native plugin's WebView -> the staging support API -> its D1. Needs a
+// plugin built with BLOKDUST_SUPPORT_PUBLIC_URL at staging; deletes its own report afterwards.
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawn } from 'node:child_process';
 import { remoteConfig } from '../../tools/server/config.ts';
 import { run, WRANGLER } from '../../tools/server/lib.ts';
+
+/** The host's last stdout line: what the editor's support panel did. */
+interface HostResult {
+  editor?: { success?: boolean; status?: string; id?: unknown };
+}
+/** A stored report joined with its context (server/ support tables). */
+interface ReportRow {
+  kind: string;
+  message: string;
+  version: string;
+  surface: string;
+  system_json: string;
+  patch_json: string;
+}
 
 assert.equal(process.platform, 'darwin', 'native smoke currently uses the macOS VST3 host');
 mkdirSync('.cache', { recursive: true });
@@ -18,30 +32,32 @@ const result = await new Promise<string>((resolve, reject) => {
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let out = '';
-  child.stdout.on('data', (d) => {
-    out += d;
+  child.stdout.on('data', (chunk: Buffer) => {
+    out += chunk.toString();
   });
-  // Host diagnostics may contain local paths; keep them out of committed results and terminal summaries.
+  // Host diagnostics may hold local paths; keep them out of results and summaries.
   child.stderr.resume();
   child.on('error', reject);
   child.on('close', (code) => {
-    code === 0 ? resolve(out) : reject(new Error('native support smoke host failed'));
+    if (code === 0) resolve(out);
+    else reject(new Error('native support smoke host failed'));
   });
 });
-const data = JSON.parse(result.trim().split('\n').at(-1)!);
+const data = JSON.parse(result.trim().split('\n').at(-1) ?? '') as HostResult;
 assert.equal(
   data.editor?.success,
   true,
   `native panel failed: ${data.editor?.status ?? 'timeout'}`,
 );
+const reportId = data.editor.id;
 const id =
-  typeof data.editor.id === 'string'
-    ? data.editor.id.match(/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/)?.[0]
+  typeof reportId === 'string'
+    ? /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.exec(reportId)?.[0]
     : null;
 assert.ok(id, 'test transport must capture the private API reference');
 const config = remoteConfig('staging');
-async function sql(command: string): Promise<any[]> {
-  const r = await run(
+async function sql(command: string): Promise<ReportRow[]> {
+  const query = await run(
     [
       WRANGLER,
       'd1',
@@ -58,8 +74,12 @@ async function sql(command: string): Promise<any[]> {
     ],
     { quiet: true },
   );
-  assert.equal(r.code, 0, 'staging database query failed');
-  return JSON.parse(r.out.slice(r.out.search(/^\[/m)))[0].results; // wrangler may print warnings (with brackets) before the JSON
+  assert.equal(query.code, 0, 'staging database query failed');
+  // Wrangler may print warnings (with brackets) before the JSON.
+  const answers = JSON.parse(query.out.slice(query.out.search(/^\[/m))) as {
+    results: ReportRow[];
+  }[];
+  return answers[0].results;
 }
 try {
   const rows = await sql(
@@ -67,8 +87,12 @@ try {
   );
   assert.equal(rows.length, 1);
   const row = rows[0],
-    system = JSON.parse(row.system_json),
-    patch = JSON.parse(row.patch_json);
+    system = JSON.parse(row.system_json) as {
+      format: string;
+      sampleRate: number;
+      bufferSize: number;
+    },
+    patch = JSON.parse(row.patch_json) as { blocks: unknown[] };
   assert.equal(row.message, 'CHG-0036 native plugin support smoke test');
   assert.equal(row.surface, 'plugin');
   assert.equal(system.format, 'VST3');

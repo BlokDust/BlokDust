@@ -1,10 +1,12 @@
-// Stage block tests: making a Stage and going into it (CHG-0021, UI-0012); run by tests/e2e/new-blocks.ts.
+// Stage block tests: making a Stage and going into it (CHG-0021, UI-0012); run by
+// tests/e2e/new-blocks.ts.
 import type { Page } from 'playwright';
+import type { AppSettingsPanel } from '../pageGlobals.shared.ts';
+import { steadySineWav } from '../steadySine.ts';
 import {
   OUT,
   browser,
   blk,
-  sineWav,
   state,
   open,
   idOf,
@@ -12,11 +14,37 @@ import {
   rows,
   menuItems,
   type Tests,
+  pointOf,
+  setParam,
 } from './harness.ts';
 
+/** The Stage's window while it is open. */
+async function insideWindow(page: Page) {
+  const win = await page.evaluate(() => window.__bd_probe.inside);
+  if (!win) throw new Error('no Stage is open');
+  return win;
+}
+/** css px of the block with engine id `id`. */
+async function pointOfId(page: Page, id: number): Promise<[number, number]> {
+  const at = await page.evaluate((blockId) => window.__bd_probe.blockPoint(blockId), id);
+  if (!at) throw new Error(`no point on block ${id}`);
+  return at;
+}
+/** The engine id of the first block of `type` on the stage. */
+async function idOfType(page: Page, type: string): Promise<number> {
+  const block = (await state(page)).blocks.find((each) => each.type === type);
+  if (!block) throw new Error(`no ${type} on the stage`);
+  return block.id;
+}
+const sortedTypes = (blocks: { type: string }[]) =>
+  blocks
+    .map((block) => block.type)
+    .sort()
+    .join();
+
 export const stageTests: Tests = {
-  // CHG-0021 (SCOPE-0006, UI-0009): a Stage block plays what is inside it when powered; OPEN STAGE shows the inner world
-  // in a window; an edit inside is kept in the patch; ×, Esc and a press outside go back out.
+  // CHG-0021 (SCOPE-0006, UI-0009): a Stage block plays what is inside it when powered; OPEN STAGE
+  // shows the inner world in a window; an edit inside is kept; ×, Esc and a press outside go out.
   async stage(errors) {
     const macros = [
       {
@@ -28,89 +56,86 @@ export const stageTests: Tests = {
         ],
       },
     ];
-    const p = await open(
+    const page = await open(
       browser,
       [blk('s', 'source.stage', 0, 0), blk('outer', 'fx.volume', 0, 8)],
       errors,
       { macros },
     );
-    const menu = await menuItems(p, 'Source');
-    const silent = (await state(p)).rms < 0.0005; // nothing powers it
-    const at = (await p.evaluate(
-      (i) => (window as any).__bd_probe.blockPoint(i),
-      await idOf(p, 's'),
-    )) as [number, number];
-    await p.mouse.move(at[0], at[1]);
-    await p.mouse.down();
-    await p.waitForTimeout(400);
-    const held = (await state(p)).rms > 0.005; // a held pointer powers it: the inner Tone sounds
-    await p.mouse.up();
-    await p.waitForTimeout(700);
-    // its panel
-    await openPanel(p, 's');
-    const names = (await rows(p)).map((x) => x.name || x.type);
-    await p.evaluate(() =>
-      (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('openStage', 1),
+    const menu = await menuItems(page, 'Source');
+    // Nothing powers it.
+    const silent = (await state(page)).rms < 0.0005;
+    const at = await pointOf(page, 's');
+    await page.mouse.move(at[0], at[1]);
+    await page.mouse.down();
+    await page.waitForTimeout(400);
+    // A held pointer powers it: the inner Tone sounds.
+    const held = (await state(page)).rms > 0.005;
+    await page.mouse.up();
+    await page.waitForTimeout(700);
+    // Its panel.
+    await openPanel(page, 's');
+    const names = (await rows(page)).map((row) => row.name || row.type);
+    await setParam(page, 'openStage', 1);
+    await page.waitForFunction(() => window.__bd_probe.inside, null, { timeout: 5000 });
+    await page.waitForTimeout(900);
+    const inner = (await state(page)).blocks.map((block) => block.type).sort();
+    const win = await insideWindow(page);
+    const insideMenu = await menuItems(page, 'Source'),
+      insideInteraction = await menuItems(page, 'Interaction');
+    // The inner world's own connections.
+    const linked = (await state(page)).connections.length / 2;
+    await page.screenshot({ path: `${OUT}/stage-inside.png` });
+    // Edit inside: move the inner Filter away (it disconnects).
+    const filterAt = await pointOfId(page, await idOfType(page, 'fx.filter'));
+    await page.mouse.move(filterAt[0], filterAt[1]);
+    await page.mouse.down();
+    await page.mouse.move(filterAt[0] + 260, filterAt[1] + 60, { steps: 8 });
+    await page.mouse.up();
+    await page.waitForTimeout(500);
+    const unlinked = (await state(page)).connections.length / 2;
+    // Out by the ×.
+    await page.mouse.click(win.closeX, win.closeY);
+    await page.waitForTimeout(500);
+    const out1 = await page.evaluate(() => window.__bd_probe.inside === null);
+    const outerBlocks = (await state(page)).blocks.map((block) => block.type).sort();
+    const outerInteraction = await menuItems(page, 'Interaction');
+    const saved = (await state(page)).patch.macros?.[0];
+    const movedFilter = saved?.blocks.find((block) => block.id === 'f');
+    // In again by double click; out by Esc; in again; out by a press in the margin. The point is
+    // asked again: v1 moved the view for the panel.
+    const at2 = await pointOf(page, 's');
+    await page.mouse.dblclick(at2[0], at2[1]);
+    await page.waitForFunction(() => window.__bd_probe.inside, null, { timeout: 5000 });
+    await page.waitForTimeout(700);
+    const again = (await state(page)).blocks.length;
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
+    const out2 = await page.evaluate(() => window.__bd_probe.inside === null);
+    await page.evaluate(
+      (stageId) => {
+        window.__bd_stage.enter(stageId);
+      },
+      await idOf(page, 's'),
     );
-    await p.waitForFunction(() => (window as any).__bd_probe.inside, null, { timeout: 5000 });
-    await p.waitForTimeout(900);
-    const inner = (await state(p)).blocks.map((b: any) => b.type).sort();
-    const win = await p.evaluate(() => (window as any).__bd_probe.inside);
-    const insideMenu = await menuItems(p, 'Source'),
-      insideInteraction = await menuItems(p, 'Interaction');
-    const linked = (await state(p)).connections.length / 2; // the inner world's own connections
-    await p.screenshot({ path: `${OUT}/stage-inside.png` });
-    // edit inside: move the inner Filter away (it disconnects)
-    const fAt = (await p.evaluate(() => {
-      const s = (window as any).__bd_probe;
-      const i = s.state.blocks.find((b: any) => b.type === 'fx.filter').id;
-      return s.blockPoint(i);
-    })) as [number, number];
-    await p.mouse.move(fAt[0], fAt[1]);
-    await p.mouse.down();
-    await p.mouse.move(fAt[0] + 260, fAt[1] + 60, { steps: 8 });
-    await p.mouse.up();
-    await p.waitForTimeout(500);
-    const unlinked = (await state(p)).connections.length / 2;
-    // out by the ×
-    await p.mouse.click(win.closeX, win.closeY);
-    await p.waitForTimeout(500);
-    const out1 = await p.evaluate(() => (window as any).__bd_probe.inside === null);
-    const outerBlocks = (await state(p)).blocks.map((b: any) => b.type).sort();
-    const outerInteraction = await menuItems(p, 'Interaction');
-    const saved = (await state(p)).patch.macros?.[0];
-    const movedFilter = saved?.blocks.find((b: any) => b.id === 'f');
-    // in again by double click; out by Esc; in again; out by a press in the margin
-    const at2 = (await p.evaluate(
-      (i) => (window as any).__bd_probe.blockPoint(i),
-      await idOf(p, 's'),
-    )) as [number, number]; // v1 moved the view for the panel
-    await p.mouse.dblclick(at2[0], at2[1]);
-    await p.waitForFunction(() => (window as any).__bd_probe.inside, null, { timeout: 5000 });
-    await p.waitForTimeout(700);
-    const again = (await state(p)).blocks.length;
-    await p.keyboard.press('Escape');
-    await p.waitForTimeout(400);
-    const out2 = await p.evaluate(() => (window as any).__bd_probe.inside === null);
-    await p.evaluate((i) => (window as any).__bd_stage.enter(i), await idOf(p, 's'));
-    await p.waitForTimeout(700);
-    const w2 = await p.evaluate(() => (window as any).__bd_probe.inside);
-    await p.mouse.click(w2.x - 40, w2.y + w2.h / 2);
-    await p.waitForTimeout(400);
-    const out3 = await p.evaluate(() => (window as any).__bd_probe.inside === null);
-    // still plays, and the patch round-trips
-    await p.mouse.move(at2[0], at2[1]);
-    await p.mouse.down();
-    await p.waitForTimeout(400);
-    const stillPlays = (await state(p)).rms > 0.005;
-    await p.mouse.up();
-    await p.close();
+    await page.waitForTimeout(700);
+    const win2 = await insideWindow(page);
+    await page.mouse.click(win2.x - 40, win2.y + win2.h / 2);
+    await page.waitForTimeout(400);
+    const out3 = await page.evaluate(() => window.__bd_probe.inside === null);
+    // Still plays, and the patch round-trips.
+    await page.mouse.move(at2[0], at2[1]);
+    await page.mouse.down();
+    await page.waitForTimeout(400);
+    const stillPlays = (await state(page)).rms > 0.005;
+    await page.mouse.up();
+    await page.close();
     const pass =
       menu.includes('Stage') &&
       silent &&
       held &&
       names.includes('Volume') &&
-      names.filter((nameValue: string) => nameValue === 'actionbutton').length === 1 &&
+      names.filter((name) => name === 'actionbutton').length === 1 &&
       inner.join() === 'fx.filter,power.power,source.tone' &&
       !insideMenu.includes('Stage') &&
       insideMenu.includes('Sample') &&
@@ -154,9 +179,10 @@ export const stageTests: Tests = {
       },
     ];
   },
-  // CHG-0021: selected blocks become what is inside a new Stage (Cmd/Ctrl+G); a copy of a Stage has its own inside.
+  // CHG-0021: selected blocks become what is inside a new Stage (Cmd/Ctrl+G); a copy of a Stage has
+  // its own inside.
   async 'stage-from-selection'(errors) {
-    const p = await open(
+    const page = await open(
       browser,
       [
         blk('t', 'source.tone', -6, 0),
@@ -166,51 +192,49 @@ export const stageTests: Tests = {
       ],
       errors,
     );
-    await p.waitForTimeout(300);
-    const before = (await state(p)).rms > 0.005;
-    const ids = await Promise.all(['t', 'pw', 'f'].map((u) => idOf(p, u)));
-    const stageId = await p.evaluate((list) => (window as any).__bd_stage.wrap(list, -6, 0), ids);
-    await p.waitForTimeout(400);
-    const s1 = await state(p);
-    const quiet = s1.rms < 0.0005; // inside now, and nothing powers the Stage
-    // power it: a Power block beside it (through a patch insert would be heavier; press instead)
-    const at = (await p.evaluate((i) => (window as any).__bd_probe.blockPoint(i), stageId)) as [
-      number,
-      number,
-    ];
-    await p.mouse.move(at[0], at[1]);
-    await p.mouse.down();
-    await p.waitForTimeout(400);
-    const plays = (await state(p)).rms > 0.005;
-    await p.mouse.up();
-    await p.waitForTimeout(600);
-    await p.mouse.click(1100, 300);
-    await p.waitForTimeout(400); // close its panel
-    const patch = (await state(p)).patch;
-    await p.close();
+    await page.waitForTimeout(300);
+    const before = (await state(page)).rms > 0.005;
+    const ids = await Promise.all(['t', 'pw', 'f'].map((uid) => idOf(page, uid)));
+    const stageId = await page.evaluate((list) => window.__bd_stage.wrap(list, -6, 0), ids);
+    if (stageId === null) throw new Error('no Stage was made');
+    await page.waitForTimeout(400);
+    const wrapped = await state(page);
+    // Inside now, and nothing powers the Stage.
+    const quiet = wrapped.rms < 0.0005;
+    // Power it by pressing on it.
+    const at = await pointOfId(page, stageId);
+    await page.mouse.move(at[0], at[1]);
+    await page.mouse.down();
+    await page.waitForTimeout(400);
+    const plays = (await state(page)).rms > 0.005;
+    await page.mouse.up();
+    await page.waitForTimeout(600);
+    // Close its panel.
+    await page.mouse.click(1100, 300);
+    await page.waitForTimeout(400);
+    const patch = (await state(page)).patch;
+    await page.close();
     const macro = patch.macros?.[0];
     const pass =
       before &&
       quiet &&
       plays &&
-      s1.blocks
-        .map((b: any) => b.type)
-        .sort()
-        .join() === 'fx.reverb,source.stage' &&
-      macro?.blocks
-        .map((b: any) => b.type)
-        .sort()
-        .join() === 'fx.filter,power.power,source.tone' &&
-      macro.block === patch.blocks.find((b: any) => b.type === 'source.stage').id;
-    return [pass, { before, quiet, plays, outer: s1.blocks.map((b: any) => b.type), macro }];
+      sortedTypes(wrapped.blocks) === 'fx.reverb,source.stage' &&
+      !!macro &&
+      sortedTypes(macro.blocks) === 'fx.filter,power.power,source.tone' &&
+      macro.block === patch.blocks.find((block) => block.type === 'source.stage')?.id;
+    return [
+      pass,
+      { before, quiet, plays, outer: wrapped.blocks.map((block) => block.type), macro },
+    ];
   },
-  // Owner review 2026-11-14: blocks dragged onto a Stage block go inside it (it is ringed while they would); with
-  // what was there, to its right, keeping their connections.
+  // Blocks dragged onto a Stage block go inside it (it is ringed while they would), to the right of
+  // what was there, keeping their connections.
   async 'drop-into-stage'(errors) {
     const macros = [
       { block: 's', blocks: [blk('t', 'source.tone', 0, 0), blk('pw', 'power.power', -3, 0)] },
     ];
-    const p = await open(
+    const page = await open(
       browser,
       [
         blk('s', 'source.stage', 0, 0),
@@ -221,51 +245,42 @@ export const stageTests: Tests = {
       errors,
       { macros },
     );
-    await p.waitForTimeout(400);
-    const ids = await Promise.all(['t2', 'f2'].map((u) => idOf(p, u)));
-    await p.evaluate((list) => (window as any).__bd_probe.select?.(list), ids);
-    const from = (await p.evaluate((i) => (window as any).__bd_probe.blockPoint(i), ids[0])) as [
-      number,
-      number,
-    ];
-    const onto = (await p.evaluate(
-      (i) => (window as any).__bd_probe.blockPoint(i),
-      await idOf(p, 's'),
-    )) as [number, number];
-    await p.mouse.move(...from);
-    await p.mouse.down();
-    await p.mouse.move(onto[0], onto[1], { steps: 12 });
-    await p.waitForTimeout(200);
-    const ringed = await p.evaluate(() => (window as any).__bd_probe.dropTarget);
-    await p.mouse.up();
-    await p.waitForTimeout(600);
-    const s = await state(p),
-      macro = s.patch.macros?.find((macro: any) => macro.block === 's');
-    const sounds = s.rms > 0.005; // the outer Power still powers the Stage, whose inner Tone plays
-    await p.close();
-    const inner = macro?.blocks
-      .map((b: any) => b.type)
-      .sort()
-      .join();
-    const outer = s.blocks
-      .map((b: any) => b.type)
-      .sort()
-      .join();
-    const added = macro?.blocks.filter((b: any) => ['t2', 'f2'].includes(b.id)) ?? [];
+    await page.waitForTimeout(400);
+    const ids = await Promise.all(['t2', 'f2'].map((uid) => idOf(page, uid)));
+    await page.evaluate((list) => {
+      window.__bd_probe.select(list);
+    }, ids);
+    const from = await pointOfId(page, ids[0]);
+    const onto = await pointOf(page, 's');
+    await page.mouse.move(...from);
+    await page.mouse.down();
+    await page.mouse.move(onto[0], onto[1], { steps: 12 });
+    await page.waitForTimeout(200);
+    const ringed = await page.evaluate(() => window.__bd_probe.dropTarget);
+    await page.mouse.up();
+    await page.waitForTimeout(600);
+    const dropped = await state(page),
+      macro = dropped.patch.macros?.find((each) => each.block === 's');
+    // The outer Power still powers the Stage, whose inner Tone plays.
+    const sounds = dropped.rms > 0.005;
+    await page.close();
+    const inner = macro && sortedTypes(macro.blocks);
+    const outer = sortedTypes(dropped.blocks);
+    const added = macro?.blocks.filter((block) => ['t2', 'f2'].includes(block.id)) ?? [];
     const pass =
       ringed !== null &&
       outer === 'power.power,source.stage' &&
       inner === 'fx.filter,power.power,source.tone,source.tone' &&
       added.length === 2 &&
-      added.every((b: any) => b.x > 0) &&
-      (macro?.connectionOrder ?? []).some((c: string[]) => c.join() === 't2,f2') &&
+      added.every((block) => (block.x ?? 0) > 0) &&
+      (macro?.connectionOrder ?? []).some((pair) => pair.join() === 't2,f2') &&
       sounds;
     return [pass, { ringed, outer, inner, added, order: macro?.connectionOrder, sounds }];
   },
-  // Owner review 2 (2026-11-14, UI-0012): with blocks selected a MAKE STAGE button puts them all in a new Stage block,
-  // samplers with their audio (nothing is left out), and they carry on playing inside.
+  // UI-0012: with blocks selected a MAKE STAGE button puts them all in a new Stage block, samplers
+  // with their audio (nothing is left out), and they carry on playing inside.
   async 'make-stage-button'(errors) {
-    const p = await open(
+    const page = await open(
       browser,
       [
         blk('sm', 'source.sample', 0, 0),
@@ -274,41 +289,38 @@ export const stageTests: Tests = {
       ],
       errors,
     );
-    const none = await p.evaluate(() => (window as any).__bd_probe.makeStage);
-    await p.evaluate(
-      ([i, bytes]) => (window as any).__bd_loadSample(i, 'sine.wav', new Uint8Array(bytes).buffer),
-      [await idOf(p, 'sm'), sineWav()] as const,
+    const none = await page.evaluate(() => window.__bd_probe.makeStage);
+    await page.evaluate(
+      ([id, bytes]) => window.__bd_loadSample(id, 'sine.wav', new Uint8Array(bytes).buffer),
+      [await idOf(page, 'sm'), steadySineWav()] as const,
     );
-    await p.waitForTimeout(300);
-    await p.evaluate(
-      (list) => (window as any).__bd_probe.select(list),
-      await Promise.all(['sm', 'pw'].map((u) => idOf(p, u))),
+    await page.waitForTimeout(300);
+    await page.evaluate(
+      (list) => {
+        window.__bd_probe.select(list);
+      },
+      await Promise.all(['sm', 'pw'].map((uid) => idOf(page, uid))),
     );
-    await p.waitForTimeout(200);
-    const btn = (await p.evaluate(() => (window as any).__bd_probe.makeStage)) as {
-      x: number;
-      y: number;
-    } | null;
-    await p.screenshot({ path: `${OUT}/make-stage-button.png` });
-    if (btn) await p.mouse.click(btn.x, btn.y);
-    await p.waitForTimeout(1200);
-    const s = await state(p),
-      outer = s.blocks
-        .map((b: any) => b.type)
-        .sort()
-        .join();
-    const inner = s.patch.macros?.[0]?.blocks
-      .map((b: any) => b.type)
-      .sort()
-      .join();
-    const sounds = s.rms > 0.005; // the outer Power powers the Stage; inside, its Power plays the Sample
-    await p.evaluate(
-      (i) => (window as any).__bd_stage.enter(i),
-      s.blocks.find((b: any) => b.type === 'source.stage').id,
+    await page.waitForTimeout(200);
+    const btn = await page.evaluate(() => window.__bd_probe.makeStage);
+    await page.screenshot({ path: `${OUT}/make-stage-button.png` });
+    if (btn) await page.mouse.click(btn.x, btn.y);
+    await page.waitForTimeout(1200);
+    const made = await state(page),
+      outer = sortedTypes(made.blocks);
+    const firstMacro = made.patch.macros?.[0];
+    const inner = firstMacro && sortedTypes(firstMacro.blocks);
+    // The outer Power powers the Stage; inside, its Power plays the Sample.
+    const sounds = made.rms > 0.005;
+    await page.evaluate(
+      (stageId) => {
+        window.__bd_stage.enter(stageId);
+      },
+      await idOfType(page, 'source.stage'),
     );
-    await p.waitForTimeout(700);
-    const shown = await p.evaluate(() => (window as any).__bd_probe.samples);
-    await p.close();
+    await page.waitForTimeout(700);
+    const shown = await page.evaluate(() => window.__bd_probe.samples);
+    await page.close();
     const pass =
       none === null &&
       !!btn &&
@@ -320,52 +332,60 @@ export const stageTests: Tests = {
       shown[0].frames > 0;
     return [pass, { none, btn, outer, inner, sounds, shown }];
   },
-  // Owner (2026-11-17, UI-0012): MAKE STAGE covered the SIGNED IN AS line. It now sits beside the selection's top: on
-  // its right, or its left with no room there. Only with every block selected and some out of view does it go top
-  // right, under the SIGNED IN AS line. Drawn on v1's panel layer (no blurred shadow: no gradients in BlokDust).
+  // UI-0012: MAKE STAGE sits beside the selection's top (right, or left with no room), clear of
+  // SIGNED IN AS; top right under it only with every block selected and some out of view.
   async 'make-stage-placement'(errors) {
-    interface B {
+    interface Box {
       x: number;
       y: number;
       w: number;
       h: number;
     }
-    interface R {
+    interface Bounds {
       x0: number;
       y0: number;
       x1: number;
       y1: number;
     }
-    const hits = (a?: B | null, b?: B | null) =>
+    const overlaps = (a?: Box | null, b?: Box | null) =>
       !!a && !!b && a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
-    const right = (b?: B, s?: R) =>
-      !!b && !!s && b.x > s.x1 && b.x - s.x1 < 20 && Math.abs(b.y - s.y0) < 2;
-    const left = (b?: B, s?: R) =>
-      !!b && !!s && b.x + b.w < s.x0 && s.x0 - (b.x + b.w) < 20 && Math.abs(b.y - s.y0) < 2;
-    const corner = (b?: B, me?: B) => !!b && !!me && b.x + b.w > 1280 - 40 && b.y >= me.y + me.h;
-    async function pick(p: Page, uids: string[], shot: string) {
-      await p.evaluate(() => {
-        (window as any).__bd_probe.scene.SettingsPanel.accountPage.Account = {
+    const right = (box?: Box, sel?: Bounds) =>
+      !!box && !!sel && box.x > sel.x1 && box.x - sel.x1 < 20 && Math.abs(box.y - sel.y0) < 2;
+    const left = (box?: Box, sel?: Bounds) =>
+      !!box &&
+      !!sel &&
+      box.x + box.w < sel.x0 &&
+      sel.x0 - (box.x + box.w) < 20 &&
+      Math.abs(box.y - sel.y0) < 2;
+    const corner = (box?: Box, me?: Box | null) =>
+      !!box && !!me && box.x + box.w > 1280 - 40 && box.y >= me.y + me.h;
+    async function pick(page: Page, uids: string[], shot: string) {
+      await page.evaluate(() => {
+        (window.__bd_probe.scene.SettingsPanel as AppSettingsPanel).accountPage.Account = {
           handle: 'someone_with_a_long_name',
+          passkeys: 0,
+          providers: [],
         };
       });
-      await p.evaluate(
-        (list) => (window as any).__bd_probe.select(list),
-        await Promise.all(uids.map((uid) => idOf(p, uid))),
+      await page.evaluate(
+        (list) => {
+          window.__bd_probe.select(list);
+        },
+        await Promise.all(uids.map((uid) => idOf(page, uid))),
       );
-      await p.waitForTimeout(200);
-      await p.screenshot({ path: `${OUT}/make-stage-${shot}.png` });
-      return p.evaluate(() => {
-        const pr = (window as any).__bd_probe;
+      await page.waitForTimeout(200);
+      await page.screenshot({ path: `${OUT}/make-stage-${shot}.png` });
+      return page.evaluate(() => {
+        const probe = window.__bd_probe;
         return {
-          btn: pr.makeStage?.box as B | undefined,
-          sel: pr.selectedBounds as R | undefined,
-          me: pr.corners.meBox as B | undefined,
+          btn: probe.makeStage?.box,
+          sel: probe.selectedBounds ?? undefined,
+          me: probe.corners.meBox,
         };
       });
     }
     // In view: the tone and power near the middle, a filter near the right edge.
-    let p = await open(
+    let page = await open(
       browser,
       [
         blk('t', 'source.tone', 0, 0),
@@ -374,13 +394,13 @@ export const stageTests: Tests = {
       ],
       errors,
     );
-    await p.waitForTimeout(300);
-    const some = await pick(p, ['t', 'pw'], 'beside');
-    const edge = await pick(p, ['f'], 'edge');
-    const allIn = await pick(p, ['t', 'pw', 'f'], 'all-in-view');
-    await p.close();
+    await page.waitForTimeout(300);
+    const some = await pick(page, ['t', 'pw'], 'beside');
+    const edge = await pick(page, ['f'], 'edge');
+    const allIn = await pick(page, ['t', 'pw', 'f'], 'all-in-view');
+    await page.close();
     // One block far out of view.
-    p = await open(
+    page = await open(
       browser,
       [
         blk('t', 'source.tone', 0, 0),
@@ -389,16 +409,16 @@ export const stageTests: Tests = {
       ],
       errors,
     );
-    await p.waitForTimeout(300);
-    const allOut = await pick(p, ['t', 'pw', 'far'], 'all-out-of-view');
-    await p.close();
-    const r = {
+    await page.waitForTimeout(300);
+    const allOut = await pick(page, ['t', 'pw', 'far'], 'all-out-of-view');
+    await page.close();
+    const placed = {
       some: right(some.btn, some.sel),
       edge: left(edge.btn, edge.sel),
       allIn: right(allIn.btn, allIn.sel) || left(allIn.btn, allIn.sel),
       allOut: corner(allOut.btn, allOut.me),
-      clear: ![some, edge, allIn, allOut].some((x) => hits(x.btn, x.me)),
+      clear: ![some, edge, allIn, allOut].some((picked) => overlaps(picked.btn, picked.me)),
     };
-    return [Object.values(r).every(Boolean), { ...r, some, edge, allIn, allOut }];
+    return [Object.values(placed).every(Boolean), { ...placed, some, edge, allIn, allOut }];
   },
 };
