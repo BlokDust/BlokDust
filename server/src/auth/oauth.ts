@@ -1,20 +1,17 @@
-// What Google and Apple sign-in share (SPEC-SHARING-ACCOUNTS R2a, R2b): the return path, and signing in once the
-// provider has confirmed who it is (a new account if this provider account is new here).
+// What Google and Apple sign-in share (SPEC-SHARING-ACCOUNTS R2a, R2b): the return path, and
+// signing in once the provider has confirmed who it is.
 import type { Env } from '../env.ts';
 import { publicBase } from '../http.ts';
 import { cookie, currentUser, newUserId, startSession } from './session.ts';
 import { countNewAccount, mayCreateAccount } from './newAccounts.ts';
 
-/**
- * Where to go back to: a path on this site only (never another site: an open redirect). Checked the way the browser
- * and `new URL` will read it, not as text: the URL parser drops tabs and newlines and reads `\` as `/`, so
- * "/<TAB>/evil.example" is "//evil.example" (security review, PR 13).
- */
-export function safeReturn(r: string | null): string {
-  if (!r?.startsWith('/')) return '/';
+/** The way back: a path on this site only (no open redirect), read as `new URL` does (tabs drop,
+ * `\` is `/`: "/<TAB>/evil.example" is "//evil.example"; security review, PR 13). */
+export function safeReturn(requested: string | null): string {
+  if (!requested?.startsWith('/')) return '/';
   const probe = 'https://return.invalid';
   try {
-    const url = new URL(r, probe);
+    const url = new URL(requested, probe);
     if (url.origin !== probe) return '/';
     const path = `${url.pathname}${url.search}${url.hash}`;
     return path.length <= 512 ? path : '/';
@@ -23,12 +20,8 @@ export function safeReturn(r: string | null): string {
   }
 }
 
-/**
- * Back from `provider` with its account `subject`. Signed out: sign in as the BlokDust account it belongs to, or a new
- * one. Signed in (Settings › ACCOUNT › SIGN-IN METHODS, R7a): add it to this account; if it already belongs to
- * another BlokDust account it is refused and nothing changes (R7b: never switch accounts behind the user's back).
- * The page learns what happened from `?account=`: new | in | limit | linked-<provider> | taken-<provider>.
- */
+/** Back from `provider` with `subject`: signed out, sign in (or create); signed in, add it (R7a)
+ * unless taken (R7b). `?account=`: new | in | limit | linked-<p> | taken-<p>. */
 export async function finishSignIn(
   env: Env,
   req: Request,

@@ -1,5 +1,5 @@
-// HTML pages with link previews (SHARING-0002, SPEC-SHARING-BACKEND R9–R11): the app's index.html with Open Graph,
-// twitter:card and oEmbed discovery tags inserted for `?c=<id>` and `/embed/<id>`, and the oEmbed endpoint itself.
+// HTML pages with link previews (SHARING-0002, SPEC-SHARING-BACKEND R9–R11): index.html with Open
+// Graph, twitter:card and oEmbed tags for `?c=<id>` and `/embed/<id>`, and the oEmbed endpoint.
 import type { Env } from './env.ts';
 import { HttpError, assetBase, basePath, escapeHtml, json, publicBase } from './http.ts';
 import { ID_RE, loadPatch, type Loaded } from './patches.ts';
@@ -11,7 +11,7 @@ const EMBED = { width: 640, height: 400 } as const;
 
 const displayTitle = (loaded: Loaded | null) =>
   loaded?.title ? `${loaded.title} · BlokDust` : 'BlokDust';
-/** Link previews show og:site_name ("BlokDust") already, so the card title is just the patch's (R9). */
+/** Link previews show og:site_name ("BlokDust"), so the card title is the patch's own (R9). */
 const cardTitle = (loaded: Loaded | null) => loaded?.title || 'BlokDust';
 const DESCRIPTION =
   'Connect blocks to make sounds, instruments and self-playing music. Free on the web and as a VST/AU plugin.';
@@ -48,7 +48,7 @@ function tags(
         `<meta name="twitter:image" content="${escapeHtml(img)}">`,
       );
     }
-    // X gates player cards (SHARING-0002): attempted, not relied on; other sites use og:* or oEmbed.
+    // X gates player cards (SHARING-0002): tried, not relied on; others use og:* or oEmbed.
     out.push(
       `<meta name="twitter:card" content="player">`,
       `<meta name="twitter:title" content="${escapeHtml(title)}">`,
@@ -65,7 +65,7 @@ function tags(
   // The app reads these instead of re-fetching what the Worker already looked up.
   out.push(`<meta name="blokdust-base" content="${escapeHtml(base)}">`);
   if (embed && id) out.push(`<meta name="blokdust-embed" content="${escapeHtml(id)}">`);
-  // Usage analytics and error reports (SHARING-0010 R5, R9): the share of sessions that send events (0: off), and Sentry.
+  // Analytics and errors (SHARING-0010 R5, R9): the share of sessions sending (0: off), Sentry.
   const a = clientConfig(env);
   out.push(`<meta name="blokdust-analytics" content="${a.rate}">`);
   if (a.sentryDsn)
@@ -83,8 +83,8 @@ export async function page(
   url: URL,
   embedId: string | null,
 ): Promise<Response> {
-  const c = embedId ?? url.searchParams.get('c');
-  const id = c && ID_RE.test(c) ? c : null;
+  const shareId = embedId ?? url.searchParams.get('c');
+  const id = shareId && ID_RE.test(shareId) ? shareId : null;
   const loaded = id ? await loadPatch(env, id) : null;
   if (embedId && !loaded)
     return new Response('No such BlokDust patch.', {
@@ -95,19 +95,19 @@ export async function page(
   const asset = await env.ASSETS.fetch(new Request(assetUrl.toString(), { headers: req.headers }));
   if (!asset.ok) return asset;
   const head = tags(env, req, id, loaded, !!embedId);
-  // Embed pages live one level down (/embed/<id>); the build uses relative asset URLs, so pin the base.
+  // Embed pages sit one level down (/embed/<id>) and assets are relative: pin the base.
   const baseTag = embedId ? `<base href="${escapeHtml(basePath(env))}/">\n    ` : '';
   const title = escapeHtml(embedId || loaded ? displayTitle(loaded) : 'BlokDust');
   const rewritten = new HTMLRewriter()
     .on('head', {
-      element(e) {
-        if (baseTag) e.prepend(baseTag, { html: true });
-        e.append(`    ${head}\n  `, { html: true });
+      element(tag) {
+        if (baseTag) tag.prepend(baseTag, { html: true });
+        tag.append(`    ${head}\n  `, { html: true });
       },
     })
     .on('title', {
-      element(e) {
-        e.setInnerContent(title);
+      element(tag) {
+        tag.setInnerContent(title);
       },
     })
     .transform(asset);
@@ -119,24 +119,24 @@ export async function page(
   return new Response(rewritten.body, { status: 200, headers });
 }
 
-/** GET /oembed?url=<share or embed URL>[&maxwidth&maxheight&format=json] (oembed.com §2.2, type "rich"). */
+/** GET /oembed?url=<share or embed URL>[&maxwidth&maxheight&format=json] (oembed.com §2.2). */
 export async function oembed(env: Env, req: Request, url: URL): Promise<Response> {
   const format = url.searchParams.get('format') ?? 'json';
   if (format !== 'json') throw new HttpError(501, 'only json is supported');
   const target = url.searchParams.get('url');
   if (!target) throw new HttpError(400, 'url required');
-  let t: URL;
+  let targetUrl: URL;
   try {
-    t = new URL(target);
+    targetUrl = new URL(target);
   } catch {
     throw new HttpError(400, 'bad url');
   }
   const base = new URL(publicBase(env, req) + '/');
-  if (t.host !== base.host) throw new HttpError(404, 'not a BlokDust URL');
-  const rel = t.pathname.startsWith(base.pathname)
-    ? t.pathname.slice(base.pathname.length - 1)
-    : t.pathname;
-  const id = /^\/embed\/([^/]+)\/?$/.exec(rel)?.[1] ?? t.searchParams.get('c');
+  if (targetUrl.host !== base.host) throw new HttpError(404, 'not a BlokDust URL');
+  const rel = targetUrl.pathname.startsWith(base.pathname)
+    ? targetUrl.pathname.slice(base.pathname.length - 1)
+    : targetUrl.pathname;
+  const id = /^\/embed\/([^/]+)\/?$/.exec(rel)?.[1] ?? targetUrl.searchParams.get('c');
   if (!id || !ID_RE.test(id)) throw new HttpError(404, 'not a BlokDust patch URL');
   const loaded = await loadPatch(env, id);
   if (!loaded) throw new HttpError(404, 'no such patch');

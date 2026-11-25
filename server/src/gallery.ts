@@ -1,25 +1,25 @@
-// The public gallery (SPEC-SHARING-GALLERY, SHARING-0009): signed-in users publish with the gallery switch on SAVE; anyone browses
-// (newest, or popular: likes and remixes over age); signed-in users like (no down votes) and report. Reports hide a
-// patch at REPORTS_TO_HIDE (never @blokdust's own); the site owner reviews with `pnpm bd gallery`.
+// The public gallery (SPEC-SHARING-GALLERY, SHARING-0009): signed-in users publish, like, report;
+// anyone browses. Reports hide a patch (not @blokdust's); `pnpm bd gallery` reviews them.
 import type { Env } from './env.ts';
+import { textOf } from '../../shared/text.ts';
 import { HttpError, json } from './http.ts';
 import { isOffensive } from './moderation.ts';
 import { ID_RE } from './patches.ts';
 import { currentUser, requireUser } from './auth/session.ts';
 
 export const PAGE = 20;
-/** The site's own account (owner review 3): its patches are the EXAMPLES and TUTORIALS (R16). The name is reserved. */
+/** The site's own account: its patches are EXAMPLES and TUTORIALS (R16); the name is reserved. */
 export const OFFICIAL = 'blokdust';
 export type Sort = 'popular' | 'top' | 'new' | 'examples' | 'tutorials';
-/** R9: reports that hide a patch (5, not 3: throwaway accounts are cheap; security review, PR 13). */
+/** R9: reports that hide a patch (5: throwaway accounts are cheap; security review, PR 13). */
 export const REPORTS_TO_HIDE = 5;
 const HOUR = 3_600_000;
 
 async function body<T>(req: Request): Promise<T> {
-  const t = await req.text();
-  if (t.length > 8 * 1024) throw new HttpError(413, 'request too large');
+  const raw = await req.text();
+  if (raw.length > 8 * 1024) throw new HttpError(413, 'request too large');
   try {
-    return JSON.parse(t || '{}') as T;
+    return JSON.parse(raw || '{}') as T;
   } catch {
     throw new HttpError(400, 'body must be JSON');
   }
@@ -32,9 +32,9 @@ interface PatchJson {
 /** Every block in the patch, Stage insides included. */
 export const allBlocks = (patchJson: PatchJson) => [
   ...(patchJson.blocks ?? []),
-  ...(patchJson.macros ?? []).flatMap((m) => m.blocks ?? []),
+  ...(patchJson.macros ?? []).flatMap((macro) => macro.blocks ?? []),
 ];
-/** R3: why a patch can't be in the gallery (others can't hear the user's own audio files: DATA-0005), or null. */
+/** R3: why a patch can't be in the gallery (others can't hear one's own files, DATA-0005). */
 export function notPublishable(patchJson: PatchJson): string | null {
   const bs = allBlocks(patchJson);
   if (!bs.length) return 'Add some blocks first.';
@@ -48,7 +48,7 @@ const blockTypes = (patchJson: PatchJson) =>
   [
     ...new Set(
       allBlocks(patchJson)
-        .map((b) => String(b.type ?? ''))
+        .map((b) => textOf(b.type))
         .filter(Boolean),
     ),
   ]
@@ -68,11 +68,8 @@ async function latest(
 }
 
 export const SIGN_IN_TO_PUBLISH = 'Only signed-in users can publish to the gallery.';
-/**
- * After a save (R1, R5): `on` puts the patch in the gallery (or keeps it there with its latest title and blocks), off
- * takes it out; undefined leaves it as it is, refreshed. Only a signed-in owner with a name can publish (R2; owner,
- * 2026-11-15: accountability and ownership). Returns whether it is published, and why not when it can't be.
- */
+/** After a save (R1, R5): `on` publishes (refreshing title and blocks), off unpublishes, undefined
+ * keeps it. Only a signed-in owner with a name publishes (R2). Returns published, or why not. */
 export async function afterSave(
   env: Env,
   id: string,
@@ -91,21 +88,21 @@ export async function afterSave(
     : null;
   if (!owner) return { published: false, reason: SIGN_IN_TO_PUBLISH };
   if (!owner.handle) return { published: false, reason: 'Choose your name in Settings first.' };
-  const p = await latest(env, id);
-  if (!p) return { published: false };
-  const patch = JSON.parse(p.json) as PatchJson;
+  const latestPatch = await latest(env, id);
+  if (!latestPatch) return { published: false };
+  const patch = JSON.parse(latestPatch.json) as PatchJson;
   const reason =
     notPublishable(patch) ??
-    (!p.title.trim()
+    (!latestPatch.title.trim()
       ? 'Give the patch a name first.'
-      : isOffensive(p.title)
+      : isOffensive(latestPatch.title)
         ? 'Please choose another name for the patch.'
         : null);
   if (reason) {
     if (was) await env.DB.prepare('DELETE FROM gallery WHERE patch_id = ?').bind(id).run();
     return { published: false, reason };
   }
-  // @blokdust's patches go in EXAMPLES when first published (R16; `bd gallery kind` makes one a tutorial).
+  // @blokdust's patches start in EXAMPLES (R16; `bd gallery kind` makes one a tutorial).
   await env.DB.prepare(
     `INSERT INTO gallery (patch_id, user_id, title, blocks, published, kind) VALUES (?, ?, ?, ?, ?, ?)
     ON CONFLICT(patch_id) DO UPDATE SET title = excluded.title, blocks = excluded.blocks`,
@@ -113,7 +110,7 @@ export async function afterSave(
     .bind(
       id,
       ownerId,
-      p.title,
+      latestPatch.title,
       blockTypes(patch),
       Date.now(),
       owner.handle === OFFICIAL ? 'example' : '',
@@ -122,24 +119,20 @@ export async function afterSave(
   return { published: true };
 }
 
-/** DELETE /api/gallery/:id — the owner takes it out (R6): the account that owns it, or the browser with its edit token. */
+/** DELETE /api/gallery/:id: its owner (account, or browser with the token) unpublishes (R6). */
 export async function unpublish(
   env: Env,
   id: string,
   mayEdit: (id: string) => Promise<boolean>,
 ): Promise<Response> {
   if (!(await mayEdit(id))) throw new HttpError(403, 'not your patch');
-  const r = await env.DB.prepare('DELETE FROM gallery WHERE patch_id = ?').bind(id).run();
-  if (!r.meta.changes) throw new HttpError(404, 'not in the gallery');
+  const result = await env.DB.prepare('DELETE FROM gallery WHERE patch_id = ?').bind(id).run();
+  if (!result.meta.changes) throw new HttpError(404, 'not in the gallery');
   return json({ published: false });
 }
 
-/**
- * GET /api/gallery?sort=popular|top|new|examples|tutorials&q=&page= (R7, R8; R16: EXAMPLES and TUTORIALS are @blokdust's,
- * oldest first, the order they were made in). `q`: words matched in titles, block types ("laser", "tone") and
- * names; `@name` lists exactly one person's patches. Popular: (likes + 2·remixes + 1) / (hours since published + 2), a simple decay so
- * new patches get a chance. Top (all time, CHG-0035): likes + 2·remixes, with no decay; newest first among equals.
- */
+/** GET /api/gallery?sort=popular|top|new|examples|tutorials&q=&page= (R7, R8, R16): `q` matches
+ * titles, block types and names, `@name` one person; sorts' formulas are in the queries below. */
 export async function list(env: Env, req: Request, url: URL): Promise<Response> {
   const me = await currentUser(env, req, { app: true }),
     now = Date.now();
@@ -153,17 +146,16 @@ export async function list(env: Env, req: Request, url: URL): Promise<Response> 
         : 'popular';
   const kind = sort === 'examples' ? 'example' : sort === 'tutorials' ? 'tutorial' : null;
   const page = Math.max(1, Math.min(500, Number(url.searchParams.get('page')) || 1));
-  const q = (url.searchParams.get('q') ?? '').trim().toLowerCase().slice(0, 40);
+  const query = (url.searchParams.get('q') ?? '').trim().toLowerCase().slice(0, 40);
   const where = ['g.hidden = 0'],
     binds: unknown[] = [];
   if (kind) {
     where.push('g.kind = ?');
     binds.push(kind);
   }
-  let handle: string | null = null;
-  for (const w of q.split(/\s+/).filter(Boolean).slice(0, 4)) {
-    if (w.startsWith('@')) {
-      handle = w.slice(1);
+  for (const word of query.split(/\s+/).filter(Boolean).slice(0, 4)) {
+    if (word.startsWith('@')) {
+      const handle = word.slice(1);
       where.push('u.handle = ?');
       binds.push(handle);
       continue;
@@ -171,7 +163,7 @@ export async function list(env: Env, req: Request, url: URL): Promise<Response> 
     where.push(
       "(lower(g.title) LIKE ? ESCAPE '\\' OR g.blocks LIKE ? ESCAPE '\\' OR u.handle LIKE ? ESCAPE '\\')",
     );
-    const like = `%${w.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+    const like = `%${word.replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
     binds.push(like, like, like);
   }
   const remixes = '(SELECT COUNT(*) FROM patches c WHERE c.parent = g.patch_id AND c.deleted = 0)';
@@ -211,11 +203,11 @@ export async function list(env: Env, req: Request, url: URL): Promise<Response> 
     {
       items: rows
         .slice(0, PAGE)
-        .map((r) => ({ ...r, liked: !!r.liked, mine: !!me && r.by === me.handle })),
+        .map((row) => ({ ...row, liked: !!row.liked, mine: !!me && row.by === me.handle })),
       page,
       more: rows.length > PAGE,
       sort,
-      q,
+      q: query,
     },
     200,
     { 'cache-control': 'no-store' },
@@ -244,14 +236,14 @@ export async function like(env: Env, req: Request, id: string): Promise<Response
       'UPDATE gallery SET likes = (SELECT COUNT(*) FROM likes WHERE patch_id = ?) WHERE patch_id = ?',
     ).bind(id, id),
   ]);
-  const g = await env.DB.prepare('SELECT likes FROM gallery WHERE patch_id = ?')
+  const entry = await env.DB.prepare('SELECT likes FROM gallery WHERE patch_id = ?')
     .bind(id)
     .first<{ likes: number }>();
-  return json({ liked: on !== false, likes: g?.likes ?? 0 });
+  return json({ liked: on !== false, likes: entry?.likes ?? 0 });
 }
 
-/** POST /api/gallery/:id/report {reason} — signed in; once per person; hidden at REPORTS_TO_HIDE (R9), except
- * @blokdust's own patches (the EXAMPLES and TUTORIALS), whose reports are kept for `bd gallery reports` only. */
+/** POST /api/gallery/:id/report {reason}: signed in, once each; hidden at REPORTS_TO_HIDE (R9),
+ * except @blokdust's, whose reports wait for `bd gallery reports`. */
 export async function report(env: Env, req: Request, id: string): Promise<Response> {
   const user = await requireUser(env, req, { app: true });
   const { reason } = await body<{ reason?: unknown }>(req);

@@ -1,37 +1,45 @@
-// Bindings and settings (wrangler.jsonc). Secrets: TURNSTILE_SECRET, FREESOUND_TOKEN, GOOGLE_CLIENT_SECRET, APPLE_PRIVATE_KEY (`pnpm bd server secret`).
+// Bindings and settings (wrangler.jsonc). Secrets: TURNSTILE_SECRET, FREESOUND_TOKEN,
+// GOOGLE_CLIENT_SECRET, APPLE_PRIVATE_KEY (`pnpm bd server secret`).
+
+/** A setting that must be there for this feature (`name` says which, if it isn't). */
+export function setting(value: string | undefined, name: string): string {
+  if (!value) throw new Error(`BlokDust: ${name} is not set`);
+  return value;
+}
+
 export interface Env {
   DB: D1Database;
   SUPPORT_DB?: D1Database;
   SUPPORT_LIMIT?: RateLimit;
   ASSETS: Fetcher;
-  /** Per-IP limits (Workers rate limiting binding): saves, and Freesound lookups (one shared key, 2000/day). */
+  /** Per-IP limits (Workers rate limiting): saves, and Freesound lookups (one key, 2000/day). */
   SAVE_LIMIT?: RateLimit;
   SEARCH_LIMIT?: RateLimit;
-  /** Absolute origin + base path used in every link we hand out (SHARING-0004). Empty: derived from the request. */
+  /** Origin + base path for every link handed out (SHARING-0004); empty: from the request. */
   PUBLIC_BASE_URL?: string;
   /** Path prefix the app is served under ("" or "/blokdust"). */
   BASE_PATH?: string;
-  /** A former base path ("/blokdust", SHARING-0006): its pages 302 to the public site's root, its API answers in place. */
+  /** A former base path ("/blokdust", SHARING-0006): pages 302 to the site root, API in place. */
   LEGACY_BASE_PATH?: string;
-  /** Where the web build sits in the asset store: "" (its root) or the base path (deployed copies, CHG-0005 task 10). */
+  /** The web build's place in the asset store: "" (root) or the base path (CHG-0005 task 10). */
   ASSET_BASE?: string;
   TURNSTILE_SITE_KEY?: string;
   TURNSTILE_SECRET?: string;
   /** Overridable for tests (a local mock); defaults to Cloudflare's siteverify. */
   TURNSTILE_VERIFY_URL?: string;
   FREESOUND_TOKEN?: string;
-  /** Sign in with Google (SPEC-SHARING-ACCOUNTS R2a): OAuth client from Google Cloud; the secret is a Worker secret. */
+  /** Sign in with Google (SPEC-SHARING-ACCOUNTS R2a): the OAuth client; its secret a secret. */
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
   /** Overridable for tests (a local mock); default to Google's endpoints and issuer. */
   GOOGLE_AUTH_URL?: string;
   GOOGLE_TOKEN_URL?: string;
   GOOGLE_ISSUER?: string;
-  /** Sign in with Apple (SPEC-SHARING-ACCOUNTS R2b): the Services ID, team and key ids (vars) and the .p8 key (a secret). */
+  /** Sign in with Apple (R2b): Services ID, team and key ids (vars), the .p8 key (a secret). */
   APPLE_CLIENT_ID?: string;
   APPLE_TEAM_ID?: string;
-  /** The iPad app's id (its bundle id), for Sign in with Apple in the app and the site's apple-app-site-association
-   * (SHARING-0011). */
+  /** The iPad app's id (its bundle id), for Sign in with Apple in the app and the site's
+   * apple-app-site-association (SHARING-0011). */
   APPLE_APP_ID?: string;
   APPLE_KEY_ID?: string;
   APPLE_PRIVATE_KEY?: string;
@@ -41,8 +49,8 @@ export interface Env {
   APPLE_ISSUER?: string;
   /** Overridable for tests (a local mock); defaults to https://freesound.org/apiv2. */
   FREESOUND_API?: string;
-  /** "off" stops the page-close activity request (SPEC-SHARING-ACCOUNTS R16) if D1's free writes run short; saves still
-   * carry activity. A var, or `wrangler secret put ACTIVITY_BEACON` to flip it without a deploy. Default on. */
+  /** "off" stops the page-close activity request (R16) when D1's free writes run short (saves still
+   * carry it); a var, or `wrangler secret put ACTIVITY_BEACON` to flip it with no deploy. */
   ACTIVITY_BEACON?: string;
   /** New accounts a network may make in a UTC day (SPEC-SHARING-ACCOUNTS R1b). Unset: 10. */
   ACCOUNTS_PER_DAY?: string;
@@ -60,12 +68,12 @@ export interface Env {
   CF_ANALYTICS_TOKEN?: string;
   /** Tests: a mock SQL API instead of Cloudflare's. */
   ANALYTICS_SQL_URL?: string;
-  /** Cloudflare Access in front of /admin/*: https://<team>.cloudflareaccess.com and the application's AUD tag. */
+  /** Cloudflare Access on /admin/*: https://<team>.cloudflareaccess.com and its AUD tag. */
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_AUD?: string;
   /** Local tests only: the dashboard without Access. Never set on a deployed env. */
   ADMIN_LOCAL?: string;
-  /** Sentry for the web app's errors (public DSN, EU region) and the environment name it reports. R9. */
+  /** Sentry for the web app's errors (public DSN, EU region) and its environment name (R9). */
   SENTRY_DSN?: string;
   SENTRY_ENVIRONMENT?: string;
 }

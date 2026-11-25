@@ -1,7 +1,5 @@
-// The private analytics dashboard (SPEC-SHARING-USAGE-ANALYTICS R10–R11): /admin/analytics, behind Cloudflare Access.
-// Access signs in the owner before the request reaches us; the Worker checks Access's signed token as well (defence in
-// depth: a route or policy mistake must not open it). Without ACCESS_TEAM_DOMAIN + ACCESS_AUD the dashboard doesn't
-// exist (404), except in local tests (ADMIN_LOCAL=1, never set on a deployed env).
+// Analytics dashboard (SPEC-SHARING-USAGE-ANALYTICS R10, R11) behind Cloudflare Access; the Worker
+// checks Access's token too. Unconfigured: 404, except local tests (ADMIN_LOCAL=1).
 import type { Env } from './env.ts';
 import { HttpError, json } from './http.ts';
 import { runQueries, sqlUrl } from './analyticsQueries.ts';
@@ -12,27 +10,26 @@ async function accessKeys(
   team: string,
   refresh = false,
 ): Promise<(JsonWebKey & { kid?: string })[]> {
-  if (!refresh && certs && certs.team === team && Date.now() - certs.at < 3600_000)
-    return certs.keys;
+  if (!refresh && certs?.team === team && Date.now() - certs.at < 3600_000) return certs.keys;
   const response = await fetch(`${team}/cdn-cgi/access/certs`);
   if (!response.ok) throw new HttpError(503, 'access keys unavailable');
   certs = {
     at: Date.now(),
     team,
-    keys: ((await response.json()) as { keys: (JsonWebKey & { kid?: string })[] }).keys ?? [],
+    keys: (await response.json<{ keys?: (JsonWebKey & { kid?: string })[] }>()).keys ?? [],
   };
   return certs.keys;
 }
-const b64url = (s: string) =>
+const b64url = (text: string) =>
   Uint8Array.from(
-    atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)),
-    (c) => c.charCodeAt(0),
+    atob(text.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((text.length + 3) % 4)),
+    (char) => char.charCodeAt(0),
   );
 
 export async function verifyAccess(env: Env, req: Request): Promise<boolean> {
   const team = (env.ACCESS_TEAM_DOMAIN ?? '').trim().replace(/\/+$/, ''),
     aud = (env.ACCESS_AUD ?? '').trim();
-  // https only; plain http is accepted for a loopback address alone (the local tests' stand-in for Access).
+  // https only; plain http only for a loopback address (the local tests' stand-in for Access).
   if (
     !team ||
     !aud ||
@@ -40,14 +37,14 @@ export async function verifyAccess(env: Env, req: Request): Promise<boolean> {
   )
     return false;
   const token = req.headers.get('cf-access-jwt-assertion') ?? '';
-  const [h, p, s] = token.split('.');
-  if (!h || !p || !s) return false;
+  const [headerPart, payloadPart, signature] = token.split('.');
+  if (!headerPart || !payloadPart || !signature) return false;
   try {
-    const header = JSON.parse(new TextDecoder().decode(b64url(h))) as {
+    const header = JSON.parse(new TextDecoder().decode(b64url(headerPart))) as {
       alg?: string;
       kid?: string;
     };
-    const payload = JSON.parse(new TextDecoder().decode(b64url(p))) as {
+    const payload = JSON.parse(new TextDecoder().decode(b64url(payloadPart))) as {
       aud?: string | string[];
       iss?: string;
       exp?: number;
@@ -64,7 +61,8 @@ export async function verifyAccess(env: Env, req: Request): Promise<boolean> {
       return false;
     if (!(Array.isArray(payload.aud) ? payload.aud : [payload.aud]).includes(aud)) return false;
     let jwk = (await accessKeys(team)).find((k) => k.kid === header.kid);
-    if (!jwk) jwk = (await accessKeys(team, true)).find((k) => k.kid === header.kid); // keys rotate
+    // keys rotate
+    jwk ??= (await accessKeys(team, true)).find((k) => k.kid === header.kid);
     if (!jwk) return false;
     const key = await crypto.subtle.importKey(
       'jwk',
@@ -76,8 +74,8 @@ export async function verifyAccess(env: Env, req: Request): Promise<boolean> {
     return await crypto.subtle.verify(
       'RSASSA-PKCS1-v1_5',
       key,
-      b64url(s),
-      new TextEncoder().encode(`${h}.${p}`),
+      b64url(signature),
+      new TextEncoder().encode(`${headerPart}.${payloadPart}`),
     );
   } catch {
     return false;
@@ -125,7 +123,7 @@ export async function admin(env: Env, req: Request, path: string): Promise<Respo
   return new Response('Not found', { status: 404 });
 }
 
-// The page: plain tables and bars, every value placed with textContent (R11: event values come from clients).
+// The page: plain tables and bars, each value set with textContent (R11: clients send values).
 const DASHBOARD = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex"><title>BlokDust analytics</title>

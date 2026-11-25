@@ -1,5 +1,6 @@
-// SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS R2/R3: same allowlist on both sides of the trust boundary.
+// SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS R2, R3: one allowlist on both sides.
 import { BLOCKS } from '../web/src/generated/blocks.gen.ts';
+import { isC0Control, replaceChars } from './text.ts';
 
 export const SUPPORT = {
   bodyBytes: 128 * 1024,
@@ -31,7 +32,7 @@ export interface SupportPatch {
   }[];
 }
 export interface SupportReport {
-  /** FEEDBACK's choice (CHG-0041: suggestion, bug; older builds send feedback), or an automatic error report. */
+  /** FEEDBACK's choice (CHG-0041: suggestion, bug; older builds: feedback), or an error report. */
   schema: 1;
   kind: SupportKind;
   message: string;
@@ -43,52 +44,58 @@ export interface SupportReport {
   patch: SupportPatch | null;
   diagnostics: Diagnostic[];
 }
-export function record(v: unknown): Record<string, unknown> {
-  return v !== null && typeof v === 'object' && !Array.isArray(v)
-    ? (v as Record<string, unknown>)
+export function record(value: unknown): Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
     : {};
 }
-const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
-/** Diagnostic text only: never stringify logged objects, URLs, filesystem paths or credential values. */
-export function diagnosticText(v: unknown): string {
-  if (typeof v !== 'string') return '[non-text diagnostic]';
-  return v
-    .slice(0, 4096)
-    .replace(/(?:https?:\/\/|file:\/\/|blob:|data:)[^\s<>"']+/gi, '[url]')
-    .replace(/(?:[A-Za-z]:[\\/]|\/(?:Users|home|tmp|private|var|Volumes)\/)[^\s<>"']+/g, '[path]')
-    .replace(
-      /\b(?:bearer\s+\S+|(?:token|password|secret|authorization|api[_-]?key)\s*[=:]\s*[^\s,;]+)/gi,
-      '[credential]',
-    )
-    .replace(/[^\s<>"']+\.(?:wav|mp3|aiff?|flac|ogg|m4a|caf)\b/gi, '[sample]')
-    .replace(/\b[^\s@]+@[^\s@]+\.[^\s@]+\b/g, '[email]')
-    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '')
-    .slice(0, 512);
+const finite = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
+/** Tab, newline and carriage return: the control characters text may keep. */
+const TEXT_LAYOUT = new Set([0x09, 0x0a, 0x0d]);
+
+/** Diagnostic text only: never logged objects, URLs, file paths or credentials. */
+export function diagnosticText(value: unknown): string {
+  if (typeof value !== 'string') return '[non-text diagnostic]';
+  return replaceChars(
+    value
+      .slice(0, 4096)
+      .replace(/(?:https?:\/\/|file:\/\/|blob:|data:)[^\s<>"']+/gi, '[url]')
+      .replace(/(?:[A-Za-z]:[\\/]|\/(?:Users|home|tmp|private|var|Volumes)\/)[^\s<>"']+/g, '[path]')
+      .replace(
+        /\b(?:bearer\s+\S+|(?:token|password|secret|authorization|api[_-]?key)\s*[=:]\s*[^\s,;]+)/gi,
+        '[credential]',
+      )
+      .replace(/[^\s<>"']+\.(?:wav|mp3|aiff?|flac|ogg|m4a|caf)\b/gi, '[sample]')
+      .replace(/\b[^\s@]+@[^\s@]+\.[^\s@]+\b/g, '[email]'),
+    (codePoint) => isC0Control(codePoint) && !TEXT_LAYOUT.has(codePoint),
+  ).slice(0, 512);
 }
-/** Rebuild from block manifests; drop refs, audio, filenames, device names, arbitrary properties and identifiers. */
+/** Rebuilt from block manifests: no refs, audio, file or device names, or other properties. */
 export function supportPatch(value: unknown): SupportPatch {
-  const p = record(value);
-  if (p.format !== 'blokdust.patch' || p.version !== 2)
+  const fields = record(value);
+  if (fields.format !== 'blokdust.patch' || fields.version !== 2)
     throw new Error('Invalid support patch format');
-  if (!Array.isArray(p.blocks) || p.blocks.length > 1024) throw new Error('Invalid support patch');
-  const blocks = p.blocks.map((value, i) => {
+  if (!Array.isArray(fields.blocks) || fields.blocks.length > 1024)
+    throw new Error('Invalid support patch');
+  const blocks = fields.blocks.map((value, i) => {
     const b = record(value),
       def = BLOCKS.find((definition) => definition.id === b.type);
     if (!def) throw new Error('Unknown block type');
     const params: Record<string, number | boolean | string> = {};
     const source = record(b.params);
     for (const param of def.params) {
-      const v = source[param.key];
-      if (finite(v) || typeof v === 'boolean') params[param.key] = v;
-      // Text enum controls are harmless; arbitrary strings (track, filename, device, display metadata) are excluded.
+      const paramValue = source[param.key];
+      if (finite(paramValue) || typeof paramValue === 'boolean') params[param.key] = paramValue;
+      // Text enum controls are harmless; free strings (track, file, device, display names) are out.
       else if (
-        typeof v === 'string' &&
+        typeof paramValue === 'string' &&
         ['waveform', 'wave', 'filterType', 'mode'].includes(param.key) &&
-        /^[a-zA-Z0-9_-]{1,32}$/.test(v)
+        /^[a-zA-Z0-9_-]{1,32}$/.test(paramValue)
       )
-        params[param.key] = v;
-      else if (param.key === 'track' && typeof v === 'string')
-        params.track = /^freesound:\d{1,12}$/.test(v) ? v : 'file:redacted';
+        params[param.key] = paramValue;
+      else if (param.key === 'track' && typeof paramValue === 'string')
+        params.track = /^freesound:\d{1,12}$/.test(paramValue) ? paramValue : 'file:redacted';
     }
     return {
       id: `b${i + 1}`,
@@ -100,10 +107,10 @@ export function supportPatch(value: unknown): SupportPatch {
   });
   const out: SupportPatch = { format: 'blokdust.patch', version: 2, blocks };
   // Release 2.0.1 saves effect connection order. Retain it using only remapped, known block IDs.
-  const ids = new Map(p.blocks.map((value, i) => [record(value).id, `b${i + 1}`]));
-  if (Array.isArray(p.connectionOrder)) {
+  const ids = new Map(fields.blocks.map((value, i) => [record(value).id, `b${i + 1}`]));
+  if (Array.isArray(fields.connectionOrder)) {
     const order: [string, string][] = [];
-    for (const pair of p.connectionOrder.slice(0, 4096)) {
+    for (const pair of fields.connectionOrder.slice(0, 4096)) {
       if (
         !Array.isArray(pair) ||
         pair.length !== 2 ||
@@ -117,8 +124,8 @@ export function supportPatch(value: unknown): SupportPatch {
     }
     if (order.length) out.connectionOrder = order;
   }
-  if (finite(p.seed)) out.seed = p.seed;
-  if (finite(p.tempo)) out.tempo = p.tempo;
+  if (finite(fields.seed)) out.seed = fields.seed;
+  if (finite(fields.tempo)) out.tempo = fields.tempo;
   if (new TextEncoder().encode(JSON.stringify(out)).length > SUPPORT.patchBytes)
     throw new Error('Support patch exceeds 64 KB');
   return out;
@@ -132,8 +139,8 @@ const SYSTEM_NUMBER = [
   'height',
   'pixelRatio',
 ] as const;
-export function supportSystem(v: unknown): Record<string, string | number> {
-  const input = record(v),
+export function supportSystem(value: unknown): Record<string, string | number> {
+  const input = record(value),
     out: Record<string, string | number> = {};
   for (const k of SYSTEM_TEXT)
     if (typeof input[k] === 'string') out[k] = diagnosticText(input[k]).slice(0, 160);
@@ -141,17 +148,19 @@ export function supportSystem(v: unknown): Record<string, string | number> {
     if (finite(input[k]) && input[k] >= 0 && input[k] < 1e7) out[k] = input[k];
   return out;
 }
-export function supportDiagnostics(v: unknown, now = Date.now()): Diagnostic[] {
-  if (!Array.isArray(v)) return [];
-  return v.slice(-SUPPORT.events).flatMap((value) => {
-    const e = record(value);
+export function supportDiagnostics(input: unknown, now = Date.now()): Diagnostic[] {
+  if (!Array.isArray(input)) return [];
+  return input.slice(-SUPPORT.events).flatMap((value) => {
+    const entry = record(value);
     if (
-      !finite(e.at) ||
-      e.at < now - SUPPORT.windowMs ||
-      e.at > now + 60000 ||
-      !['error', 'unhandledrejection', 'console'].includes(String(e.kind))
+      !finite(entry.at) ||
+      entry.at < now - SUPPORT.windowMs ||
+      entry.at > now + 60000 ||
+      !['error', 'unhandledrejection', 'console'].includes(String(entry.kind))
     )
       return [];
-    return [{ at: e.at, kind: e.kind as DiagnosticKind, message: diagnosticText(e.message) }];
+    return [
+      { at: entry.at, kind: entry.kind as DiagnosticKind, message: diagnosticText(entry.message) },
+    ];
   });
 }

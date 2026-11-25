@@ -1,7 +1,7 @@
-// Freesound proxy (DATA-0005, SPEC-SHARING-BACKEND R8): the API key stays a Worker secret; responses are normalised
-// and cached so many users share one key's rate limit. Audio is never proxied: previews come from Freesound's CDN,
-// which allows cross-origin requests.
+// Freesound proxy (DATA-0005, SPEC-SHARING-BACKEND R8): the key stays a secret; answers are cached
+// so users share its rate limit. Audio is never proxied: previews come from Freesound's CDN.
 import { LIMITS, type Env } from './env.ts';
+import { textOf } from '../../shared/text.ts';
 import { HttpError, json } from './http.ts';
 
 export interface FreesoundSound {
@@ -25,20 +25,20 @@ function licenseOf(url: string): FreesoundSound['license'] | null {
   return null; // Sampling+ and anything else: not accepted (DATA-0005)
 }
 
-function normalise(s: Record<string, unknown>): FreesoundSound | null {
-  const license = licenseOf(String(s.license ?? ''));
-  const previews = s.previews as Record<string, string> | undefined;
+function normalise(sound: Record<string, unknown>): FreesoundSound | null {
+  const license = licenseOf(textOf(sound.license));
+  const previews = sound.previews as Record<string, string> | undefined;
   const preview = previews?.['preview-hq-mp3'] ?? previews?.['preview-lq-mp3'];
-  if (!license || !preview || typeof s.id !== 'number') return null;
+  if (!license || !preview || typeof sound.id !== 'number') return null;
   return {
-    id: s.id,
-    name: String(s.name ?? ''),
-    username: String(s.username ?? ''),
+    id: sound.id,
+    name: textOf(sound.name),
+    username: textOf(sound.username),
     license,
-    licenseUrl: String(s.license),
-    duration: Number(s.duration ?? 0),
+    licenseUrl: String(sound.license),
+    duration: Number(sound.duration ?? 0),
     preview,
-    url: String(s.url ?? `https://freesound.org/s/${s.id}/`),
+    url: typeof sound.url === 'string' ? sound.url : `https://freesound.org/s/${sound.id}/`,
   };
 }
 
@@ -72,23 +72,23 @@ async function upstream(
       }),
     ),
   );
-  return JSON.parse(body);
+  return JSON.parse(body) as Record<string, unknown>;
 }
 
-/** GET /api/freesound/search?q=…[&max=s]: up to 150 sounds of at most `max` seconds (v1's per-block limits: Sample 510,
- * Granular 240, Convolver 12; never above 510), CC0/BY/BY-NC only. */
+/** GET /api/freesound/search?q=…[&max=s]: up to 150 sounds of at most `max` seconds (v1's per-block
+ * limits: Sample 510, Granular 240, Convolver 12; never above 510), CC0/BY/BY-NC only. */
 export async function search(env: Env, url: URL, ctx: ExecutionContext): Promise<Response> {
-  const q = (url.searchParams.get('q') ?? '').trim().slice(0, 100);
-  if (!q) throw new HttpError(400, 'q required');
+  const searchText = (url.searchParams.get('q') ?? '').trim().slice(0, 100);
+  if (!searchText) throw new HttpError(400, 'q required');
   const max = Math.min(
     LIMITS.maxSampleSeconds,
     Math.max(1, Math.round(Number(url.searchParams.get('max')) || LIMITS.maxSampleSeconds)),
   );
-  const d = await upstream(
+  const data = await upstream(
     env,
     '/search/text/',
     {
-      query: q,
+      query: searchText,
       page_size: '150',
       fields: FIELDS,
       sort: 'score',
@@ -96,17 +96,17 @@ export async function search(env: Env, url: URL, ctx: ExecutionContext): Promise
     },
     ctx,
   );
-  const results = ((d.results as Record<string, unknown>[]) ?? [])
+  const results = (Array.isArray(data.results) ? (data.results as Record<string, unknown>[]) : [])
     .map(normalise)
     .filter((freesoundSound): freesoundSound is FreesoundSound => !!freesoundSound);
   // Any origin may read it: the plugin's WebView page is not served by this Worker (CHG-0004 3.6).
-  return json({ query: q, count: results.length, results }, 200, {
+  return json({ query: searchText, count: results.length, results }, 200, {
     'cache-control': 'public, max-age=3600',
     'access-control-allow-origin': '*',
   });
 }
 
-/** GET /api/freesound/sounds/:id: one sound (a shared patch's recipient resolves its preview URL here). */
+/** GET /api/freesound/sounds/:id: one sound (a shared patch resolves its preview URL here). */
 export async function sound(env: Env, id: string, ctx: ExecutionContext): Promise<Response> {
   if (!/^\d{1,10}$/.test(id)) throw new HttpError(400, 'bad id');
   const freesoundSound = normalise(await upstream(env, `/sounds/${id}/`, { fields: FIELDS }, ctx));

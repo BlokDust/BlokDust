@@ -1,7 +1,5 @@
-// The iPad app signs in natively (CHG-0039, SHARING-0011): Sign in with Apple (the app's code exchanged at Apple with
-// the app's id as client, its token carrying the nonce this server issued) and passkeys (the site's domain, reached
-// through the app's Associated Domains). The answer is a plugin key in the body, never a cookie, so these endpoints sit
-// outside the cookie routes' Origin check (no ambient credentials to forge).
+// The iPad app signs in natively (SHARING-0011): Apple, passkeys. It gets a plugin key in the body,
+// never a cookie, so these skip the cookie routes' Origin check.
 import { decodeIdToken } from 'arctic';
 import {
   generateAuthenticationOptions,
@@ -20,16 +18,16 @@ const ISSUER = 'https://appleid.apple.com';
 const noStore = { 'cache-control': 'no-store' };
 
 async function body<T>(req: Request): Promise<T> {
-  const t = await req.text();
-  if (t.length > 64 * 1024) throw new HttpError(413, 'request too large');
+  const raw = await req.text();
+  if (raw.length > 64 * 1024) throw new HttpError(413, 'request too large');
   try {
-    return JSON.parse(t || '{}') as T;
+    return JSON.parse(raw || '{}') as T;
   } catch {
     throw new HttpError(400, 'body must be JSON');
   }
 }
 
-/** GET /.well-known/apple-app-site-association — the iPad app may use this site's passkeys (webcredentials). */
+/** GET /.well-known/apple-app-site-association: the iPad app may use this site's passkeys. */
 export function appSiteAssociation(env: Env): Response {
   if (!env.APPLE_TEAM_ID || !env.APPLE_APP_ID) return new Response('Not found', { status: 404 });
   return json({ webcredentials: { apps: [`${env.APPLE_TEAM_ID}.${env.APPLE_APP_ID}`] } }, 200, {
@@ -46,8 +44,8 @@ export async function appleNonce(env: Env): Promise<Response> {
   return json({ id, nonce }, 200, noStore);
 }
 
-/** POST /api/app/apple {id, code, name} — Apple's code from the app: the account (a new one if this Apple account is
- * new here) and a key for this app. */
+/** POST /api/app/apple {id, code, name} — Apple's code from the app: the account (a new one if this
+ * Apple account is new here) and a key for this app. */
 export async function appleApp(env: Env, req: Request): Promise<Response> {
   if (!appleConfigured(env) || !env.APPLE_APP_ID)
     throw new HttpError(503, 'Sign in with Apple is not set up for the app');
@@ -68,7 +66,7 @@ export async function appleApp(env: Env, req: Request): Promise<Response> {
       body: form,
       headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
     });
-    const j = (await response.json()) as { id_token?: string };
+    const j = await response.json<{ id_token?: string }>();
     if (!response.ok || !j.id_token) throw new Error('no id token');
     claims = decodeIdToken(j.id_token); // straight from Apple over TLS (OIDC Core 3.1.3.7)
   } catch {
@@ -112,24 +110,24 @@ export async function appleApp(env: Env, req: Request): Promise<Response> {
     userId,
     typeof b.name === 'string' ? b.name : 'BlokDust on iPad',
   );
-  const u = await env.DB.prepare('SELECT handle FROM users WHERE id = ?')
+  const named = await env.DB.prepare('SELECT handle FROM users WHERE id = ?')
     .bind(userId)
     .first<{ handle: string | null }>();
-  return json({ key, user: { handle: u?.handle ?? null }, fresh }, 200, noStore);
+  return json({ key, user: { handle: named?.handle ?? null }, fresh }, 200, noStore);
 }
 
-/** POST /api/app/passkey/options — a challenge for the app's passkey request (the site's domain as the relying party). */
+/** POST /api/app/passkey/options: a challenge for the app's passkey (this site the party). */
 export async function passkeyOptions(env: Env, req: Request): Promise<Response> {
-  const r = rp(env, req);
+  const party = rp(env, req);
   const options = await generateAuthenticationOptions({
-    rpID: r.id,
+    rpID: party.id,
     userVerification: 'preferred',
   });
   const id = await keepChallengeById(env, options.challenge, 'login-app');
-  return json({ id, rpId: r.id, options }, 200, noStore);
+  return json({ id, rpId: party.id, options }, 200, noStore);
 }
 
-/** POST /api/app/passkey {id, response, name} — the app's passkey answer: the account and a key for this app. */
+/** POST /api/app/passkey {id, response, name}: the app's passkey answer; the account and a key. */
 export async function passkeyApp(env: Env, req: Request): Promise<Response> {
   const b = await body<{ id?: unknown; response?: AuthenticationResponseJSON; name?: unknown }>(
     req,

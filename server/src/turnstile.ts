@@ -2,7 +2,7 @@
 import type { Env } from './env.ts';
 import { HttpError } from './http.ts';
 
-/** Turnstile (SHARING-0001): every save must carry a token Cloudflare accepts. Fails closed without a secret. */
+/** Turnstile (SHARING-0001): every save needs a token Cloudflare accepts; no secret: refused. */
 export async function verifyTurnstile(env: Env, req: Request, token: unknown): Promise<void> {
   if (!env.TURNSTILE_SECRET) throw new HttpError(503, 'saving is not configured');
   if (typeof token !== 'string' || !token) throw new HttpError(403, 'bot check missing');
@@ -13,10 +13,10 @@ export async function verifyTurnstile(env: Env, req: Request, token: unknown): P
   if (ip) form.append('remoteip', ip);
   const url =
     env.TURNSTILE_VERIFY_URL || 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-  let ok = false;
+  let ok: boolean;
   try {
     const response = await fetch(url, { method: 'POST', body: form });
-    ok = response.ok && ((await response.json()) as { success?: boolean }).success === true;
+    ok = response.ok && (await response.json<{ success?: boolean }>()).success === true;
   } catch {
     throw new HttpError(503, 'bot check unavailable');
   }

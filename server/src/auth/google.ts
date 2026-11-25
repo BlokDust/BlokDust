@@ -1,7 +1,5 @@
-// Sign in with Google: OpenID Connect authorisation code flow with PKCE, via Arctic (SPEC-SHARING-ACCOUNTS R2a,
-// SHARING-0008). Only Google's stable subject id is kept: no email, no name, no picture. The ID token comes straight
-// from Google's token endpoint over TLS, so its signature need not be checked (OIDC Core 3.1.3.7); its issuer,
-// audience and expiry are.
+// Sign in with Google (SPEC-SHARING-ACCOUNTS R2a): OIDC with PKCE (Arctic), keeping the subject id
+// only; the token from Google over TLS: issuer, audience, expiry checked (OIDC Core 3.1.3.7).
 import {
   CodeChallengeMethod,
   OAuth2Client,
@@ -48,7 +46,7 @@ export function googleStart(env: Env, req: Request, url: URL): Response {
   return new Response(null, { status: 302, headers });
 }
 
-/** GET /api/auth/google/callback?code&state — signs in (a new account if this Google account is new here). */
+/** GET /api/auth/google/callback?code&state: signs in (a new account if new here). */
 export async function googleCallback(env: Env, req: Request, url: URL): Promise<Response> {
   const [state, verifier, back] = (readCookie(req, 'bd_oauth') ?? '').split('.');
   const code = url.searchParams.get('code');

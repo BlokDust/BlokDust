@@ -1,10 +1,7 @@
-// Sign in with Apple (SPEC-SHARING-ACCOUNTS R2b, owner 2026-11-15: Google, Apple and passkeys). OpenID Connect
-// authorisation code flow. No scopes are asked for (no name, no email), so Apple answers with a plain GET redirect
-// (response_mode=query) and the SameSite=Lax state cookie comes back with it. The client secret is a short-lived
-// ES256 JWT signed with the Sign in with Apple key (WebCrypto). As with Google, the ID token comes straight from Apple's
-// token endpoint over TLS, so its issuer, audience and expiry are checked, not its signature (OIDC Core 3.1.3.7).
+// Sign in with Apple (SPEC-SHARING-ACCOUNTS R2b): OIDC, no scopes (a plain GET redirect keeps the
+// Lax state cookie), an ES256 JWT secret; the token from Apple over TLS (OIDC Core 3.1.3.7).
 import { decodeIdToken, generateState } from 'arctic';
-import type { Env } from '../env.ts';
+import { setting, type Env } from '../env.ts';
 import { HttpError, publicBase } from '../http.ts';
 import { cookie, readCookie } from './session.ts';
 import { finishSignIn, safeReturn } from './oauth.ts';
@@ -20,7 +17,7 @@ const redirectUri = (env: Env, req: Request) => `${publicBase(env, req)}/api/aut
 /** The .p8 key from Apple (PEM, PKCS#8) as DER bytes. */
 function pkcs8(pem: string): Uint8Array {
   const b64 = pem.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
-  return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  return Uint8Array.from(atob(b64), (char) => char.charCodeAt(0));
 }
 const b64url = (b: Uint8Array | string) =>
   btoa(typeof b === 'string' ? b : String.fromCharCode(...b))
@@ -28,10 +25,13 @@ const b64url = (b: Uint8Array | string) =>
     .replace(/\+/g, '-')
     .replace(/\//g, '_');
 /** Apple's client secret: an ES256 JWT from the team, about the Services ID, for five minutes. */
-export async function clientSecret(env: Env, clientId = env.APPLE_CLIENT_ID!): Promise<string> {
+export async function clientSecret(
+  env: Env,
+  clientId = setting(env.APPLE_CLIENT_ID, 'APPLE_CLIENT_ID'),
+): Promise<string> {
   const key = await crypto.subtle.importKey(
     'pkcs8',
-    pkcs8(env.APPLE_PRIVATE_KEY!),
+    pkcs8(setting(env.APPLE_PRIVATE_KEY, 'APPLE_PRIVATE_KEY')),
     { name: 'ECDSA', namedCurve: 'P-256' },
     false,
     ['sign'],
@@ -57,7 +57,7 @@ export function appleStart(env: Env, req: Request, url: URL): Response {
   for (const [k, value] of Object.entries({
     response_type: 'code',
     response_mode: 'query',
-    client_id: env.APPLE_CLIENT_ID!,
+    client_id: setting(env.APPLE_CLIENT_ID, 'APPLE_CLIENT_ID'),
     redirect_uri: redirectUri(env, req),
     state,
   }))
@@ -83,7 +83,7 @@ export async function appleCallback(env: Env, req: Request, url: URL): Promise<R
       grant_type: 'authorization_code',
       code,
       redirect_uri: redirectUri(env, req),
-      client_id: env.APPLE_CLIENT_ID!,
+      client_id: setting(env.APPLE_CLIENT_ID, 'APPLE_CLIENT_ID'),
       client_secret: await clientSecret(env),
     });
     const response = await fetch(env.APPLE_TOKEN_URL || TOKEN_URL, {
@@ -91,7 +91,7 @@ export async function appleCallback(env: Env, req: Request, url: URL): Promise<R
       body,
       headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
     });
-    const j = (await response.json()) as { id_token?: string };
+    const j = await response.json<{ id_token?: string }>();
     if (!response.ok || !j.id_token) throw new Error('no id token');
     claims = decodeIdToken(j.id_token);
   } catch {

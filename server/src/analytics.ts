@@ -1,7 +1,5 @@
-// Usage analytics (SHARING-0010, SPEC-SHARING-USAGE-ANALYTICS): POST /api/events writes allow-listed events to Workers
-// Analytics Engine; the Worker records a few events itself. Nothing identifying is stored: web visitors are a hash of
-// a salt that changes every day (and is then deleted) with the IP and user agent; plugins send a random install id,
-// stored only as a hash. Raw IPs are never written.
+// Usage analytics (SHARING-0010): allow-listed events, and the Worker's own, into Analytics Engine.
+// Nothing identifying: visitors a daily-salted hash of IP and agent; plugins a hashed install id.
 import type { Env } from './env.ts';
 import {
   EVENTS,
@@ -15,10 +13,10 @@ import {
 } from './events.ts';
 import { HttpError, json, limit, sha256Hex } from './http.ts';
 
-/** The share of sessions that send events (R5): ANALYTICS_RATE, 0 (off) … 1 (all). Unset or invalid: off. */
+/** The share of sessions that send events (R5): ANALYTICS_RATE 0 (off) to 1 (all); unset: off. */
 export function analyticsRate(env: Env): number {
-  const r = Number((env.ANALYTICS_RATE ?? '').trim());
-  return env.EVENTS && Number.isFinite(r) ? Math.max(0, Math.min(1, r)) : 0;
+  const rate = Number((env.ANALYTICS_RATE ?? '').trim());
+  return env.EVENTS && Number.isFinite(rate) ? Math.max(0, Math.min(1, rate)) : 0;
 }
 
 /** What the page needs to know (R5, R9): written into the page and /api/config. */
@@ -39,8 +37,8 @@ export async function dailySalt(env: Env): Promise<string> {
   const fresh = crypto.randomUUID();
   let value = fresh;
   try {
-    // Every isolate must use the same salt on the same day, or one visitor counts once per isolate: D1 holds it, and
-    // yesterday's is deleted, after which no hash can be linked to another day's.
+    // Every isolate must use the same salt on the same day, or one visitor counts once per isolate:
+    // D1 holds it, and yesterday's is deleted, after which no hash can be linked to another day's.
     await env.DB.prepare('INSERT OR IGNORE INTO analytics_salt (day, salt) VALUES (?, ?)')
       .bind(day, fresh)
       .run();
@@ -49,8 +47,8 @@ export async function dailySalt(env: Env): Promise<string> {
         .bind(day)
         .first<string>('salt')) ?? fresh;
     await env.DB.prepare('DELETE FROM analytics_salt WHERE day < ?').bind(day).run();
-  } catch (e) {
-    console.error('analytics salt', e);
+  } catch (failure) {
+    console.error('analytics salt', failure);
   }
   salt = { day, value };
   return value;
@@ -95,8 +93,8 @@ export function deviceOf(ua: string): { os: string; browser: string } {
 const PLUGIN_SURFACES: readonly Surface[] = ['standalone', 'vst3', 'au', 'auv3'];
 const VERSION_RE = /^[0-9A-Za-z.+-]{1,24}$/;
 const INSTALL_RE = /^[0-9a-f-]{16,64}$/i;
-const clampNum = (n: unknown) =>
-  typeof n === 'number' && Number.isFinite(n) ? Math.max(-1e9, Math.min(1e9, n)) : 0;
+const clampNum = (value: unknown) =>
+  typeof value === 'number' && Number.isFinite(value) ? Math.max(-1e9, Math.min(1e9, value)) : 0;
 
 interface Point {
   e: EventName;
@@ -131,13 +129,24 @@ function write(
     doubles: [common.w, ...point.numbers],
   });
 }
-/** An event's properties in schema order, checked (R3); null when the event isn't one a client may send. */
-function pointOf(name: unknown, s: unknown, n: unknown, fromServer: boolean): Point | null {
+/** An event's properties in schema order, checked (R3); null if a client may not send it. */
+function pointOf(
+  name: unknown,
+  stringProps: unknown,
+  numberProps: unknown,
+  fromServer: boolean,
+): Point | null {
   if (typeof name !== 'string' || !Object.hasOwn(EVENTS, name)) return null;
   const def: EventDef = EVENTS[name as EventName];
   if (!!def.server !== fromServer) return null;
-  const sv = (s && typeof s === 'object' ? s : {}) as Record<string, unknown>,
-    nv = (n && typeof n === 'object' ? n : {}) as Record<string, unknown>;
+  const sv = (stringProps && typeof stringProps === 'object' ? stringProps : {}) as Record<
+      string,
+      unknown
+    >,
+    nv = (numberProps && typeof numberProps === 'object' ? numberProps : {}) as Record<
+      string,
+      unknown
+    >;
   return {
     e: name as EventName,
     strings: Object.entries(def.strings ?? {}).map(([k, rule]) => checkString(rule, sv[k])),
@@ -147,23 +156,25 @@ function pointOf(name: unknown, s: unknown, n: unknown, fromServer: boolean): Po
 
 /** POST /api/events (R3): a batch from the web app or a plugin. Answers how many were accepted. */
 export async function ingest(env: Env, req: Request): Promise<Response> {
-  if (analyticsRate(env) <= 0) return json({ accepted: 0, off: true }, 200); // R5: switched off (or no dataset)
+  // R5: switched off (or no dataset)
+  if (analyticsRate(env) <= 0) return json({ accepted: 0, off: true }, 200);
   await limit(env.EVENTS_LIMIT, req, 'events');
   const len = Number(req.headers.get('content-length') ?? 0);
   if (len > MAX_BATCH_BYTES) throw new HttpError(413, 'batch too large');
   const text = await req.text();
   if (text.length > MAX_BATCH_BYTES) throw new HttpError(413, 'batch too large');
-  let body: Record<string, unknown>;
+  let parsed: unknown;
   try {
-    body = JSON.parse(text) as Record<string, unknown>;
+    parsed = JSON.parse(text);
   } catch {
     throw new HttpError(400, 'bad json');
   }
-  if (!body || typeof body !== 'object') throw new HttpError(400, 'bad batch');
+  if (!parsed || typeof parsed !== 'object') throw new HttpError(400, 'bad batch');
+  const body = parsed as Record<string, unknown>;
   const surface = body.surface as Surface;
   if (!SURFACES.includes(surface)) throw new HttpError(400, 'bad surface');
-  const v = typeof body.v === 'string' && VERSION_RE.test(body.v) ? body.v : null;
-  if (!v) throw new HttpError(400, 'bad version');
+  const version = typeof body.v === 'string' && VERSION_RE.test(body.v) ? body.v : null;
+  if (!version) throw new HttpError(400, 'bad version');
   const events = Array.isArray(body.events) ? body.events : null;
   if (!events || events.length > MAX_EVENTS_PER_BATCH) throw new HttpError(400, 'bad events');
   const isPlugin = PLUGIN_SURFACES.includes(surface);
@@ -171,26 +182,26 @@ export async function ingest(env: Env, req: Request): Promise<Response> {
     isPlugin && typeof body.install === 'string' && INSTALL_RE.test(body.install)
       ? body.install
       : null;
-  const w =
+  const weight =
     typeof body.w === 'number' && Number.isFinite(body.w) ? Math.max(1, Math.min(1000, body.w)) : 1;
   const device = deviceOf(req.headers.get('user-agent') ?? '');
   const os = isPlugin ? (checkString('token', body.os) ?? 'other') : device.os;
   const common = {
     surface,
-    v,
+    v: version,
     os,
     browser: isPlugin ? 'plugin' : device.browser,
     country: ((req as { cf?: { country?: string } }).cf?.country ?? 'XX').slice(0, 2),
-    // R8: a plugin is counted by its install (hashed); everything else by the daily visitor hash (R4).
+    // R8: a plugin is counted by its hashed install, all else by the daily visitor hash (R4).
     visitor: install
       ? (await sha256Hex(`install|${install}`)).slice(0, 16)
       : await visitorOf(env, req),
-    w,
+    w: weight,
   };
   let accepted = 0;
   for (const ev of events) {
-    const o = (ev && typeof ev === 'object' ? ev : {}) as Record<string, unknown>;
-    const point = pointOf(o.e, o.s, o.n, false);
+    const fields = (ev && typeof ev === 'object' ? ev : {}) as Record<string, unknown>;
+    const point = pointOf(fields.e, fields.s, fields.n, false);
     if (!point) continue;
     if (point.e.startsWith('plugin_') && !install) continue; // R8: plugin events only from a plugin
     write(env, common, point);
@@ -204,12 +215,12 @@ export async function record(
   env: Env,
   req: Request,
   name: EventName,
-  s: Record<string, string> = {},
-  n: Record<string, number> = {},
+  strings: Record<string, string> = {},
+  numbers: Record<string, number> = {},
 ): Promise<void> {
   try {
     if (analyticsRate(env) <= 0) return;
-    const point = pointOf(name, s, n, true);
+    const point = pointOf(name, strings, numbers, true);
     if (!point) return;
     const device = deviceOf(req.headers.get('user-agent') ?? '');
     write(
@@ -224,7 +235,7 @@ export async function record(
       },
       point,
     );
-  } catch (e) {
-    console.error('analytics record', e);
+  } catch (failure) {
+    console.error('analytics record', failure);
   }
 }

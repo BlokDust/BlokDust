@@ -1,6 +1,5 @@
-// Passkeys (WebAuthn) with SimpleWebAuthn (SPEC-SHARING-ACCOUNTS R1, R2, R7; SHARING-0008). Discoverable credentials:
-// signing in needs no name, the device offers its passkeys for this site. A one-time challenge lives in D1 for five
-// minutes, found by a random id in a short-lived cookie.
+// Passkeys (SimpleWebAuthn; SPEC-SHARING-ACCOUNTS R1, R2, R7), discoverable: no name to sign in. A
+// challenge waits five minutes in D1, found by a random id in a short-lived cookie.
 import {
   generateAuthenticationOptions,
   generateRegistrationOptions,
@@ -19,7 +18,11 @@ import { countNewAccount, requireMayCreateAccount } from './newAccounts.ts';
 const RP_NAME = 'BlokDust';
 const CHALLENGE_MS = 5 * 60_000;
 
-/** The relying party: this site's host and origin (the public one, or this request's in local dev). */
+const missingResponse = (): never => {
+  throw new HttpError(400, 'passkey response required');
+};
+
+/** The relying party: this site's host and origin (public, or the request's in local dev). */
 export function rp(env: Env, req: Request): { id: string; origins: string[] } {
   const pub = new URL(publicBase(env, req)),
     here = new URL(req.url);
@@ -27,10 +30,10 @@ export function rp(env: Env, req: Request): { id: string; origins: string[] } {
 }
 
 async function readJson<T>(req: Request): Promise<T> {
-  const t = await req.text();
-  if (t.length > 64 * 1024) throw new HttpError(413, 'request too large');
+  const body = await req.text();
+  if (body.length > 64 * 1024) throw new HttpError(413, 'request too large');
   try {
-    return JSON.parse(t || '{}') as T;
+    return JSON.parse(body || '{}') as T;
   } catch {
     throw new HttpError(400, 'body must be JSON');
   }
@@ -66,16 +69,14 @@ async function takeChallenge(
   )
     .bind(id)
     .first<{ challenge: string; kind: string; data: string; expires: number }>();
-  if (!row || row.kind !== kind || row.expires < Date.now())
+  if (row?.kind !== kind || row.expires < Date.now())
     throw new HttpError(400, 'sign-in expired; try again');
   return row;
 }
 const clearChallenge = (req: Request) => cookie(req, 'bd_challenge', '', 0);
 
-/**
- * POST /api/auth/passkey/register/options {handle, turnstile} — a new account (R1), or, signed in, another passkey
- * for this account (no handle needed then).
- */
+/** POST /api/auth/passkey/register/options {handle, turnstile} — a new account (R1), or, signed in,
+ * another passkey for this account (no handle needed then). */
 export async function registerOptions(env: Env, req: Request): Promise<Response> {
   const body = await readJson<{ handle?: unknown; turnstile?: unknown }>(req);
   const me = await currentUser(env, req);
@@ -96,18 +97,19 @@ export async function registerOptions(env: Env, req: Request): Promise<Response>
     if (problem) throw new HttpError(400, problem);
     if (await env.DB.prepare('SELECT 1 FROM users WHERE handle = ?').bind(handle).first())
       throw new HttpError(409, 'That name is taken.');
-    await verifyTurnstile(env, req, body.turnstile); // a new account: the bot check, as for saving (R1)
+    // a new account: the bot check, as for saving (R1)
+    await verifyTurnstile(env, req, body.turnstile);
     await requireMayCreateAccount(env, req); // R1b: before the device makes a passkey
     userId = newUserId();
   }
-  const r = rp(env, req);
+  const party = rp(env, req);
   const options = await generateRegistrationOptions({
     rpName: RP_NAME,
-    rpID: r.id,
+    rpID: party.id,
     userName: handle,
     userID: new Uint8Array(new TextEncoder().encode(userId)),
     attestationType: 'none',
-    excludeCredentials: exclude.map((c) => ({ id: c.id })),
+    excludeCredentials: exclude.map((credential) => ({ id: credential.id })),
     authenticatorSelection: { residentKey: 'required', userVerification: 'preferred' },
   });
   const set = await keepChallenge(
@@ -120,7 +122,7 @@ export async function registerOptions(env: Env, req: Request): Promise<Response>
   return json(options, 200, { 'set-cookie': set, 'cache-control': 'no-store' });
 }
 
-/** POST /api/auth/passkey/register/verify {response} — saves the passkey; a new account is created and signed in. */
+/** POST /api/auth/passkey/register/verify {response}: saves it; a new account, signed in. */
 export async function registerVerify(env: Env, req: Request): Promise<Response> {
   const body = await readJson<{ response?: RegistrationResponseJSON }>(req);
   const { challenge, data } = await takeChallenge(env, req, 'register');
@@ -133,28 +135,36 @@ export async function registerVerify(env: Env, req: Request): Promise<Response> 
     const me = await currentUser(env, req);
     if (me?.id !== userId) throw new HttpError(401, 'sign in first');
   }
-  const r = rp(env, req);
-  let v;
+  const party = rp(env, req);
+  let verification;
   try {
-    v = await verifyRegistrationResponse({
-      response: body.response!,
+    verification = await verifyRegistrationResponse({
+      response: body.response ?? missingResponse(),
       expectedChallenge: challenge,
-      expectedOrigin: r.origins,
-      expectedRPID: r.id,
+      expectedOrigin: party.origins,
+      expectedRPID: party.id,
     });
   } catch (error) {
     throw new HttpError(400, `passkey not accepted: ${(error as Error).message}`);
   }
-  if (!v.verified) throw new HttpError(400, 'passkey not accepted');
-  const c = v.registrationInfo.credential,
+  if (!verification.verified) throw new HttpError(400, 'passkey not accepted');
+  const newCredential = verification.registrationInfo.credential,
     now = Date.now();
   const add = env.DB.prepare(
     'INSERT INTO credentials (id, user_id, public_key, counter, transports, created) VALUES (?, ?, ?, ?, ?, ?)',
-  ).bind(c.id, userId, c.publicKey, c.counter, (c.transports ?? []).join(','), now);
+  ).bind(
+    newCredential.id,
+    userId,
+    newCredential.publicKey,
+    newCredential.counter,
+    (newCredential.transports ?? []).join(','),
+    now,
+  );
   try {
     if (existing) await add.run();
     else {
-      await requireMayCreateAccount(env, req); // R1b: another tab may have used the day's last one meanwhile
+      // R1b: another tab may have used the day's last one meanwhile
+      await requireMayCreateAccount(env, req);
       await env.DB.batch([
         env.DB.prepare('INSERT INTO users (id, handle, created) VALUES (?, ?, ?)').bind(
           userId,
@@ -175,7 +185,7 @@ export async function registerVerify(env: Env, req: Request): Promise<Response> 
   return withCookies({ user: { id: userId, handle } }, headers);
 }
 
-/** POST /api/auth/passkey/login/options — the device picks one of its passkeys for this site (R2). */
+/** POST /api/auth/passkey/login/options: the device picks one of its passkeys here (R2). */
 export async function loginOptions(env: Env, req: Request): Promise<Response> {
   const options = await generateAuthenticationOptions({
     rpID: rp(env, req).id,
@@ -196,8 +206,8 @@ export async function loginVerify(env: Env, req: Request): Promise<Response> {
   return withCookies({ user: { id: cred.user_id, handle: cred.handle } }, headers);
 }
 
-/** A passkey's answer to `challenge` checked against the credential it names; whose it is. (The website, and the iPad
- * app through the site's domain: SHARING-0011.) */
+/** A passkey's answer to `challenge` checked against the credential it names; whose it is. (The
+ * website, and the iPad app through the site's domain: SHARING-0011.) */
 export async function verifyAssertion(
   env: Env,
   req: Request,
@@ -221,14 +231,14 @@ export async function verifyAssertion(
     }>();
   if (!cred)
     throw new HttpError(401, 'This passkey is not known here. It may belong to a deleted account.');
-  const r = rp(env, req);
-  let v;
+  const party = rp(env, req);
+  let verification;
   try {
-    v = await verifyAuthenticationResponse({
-      response: body.response!,
+    verification = await verifyAuthenticationResponse({
+      response: body.response ?? missingResponse(),
       expectedChallenge: challenge,
-      expectedOrigin: r.origins,
-      expectedRPID: r.id,
+      expectedOrigin: party.origins,
+      expectedRPID: party.id,
       credential: {
         id: cred.id,
         publicKey: new Uint8Array(cred.public_key as ArrayLike<number>),
@@ -239,9 +249,9 @@ export async function verifyAssertion(
   } catch (error) {
     throw new HttpError(401, `passkey not accepted: ${(error as Error).message}`);
   }
-  if (!v.verified) throw new HttpError(401, 'passkey not accepted');
+  if (!verification.verified) throw new HttpError(401, 'passkey not accepted');
   await env.DB.prepare('UPDATE credentials SET counter = ?, last_used = ? WHERE id = ?')
-    .bind(v.authenticationInfo.newCounter, Date.now(), cred.id)
+    .bind(verification.authenticationInfo.newCounter, Date.now(), cred.id)
     .run();
   return { user_id: cred.user_id, handle: cred.handle };
 }
@@ -276,7 +286,7 @@ export async function takeChallengeById(
   )
     .bind(id)
     .first<{ challenge: string; kind: string; data: string; expires: number }>();
-  if (!row || row.kind !== kind || row.expires < Date.now())
+  if (row?.kind !== kind || row.expires < Date.now())
     throw new HttpError(400, 'sign-in expired; try again');
   return row;
 }

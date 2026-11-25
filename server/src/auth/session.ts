@@ -1,5 +1,5 @@
-// Sessions (SPEC-SHARING-ACCOUNTS R3–R5, SHARING-0008): a random token in an HttpOnly cookie; D1 keeps its SHA-256.
-// Requests that change anything with the cookie must come from this site (Origin check, on top of SameSite=Lax).
+// Sessions (SPEC-SHARING-ACCOUNTS R3–R5): a random token in an HttpOnly cookie, its SHA-256 in D1;
+// changes with the cookie must come from this site (Origin check on top of SameSite=Lax).
 import type { Env } from '../env.ts';
 import { HttpError, b64urlBytes, publicBase, sha256Hex } from '../http.ts';
 
@@ -12,7 +12,7 @@ export interface User {
   created: number;
 }
 
-/** Secure cookies on https; plain http only for local dev and tests (`wrangler dev`). `__Host-` needs Secure. */
+/** Secure cookies on https; plain http only for local dev and tests. `__Host-` needs Secure. */
 const secure = (req: Request) => new URL(req.url).protocol === 'https:';
 export const cookieName = (req: Request, name: string) => (secure(req) ? `__Host-${name}` : name);
 
@@ -47,16 +47,16 @@ export async function startSession(env: Env, req: Request, userId: string): Prom
   return cookie(req, 'bd_session', token, SESSION_DAYS * 86_400);
 }
 
-/** A plugin's key in this request (CHG-0039, SHARING-0011): `Authorization: Bearer bdk_…`, else null. Patches' edit
- * tokens travel in the same header without the prefix. */
+/** A plugin's key in this request (CHG-0039, SHARING-0011): `Authorization: Bearer bdk_…`, else
+ * null. Patches' edit tokens travel in the same header without the prefix. */
 export function appKeyOf(req: Request): string | null {
-  const m = /^Bearer (bdk_[A-Za-z0-9_-]{20,64})$/.exec(req.headers.get('authorization') ?? '');
-  return m ? m[1] : null;
+  const bearer = /^Bearer (bdk_[A-Za-z0-9_-]{20,64})$/.exec(req.headers.get('authorization') ?? '');
+  return bearer ? bearer[1] : null;
 }
 export const APP_KEY_DAYS = 180;
 const HOUR = 3_600_000;
-/** The account a plugin key belongs to; a key past its life is deleted. Used, it lives 180 days more (written at most
- * hourly). */
+/** The account a plugin key belongs to; a key past its life is deleted. Used, it lives 180 days
+ * more (written at most hourly). */
 async function userForKey(env: Env, key: string): Promise<User | null> {
   const hash = await sha256Hex(key),
     now = Date.now();
@@ -77,10 +77,8 @@ async function userForKey(env: Env, key: string): Promise<User | null> {
   return { id: row.id, handle: row.handle, created: row.created };
 }
 
-/**
- * The signed-in user, or null. A session past half its life is extended (sliding expiry, R3). `app`: this endpoint
- * also takes a plugin's key (SHARING-0011 lists which). A request with a key is never read as the cookie's user.
- */
+/** The signed-in user, or null; past half its life a session is extended (R3). `app`: takes a
+ * plugin's key too (SHARING-0011), and a request with a key is never the cookie's user. */
 export async function currentUser(
   env: Env,
   req: Request,
@@ -119,7 +117,7 @@ export async function requireUser(
   return user;
 }
 
-/** Sign out: this session, or every session of the user (`everywhere`). Returns the clearing Set-Cookie. */
+/** Sign out this session, or all the user's (`everywhere`); returns the clearing Set-Cookie. */
 export async function endSession(env: Env, req: Request, everywhere: boolean): Promise<string> {
   const token = readCookie(req, 'bd_session');
   if (token) {

@@ -1,4 +1,5 @@
 import type { Env } from './env.ts';
+import { replaceChars } from '../../shared/text.ts';
 import { HttpError, json, sha256Hex } from './http.ts';
 import {
   SUPPORT,
@@ -11,7 +12,7 @@ import {
 } from '../../shared/support.ts';
 
 const DAY = 86400000;
-// Write-only, credential-free endpoint also used by the embedded plugin WebView. No public report lookup/list API.
+// Write-only, credential-free, used by the plugin WebView too. No API lists or looks up reports.
 export const supportHeaders = {
   'access-control-allow-origin': '*',
   'cache-control': 'no-store',
@@ -22,20 +23,20 @@ async function body(req: Request): Promise<Record<string, unknown>> {
     throw new HttpError(415, 'JSON required');
   if (Number(req.headers.get('content-length')) > SUPPORT.bodyBytes)
     throw new HttpError(413, 'report too large');
-  const reader = req.body?.getReader();
+  const reader = (req.body as ReadableStream<Uint8Array> | null)?.getReader();
   if (!reader) throw new HttpError(400, 'report required');
   const chunks: Uint8Array[] = [];
   let bytes = 0;
   try {
     for (;;) {
-      const r = await reader.read();
-      if (r.done) break;
-      bytes += r.value.byteLength;
+      const readResult = await reader.read();
+      if (readResult.done) break;
+      bytes += readResult.value.byteLength;
       if (bytes > SUPPORT.bodyBytes) {
         await reader.cancel();
         throw new HttpError(413, 'report too large');
       }
-      chunks.push(r.value);
+      chunks.push(readResult.value);
     }
   } finally {
     reader.releaseLock();
@@ -94,9 +95,11 @@ export async function submitSupport(env: Env, req: Request): Promise<Response> {
   const now = Date.now(),
     diagnostics = includeContext ? supportDiagnostics(b.diagnostics, now) : [],
     system = includeContext ? supportSystem(b.system) : {};
-  const message = automatic ? diagnosticText(b.message) : b.message.replace(/\u0000/g, '').trim();
+  const message = automatic
+    ? diagnosticText(b.message)
+    : replaceChars(b.message, (codePoint) => codePoint === 0).trim();
   const fingerprint = await sha256Hex(
-    `${b.version}:${system.surface ?? ''}:${diagnostics.at(-1)?.kind ?? ''}:${diagnostics.at(-1)?.message ?? message}`,
+    `${b.version}:${'surface' in system ? system.surface : ''}:${diagnostics.at(-1)?.kind ?? ''}:${diagnostics.at(-1)?.message ?? message}`,
   );
   const id = crypto.randomUUID();
   await env.SUPPORT_DB.batch([
@@ -105,7 +108,7 @@ export async function submitSupport(env: Env, req: Request): Promise<Response> {
       (id, created, kind, topic, message, email, version, build, surface, fingerprint, review_due, expires)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
-      // FEEDBACK's SUGGESTION and BUG (CHG-0041) are feedback with a topic (the table's kinds stay as they were).
+      // FEEDBACK's SUGGESTION and BUG (CHG-0041) are feedback with a topic (table kinds stay).
       .bind(
         id,
         now,
