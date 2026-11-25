@@ -102,8 +102,8 @@ export function iosDevice(noBuild: boolean): void {
       .filter(Boolean)
       .map((u) => new URL(u).hostname)
       .join(';');
-    // Once the App ID has Sign in with Apple and Associated Domains (the developer portal, or Xcode signed in to the
-    // team): BLOKDUST_IOS_NATIVE_SIGN_IN=1 in local config builds them in.
+    // Once the App ID has Sign in with Apple and Associated Domains (the developer portal, or Xcode
+    // signed in to the team): BLOKDUST_IOS_NATIVE_SIGN_IN=1 in local config builds them in.
     env.BLOKDUST_IOS_NATIVE_SIGN_IN = setting('BLOKDUST_IOS_NATIVE_SIGN_IN', '0');
     must(
       spawnSync('cmake', ['--preset', 'plugin-ios'], {

@@ -6,15 +6,48 @@ import { resolve } from 'node:path';
 import { FX_VST3, HOST, VST3 } from './paths.ts';
 import { build } from './build.ts';
 import { validate } from './validate.ts';
-import { expected, hostRender, nativeRender, sampleState } from './hostRender.ts';
+import {
+  expected,
+  hostRender,
+  lastJsonLine,
+  nativeRender,
+  sampleState,
+  type SelfTest,
+} from './hostRender.ts';
+
+/** A fixture the built plugin renders, and what else it must show. */
+interface PluginTestCase {
+  name: string;
+  plugin: string;
+  fixture: string;
+  extra: string[];
+  editorBlocks?: number;
+  noRoundTripCheck?: boolean;
+  /** An automation lane's index and the name it must have. */
+  paramName?: [number, string];
+  /** Compare with the native engine now, not the golden hashes. */
+  native?: boolean;
+}
+
+/** A host self-test (`--selftest-…`): its answer, or none. */
+function selfTest(flag: string) {
+  const result = spawnSync(HOST, [flag], { encoding: 'utf8' });
+  let answer: SelfTest = {};
+  try {
+    answer = lastJsonLine(result.stdout) as SelfTest;
+  } catch {
+    // reported by the caller
+  }
+  return { answer, stderr: result.stderr };
+}
 
 export function test() {
   build();
   const pluginval = validate();
   const diag = resolve('.cache/plugin-ui-diag.json');
-  // Dust 1 = 0.75 on filter.gain (−35..35) gives 17.5 dB: the dust-filter fixture's patch, reached by automation.
+  // Dust 1 = 0.75 on filter.gain (−35..35) is 17.5 dB: the dust-filter patch, by automation.
   const automationState = 'tests/golden/states/dust-filter.state.json';
-  const cases = [
+  const cases: PluginTestCase[] = [
     {
       name: 'emitter-tone (state + editor)',
       plugin: VST3,
@@ -28,7 +61,7 @@ export function test() {
       fixture: 'tests/golden/toggle-pulse.json',
       extra: [],
     },
-    { name: 'keys / laser fixtures need scripts: covered natively', skip: true },
+    // keys and laser fixtures need scripts: covered natively
     {
       name: 'Dust 1 automation',
       plugin: VST3,
@@ -43,29 +76,30 @@ export function test() {
       fixture: 'tests/golden/fx-audio-in.json',
       extra: [],
     },
-    // CHG-0004 3.4: the instrument's side-chain bus, once enabled, feeds Audio Input exactly like the FX's input.
+    // CHG-0004 3.4: the instrument's side-chain bus feeds Audio Input as the FX's input does.
     {
       name: 'Instrument: side-chain → Audio Input',
       plugin: VST3,
       fixture: 'tests/golden/fx-audio-in.json',
       extra: ['--sidechain'],
     },
-    // Host MIDI at the same samples as the fixture's script (velocity of note-on is ignored by the engine today).
+    // Host MIDI at the fixture script's samples (the engine ignores note-on velocity today).
     {
       name: 'host MIDI notes',
       plugin: VST3,
       fixture: 'tests/golden/midi-notes.json',
       extra: ['--midi', 'on:60@4800,off:60@48000,on:67/76@72000,off:67@120000'],
     }, // velocity 76/127, as in the fixture
-    // In a DAW the computer keys are the host's (Logic Musical Typing, Live's Computer MIDI Keyboard): they arrive as MIDI.
+    // In a DAW the computer keys are the host's (Logic Musical Typing, Live's Computer MIDI
+    // Keyboard): they arrive as MIDI.
     {
       name: 'DAW keys → Computer Keyboard',
       plugin: VST3,
       fixture: 'tests/golden/keyboard-host-midi.json',
       extra: ['--midi', 'on:60@4800,on:64@24000,off:60@48000,off:64@60000'],
     },
-    // CHG-0004 3.6: a DAW project whose Sample uses the user's own file (absolute path): the plugin loads it natively,
-    // relinks nothing, and renders like the native engine with the same WAV attached.
+    // CHG-0004 3.6: a project whose Sample uses the user's own file (absolute path): loaded
+    // natively, nothing relinked, rendering as the native engine with the same WAV.
     {
       name: "state: Sample with the user's file",
       plugin: VST3,
@@ -82,8 +116,8 @@ export function test() {
       native: true,
       noRoundTripCheck: true,
     },
-    // CHG-0038: a Sample inside a Stage (a website patch in a DAW project): the plugin loads its file into the Stage's
-    // inner world and renders like the native engine with the WAV attached there.
+    // CHG-0038: a Sample inside a Stage (a website patch in a project): its file goes to the
+    // Stage's inner world, rendering as the native engine with the WAV there.
     {
       name: 'Stage: a sampler inside plays its file',
       plugin: VST3,
@@ -97,26 +131,28 @@ export function test() {
       native: true,
       noRoundTripCheck: true,
     },
-    // CHG-0004 3.5: the host's transport (120 BPM, beat each block) ≡ the patch tempo rendered natively.
+    // CHG-0004 3.5: the host's transport (120 BPM) ≡ the patch tempo rendered natively.
     {
       name: 'host tempo + transport',
       plugin: VST3,
       fixture: 'tests/golden/tempo-host.json',
       extra: ['--tempo', '120'],
     },
-    // PLUGIN-0004: a raw MPE stream through the plugin's own parser ≡ the web parser's commands rendered natively.
+    // PLUGIN-0004: a raw MPE stream through the plugin's parser ≡ the web parser's, natively.
     {
       name: 'host MPE MIDI',
       plugin: VST3,
       fixture: 'tests/golden/mpe-midi.json',
       extra: [
         '--midi-raw',
-        (JSON.parse(readFileSync('tests/golden/mpe-midi.json', 'utf8')).midi as number[][])
-          .map((m) => `${m[0]}:${m[1]},${m[2]},${m[3]}`)
+        (
+          JSON.parse(readFileSync('tests/golden/mpe-midi.json', 'utf8')) as { midi: number[][] }
+        ).midi
+          .map((message) => `${message[0]}:${message[1]},${message[2]},${message[3]}`)
           .join(';'),
       ],
     },
-  ].filter((c) => !c.skip) as any[];
+  ];
   const renders = cases.map((cas) => {
     const got = hostRender(cas.plugin, cas.fixture, cas.extra, { BLOKDUST_DIAG_FILE: diag });
     const exp = cas.native ? nativeRender(cas.fixture) : expected(cas.fixture);
@@ -124,14 +160,14 @@ export function test() {
     const ok =
       nameOk &&
       got.audioHash === exp.audioHash &&
-      (cas.noRoundTripCheck || got.stateRoundTrips === true) &&
+      (cas.noRoundTripCheck === true || got.stateRoundTrips === true) &&
       (cas.editorBlocks === undefined ||
         (got.editor?.blocks === cas.editorBlocks &&
-          got.editor?.supportSystem?.format === 'VST3' &&
-          got.editor?.supportSystem?.sampleRate > 0 &&
-          got.editor?.supportSystem?.bufferSize > 0 &&
-          // Owner (iPad, 2026-11-20): the Wavetable's picture is drawn by the engine's wasm; the editor must serve it.
-          got.editor?.wasm === true));
+          got.editor.supportSystem?.format === 'VST3' &&
+          (got.editor.supportSystem.sampleRate ?? 0) > 0 &&
+          (got.editor.supportSystem.bufferSize ?? 0) > 0 &&
+          // The Wavetable's picture is drawn by the engine's wasm: the editor must serve it.
+          got.editor.wasm === true));
     return {
       case: cas.name,
       ok,
@@ -140,9 +176,9 @@ export function test() {
       ...(got.editor ? { editor: got.editor } : {}),
     };
   });
-  // CHG-0004 3.10 (found by the REAPER save/reopen check): Dust values are part of the plugin's saved state.
+  // CHG-0004 3.10 (found by REAPER's save and reopen): Dust values are saved state.
   {
-    const r = hostRender(VST3, 'tests/golden/dust-filter.json', [
+    const rendered = hostRender(VST3, 'tests/golden/dust-filter.json', [
       '--state',
       automationState,
       '--param',
@@ -151,25 +187,26 @@ export function test() {
       '7=0.25',
       '--reload',
     ]);
-    const v = r.reloadedValues ?? [];
-    const ok = Math.abs((v[0] ?? -1) - 0.6) < 1e-4 && Math.abs((v[7] ?? -1) - 0.25) < 1e-4;
+    const values = rendered.reloadedValues ?? [];
+    const ok =
+      Math.abs((values.at(0) ?? -1) - 0.6) < 1e-4 && Math.abs((values.at(7) ?? -1) - 0.25) < 1e-4;
     renders.push({
       case: 'state keeps Dust 1-8 values (save, reopen)',
       ok,
-      audioHash: JSON.stringify(v.slice(0, 8)),
+      audioHash: JSON.stringify(values.slice(0, 8)),
       expected: '[0.6,…,0.25]',
     });
   }
-  // Owner (Ableton, 2026-11-12): a Dust lane moves its block param, and the patch the host saves says so (the editor
-  // shows the same value: ui-regressions dust-moves-sliders). Dust 1 = 0.75 on filter.gain (−35..35) is 17.5 dB.
+  // A Dust lane moves its block param, and the patch the host saves says so (the editor shows the
+  // same: ui-regressions dust-moves-sliders).
   {
-    const r = hostRender(VST3, 'tests/golden/dust-filter.json', [
+    const dusted = hostRender(VST3, 'tests/golden/dust-filter.json', [
       '--state',
       automationState,
       '--param',
       '0=0.75',
     ]);
-    const gain = r.stateAfter?.blocks?.find((b: any) => b.id === 'filter')?.params?.gain;
+    const gain = dusted.stateAfter?.blocks?.find((block) => block.id === 'filter')?.params?.gain;
     renders.push({
       case: 'Dust moves the saved block param',
       ok: typeof gain === 'number' && Math.abs(gain - 17.5) < 1e-6,
@@ -177,9 +214,11 @@ export function test() {
       expected: '17.5',
     });
   }
-  // CHG-0004 3.9: a MIDI CC bound to Dust 1 (learned → "cc" in the automation entry) drives it like the host lane.
+  // CHG-0004 3.9: a MIDI CC learned for Dust 1 ("cc" in automation) drives it as the lane does.
   {
-    const st = JSON.parse(readFileSync(automationState, 'utf8'));
+    const st = JSON.parse(readFileSync(automationState, 'utf8')) as {
+      automation: { cc?: number }[];
+    };
     st.automation[0].cc = 20;
     const ccState = resolve('.cache/plugin-cc-state.json');
     writeFileSync(ccState, JSON.stringify(st));
@@ -203,8 +242,8 @@ export function test() {
       expected: byLane.audioHash,
     });
   }
-  // Owner (Logic): bypassed, the plugin is silent but its world keeps running, so the stage still connects blocks;
-  // once back on it sounds exactly as if it had never been bypassed.
+  // Owner (Logic): bypassed, the plugin is silent but its world keeps running, so the stage still
+  // connects blocks; once back on it sounds exactly as if it had never been bypassed.
   {
     const from = String(48000 * 2);
     const bypassed = hostRender(VST3, 'tests/golden/emitter-tone.json', [
@@ -214,7 +253,8 @@ export function test() {
       from,
     ]);
     const normal = hostRender(VST3, 'tests/golden/emitter-tone.json', ['--tail-from', from]);
-    const ok = !!bypassed.tailHash && bypassed.tailHash === normal.tailHash && normal.peak > 0.001;
+    const ok =
+      !!bypassed.tailHash && bypassed.tailHash === normal.tailHash && (normal.peak ?? 0) > 0.001;
     renders.push({
       case: 'bypassed: the world keeps running',
       ok,
@@ -222,7 +262,7 @@ export function test() {
       expected: normal.tailHash,
     });
   }
-  // Owner (Ableton): pressing Play resyncs the world, so takes from bar 1 match whatever happened before (here the
+  // Pressing Play resyncs the world: takes from bar 1 match whatever came before (here the
   // transport stopped at different times, then played from bar 1 at the same sample).
   {
     const again = '144000';
@@ -242,7 +282,7 @@ export function test() {
       '--tail-from',
       again,
     ]);
-    const ok = !!a.tailHash && a.tailHash === b.tailHash && a.peak > 0.001;
+    const ok = !!a.tailHash && a.tailHash === b.tailHash && (a.peak ?? 0) > 0.001;
     renders.push({
       case: 'Play resyncs: takes from bar 1 match',
       ok,
@@ -250,16 +290,18 @@ export function test() {
       expected: b.tailHash,
     });
   }
-  // Owner (GarageBand on iPad, 2026-11-16, CHG-0025): the power switch's HOST mode (saved with the project) powers the
-  // world while the DAW plays and turns it off while it is stopped; plain ON keeps it running when stopped.
+  // CHG-0025: power HOST (saved with the project) powers the world while the DAW plays, off while
+  // it is stopped; plain ON keeps running when stopped.
   {
-    const fx = JSON.parse(readFileSync('tests/golden/tempo-host.json', 'utf8'));
-    const state = (mode: number) => {
-      const f = resolve(`.cache/power-mode-${mode}.state.json`);
-      writeFileSync(f, JSON.stringify({ ...fx.patch, plugin: { powerMode: mode } }));
-      return f;
+    const fx = JSON.parse(readFileSync('tests/golden/tempo-host.json', 'utf8')) as {
+      patch: Record<string, unknown>;
     };
-    // Stopped at 1.25 s, played again from bar 1 at 3 s: the stopped window starts 1 s after the stop (notes release).
+    const state = (mode: number) => {
+      const statePath = resolve(`.cache/power-mode-${mode}.state.json`);
+      writeFileSync(statePath, JSON.stringify({ ...fx.patch, plugin: { powerMode: mode } }));
+      return statePath;
+    };
+    // Stopped at 1.25 s, played from bar 1 at 3 s: the stopped window starts 1 s after (release).
     const run = (mode: number, window: string) =>
       hostRender(VST3, 'tests/golden/tempo-host.json', [
         '--state',
@@ -280,9 +322,9 @@ export function test() {
       '--reload',
     ]).stateAfter?.plugin;
     const ok =
-      hostStopped < 1e-4 &&
-      hostPlaysAgain > 0.001 &&
-      onStopped > 0.001 &&
+      (hostStopped ?? Infinity) < 1e-4 &&
+      (hostPlaysAgain ?? 0) > 0.001 &&
+      (onStopped ?? 0) > 0.001 &&
       reloaded?.powerMode === 2;
     renders.push({
       case: 'power HOST: off while the DAW is stopped, on when it plays',
@@ -291,12 +333,12 @@ export function test() {
       expected: 'stopped silent; plays; ON keeps running',
     });
   }
-  // Owner (Logic): a disabled plugin gets no audio callbacks at all; with its editor open the stage must still update.
+  // A disabled plugin gets no audio callbacks; with its editor open the stage must still update.
   {
-    const r = hostRender(VST3, 'tests/golden/emitter-tone.json', ['--idle', '--editor', diag], {
+    const idle = hostRender(VST3, 'tests/golden/emitter-tone.json', ['--idle', '--editor', diag], {
       BLOKDUST_DIAG_FILE: diag,
     });
-    const seq = r.editor?.snapshotSeq ?? 0;
+    const seq = idle.editor?.snapshotSeq ?? 0;
     renders.push({
       case: 'no audio callbacks: the editor still ticks the world',
       ok: seq > 0,
@@ -304,41 +346,29 @@ export function test() {
       expected: '> 0 snapshots',
     });
   }
-  // CHG-0038: Stage blocks' inner worlds as the processor keeps them (edits inside go to the Stage's world, made on
-  // first use; a removed Stage's world is freed once the engine let it go; macros keep the processor's sampler fields).
+  // CHG-0038: Stages' inner worlds in the processor (made on first use; freed once the engine lets
+  // a removed one go; macros keep the processor's sampler fields).
   {
-    const result = spawnSync(HOST, ['--selftest-stages'], { encoding: 'utf8' });
-    const j = (() => {
-      try {
-        return JSON.parse(result.stdout.trim().split('\n').pop()!);
-      } catch {
-        return {};
-      }
-    })();
+    const { answer, stderr } = selfTest('--selftest-stages');
     renders.push({
       case: 'Stage worlds: edits inside reach their own world',
-      ok: j.ok === true,
-      audioHash: JSON.stringify(j.checks ?? result.stderr),
+      ok: answer.ok === true,
+      audioHash: JSON.stringify(answer.checks ?? stderr),
       expected: 'all checks true',
     });
   }
   // CHG-0005: patch files (save, list) and the Open / Insert merge the processor applies.
   {
-    const result = spawnSync(HOST, ['--selftest-patches'], { encoding: 'utf8' });
-    let j: any = {};
-    try {
-      j = JSON.parse(result.stdout.trim().split('\n').pop() ?? '{}');
-    } catch {
-      /* reported below */
-    }
+    const { answer, stderr } = selfTest('--selftest-patches');
     renders.push({
       case: 'patch files: save, list, open/insert merge',
-      ok: j.ok === true,
-      audioHash: JSON.stringify(j.checks ?? result.stderr),
+      ok: answer.ok === true,
+      audioHash: JSON.stringify(answer.checks ?? stderr),
       expected: 'all checks true',
     });
   }
-  for (const r of renders.filter((r) => !r.ok)) console.error(`FAIL ${JSON.stringify(r)}`);
+  for (const failed of renders.filter((render) => !render.ok))
+    console.error(`FAIL ${JSON.stringify(failed)}`);
   const ok =
     pluginval.vst3 === 'pass' &&
     pluginval.fxVst3 === 'pass' &&
@@ -346,8 +376,8 @@ export function test() {
   console.log(
     JSON.stringify({
       pluginval,
-      renders: renders.map(({ case: c, ok, editor }) => ({
-        case: c,
+      renders: renders.map(({ case: name, ok, editor }) => ({
+        case: name,
         ok,
         ...(editor ? { editor } : {}),
       })),

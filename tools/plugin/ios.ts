@@ -28,19 +28,21 @@ const HOST_APP = 'build/plugin-ios-sim/ioshost/BlokDustIOSHost.app';
 const HOST_ID = 'com.funputs.tests.blokdust-ioshost';
 const COMPONENT = 'aumu,Bdst,Bldt';
 const FX_COMPONENT = 'aufx,Bdfx,Bldt'; // BlokDust FX, the app's second extension (task 9)
-const FX_FIXTURES = ['tests/golden/fx-audio-in.json']; // its test sine goes in through the effect's input
+// its test sine goes in through the effect's input
+const FX_FIXTURES = ['tests/golden/fx-audio-in.json'];
 const FX_APPEX = `${APP}/PlugIns/BlokDust FX.appex`;
-const FIXTURES = ['tests/golden/emitter-tone.json', 'tests/golden/toggle-pulse.json']; // as `bd plugin test`
+// as `bd plugin test`
+const FIXTURES = ['tests/golden/emitter-tone.json', 'tests/golden/toggle-pulse.json'];
 // Task 6: a patch from another machine (its sample's path does not exist here) whose file is in the shared Samples
 // folder: the extension relinks it by name and must render like the native engine with the same WAV.
 const SAMPLE_FIXTURE = 'tests/golden/samples/sample-file.json';
 const SMALL_VIEW = [480, 320]; // an AUM-sized plugin window (task 8): screenshot only, for review
 const APP_GROUP = 'group.com.funputs.blokdust'; // plugin/CMakeLists.txt BLOKDUST_APP_GROUP
-// Usage stats (SPEC-SHARING-USAGE-ANALYTICS R8): one switch and one install id per iPad, in the App Group. The test turns
-// the switch off there; the app and the extension must both read it.
+// Usage stats (SPEC-SHARING-USAGE-ANALYTICS R8): one switch and one install id per iPad, in the App
+// Group. The test turns the switch off there; the app and the extension must both read it.
 const STATS_FILE = 'usage-stats.settings';
-// …and a page coming back into focus asks once for a change made elsewhere (owner, iPad: switched off in GarageBand,
-// the app, still running, said on).
+// …and a page coming back into focus asks once for a change made elsewhere (owner, iPad: switched
+// off in GarageBand, the app, still running, said on).
 const STATS_ASKED = /values: usageStats=1/;
 /** The instrument extension's own log lines: the app's process has the same name (BlokDust), so pick it by its pid. */
 const extensionLines = (log: string) => {
@@ -56,7 +58,8 @@ const extensionLines = (log: string) => {
 };
 const statsFile = (on: boolean) =>
   `<?xml version="1.0" encoding="UTF-8"?>\n\n<PROPERTIES>\n  <VALUE name="usageStats" val="${on ? 1 : 0}"/>\n</PROPERTIES>\n`;
-const FIRST_PATCH = 'web/src/patch/presets/04-rotating-sequencer.blokdust'; // the app's first launch (PluginProcessor.cpp)
+// the app's first launch (PluginProcessor.cpp)
+const FIRST_PATCH = 'web/src/patch/presets/04-rotating-sequencer.blokdust';
 
 const sleep = (ms: number) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 
@@ -222,7 +225,8 @@ function appCheck(udid: string, group: string) {
       'read FX Info.plist',
     ).stdout,
   );
-  // Each extension's ID is the app's plus one part (the App Store refused com.funputs.blokdust.fx.fxAUv3).
+  // Each extension's ID is the app's plus one part (the App Store refused
+  // com.funputs.blokdust.fx.fxAUv3).
   const appStorePlist =
     plist.ITSAppUsesNonExemptEncryption === false &&
     [appexPlist, fxPlist].every(
@@ -453,7 +457,8 @@ export function iosTest(noBuild: boolean): void {
     relinked: log.includes('sample: relinked from Samples'),
     error: s?.error,
   };
-  const lastBlocks = JSON.parse(readFileSync(SAMPLE_FIXTURE, 'utf8')).patch.blocks.length; // the editor shows the last state set
+  // the editor shows the last state set
+  const lastBlocks = JSON.parse(readFileSync(SAMPLE_FIXTURE, 'utf8')).patch.blocks.length;
   const editor = {
     sharedFolder: extensionSharedFolder,
     usageStatsShared: extensionLines(log).includes('usage stats: app group, off'),

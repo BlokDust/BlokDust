@@ -69,8 +69,8 @@ function defaultBuild(): string {
   return `${date.getUTCFullYear()}${p(date.getUTCMonth() + 1)}${p(date.getUTCDate())}.${p(date.getUTCHours())}${p(date.getUTCMinutes())}`;
 }
 
-/** The bundles' dSYMs (crash-report symbols): CMake's targets write them beside their products, where Xcode's archive
- *  doesn't look, so they are copied into the archive's dSYMs folder. */
+/** The bundles' dSYMs (crash-report symbols): CMake's targets write them beside their products,
+ * where Xcode's archive doesn't look, so they are copied into the archive's dSYMs folder. */
 const DSYMS: [string, string][] = [
   ['BlokDust.app', 'build/plugin-ios-release/plugin/BlokDust_artefacts/Release/Standalone'],
   ['BlokDust.appex', 'build/plugin-ios-release/plugin/BlokDust_artefacts/Release/AUv3'],

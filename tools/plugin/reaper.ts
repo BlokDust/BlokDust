@@ -106,7 +106,8 @@ export async function reaperMac() {
       stdio: 'ignore',
       detached: true,
     });
-    spawn(click, ['90'], { stdio: 'ignore', detached: true }).unref(); // presses "Still evaluating" when the dialog shows
+    // presses "Still evaluating" when the dialog shows
+    spawn(click, ['90'], { stdio: 'ignore', detached: true }).unref();
     const deadline = Date.now() + (p.seconds + 120) * 1000; // first launch scans plugins
     while (Date.now() < deadline && !existsSync(report))
       await new Promise((resolve) => setTimeout(resolve, 500));

@@ -31,7 +31,8 @@ export function au(keep = false) {
   for (const p of plugins)
     if (existsSync(p.dest) && !keep)
       throw new Error(`${p.dest} already exists; not touching an install this tool did not make`);
-  const refresh = () => run('killall', ['-9', 'AudioComponentRegistrar'], true); // macOS caches the AU list
+  // macOS caches the AU list
+  const refresh = () => run('killall', ['-9', 'AudioComponentRegistrar'], true);
   const results: any[] = [];
   try {
     for (const p of plugins) {

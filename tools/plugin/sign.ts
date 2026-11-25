@@ -25,7 +25,8 @@ export function signBundles(
       ['AU', 'component'],
       ['Standalone', 'app'],
     ]) {
-      if (fmt === 'Standalone' && target === 'BlokDustFX') continue; // an older build tree may still hold one
+      // an older build tree may still hold one
+      if (fmt === 'Standalone' && target === 'BlokDustFX') continue;
       const src = `${art}/Release/${fmt}/${product}.${ext}`;
       const dest = join(dist, `${product}.${ext}`);
       cpSync(src, dest, { recursive: true, verbatimSymlinks: true });
