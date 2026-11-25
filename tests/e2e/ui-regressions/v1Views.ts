@@ -1,5 +1,6 @@
 // v1 objects the ported code leaves untyped, as the tests read them (casts in page code).
 import type { V1Block } from '../../../web/src/v1ui/blocks.ts';
+import type { Splash } from '../../../web/src/v1ui/ported/Splash.ts';
 
 /** A v1 block's options form (v1 UpdateOptionsForm's result). */
 export interface V1OptionsForm {
@@ -22,4 +23,9 @@ export interface MessagePanelText {
 /** The tour's text (v1 Tutorial.Text, loaded from JSON). */
 export interface TutorialText {
   Scenes: { Intro: string }[];
+}
+
+/** The scene's private splash (V1Scene.splash): the start screen while it shows. */
+export interface SceneSplash {
+  splash: Splash | null;
 }
