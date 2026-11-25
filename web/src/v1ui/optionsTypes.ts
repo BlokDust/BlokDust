@@ -7,6 +7,7 @@ import type { OptionHandle } from './ported/UI/Options/OptionHandle';
 import type { OptionSubHandle } from './ported/UI/Options/OptionSubHandle';
 import type { OptionButton } from './ported/UI/Options/OptionButton';
 import type { OptionSwitch } from './ported/UI/Options/OptionSwitch';
+import type { Pad } from './touchpadPanel.ts';
 
 // ---- a block's options form (v1 Block.OptionsForm: OptionsPanel.Populate builds its rows) ----
 export interface FormSwitch {
@@ -91,6 +92,8 @@ export interface PanelOption {
   Followed?: number;
   /** The selector's choice width (tests: it fits between the arrows). */
   TextWidth?: number;
+  /** The Touchpad's pads as drawn (touchpadPanel.ts). */
+  Pads?: Pad[];
   /** The ADSR readout is installed (adsrPanel.ts). */
   __bdReadout?: boolean;
 }
