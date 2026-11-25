@@ -18,6 +18,14 @@ export interface CommandsMessage {
   commands: Command[];
 }
 
+/** The fake JUCE WebView bridge the plugin tests install as window.__JUCE__. */
+export interface FakeJuce {
+  backend: {
+    addEventListener(id: string, listener: (value: unknown) => void): void;
+    emitEvent(id: string, value?: unknown): void;
+  };
+}
+
 /** A fake Web MIDI input: tests call its handler as a device would. */
 export interface FakeMidiInput {
   id: string;
@@ -75,6 +83,7 @@ declare global {
     __unclipped?: string[];
     __shared?: ShareData;
     __seenBeforePatch?: number;
+    __patched?: boolean;
     __fakeMidi?: Map<string, FakeMidiInput>;
     __supportDrawing?: SupportDrawing;
     /** The File System Access save picker (Chromium); tests replace or remove it. */

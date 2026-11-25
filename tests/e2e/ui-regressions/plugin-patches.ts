@@ -1,21 +1,35 @@
 // ui-regressions: The plugins' patches: saving, reopening and quick save in a DAW.
 import { OUT, browser, state, toCss, type RegressionTest, url } from './harness.ts';
 import { openPlugin, plugPatch } from './pluginPage.ts';
-import { openList, openPatches, patchesClick } from './patchesPanel.ts';
+import { openList, openPatches, patchesAt, patchesClick } from './patchesPanel.ts';
+import type { CommandsMessage, FakeJuce } from '../pageGlobals.ts';
+
+/** What the page sends the plugin editor about patch files (bd_patch*, bd_openUrl). */
+interface PatchFileMessage {
+  req?: number;
+  patch?: string;
+  title?: string;
+  mode?: string;
+  path?: string;
+  url?: string;
+}
+/** A patch the processor applies, as far as these tests read it. */
+interface AppliedPatch {
+  blocks: { id: string }[];
+}
 
 export const pluginPatchesTests: Record<string, RegressionTest> = {
-  /** CHG-0005: the header's Share slot reads PATCHES (plugin and web) and opens the Patches panel. In the plugin the
-   * files live in ~/Music/BlokDust/Patches: the page asks the editor (bd_patchList / Save / Read / Pick / Apply / Reveal)
-   * and the processor merges Open / Insert itself. SAVE TO COMPUTER goes through the editor's save dialog (it replies
-   * once the user has chosen); FROM YOUR COMPUTER's file comes back unrequested and the panel asks Open or Insert.
-   * Native replies are faked here; `bd plugin test` checks the native side. */
+  /** CHG-0005: plugin patches live in ~/Music/BlokDust/Patches; the page asks the editor
+   * (bd_patch*) and the processor merges Open and Insert. Native replies are faked here. */
   async 'plugin-patches'(errors: string[]) {
     const spy = () => {
       const seen: string[] = [];
-      const drawText = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (text: string, ...a: any[]) {
+      const proto = CanvasRenderingContext2D.prototype,
+        drawText = Object.getOwnPropertyDescriptor(proto, 'fillText')
+          ?.value as typeof proto.fillText;
+      proto.fillText = function (text: string, ...rest: [number, number, number?]) {
         seen.push(text);
-        return (drawText as any).call(this, text, ...a);
+        drawText.call(this, text, ...rest);
       };
       window.__texts = seen;
       window.__bd_probe.scene.Header.Draw();
@@ -33,76 +47,76 @@ export const pluginPatchesTests: Record<string, RegressionTest> = {
         { id: 'o', type: 'source.tone', x: 3, y: 0 },
       ],
     };
-    await pg.evaluate((saved) => {
-      const be = window.__JUCE__.backend,
-        emit = be.emitEvent,
-        fire = window.__fire;
-      be.emitEvent = (id: string, value: any) => {
-        emit(id, value);
+    await pg.evaluate((savedPatch) => {
+      const backend = (window.__JUCE__ as FakeJuce).backend,
+        emit = backend.emitEvent.bind(backend),
+        fire = (id: string, value: unknown) => {
+          window.__fire?.(id, value);
+        };
+      backend.emitEvent = (id: string, sent?: unknown) => {
+        emit(id, sent);
+        const value = sent as { req?: number };
         if (id === 'bd_patchList')
-          setTimeout(
-            () =>
-              fire('bd_patchList', {
-                req: value.req,
-                items: [
-                  {
-                    name: 'My Keys',
-                    path: '/m/My Keys.blokdust',
-                    modified: Date.UTC(2026, 10, 8, 12),
-                  },
-                ],
-              }),
-            20,
-          );
+          setTimeout(() => {
+            fire('bd_patchList', {
+              req: value.req,
+              items: [
+                {
+                  name: 'My Keys',
+                  path: '/m/My Keys.blokdust',
+                  modified: Date.UTC(2026, 10, 8, 12),
+                },
+              ],
+            });
+          }, 20);
+        // The user picks a place.
         if (id === 'bd_patchSave')
-          setTimeout(() => fire('bd_patchSaved', { req: value.req, ok: true }), 300); // the user picks a place
+          setTimeout(() => {
+            fire('bd_patchSaved', { req: value.req, ok: true });
+          }, 300);
         if (id === 'bd_patchRead')
-          setTimeout(
-            () =>
-              fire('bd_patchFile', {
-                req: value.req,
-                text: JSON.stringify(saved),
-                name: 'My Keys',
-                mode: 'open',
-              }),
-            20,
-          );
+          setTimeout(() => {
+            fire('bd_patchFile', {
+              req: value.req,
+              text: JSON.stringify(savedPatch),
+              name: 'My Keys',
+              mode: 'open',
+            });
+          }, 20);
         if (id === 'bd_patchDelete')
-          setTimeout(() => fire('bd_patchDeleted', { req: value.req, ok: true }), 20);
+          setTimeout(() => {
+            fire('bd_patchDeleted', { req: value.req, ok: true });
+          }, 20);
         if (id === 'bd_patchPick')
-          setTimeout(
-            () =>
-              fire('bd_patchFile', {
-                text: JSON.stringify(saved),
-                name: 'My Keys',
-                file: 'My Keys.blokdust',
-                mode: 'choose',
-              }),
-            20,
-          );
+          setTimeout(() => {
+            fire('bd_patchFile', {
+              text: JSON.stringify(savedPatch),
+              name: 'My Keys',
+              file: 'My Keys.blokdust',
+              mode: 'choose',
+            });
+          }, 20);
       };
     }, saved);
     await pg.evaluate(spy);
     await pg.waitForTimeout(300);
     const label = await pg.evaluate(() => ({
-      patches: window.__texts.includes('PATCHES'),
-      share: window.__texts.includes('SHARE'),
+      patches: (window.__texts ?? []).includes('PATCHES'),
+      share: (window.__texts ?? []).includes('SHARE'),
     }));
     await openPatches(pg);
     const tab = await pg.evaluate(() => window.__bd_probe.scene.PatchesPanel.Tab);
     await patchesClick(pg, 'save', 600);
-    const flash = await pg.evaluate(() =>
-      window.__bd_probe.scene.PatchesPanel.flashing('save'),
-    );
-    // CREATE SHARE LINK (owner, 2026-11-10: in place of SHOW FOLDER; SAVE TO COMPUTER first): opens the patch on the site.
-    const order = await pg.evaluate(() => {
-      const pp = window.__bd_probe.scene.PatchesPanel;
-      return pp.centreOf('save')[0] < pp.centreOf('share')[0];
-    });
+    const flash = await pg.evaluate(() => window.__bd_probe.scene.PatchesPanel.flashing('save'));
+    // CREATE SHARE LINK, after SAVE TO COMPUTER, opens the patch on the site.
+    const order = (await patchesAt(pg, 'save'))[0] < (await patchesAt(pg, 'share'))[0];
     await patchesClick(pg, 'share', 400);
     const opened = await pg.evaluate(
       () =>
-        window.__sent.find((message) => message.id === 'bd_openUrl')?.v.url as string | undefined,
+        (
+          (window.__sent ?? []).find((message) => message.id === 'bd_openUrl')?.v as
+            PatchFileMessage | undefined
+        )?.url,
     );
     await patchesClick(pg, 'tab1', 1100);
     const panel = await pg.evaluate(() => {
@@ -116,11 +130,11 @@ export const pluginPatchesTests: Record<string, RegressionTest> = {
     await pg.screenshot({ path: `${OUT}/plugin-patches.png` });
     const sent = () =>
       pg.evaluate(() =>
-        window.__sent
-          .filter((e) => e.id.startsWith('bd_patch'))
-          .map((e) => ({ id: e.id, v: e.v })),
+        (window.__sent ?? [])
+          .filter((message) => message.id.startsWith('bd_patch'))
+          .map((message) => ({ id: message.id, v: message.v as PatchFileMessage })),
       );
-    await patchesClick(pg, 'ins1', 900); // the first preset: Insert (no confirm; the processor merges it)
+    await patchesClick(pg, 'ins1', 900); // the first preset: Insert (the processor merges it)
     const [bx, by] = await toCss(pg, 0, 0.2),
       [bx2, by2] = await toCss(pg, 4, 0.2); // a change since the save
     await pg.mouse.move(bx, by);
@@ -144,10 +158,14 @@ export const pluginPatchesTests: Record<string, RegressionTest> = {
     await patchesClick(pg, 'fileBack', 400);
     const log = await sent();
     await close();
-    const save = log.find((e) => e.id === 'bd_patchSave'),
-      apply = log.filter((e) => e.id === 'bd_patchApply');
-    const ins = apply[0] && JSON.parse(apply[0].v.patch),
-      open = apply[1] && JSON.parse(apply[1].v.patch);
+    const save = log.find((message) => message.id === 'bd_patchSave'),
+      apply = log.filter((message) => message.id === 'bd_patchApply');
+    const applied = (index: number) => {
+      const text = apply.at(index)?.v.patch;
+      return text === undefined ? undefined : (JSON.parse(text) as AppliedPatch);
+    };
+    const ins = applied(0),
+      open = applied(1);
     const ok =
       label.patches &&
       !label.share &&
@@ -155,23 +173,27 @@ export const pluginPatchesTests: Record<string, RegressionTest> = {
       !panel.share &&
       tab === 0 &&
       panel.items[0] === 'My Keys | Saved 8 Nov 2026' &&
-      panel.items.some((i: string) => i.endsWith('| Preset')) &&
+      panel.items.some((item) => item.endsWith('| Preset')) &&
       !!save?.v.title &&
-      flash === true &&
-      apply[0]?.v.mode === 'insert' &&
-      ins.blocks.length === 6 &&
+      flash &&
+      apply.at(0)?.v.mode === 'insert' &&
+      ins?.blocks.length === 6 &&
       !ins.blocks.some((b) => b.id === 't') &&
       asked === 'confirm' &&
-      log.some((e) => e.id === 'bd_patchRead' && e.v.path === '/m/My Keys.blokdust') &&
-      apply[1]?.v.mode === 'open' &&
-      open.blocks.map((b) => b.id).join() === 'k,o' &&
+      log.some(
+        (message) => message.id === 'bd_patchRead' && message.v.path === '/m/My Keys.blokdust',
+      ) &&
+      apply.at(1)?.v.mode === 'open' &&
+      open?.blocks.map((b) => b.id).join() === 'k,o' &&
       choice.view === 'file' &&
       choice.picked?.title === 'My Keys' &&
-      choice.picked?.fileName === 'My Keys.blokdust' &&
-      log.some((e) => e.id === 'bd_patchPick') &&
+      choice.picked.fileName === 'My Keys.blokdust' &&
+      log.some((message) => message.id === 'bd_patchPick') &&
       order &&
       /^https:\/\/[^?]+\/\?c=p[\w-]+&t=[^&]+&share=1$/.test(opened ?? '') &&
-      log.some((e) => e.id === 'bd_patchDelete' && e.v.path === '/m/My Keys.blokdust');
+      log.some(
+        (message) => message.id === 'bd_patchDelete' && message.v.path === '/m/My Keys.blokdust',
+      );
     return [
       ok,
       {
@@ -183,15 +205,14 @@ export const pluginPatchesTests: Record<string, RegressionTest> = {
         choice,
         order,
         opened,
-        sent: log.map((e) => e.id),
+        sent: log.map((message) => message.id),
         insertIds: ins?.blocks.map((b) => b.id),
         openIds: open?.blocks.map((b) => b.id),
       },
     ];
   },
-  /** Owner (Logic, 2026-11-12): opening the plugin briefly showed an old patch before its own. The web view keeps
-   * localStorage between sessions, and the page drew its autosave until the processor's patch arrived. In the plugin
-   * the patch comes only from the processor: nothing is drawn before it, and the page never autosaves. */
+  /** The plugin showed an old patch (the web view's autosave) before its own: there the patch comes
+   * only from the processor, nothing is drawn before it, and the page never autosaves. */
   async 'plugin-no-stale-patch'(errors: string[]) {
     const stale = {
       format: 'blokdust.patch',
@@ -202,39 +223,39 @@ export const pluginPatchesTests: Record<string, RegressionTest> = {
         { id: 'old2', type: 'fx.reverb', x: 3, y: 0, params: {} },
       ],
     };
-    const ctx = await browser.newContext({
+    const context = await browser.newContext({
       viewport: { width: 1280, height: 800 },
       deviceScaleFactor: 1,
     });
-    await ctx.addInitScript(
+    await context.addInitScript(
       ([old]) => {
         try {
           localStorage.setItem('blokdust2.autosave', JSON.stringify(old));
         } catch {
           /* */
         }
-        const listeners: Record<string, ((x: unknown) => void)[]> = {};
-        const w = window as any;
-        w.__seenBeforePatch = 0;
-        w.__patched = false;
+        const listeners: Partial<Record<string, ((value: unknown) => void)[]>> = {};
+        const page = window as Partial<Window>;
+        page.__seenBeforePatch = 0;
+        page.__patched = false;
         const watch = () => {
-          if (w.__patched) return;
-          w.__seenBeforePatch = Math.max(
-            w.__seenBeforePatch,
-            w.__bd_probe?.state.blocks.length ?? 0,
+          if (page.__patched) return;
+          page.__seenBeforePatch = Math.max(
+            page.__seenBeforePatch ?? 0,
+            page.__bd_probe?.state.blocks.length ?? 0,
           );
           requestAnimationFrame(watch);
         };
         requestAnimationFrame(watch);
-        w.__JUCE__ = {
+        page.__JUCE__ = {
           backend: {
-            addEventListener: (id: string, fn: (x: unknown) => void) => {
-              (listeners[id] ??= []).push(fn);
+            addEventListener: (id: string, listener: (value: unknown) => void) => {
+              (listeners[id] ??= []).push(listener);
             },
             emitEvent: (id: string) => {
               if (id === 'bd_hello')
                 setTimeout(() => {
-                  w.__patched = true;
+                  page.__patched = true;
                   listeners.bd_patch?.forEach((listener) => {
                     listener({
                       patch: JSON.stringify({
@@ -252,10 +273,10 @@ export const pluginPatchesTests: Record<string, RegressionTest> = {
       },
       [stale] as const,
     );
-    const pg = await ctx.newPage();
+    const pg = await context.newPage();
     pg.on('pageerror', (error) => errors.push(error.message));
     await pg.goto(`${url}/index.html`);
-    await pg.waitForFunction(() => window.__bd_probe?.state.started, null, {
+    await pg.waitForFunction(() => (window as Partial<Window>).__bd_probe?.state.started, null, {
       timeout: 15000,
     });
     await pg.waitForTimeout(800);
@@ -263,15 +284,17 @@ export const pluginPatchesTests: Record<string, RegressionTest> = {
       seenBeforePatch: window.__seenBeforePatch,
       blocksAfter: window.__bd_probe.state.blocks.length,
       autosave:
-        JSON.parse(localStorage.getItem('blokdust2.autosave') ?? 'null')?.blocks?.length ?? null,
+        (JSON.parse(localStorage.getItem('blokdust2.autosave') ?? 'null') as AppliedPatch | null)
+          ?.blocks.length ?? null,
     }));
-    await ctx.close();
-    return [result.seenBeforePatch === 0 && result.blocksAfter === 0 && result.autosave === 2, result];
+    await context.close();
+    return [
+      result.seenBeforePatch === 0 && result.blocksAfter === 0 && result.autosave === 2,
+      result,
+    ];
   },
-  /** Ableton: an FX instance lost its connection lines for good (reload didn't help). After blocks are deleted the
-   * processor's engine ids are no longer 1..N, but a reopened (or reloaded) editor numbered the patch's blocks 1..N:
-   * the engine's connections then named the wrong blocks, and the page's commands moved the wrong ones. The editor
-   * now sends the engine's ids with the patch and the page uses them. */
+  /** A reopened editor numbered the blocks 1..N though the engine's ids had gaps, so connections
+   * and commands named the wrong blocks: the editor sends the engine's ids, which the page uses. */
   async 'plugin-reopen-keeps-ids'(errors: string[]) {
     const patch = plugPatch([
       { id: 'kb', type: 'input.midi-controller', x: 8, y: 0 },
@@ -279,15 +302,15 @@ export const pluginPatchesTests: Record<string, RegressionTest> = {
     ]);
     const { pg, close } = await openPlugin(patch, errors, { kb: 4, tone: 7 });
     const ids = (await state(pg)).blocks.map((b) => b.id).sort();
-    await pg.evaluate(() =>
-      window.__fire('bd_snapshot', {
+    await pg.evaluate(() => {
+      window.__fire?.('bd_snapshot', {
         particles: [],
         connections: [4, 7],
         powered: [],
         beams: [],
         playheads: [],
-      }),
-    );
+      });
+    });
     await pg.waitForTimeout(300);
     const fresh = await pg.evaluate(() => {
       const scene = window.__bd_probe.scene;
@@ -296,17 +319,17 @@ export const pluginPatchesTests: Record<string, RegressionTest> = {
     await pg.mouse.up();
     await pg.waitForTimeout(300);
     const added = await pg.evaluate(() =>
-      window.__sent
+      (window.__sent ?? [])
         .filter((x) => x.id === 'bd_commands')
-        .flatMap((x) => x.v.commands)
-        .filter((c) => c.type === 0)
-        .map((c) => c.id),
+        .flatMap((x) => (x.v as CommandsMessage).commands)
+        .filter((command) => command.type === 0)
+        .map((command) => command.id),
     );
     await close();
     return [ids.join() === '4,7' && added.length === 1 && added[0] === 8, { ids, added, fresh }];
   },
-  /** In a DAW Cmd/Ctrl+S is the DAW's (not cancelled, no panel); the standalone app keeps no link, so it opens
-   * Patches › SAVE. */
+  /** In a DAW Cmd/Ctrl+S is the DAW's (not cancelled, no panel); the standalone app keeps no link,
+   * so it opens Patches › SAVE. */
   async 'quick-save-plugin-keys'(errors: string[]) {
     const run = async (standalone: boolean) => {
       const { pg, close } = await openPlugin(
@@ -328,7 +351,7 @@ export const pluginPatchesTests: Record<string, RegressionTest> = {
           open: pp.Open,
           tab: pp.Tab,
           prevented: window.__prevented,
-          sent: (window.__sent as { id: string }[])
+          sent: (window.__sent ?? [])
             .map((x) => x.id)
             .filter((id) => /share|openUrl|patchSave/.test(id)),
         };
