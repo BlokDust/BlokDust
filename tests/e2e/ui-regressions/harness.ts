@@ -95,3 +95,9 @@ export async function maxChange(
     for (let k = 0; k < 3; k++) largest = Math.max(largest, Math.abs(a.data[i + k] - b.data[i + k]));
   return largest;
 }
+/** A block's centre in CSS px (BdProbe.blockPoint), by engine id; throws if it is not drawn. */
+export async function blockAt(page: Page, id: number): Promise<[number, number]> {
+  const point = await page.evaluate((blockId) => window.__bd_probe.blockPoint(blockId), id);
+  if (!point) throw new Error(`block ${id} is not drawn`);
+  return point;
+}
