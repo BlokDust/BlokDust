@@ -7,21 +7,21 @@ import { AccountPageState } from './state.ts';
 
 export abstract class AccountPageLayout extends AccountPageState {
   // ---- layout, from the page's top (Settings: OffsetY + 120 units + the tab's YOffset) ----
-  protected textW(t: string, font = App.Metrics.TxtMid) {
-    const c = this.ctx();
-    c.font = font;
-    return c.measureText(t.toUpperCase()).width;
+  protected textW(text: string, font = App.Metrics.TxtMid) {
+    const context = this.ctx();
+    context.font = font;
+    return context.measureText(text.toUpperCase()).width;
   }
   protected bordered(label: string, right: number, top: number): Bordered {
     const unit = App.Unit,
-      w = this.textW(label);
+      width = this.textW(label);
     return {
       label,
-      x: right - 10 * unit - w,
+      x: right - 10 * unit - width,
       y: top,
-      w: w + 10 * unit,
+      w: width + 10 * unit,
       h: 20 * unit,
-      textX: right - 5 * unit - w,
+      textX: right - 5 * unit - width,
       textY: top + 14 * unit,
     };
   }
@@ -34,14 +34,14 @@ export abstract class AccountPageLayout extends AccountPageState {
     const unit = App.Unit,
       width = App.Width,
       pw = this.pageW(),
-      L = width * 0.5 - pw * 0.5,
-      R = width * 0.5 + pw * 0.5,
+      left = width * 0.5 - pw * 0.5,
+      rightEdge = width * 0.5 + pw * 0.5,
       hw = (pw - 15 * unit) * 0.5;
     const half = (right: boolean, y: number): Box => {
-      const x = right ? width * 0.5 + 7.5 * unit : L;
+      const x = right ? width * 0.5 + 7.5 * unit : left;
       return { x, y, w: hw, h: 40 * unit, cx: x + hw * 0.5 };
     };
-    const full = (y: number): Box => ({ x: L, y, w: pw, h: 40 * unit, cx: width * 0.5 });
+    const full = (y: number): Box => ({ x: left, y, w: pw, h: 40 * unit, cx: width * 0.5 });
     // Signed out: one row per way to sign in, 15 units apart.
     const ways = this.ways(),
       out: Record<string, Box> = {};
@@ -53,12 +53,12 @@ export abstract class AccountPageLayout extends AccountPageState {
       field: top + 24 * unit,
       rule: top + 66 * unit,
       submit: full(top + 85 * unit),
-      back: this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * unit, top + 145 * unit),
+      back: this.bordered(COPY.back, left + this.textW(COPY.back) + 10 * unit, top + 145 * unit),
     };
-    // The account's buttons under its stats (R15); 35 units under the SIGNED IN line until they arrive. DELETE ACCOUNT
-    // sits top right, on the SIGNED IN line (CHG-0027: the stats need its row).
+    // The account's buttons under its stats (R15), 35 units under SIGNED IN until they arrive;
+    // DELETE ACCOUNT top right on the SIGNED IN line (CHG-0027: the stats need its row).
     const below2 = top + this.statsHeight() * unit;
-    // DELETE ACCOUNT at the bottom right of the screen, out of the way (owner, 2026-11-18); it slides with the page.
+    // DELETE ACCOUNT bottom right of the screen, out of the way; it slides with the page.
     const screenBottom = top - ACCOUNT_TOP * unit + App.Height;
     const signedIn = {
       add: half(false, below2),
@@ -69,7 +69,7 @@ export abstract class AccountPageLayout extends AccountPageState {
     const del = { cancel: half(false, top + 75 * unit), ok: half(true, top + 75 * unit) };
     // Signed in: the ways in on the line under the buttons, then any message.
     const methods = below2 + 62 * unit;
-    // SIGN-IN METHODS: the heading and its line, a row per way in (40 units), then the ADD buttons 55 apart, then BACK.
+    // SIGN-IN METHODS: heading and line, a row per way in (40 units), ADD buttons 55 apart, BACK.
     const rows = this.methodRows(),
       rowTop = top + 52 * unit,
       rowH = 40 * unit;
@@ -77,7 +77,9 @@ export abstract class AccountPageLayout extends AccountPageState {
     const list = rows.map((row, i) => ({
       ...row,
       y: rowTop + i * rowH,
-      remove: removable ? this.bordered(COPY.remove, R, rowTop + i * rowH + 10 * unit) : null,
+      remove: removable
+        ? this.bordered(COPY.remove, rightEdge, rowTop + i * rowH + 10 * unit)
+        : null,
     }));
     // APPS SIGNED IN (SHARING-0011): its heading 20 units under the ways in, then a row per plugin.
     const appsTop = rowTop + rows.length * rowH + 20 * unit,
@@ -85,7 +87,11 @@ export abstract class AccountPageLayout extends AccountPageState {
         ? this.Apps.map((a, i) => ({
             app: a,
             y: appsTop + 22 * unit + i * rowH,
-            remove: this.bordered(COPY.remove, R, appsTop + 22 * unit + i * rowH + 10 * unit),
+            remove: this.bordered(
+              COPY.remove,
+              rightEdge,
+              appsTop + 22 * unit + i * rowH + 10 * unit,
+            ),
           }))
         : [];
     const addsTop = appRows.length
@@ -96,29 +102,29 @@ export abstract class AccountPageLayout extends AccountPageState {
       adds[k] = full(addsTop + i * 55 * unit);
     });
     const addsEnd = addsTop + this.addable().length * 55 * unit;
-    // BACK at the top right, on the heading's line (owner, 2026-11-19: a button, not an arrow; the heading stays at the left).
-    const methodsBack = this.bordered(COPY.back, R, top - 4 * unit);
+    // BACK top right on the heading's line (a button, not an arrow; the heading stays left).
+    const methodsBack = this.bordered(COPY.back, rightEdge, top - 4 * unit);
     // A plugin's code (SHARING-0011): the code large under the line, the QR code at the right, BACK
     // (and OPEN BROWSER AGAIN) under them.
     const qrSize = 130 * unit,
       code = {
         text: top + 118 * unit,
-        qr: { x: R - qrSize, y: top + 70 * unit, s: qrSize },
+        qr: { x: rightEdge - qrSize, y: top + 70 * unit, s: qrSize },
         waiting: top + 160 * unit,
-        back: this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * unit, top + 220 * unit),
+        back: this.bordered(COPY.back, left + this.textW(COPY.back) + 10 * unit, top + 220 * unit),
         again: this.bordered(
           COPY.openAgain,
-          L + this.textW(COPY.back) + 30 * unit + this.textW(COPY.openAgain) + 10 * unit,
+          left + this.textW(COPY.back) + 30 * unit + this.textW(COPY.openAgain) + 10 * unit,
           top + 220 * unit,
         ),
       };
-    // The website approving a code: the code large, then CANCEL · APPROVE; typing one: the name field, CONTINUE, BACK.
+    // Approving a code: the code large, CANCEL · APPROVE; typing one: the field, CONTINUE, BACK.
     const approve = {
       code: top + 118 * unit,
       cancel: half(false, top + 150 * unit),
       ok: half(true, top + 150 * unit),
       submit: full(top + 85 * unit),
-      back: this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * unit, top + 145 * unit),
+      back: this.bordered(COPY.back, left + this.textW(COPY.back) + 10 * unit, top + 145 * unit),
     };
     const message =
       this.View === 'methods'
@@ -133,8 +139,8 @@ export abstract class AccountPageLayout extends AccountPageState {
                 ? methods + 24 * unit
                 : top + 190 * unit;
     return {
-      L,
-      R,
+      L: left,
+      R: rightEdge,
       out,
       naming,
       signedIn,
@@ -151,19 +157,23 @@ export abstract class AccountPageLayout extends AccountPageState {
       approve,
     };
   }
-  /** SIGN-IN METHODS' rows (R7a): the account's ways in, from the server's list (older servers: from the counts). */
+  /** SIGN-IN METHODS' rows (R7a): the server's list of ways in (older servers: the counts). */
   methodRows(): { label: string; detail: string; method: SignInMethod | null }[] {
     const a = this.Account;
     if (!a) return [];
     const name = (k: string) =>
       k === 'google' ? COPY.google1 : k === 'apple' ? COPY.apple1 : COPY.passkey1;
-    const when = (t: number) =>
-      new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const when = (time: number) =>
+      new Date(time).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
     if (a.methods)
-      return a.methods.map((m) => ({
-        label: name(m.kind),
-        detail: m.created ? COPY.added(when(m.created)) : '',
-        method: m,
+      return a.methods.map((signInMethod) => ({
+        label: name(signInMethod.kind),
+        detail: signInMethod.created ? COPY.added(when(signInMethod.created)) : '',
+        method: signInMethod,
       }));
     return [
       ...a.providers.map((provider) => ({ label: name(provider), detail: '', method: null })),
@@ -174,18 +184,18 @@ export abstract class AccountPageLayout extends AccountPageState {
       })),
     ];
   }
-  /** What SIGN-IN METHODS can add: Google and Apple where the server offers them and they aren't linked, and a passkey. */
+  /** What SIGN-IN METHODS can add: Google and Apple where offered and unlinked, and a passkey. */
   protected addable(): ('addGoogle' | 'addApple' | 'addPasskey')[] {
-    const p = this.Account?.providers ?? [];
+    const offered = this.Account?.providers ?? [];
     return [
-      ...(this.google && !p.includes('google') ? ['addGoogle' as const] : []),
-      ...(this.apple && !p.includes('apple') ? ['addApple' as const] : []),
+      ...(this.google && !offered.includes('google') ? ['addGoogle' as const] : []),
+      ...(this.apple && !offered.includes('apple') ? ['addApple' as const] : []),
       'addPasskey',
     ];
   }
   /** The ways to sign in, in the owner's order: Google, Apple, then a passkey (always offered). */
   protected ways(): ('google' | 'apple' | 'passkey' | 'browser')[] {
-    // The plugins: a code approved on the website; the iPad app also Apple and passkeys natively (SHARING-0011).
+    // The plugins sign in with a code approved on the website; the iPad app also natively.
     if (this.host.plugin)
       return this.host.plugin.native ? ['apple', 'passkey', 'browser'] : ['browser'];
     return [
@@ -195,10 +205,8 @@ export abstract class AccountPageLayout extends AccountPageState {
     ];
   }
 
-  // ---- stats (R15) ----
-  // Rows in units from the page's top, one even gap (22 units) between SIGNED IN, the two rows of numbers, FAVOURITE
-  // BLOCKS and the buttons (owner, 2026-11-16: it was roomy at the top and bunched from FAVOURITE BLOCKS down).
-  /** The stats' rows, in units from the page's top (the account buttons go below them). */
+  /** The stats' height in units from the page's top (R15), the buttons below: one even 22-unit gap
+   * between SIGNED IN, the two rows of numbers, FAVOURITE BLOCKS and the buttons. */
   protected statsHeight(): number {
     const st = this.Account?.stats;
     if (!st) return 35;
@@ -209,10 +217,11 @@ export abstract class AccountPageLayout extends AccountPageState {
   get addLabel(): string {
     return (this.Account?.passkeys ?? 0) > 0 ? COPY.addAnother : COPY.addPasskey;
   }
-  /** The ways this account signs in (Settings › ACCOUNT, under its buttons): Google, Apple, its passkeys. */
+  /** The ways this account signs in (Settings › ACCOUNT): Google, Apple, its passkeys. */
   methods(): string[] {
-    const a = this.Account!,
+    const a = this.Account,
       out: string[] = [];
+    if (!a) return out;
     if (a.providers.includes('google')) out.push(COPY.google1);
     if (a.providers.includes('apple')) out.push(COPY.apple1);
     if (a.passkeys > 0 || !out.length) out.push(COPY.passkeyN(a.passkeys));

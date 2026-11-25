@@ -7,66 +7,66 @@ import { AccountPageDrawParts } from './drawParts.ts';
 
 export abstract class AccountPageDraw extends AccountPageDrawParts {
   draw(top: number): void {
-    const c = this.ctx(),
+    const context = this.ctx(),
       unit = App.Unit,
-      W = App.Width,
+      stageWidth = App.Width,
       txt = App.Palette[App.ThemeManager.Txt],
       menu = App.ThemeManager.MenuOrder;
     const Lo = this.layout(top),
       busy = this.Busy,
-      r = this.roll;
+      rolled = this.roll;
     if (this.View === 'create' || this.View === 'name') {
       const create = this.View === 'create';
       this.heading(create ? COPY.createTitle : COPY.nameTitle, '', top, Lo.L);
-      App.FillColor(c, txt);
-      c.font = App.Metrics.TxtMid;
-      c.textAlign = 'right';
+      App.FillColor(context, txt);
+      context.font = App.Metrics.TxtMid;
+      context.textAlign = 'right';
       if (App.Metrics.Device !== Device.mobile)
-        c.fillText(COPY.name.toUpperCase(), Lo.L - 15 * unit, Lo.naming.field + 28 * unit);
-      App.StrokeColor(c, txt);
-      c.lineWidth = 2;
-      c.beginPath();
-      c.moveTo(Lo.L, Lo.naming.rule);
-      c.lineTo(Lo.R, Lo.naming.rule);
-      c.stroke();
+        context.fillText(COPY.name.toUpperCase(), Lo.L - 15 * unit, Lo.naming.field + 28 * unit);
+      App.StrokeColor(context, txt);
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(Lo.L, Lo.naming.rule);
+      context.lineTo(Lo.R, Lo.naming.rule);
+      context.stroke();
       this.filled(
         Lo.naming.submit,
         App.Palette[busy ? 1 : menu[3]],
         busy ? COPY.working : create ? COPY.createButton : COPY.saveName,
-        !busy && !!r.submit,
+        !busy && !!rolled.submit,
       );
       if (create) this.drawBordered(Lo.naming.back, App.Palette[1]);
-    } else if (this.View === 'code' && this.Device) {
-      // A plugin's code (SHARING-0011).
+    } else if (this.View === 'code' && this.Device && this.host.plugin) {
+      // A plugin's code (SHARING-0011): only the plugins have one.
       const device = this.Device,
-        plug = this.host.plugin!;
+        plug = this.host.plugin;
       this.heading(
         COPY.codeTitle,
         plug.canOpenBrowser ? COPY.codeOpened : COPY.codeGo(device.verifyAt),
         top,
         Lo.L,
       );
-      App.FillColor(c, txt);
-      c.textAlign = 'left';
-      c.font = App.Metrics.TxtSlider;
-      c.fillText(device.userCode, Lo.L, Lo.code.text);
+      App.FillColor(context, txt);
+      context.textAlign = 'left';
+      context.font = App.Metrics.TxtSlider;
+      context.fillText(device.userCode, Lo.L, Lo.code.text);
       // only where the browser can't be opened (owner, 2026-11-19)
       if (!plug.canOpenBrowser) this.drawQr(device.verifyUrl, Lo.code.qr);
       App.AnimationsLayer.DrawSprite(
-        c,
+        context,
         'loading',
         Lo.L + 8 * unit,
         Lo.code.waiting - 5 * unit,
         16,
         true,
       );
-      App.FillColor(c, txt);
-      c.font = App.Metrics.TxtItalic2;
-      c.textAlign = 'left';
-      c.fillText(COPY.waiting, Lo.L + 24 * unit, Lo.code.waiting);
+      App.FillColor(context, txt);
+      context.font = App.Metrics.TxtItalic2;
+      context.textAlign = 'left';
+      context.fillText(COPY.waiting, Lo.L + 24 * unit, Lo.code.waiting);
       this.drawBordered(Lo.code.back, App.Palette[1]);
       if (plug.canOpenBrowser)
-        this.drawBordered(Lo.code.again, App.Palette[r.openAgain ? menu[3] : 1]);
+        this.drawBordered(Lo.code.again, App.Palette[rolled.openAgain ? menu[3] : 1]);
     } else if (this.View === 'approve' && this.Account) {
       // The website approving a plugin's code (SHARING-0011).
       if (this.ApproveCode) {
@@ -76,40 +76,45 @@ export abstract class AccountPageDraw extends AccountPageDrawParts {
           top,
           Lo.L,
         );
-        App.FillColor(c, txt);
-        c.textAlign = 'left';
-        c.font = App.Metrics.TxtSlider;
-        c.fillText(this.ApproveCode.toUpperCase(), Lo.L, Lo.approve.code);
+        App.FillColor(context, txt);
+        context.textAlign = 'left';
+        context.font = App.Metrics.TxtSlider;
+        context.fillText(this.ApproveCode.toUpperCase(), Lo.L, Lo.approve.code);
         if (this.ApproveName) {
-          this.filled(Lo.approve.cancel, App.Palette[1], COPY.cancel, !busy && !!r.approveCancel);
+          this.filled(
+            Lo.approve.cancel,
+            App.Palette[1],
+            COPY.cancel,
+            !busy && !!rolled.approveCancel,
+          );
           this.filled(
             Lo.approve.ok,
             App.Palette[busy ? 1 : menu[3]],
             busy ? COPY.working : COPY.approve,
-            !busy && !!r.approveOk,
+            !busy && !!rolled.approveOk,
           );
         } else
           App.AnimationsLayer.DrawSprite(
-            c,
+            context,
             'loading',
-            W * 0.5,
+            stageWidth * 0.5,
             Lo.approve.ok.y + 20 * unit,
             16,
             true,
           );
       } else {
         this.heading(COPY.enterTitle, '', top, Lo.L);
-        App.StrokeColor(c, txt);
-        c.lineWidth = 2;
-        c.beginPath();
-        c.moveTo(Lo.L, Lo.naming.rule);
-        c.lineTo(Lo.R, Lo.naming.rule);
-        c.stroke();
+        App.StrokeColor(context, txt);
+        context.lineWidth = 2;
+        context.beginPath();
+        context.moveTo(Lo.L, Lo.naming.rule);
+        context.lineTo(Lo.R, Lo.naming.rule);
+        context.stroke();
         this.filled(
           Lo.naming.submit,
           App.Palette[busy ? 1 : menu[3]],
           busy ? COPY.working : COPY.continue,
-          !busy && !!r.submitCode,
+          !busy && !!rolled.submitCode,
         );
         this.drawBordered(Lo.naming.back, App.Palette[1]);
       }
@@ -117,60 +122,61 @@ export abstract class AccountPageDraw extends AccountPageDrawParts {
       this.heading(COPY.methodsTitle, COPY.methodsLine, top, Lo.L);
       const line = App.Palette[1];
       Lo.list.forEach((row, i) => {
-        App.FillColor(c, txt);
-        c.textAlign = 'left';
-        c.font = App.Metrics.TxtMid;
-        c.fillText(row.label.toUpperCase(), Lo.L, row.y + 25 * unit);
+        App.FillColor(context, txt);
+        context.textAlign = 'left';
+        context.font = App.Metrics.TxtMid;
+        context.fillText(row.label.toUpperCase(), Lo.L, row.y + 25 * unit);
         if (row.detail) {
-          c.font = App.Metrics.TxtItalic2;
-          c.fillText(row.detail, Lo.L + 110 * unit, row.y + 25 * unit);
+          context.font = App.Metrics.TxtItalic2;
+          context.fillText(row.detail, Lo.L + 110 * unit, row.y + 25 * unit);
         }
-        if (row.remove) this.drawBordered(row.remove, App.Palette[r[`remove${i}`] ? menu[3] : 1]);
-        App.StrokeColor(c, line);
-        c.lineWidth = 1;
-        c.beginPath();
-        c.moveTo(Lo.L, row.y + Lo.rowH);
-        c.lineTo(Lo.R, row.y + Lo.rowH);
-        c.stroke();
+        if (row.remove)
+          this.drawBordered(row.remove, App.Palette[rolled[`remove${i}`] ? menu[3] : 1]);
+        App.StrokeColor(context, line);
+        context.lineWidth = 1;
+        context.beginPath();
+        context.moveTo(Lo.L, row.y + Lo.rowH);
+        context.lineTo(Lo.R, row.y + Lo.rowH);
+        context.stroke();
       });
       if (Lo.appRows.length) {
-        App.FillColor(c, txt);
-        c.textAlign = 'left';
-        c.font = App.Metrics.TxtMid;
-        c.fillText(COPY.apps.toUpperCase(), Lo.L, Lo.appsTop + 10 * unit);
-        const when = (t: number | null) =>
-          t
-            ? new Date(t).toLocaleDateString('en-GB', {
+        App.FillColor(context, txt);
+        context.textAlign = 'left';
+        context.font = App.Metrics.TxtMid;
+        context.fillText(COPY.apps.toUpperCase(), Lo.L, Lo.appsTop + 10 * unit);
+        const when = (time: number | null) =>
+          time
+            ? new Date(time).toLocaleDateString('en-GB', {
                 day: 'numeric',
                 month: 'short',
                 year: 'numeric',
               })
             : '';
         Lo.appRows.forEach((row, i) => {
-          App.FillColor(c, txt);
-          c.textAlign = 'left';
-          c.font = App.Metrics.TxtMid;
+          App.FillColor(context, txt);
+          context.textAlign = 'left';
+          context.font = App.Metrics.TxtMid;
           const name = row.app.name.toUpperCase(),
             max = Lo.R - Lo.L - 250 * unit;
-          c.fillText(
-            c.measureText(name).width > max ? `${name.slice(0, 28)}…` : name,
+          context.fillText(
+            context.measureText(name).width > max ? `${name.slice(0, 28)}…` : name,
             Lo.L,
             row.y + 25 * unit,
           );
-          c.font = App.Metrics.TxtItalic2;
-          c.textAlign = 'right';
-          c.fillText(
+          context.font = App.Metrics.TxtItalic2;
+          context.textAlign = 'right';
+          context.fillText(
             COPY.lastUsed(when(row.app.lastUsed ?? row.app.created)),
             row.remove.x - 15 * unit,
             row.y + 25 * unit,
           );
-          this.drawBordered(row.remove, App.Palette[r[`app${i}`] ? menu[3] : 1]);
-          App.StrokeColor(c, App.Palette[1]);
-          c.lineWidth = 1;
-          c.beginPath();
-          c.moveTo(Lo.L, row.y + Lo.rowH);
-          c.lineTo(Lo.R, row.y + Lo.rowH);
-          c.stroke();
+          this.drawBordered(row.remove, App.Palette[rolled[`app${i}`] ? menu[3] : 1]);
+          App.StrokeColor(context, App.Palette[1]);
+          context.lineWidth = 1;
+          context.beginPath();
+          context.moveTo(Lo.L, row.y + Lo.rowH);
+          context.lineTo(Lo.R, row.y + Lo.rowH);
+          context.stroke();
         });
       }
       const colours = {
@@ -188,53 +194,53 @@ export abstract class AccountPageDraw extends AccountPageDrawParts {
           b,
           App.Palette[busy ? 1 : colours[k]],
           busy && k === 'addPasskey' ? COPY.working : labels[k],
-          !busy && !!r[k],
+          !busy && !!rolled[k],
         );
       this.drawBordered(Lo.methodsBack, App.Palette[1]);
     } else if (this.View === 'delete') {
       this.heading(COPY.deleteTitle, COPY.deleteLine, top, Lo.L);
-      this.filled(Lo.del.cancel, App.Palette[1], COPY.cancel, !!r.deleteCancel);
+      this.filled(Lo.del.cancel, App.Palette[1], COPY.cancel, !!rolled.deleteCancel);
       this.filled(
         Lo.del.ok,
         App.Palette[menu[3]],
         busy ? COPY.working : COPY.deleteButton,
-        !busy && !!r.deleteOk,
+        !busy && !!rolled.deleteOk,
       );
     } else if (this.Account) {
-      App.FillColor(c, txt);
-      c.textAlign = 'left';
-      c.font = App.Metrics.TxtMid;
+      App.FillColor(context, txt);
+      context.textAlign = 'left';
+      context.font = App.Metrics.TxtMid;
       // the corner already says who (owner, 2026-11-18)
-      c.fillText(COPY.stats.toUpperCase(), Lo.L, top + 10 * unit);
+      context.fillText(COPY.stats.toUpperCase(), Lo.L, top + 10 * unit);
       this.drawStats(top, Lo.L, Lo.R);
       // the plugins: methods and deleting are the website's (SHARING-0011)
       const plugin = !!this.host.plugin;
-      // The plugins: SIGN OUT only (owner, 2026-11-19: the account's methods are on the website, and it is reached there).
+      // The plugins: SIGN OUT only (the account's methods are on the website).
       if (!plugin)
         this.filled(
           Lo.signedIn.add,
           App.Palette[busy ? 1 : menu[1]],
           COPY.methodsButton,
-          !busy && !!r.methods,
+          !busy && !!rolled.methods,
           true,
         );
       this.filled(
         plugin ? Lo.signedIn.outFull : Lo.signedIn.out,
         App.Palette[busy ? 1 : menu[3]],
         COPY.signOut,
-        !busy && !!r.signOut,
+        !busy && !!rolled.signOut,
         true,
       );
       if (!plugin) this.drawBordered(Lo.signedIn.del, App.Palette[1]);
-      App.FillColor(c, txt);
-      c.font = App.Metrics.TxtItalic2;
-      c.textAlign = 'left';
-      c.fillText(`${COPY.methods}: ${this.methods().join(' · ')}`, Lo.L, Lo.methods);
+      App.FillColor(context, txt);
+      context.font = App.Metrics.TxtItalic2;
+      context.textAlign = 'left';
+      context.fillText(`${COPY.methods}: ${this.methods().join(' · ')}`, Lo.L, Lo.methods);
     } else {
-      App.FillColor(c, txt);
-      c.font = App.Metrics.TxtMid;
-      c.textAlign = 'left';
-      c.fillText(
+      App.FillColor(context, txt);
+      context.font = App.Metrics.TxtMid;
+      context.textAlign = 'left';
+      context.fillText(
         this.noBackend
           ? COPY.noAccounts
           : this.View === 'approve'
@@ -246,7 +252,14 @@ export abstract class AccountPageDraw extends AccountPageDrawParts {
         top + 10 * unit,
       );
       if (this.Account === undefined && !this.noBackend)
-        App.AnimationsLayer.DrawSprite(c, 'loading', W * 0.5, top + 55 * unit, 16, true);
+        App.AnimationsLayer.DrawSprite(
+          context,
+          'loading',
+          stageWidth * 0.5,
+          top + 55 * unit,
+          16,
+          true,
+        );
       else if (!this.noBackend) {
         // Each its own menu colour, as Connect's GUIDE buttons and the Patches panel's.
         const colours = {
@@ -260,14 +273,14 @@ export abstract class AccountPageDraw extends AccountPageDrawParts {
             Lo.out[k],
             App.Palette[busy ? 1 : colours[k]],
             k === 'passkey' && this.host.plugin ? COPY.passkeyApp : COPY[k],
-            !busy && !!r[k],
+            !busy && !!rolled[k],
           );
       }
     }
     if (this.Message) {
-      App.FillColor(c, txt);
-      c.font = App.Metrics.TxtItalic2;
-      c.textAlign = 'left';
+      App.FillColor(context, txt);
+      context.font = App.Metrics.TxtItalic2;
+      context.textAlign = 'left';
       this.wrap(this.Message, Lo.L, Lo.message, 14 * unit, this.pageW());
     }
   }

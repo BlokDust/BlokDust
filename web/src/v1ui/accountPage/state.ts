@@ -2,6 +2,7 @@
 import type { AccountHost, AccountInfo } from '../patches/hosts.ts';
 import type { SignedInApp } from '../../account/client.ts';
 import type { DeviceCode } from '../../account/device.ts';
+import { pageElement } from '../pageElement.ts';
 import { COPY } from './copy.ts';
 
 export abstract class AccountPageState {
@@ -21,9 +22,10 @@ export abstract class AccountPageState {
   protected google = false;
   protected apple = false;
   protected noBackend = false;
-  protected roll: Record<string, boolean> = {};
-  protected readonly field = document.getElementById('accountHandle')!;
-  protected readonly input = document.getElementById('accountHandleInput') as HTMLInputElement;
+  /** What the pointer is over, by control name (an unnamed control is not hovered). */
+  protected roll: Partial<Record<string, boolean>> = {};
+  protected readonly field = pageElement('accountHandle');
+  protected readonly input = pageElement<HTMLInputElement>('accountHandleInput');
   /** Called when who is signed in changes (the tab's name, the signed-in mark on the stage). */
   onChange: () => void = () => {};
 
@@ -46,7 +48,7 @@ export abstract class AccountPageState {
     });
   }
 
-  /** Back from Google or Apple having added it, or refused because it belongs to another account (R7a, R7b). */
+  /** Back from Google or Apple, added, or refused as another account's (R7a, R7b). */
   showMethods(message: string): void {
     this.View = 'methods';
     this.Message = message;
@@ -93,7 +95,7 @@ export abstract class AccountPageState {
     }
     this.mark();
   }
-  /** Back from Google or Apple when this network has made its new accounts for the day (R1b): say so. */
+  /** Back from Google or Apple when this network made its new accounts for the day (R1b). */
   refused(message: string): void {
     this.View = 'main';
     this.Message = message;
@@ -121,13 +123,13 @@ export abstract class AccountPageState {
   /** Ask who is signed in (opening the tab, and after any change); `stats` with the account's stats
    * (R15: only for the tab, so loading the page asks for less). */
   async refresh(stats = true): Promise<void> {
-    const m = await this.host.me(stats);
+    const signedIn = await this.host.me(stats);
     const before = this.Account?.handle ?? null,
       was = this.Account;
-    this.noBackend = !m;
-    this.google = !!m?.google;
-    this.apple = !!m?.apple;
-    this.Account = m?.user ?? null;
+    this.noBackend = !signedIn;
+    this.google = !!signedIn?.google;
+    this.apple = !!signedIn?.apple;
+    this.Account = signedIn?.user ?? null;
     // Without stats asked for, keep the ones already shown for the same account.
     if (this.Account && !this.Account.stats && was?.stats && was.handle === this.Account.handle)
       this.Account.stats = was.stats;

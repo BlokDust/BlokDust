@@ -3,9 +3,8 @@ import { COPY } from './copy.ts';
 import { AccountPageDraw } from './draw.ts';
 
 export abstract class AccountPageFlows extends AccountPageDraw {
-  /** CONTINUE WITH PASSKEY: sign in with one the device has; none chosen (or one this site no longer knows), make a
-   * new account with one instead (SPEC-SHARING-ACCOUNTS R1, R2). Browsers don't say whether the user closed the
-   * dialog or had no passkey, so both lead to the name step, which has BACK. */
+  /** CONTINUE WITH PASSKEY: sign in with the device's, else make an account with a new one (R1,
+   * R2); a closed dialog and no passkey look the same, so both reach the name step, with BACK. */
   protected async continueWithPasskey(): Promise<void> {
     this.Busy = true;
     this.Message = '';
@@ -27,14 +26,16 @@ export abstract class AccountPageFlows extends AccountPageDraw {
       this.mark();
     }
   }
-  /** The iPad app: Apple or a passkey, natively; a new Apple account then picks its name (refresh asks). */
+  /** The iPad app: Apple or a passkey, natively; a new Apple account then picks its name. */
   protected async nativeSignIn(kind: 'apple' | 'passkey'): Promise<void> {
-    const plug = this.host.plugin!;
+    const plug = this.host.plugin,
+      native = plug?.native;
+    if (!plug || !native) throw new Error('BlokDust: no native sign-in here');
     this.Busy = true;
     this.Message = '';
     try {
-      const r = await (kind === 'apple' ? plug.native!.apple() : plug.native!.passkey());
-      plug.keep(r.key, r.user.handle);
+      const answer = await (kind === 'apple' ? native.apple() : native.passkey());
+      plug.keep(answer.key, answer.user.handle);
       this.View = 'main';
       await this.refresh();
     } catch (error) {
@@ -121,8 +122,8 @@ export abstract class AccountPageFlows extends AccountPageDraw {
     this.Busy = true;
     this.Message = '';
     try {
-      const r = await apps.approve(code, yes);
-      this.Message = yes ? COPY.approved(r.name) : COPY.turnedDown(r.name);
+      const result = await apps.approve(code, yes);
+      this.Message = yes ? COPY.approved(result.name) : COPY.turnedDown(result.name);
       this.ApproveCode = null;
       this.ApproveName = null;
       this.View = 'main';
@@ -153,12 +154,12 @@ export abstract class AccountPageFlows extends AccountPageDraw {
     }
   }
   protected async submit(): Promise<void> {
-    const h = this.input.value.trim().toLowerCase();
-    if (!h) {
+    const handle = this.input.value.trim().toLowerCase();
+    if (!handle) {
       this.Message = 'Choose a name first.';
       return;
     }
-    if (this.View === 'create') await this.action(() => this.host.signUp(h));
-    else if (this.View === 'name') await this.action(() => this.host.setHandle(h));
+    if (this.View === 'create') await this.action(() => this.host.signUp(handle));
+    else if (this.View === 'name') await this.action(() => this.host.setHandle(handle));
   }
 }
