@@ -1,12 +1,23 @@
 // ui-regressions: The Stage block in the plugins.
 import { type RegressionTest } from './harness.ts';
 import { openPlugin, plugPatch } from './pluginPage.ts';
+import type { CommandsMessage } from '../pageGlobals.ts';
+import type { V1BlockView } from './v1Views.ts';
+
+/** What a Stage holds, as bd_macros sends it to the processor. */
+interface StageMacro {
+  block: string;
+  blocks: { id: string; x?: number }[];
+}
+/** The value of bd_stageView or bd_macros. */
+interface StageMessage {
+  stage?: number;
+  macros?: StageMacro[];
+}
 
 export const pluginStageTests: Record<string, RegressionTest> = {
-  /** The plugins have Stage in the menu and open one as the web does: the page asks the processor for the Stage's
-   * world (bd_stageView) and uses the inner ids it was given (innerIds); edits inside go to that world (`stage` on the
-   * commands); frames of a world not on show are dropped; leaving sends what is inside (bd_macros) for the DAW's
-   * state. */
+  /** Plugins open a Stage as the web does: bd_stageView asks for its world, edits inside carry
+   * `stage`, other worlds' frames are dropped, and leaving sends what is inside (bd_macros). */
   async 'plugin-stage'(errors: string[]) {
     const patch = {
       ...plugPatch([
@@ -26,30 +37,35 @@ export const pluginStageTests: Record<string, RegressionTest> = {
     const { pg, close } = await openPlugin(patch, errors, { s: 1, o: 2 }, false, {
       innerIds: { s: { t: 5, pw: 6 } },
     });
-    const menu = await pg.evaluate(() =>
-      (window.__bd_probe.v1App.BlockCreator.MenuJson.categories as any[])
-        .find((c) => c.name === 'Source')
-        .items.map((i) => i.name),
+    const menu = await pg.evaluate(
+      () =>
+        window.__bd_probe.v1App.BlockCreator.MenuJson.categories
+          .find((category) => category.name === 'Source')
+          ?.items.map((item) => item.name) ?? [],
     );
     await pg.evaluate(() => {
-      window.__sent.length = 0;
+      (window.__sent ?? []).length = 0;
     });
-    await pg.evaluate(() => window.__bd_stage.enter(1));
+    await pg.evaluate(() => {
+      window.__bd_stage.enter(1);
+    });
     await pg.waitForTimeout(700);
     const inside = await pg.evaluate(() => window.__bd_probe.inside?.stage ?? null);
     const sent = (id: string) =>
       pg.evaluate(
-        (k) =>
-          (window.__sent as { id: string; v: any }[])
-            .filter((message) => message.id === k)
-            .map((e) => e.v),
+        (messageId) =>
+          (window.__sent ?? [])
+            .filter((message) => message.id === messageId)
+            .map((message) => message.v),
         id,
       );
-    const views = (await sent('bd_stageView')).map((value) => value.stage);
+    const views = (await sent('bd_stageView')).map((value) => (value as StageMessage).stage);
     const innerTone = await pg.evaluate(() => window.__bd_probe.idOf('t'));
-    // drag the inner Tone: its move goes to the Stage's world
-    const at = (await pg.evaluate((i) => window.__bd_probe.blockPoint(i), innerTone)) as
-      [number, number] | null;
+    // Drag the inner Tone: its move goes to the Stage's world.
+    const at =
+      innerTone === undefined
+        ? null
+        : await pg.evaluate((i) => window.__bd_probe.blockPoint(i), innerTone);
     if (at) {
       await pg.mouse.move(at[0], at[1]);
       await pg.mouse.down();
@@ -58,22 +74,23 @@ export const pluginStageTests: Record<string, RegressionTest> = {
       await pg.waitForTimeout(400);
     }
     const moves = (await sent('bd_commands'))
-      .flatMap((v) => v.commands)
-      .filter((c) => c.type === 2);
+      .flatMap((value) => (value as CommandsMessage).commands)
+      .filter((command) => command.type === 2);
     const movedInside =
       moves.length > 0 && moves.every((move) => move.stage === 1 && move.id === innerTone);
-    // a frame of the outer world is dropped while inside; one of this Stage's world shows
-    const frame = (view: number, n: number) =>
+    // A frame of the outer world is dropped while inside; one of this Stage's world shows.
+    const frame = (view: number, particles: number) =>
       pg.evaluate(
-        ([key, k]) =>
-          window.__fire('bd_snapshot', {
+        ([key, count]) => {
+          window.__fire?.('bd_snapshot', {
             view: key,
-            particles: Array.from({ length: k * 3 }, () => 1),
+            particles: Array.from({ length: count * 3 }, () => 1),
             connections: [],
             powered: [],
             beams: [],
-          }),
-        [view, n] as const,
+          });
+        },
+        [view, particles] as const,
       );
     const before = await pg.evaluate(() => window.__bd_probe.state.particles);
     await frame(0, 4);
@@ -85,11 +102,11 @@ export const pluginStageTests: Record<string, RegressionTest> = {
     await pg.keyboard.press('Escape');
     await pg.waitForTimeout(500);
     const out = await pg.evaluate(() => window.__bd_probe.inside === null);
-    const back = (await sent('bd_stageView')).map((v) => v.stage).slice(1);
-    const macros = (await sent('bd_macros')).pop()?.macros ?? [];
-    const t = macros
-      .find((macro) => macro.block === 's')
-      ?.blocks.find((b) => b.id === 't');
+    const back = (await sent('bd_stageView'))
+      .map((value) => (value as StageMessage).stage)
+      .slice(1);
+    const macros = ((await sent('bd_macros')).pop() as StageMessage | undefined)?.macros ?? [];
+    const tone = macros.find((macro) => macro.block === 's')?.blocks.find((b) => b.id === 't');
     await close();
     const ok =
       menu.includes('Stage') &&
@@ -101,8 +118,8 @@ export const pluginStageTests: Record<string, RegressionTest> = {
       afterInner === 2 &&
       out &&
       JSON.stringify(back) === '[0]' &&
-      !!t &&
-      t.x !== 0;
+      !!tone &&
+      tone.x !== 0;
     return [
       ok,
       {
@@ -117,20 +134,19 @@ export const pluginStageTests: Record<string, RegressionTest> = {
         afterInner,
         out,
         back,
-        saved: t,
+        saved: tone,
       },
     ];
   },
-  /** Owner (2026-11-19): a Stage's panel in the plugins has OPEN STAGE and LOAD PATCH, as on the web, and OPEN
-   * STAGE opens it. */
+  /** A Stage's panel in the plugins has OPEN STAGE and LOAD PATCH, as on the web; OPEN STAGE opens
+   * it. */
   async 'plugin-stage-panel-buttons'(errors: string[]) {
     const { pg, close } = await openPlugin(
       plugPatch([{ id: 's', type: 'source.stage', x: 0, y: 0 }]),
       errors,
       { s: 1 },
     );
-    const at = (await pg.evaluate(() => window.__bd_probe.blockPoint(1))) as
-      [number, number] | null;
+    const at = await pg.evaluate(() => window.__bd_probe.blockPoint(1));
     if (at) {
       await pg.mouse.move(at[0], at[1]);
       await pg.mouse.click(at[0], at[1]);
@@ -142,7 +158,7 @@ export const pluginStageTests: Record<string, RegressionTest> = {
           return (
             optionsPanel.Scale === 1 &&
             !optionsPanel.Opening &&
-            optionsPanel.SelectedBlock?.Id === 1
+            (optionsPanel.SelectedBlock as V1BlockView | undefined)?.Id === 1
           );
         },
         null,
@@ -151,20 +167,22 @@ export const pluginStageTests: Record<string, RegressionTest> = {
       .catch(() => {});
     await pg.waitForTimeout(400);
     const settings = await pg.evaluate(() =>
-      (window.__bd_probe.scene.OptionsPanel.Options as any[]).map((o) => o.Setting),
+      window.__bd_probe.scene.OptionsPanel.Options.map((option) => option.Setting),
     );
-    await pg.evaluate(() =>
-      window.__bd_probe.scene.OptionsPanel.SelectedBlock?.SetParam('openStage', 1),
-    );
+    await pg.evaluate(() => {
+      (window.__bd_probe.scene.OptionsPanel.SelectedBlock as V1BlockView | undefined)?.SetParam(
+        'openStage',
+        1,
+      );
+    });
     await pg.waitForTimeout(700);
     const opened = await pg.evaluate(() => window.__bd_probe.inside?.stage ?? null);
     await close();
     const ok = settings.includes('openStage') && opened === 1;
     return [ok, { settings, opened }];
   },
-  /** MAKE STAGE from a selection and Cmd/Ctrl+D on a Stage work in the plugins: what goes inside is built in the new
-   * Stage's own world (commands carry `stage`), never the outer one, and the processor is told what is inside it
-   * (bd_macros), so the DAW project keeps it. */
+  /** Plugins: MAKE STAGE and Cmd/Ctrl+D on a Stage build its insides in its own world (commands
+   * carry `stage`), and bd_macros tells the processor, so the DAW project keeps them. */
   async 'plugin-stage-make-and-copy'(errors: string[]) {
     const { pg, close } = await openPlugin(
       plugPatch([
@@ -175,42 +193,57 @@ export const pluginStageTests: Record<string, RegressionTest> = {
       { a: 1, b: 2 },
     );
     await pg.evaluate(() => {
-      window.__sent.length = 0;
+      (window.__sent ?? []).length = 0;
     });
     const made = await pg.evaluate(() => window.__bd_stage.wrap([1, 2], 0, 0));
     await pg.waitForTimeout(400);
-    const all = () => pg.evaluate(() => window.__sent as { id: string; v: any }[]);
+    const all = () => pg.evaluate(() => window.__sent ?? []);
+    const commandsIn = (log: { id: string; v: unknown }[]) =>
+      log
+        .filter((message) => message.id === 'bd_commands')
+        .flatMap((message) => (message.v as CommandsMessage).commands);
+    const macrosIn = (log: { id: string; v: unknown }[]) =>
+      (log.filter((message) => message.id === 'bd_macros').pop()?.v as StageMessage | undefined)
+        ?.macros ?? [];
     const sent1 = await all();
-    const cmds1 = sent1.filter((message) => message.id === 'bd_commands').flatMap((e) => e.v.commands);
-    const innerAdds1 = cmds1.filter((c) => c.type === 0 && c.stage === made);
+    const cmds1 = commandsIn(sent1);
+    const innerAdds1 = cmds1.filter((command) => command.type === 0 && command.stage === made);
     const stray1 = cmds1.filter(
-      (c) => c.type === 0 && !c.stage && c.blockType !== undefined && c.id !== made,
+      (command) =>
+        command.type === 0 &&
+        !command.stage &&
+        command.blockType !== undefined &&
+        command.id !== made,
     );
-    const m1 = sent1.filter((e) => e.id === 'bd_macros').pop()?.v.macros ?? [];
+    const m1 = macrosIn(sent1);
     const uid = await pg.evaluate(
-      () =>
-        window.__bd_probe.state.patch.blocks.find((b) => b.type === 'source.stage')
-          ?.id,
+      () => window.__bd_probe.state.patch.blocks.find((b) => b.type === 'source.stage')?.id,
     );
-    // copy it
+    // Copy it.
     await pg.evaluate(() => {
-      window.__sent.length = 0;
+      (window.__sent ?? []).length = 0;
     });
-    await pg.evaluate((i) => window.__bd_probe.select([i]), made);
+    await pg.evaluate((id) => {
+      if (id !== null) window.__bd_probe.select([id]);
+    }, made);
     await pg.keyboard.press(process.platform === 'darwin' ? 'Meta+d' : 'Control+d');
     await pg.waitForTimeout(400);
     const sent2 = await all();
-    const cmds2 = sent2.filter((e) => e.id === 'bd_commands').flatMap((e) => e.v.commands);
-    const copy = cmds2.find((c) => c.type === 0 && !c.stage && c.id !== made)?.id;
-    const innerAdds2 = cmds2.filter((c) => c.type === 0 && c.stage === copy);
-    const stray2 = cmds2.filter((c) => c.type === 0 && !c.stage && c.id !== copy);
-    const m2 = sent2.filter((e) => e.id === 'bd_macros').pop()?.v.macros ?? [];
+    const cmds2 = commandsIn(sent2);
+    const copy = cmds2.find(
+      (command) => command.type === 0 && !command.stage && command.id !== made,
+    )?.id;
+    const innerAdds2 = cmds2.filter((command) => command.type === 0 && command.stage === copy);
+    const stray2 = cmds2.filter(
+      (command) => command.type === 0 && !command.stage && command.id !== copy,
+    );
+    const m2 = macrosIn(sent2);
     await close();
     const ok =
       typeof made === 'number' &&
       innerAdds1.length === 2 &&
       stray1.length === 0 &&
-      m1.some((m) => m.block === uid && m.blocks.length === 2) &&
+      m1.some((macro) => macro.block === uid && macro.blocks.length === 2) &&
       typeof copy === 'number' &&
       innerAdds2.length === 2 &&
       stray2.length === 0 &&
@@ -221,11 +254,11 @@ export const pluginStageTests: Record<string, RegressionTest> = {
         made,
         innerAdds1: innerAdds1.length,
         stray1,
-        macros1: m1.map((m) => [m.block, m.blocks.length]),
+        macros1: m1.map((macro) => [macro.block, macro.blocks.length]),
         copy,
         innerAdds2: innerAdds2.length,
         stray2,
-        macros2: m2.map((m) => [m.block, m.blocks.length]),
+        macros2: m2.map((macro) => [macro.block, macro.blocks.length]),
       },
     ];
   },
