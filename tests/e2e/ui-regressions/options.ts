@@ -2,6 +2,7 @@
 import {
   OUT,
   blk,
+  blockAt,
   browser,
   maxOver,
   open,
@@ -11,15 +12,13 @@ import {
   url,
 } from './harness.ts';
 import { openPlugin, plugPatch } from './pluginPage.ts';
+import type { CommandsMessage } from '../pageGlobals.ts';
+import type { ParametricOption, V1BlockView } from './v1Views.ts';
 
 export const optionsTests: Record<string, RegressionTest> = {
-  /** CHG-0004 3.5: Emitter and Pulse panels get a Tempo Sync switch (v1 option styles); on, the Emitter shows Division,
-   * the Pulse its Length, in musical steps. The patch saves the tempo and the synced params. Owner (2026-11-10): the
-   * Stereo Delay syncs too (Delay in place of Delay Time), and the tempo is set once in Settings, not on each block. */
+  /** CHG-0004: Tempo Sync on Emitter, Pulse, Laser and Stereo Delay swaps their timing rows for
+   * musical steps; the patch saves tempo and synced params; new ones from the menu start synced. */
   async 'tempo-sync-options'(errors: string[]) {
-    // Owner (Phase 3 review): Angle, then Tempo Sync; synced, Division (with triplets) and Swing replace Fire Rate and
-    // P. Speed; the Pulse's Length replaces Pulse length; a synced Laser's Turn replaces Rotate. New Emitters and Pulses
-    // from the menu start synced; saved ones without the setting keep v1 timing.
     const page = await open(
       browser,
       [
@@ -39,17 +38,19 @@ export const optionsTests: Record<string, RegressionTest> = {
         ),
       );
     const rows = async (type: string) => {
-      const id = (await state(page)).blocks.find((b) => b.type === type).id;
-      const pt = await blockAt(page, id);
-      await page.mouse.click(pt[0], pt[1]);
+      const block = (await state(page)).blocks.find((b) => b.type === type);
+      if (!block) throw new Error(`no ${type}`);
+      const [x, y] = await blockAt(page, block.id);
+      await page.mouse.click(x, y);
       await page.waitForTimeout(1000);
       return names();
     };
-    const set = (k: string, value: unknown) =>
+    const set = (param: string, value: unknown) =>
       page.evaluate(
-        ([key, val]) =>
-          window.__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam(key, val),
-        [k, value] as const,
+        ([key, val]) => {
+          (window.__bd_probe.scene.OptionsPanel.SelectedBlock as V1BlockView).SetParam(key, val);
+        },
+        [param, value] as const,
       );
     const close = async () => {
       await page.mouse.click(1100, 700);
@@ -59,7 +60,10 @@ export const optionsTests: Record<string, RegressionTest> = {
     await set('sync', true);
     await set('divisionIndex', 4);
     await set('swing', 0.5);
-    await page.evaluate(() => window.__bd_probe.scene.host.setTempo(90)); // Settings › Tempo (settings-release1)
+    // Settings › Tempo (settings-release1)
+    await page.evaluate(() => {
+      window.__bd_probe.scene.host.setTempo(90);
+    });
     await page.waitForTimeout(200);
     const emitterOn = await names();
     await page.mouse.move(700, 300);
@@ -104,45 +108,47 @@ export const optionsTests: Record<string, RegressionTest> = {
     });
     await page.mouse.up();
     await page.waitForTimeout(300);
+    const firstEmitter = patch.blocks.find((x) => x.type === 'power.emitter')?.id;
     const freshSync = (await state(page)).patch.blocks.find(
-      (b) =>
-        b.type === 'power.emitter' &&
-        b.id !== patch.blocks.find((x) => x.type === 'power.emitter').id,
+      (b) => b.type === 'power.emitter' && b.id !== firstEmitter,
     )?.params?.sync;
-    await page.evaluate(() => window.__bd_probe.scene.host.createBlock('StereoDelay', 8, -8));
+    await page.evaluate(() => {
+      window.__bd_probe.scene.host.createBlock('StereoDelay', 8, -8);
+    });
     await page.mouse.up();
     await page.waitForTimeout(300);
     const freshDelay = (await state(page)).patch.blocks
       .filter((b) => b.type === 'fx.stereo-delay')
       .map((b) => b.params?.sync);
     await page.close();
-    const by = (text: string) => patch.blocks.find((b) => b.type === text).params;
+    const by = (type: string) => patch.blocks.find((b) => b.type === type)?.params ?? {};
     const em = by('power.emitter'),
       pu = by('power.pulse'),
       la = by('power.laser'),
       de = by('fx.stereo-delay');
     const eq = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+    // Offset: CHG-0014; the Pulse's Delay: CHG-0029; the Laser's Restart: CHG-0034.
     const ok =
       eq(emitterOff, ['Angle', 'Tempo Sync', 'Fire Rate', 'Offset', 'P. Speed', 'Range']) &&
-      eq(emitterOn, ['Angle', 'Tempo Sync', 'Division', 'Swing', 'Offset', 'Range']); // Offset: CHG-0014 &&
-    eq(pulseOff, ['Tempo Sync', 'Pulse length', 'Delay', 'Pulse On']) &&
-      eq(pulseOn, ['Tempo Sync', 'Length', 'Delay', 'Pulse On']); // Delay: CHG-0029 &&
-    eq(laserOff, ['Angle', 'Tempo Sync', 'Rotate', 'Range']) &&
-      eq(laserOn, ['Angle', 'Tempo Sync', 'Turn', 'Range']) &&
+      eq(emitterOn, ['Angle', 'Tempo Sync', 'Division', 'Swing', 'Offset', 'Range']) &&
+      eq(pulseOff, ['Tempo Sync', 'Pulse length', 'Delay', 'Pulse On']) &&
+      eq(pulseOn, ['Tempo Sync', 'Length', 'Delay', 'Pulse On']) &&
+      eq(laserOff, ['Angle', 'Tempo Sync+Restart', 'Rotate', 'Range']) &&
+      eq(laserOn, ['Angle', 'Tempo Sync+Restart', 'Turn', 'Range']) &&
       eq(delayOff, ['Tempo Sync', 'Delay Time', 'Feedback', 'Mix']) &&
       eq(delayOn, ['Tempo Sync', 'Delay', 'Feedback', 'Mix']) &&
       de.sync === 1 &&
       de.delayBeats === 0.75 &&
       eq(freshDelay.slice(1), [true]) &&
       em.sync === 1 &&
-      Math.abs(em.division - 1 / 3) < 1e-9 &&
+      Math.abs(Number(em.division) - 1 / 3) < 1e-9 &&
       em.swing === 0.5 &&
       pu.sync === 1 &&
       pu.pulseBeats === 1 &&
       la.sync === 1 &&
       la.turnBeats === -8 &&
       patch.tempo === 90 &&
-      fresh != null &&
+      fresh !== null &&
       (freshSync === true || freshSync === 1);
     return [
       ok,
@@ -165,8 +171,8 @@ export const optionsTests: Record<string, RegressionTest> = {
       },
     ];
   },
-  /** Audio Input (plugin label of v1's Microphone) and Audio In have one Gain row (dB, −40 = off, up to +6); v1's
-   * Microphone had no options. The param is a ratio (1 = unity, a true bypass in the plugins). */
+  /** Audio Input and Audio In have one Gain row (dB, −40 off, up to +6; v1 had none); the param is
+   * a ratio (1 = unity, a true bypass in the plugins). */
   async 'input-gain-option'(errors: string[]) {
     const { pg, close } = await openPlugin(
       plugPatch([
@@ -175,31 +181,41 @@ export const optionsTests: Record<string, RegressionTest> = {
       ]),
       errors,
     );
-    const out: Record<string, unknown> = {};
+    const out: Record<
+      string,
+      { open: boolean; name?: string; rows: string[]; gain: unknown; sentGain: boolean }
+    > = {};
     for (const type of ['source.audio-in', 'source.microphone']) {
-      const id = (await state(pg)).blocks.find((b) => b.type === type).id;
-      const pt = await blockAt(pg, id);
-      await pg.mouse.click(pt[0], pt[1]);
+      const block = (await state(pg)).blocks.find((b) => b.type === type);
+      if (!block) throw new Error(`no ${type}`);
+      const id = block.id;
+      const [x, y] = await blockAt(pg, id);
+      await pg.mouse.click(x, y);
       await pg.waitForTimeout(1000);
       const panel = await pg.evaluate(() => {
         const optionsPanel = window.__bd_probe.scene.OptionsPanel;
         return {
           open: optionsPanel.Scale > 0,
-          name: optionsPanel.Name ?? optionsPanel.SelectedBlock?.OptionsForm?.name,
+          name: (optionsPanel.SelectedBlock as V1BlockView | undefined)?.OptionsForm?.name,
           rows: optionsPanel.Options.map((Option) => Option.Name),
         };
       });
-      await pg.evaluate(() =>
-        window.__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('gainDb', -6),
-      );
+      await pg.evaluate(() => {
+        (window.__bd_probe.scene.OptionsPanel.SelectedBlock as V1BlockView).SetParam('gainDb', -6);
+      });
       await pg.waitForTimeout(200);
-      const gain = (await state(pg)).patch.blocks.find((b) => b.type === type).params.gain;
+      const gain = (await state(pg)).patch.blocks.find((b) => b.type === type)?.params?.gain;
       const sentGain = await pg.evaluate(
         ([i]) =>
-          window.__sent
+          (window.__sent ?? [])
             .filter((x) => x.id === 'bd_commands')
-            .flatMap((x) => x.v.commands)
-            .some((c) => c.id === i && c.param === 0 && Math.abs(c.value - 0.501) < 0.001),
+            .flatMap((x) => (x.v as CommandsMessage).commands)
+            .some(
+              (command) =>
+                command.id === i &&
+                command.param === 0 &&
+                Math.abs((command.value ?? NaN) - 0.501) < 0.001,
+            ),
         [id],
       );
       out[type] = { ...panel, gain, sentGain };
@@ -208,18 +224,17 @@ export const optionsTests: Record<string, RegressionTest> = {
     }
     await close();
     const ok = Object.values(out).every(
-      (o) =>
-        o.open &&
-        o.rows.length === 1 &&
-        o.rows[0] === 'Gain' &&
-        Math.abs(o.gain - 0.501) < 0.001 &&
-        o.sentGain,
+      (row) =>
+        row.open &&
+        row.rows.length === 1 &&
+        row.rows[0] === 'Gain' &&
+        Math.abs(Number(row.gain) - 0.501) < 0.001 &&
+        row.sentGain,
     );
     return [ok, out];
   },
-  /** CHG-0010 (owner, 2026-11-12, "option B"): the Filter's panel is the EQ's graph with one handle and a TYPE row
-   * (Peak, Low pass, High pass, Band pass). Choosing Low pass and dragging the handle to the left darkens a powered
-   * Tone; the graph falls towards 20 kHz; the width bar shows for Peak and Band pass only. */
+  /** CHG-0010: the Filter's panel is a one-handle graph and a TYPE row; Low pass with the handle
+   * dragged left darkens a Tone, and the width bar shows for Peak and Band pass only. */
   async 'filter-types'(errors: string[]) {
     const page = await open(
       browser,
@@ -234,37 +249,48 @@ export const optionsTests: Record<string, RegressionTest> = {
         const optionsPanel = window.__bd_probe.scene.OptionsPanel,
           pr = window.__bd_probe.v1App.Metrics.PixelRatio;
         const option = optionsPanel.Options.find((x) => x.Type === 'parametric'),
-          t = optionsPanel.Options.find((x) => x.Type === 'buttons');
+          typeRow = optionsPanel.Options.find((x) => x.Type === 'buttons');
         const optionHandle = option?.Handles[1];
+        const params: Record<string, unknown> = {
+          ...(optionsPanel.SelectedBlock as V1BlockView | undefined)?.Params,
+        };
+        const curve = option as (typeof option & ParametricOption) | undefined;
         return {
-          types: optionsPanel.Options.map((x) => x.Type),
-          params: { ...optionsPanel.SelectedBlock?.Params },
-          buttons: t?.Buttons.map((b) => [
+          types: optionsPanel.Options.map((x) => String(x.Type)),
+          params,
+          buttons: typeRow?.Buttons.map((b) => [
             (optionsPanel.Position.x + optionsPanel.Margin + b.Position.x + b.Size.width / 2) / pr,
-            (optionsPanel.Position.y + t.Position.y + t.Size.height / 2) / pr,
+            (optionsPanel.Position.y + typeRow.Position.y + typeRow.Size.height / 2) / pr,
           ]),
           handle: optionHandle && [
             (optionsPanel.Position.x + optionsPanel.Margin + optionHandle.Position.x) / pr,
-            (optionsPanel.Position.y + option.Position.y + option.Size.height * 0.8 - optionHandle.Position.y) / pr,
+            (optionsPanel.Position.y +
+              option.Position.y +
+              option.Size.height * 0.8 -
+              optionHandle.Position.y) /
+              pr,
           ],
           graphLeft: (optionsPanel.Position.x + optionsPanel.Margin) / pr,
-          curve: option ? [option.LineGain[0], option.LineGain[option.Smoothness - 1]] : null,
+          curve: curve ? [curve.LineGain[0], curve.LineGain[curve.Smoothness - 1]] : null,
           bar: option ? option.SubHandles[1].Draw.toString().length > 10 : null,
         };
       });
     const peak = await panel();
+    const typeButtons = peak.buttons ?? [];
     const before = await maxOver(page, 'rms', 600);
-    await page.mouse.click(peak.buttons[1][0], peak.buttons[1][1]);
+    await page.mouse.click(typeButtons[1][0], typeButtons[1][1]);
     await page.waitForTimeout(300);
     const lp = await panel();
-    await page.mouse.move(lp.handle[0], lp.handle[1]);
+    const handle = lp.handle;
+    if (!handle) throw new Error('no filter handle');
+    await page.mouse.move(handle[0], handle[1]);
     await page.mouse.down();
-    await page.mouse.move(lp.graphLeft + 15, lp.handle[1], { steps: 8 });
+    await page.mouse.move(lp.graphLeft + 15, handle[1], { steps: 8 });
     await page.mouse.up();
     await page.waitForTimeout(800);
     const dark = await panel(),
       after = await maxOver(page, 'rms', 600);
-    await page.mouse.click(peak.buttons[3][0], peak.buttons[3][1]);
+    await page.mouse.click(typeButtons[3][0], typeButtons[3][1]);
     await page.waitForTimeout(300);
     const bp = await panel();
     await page.screenshot({ path: `${OUT}/filter-types.png` });
@@ -284,16 +310,16 @@ export const optionsTests: Record<string, RegressionTest> = {
       peak.bar === true &&
       lp.params.type === 1 &&
       lp.bar === false &&
-      dark.params.frequency < 60 &&
-      dark.curve![1] < dark.curve![0] &&
+      Number(dark.params.frequency) < 60 &&
+      !!dark.curve &&
+      dark.curve[1] < dark.curve[0] &&
       after < before * 0.2 &&
       bp.params.type === 3 &&
       bp.bar === true;
     return [ok, result];
   },
-  /** SPEC-CONNECTIONS-PROXIMITY R4a (owner, 2026-11-12): a source's effects run in the order they connected, as in
-   * v1. Bit Crusher in first, then Stereo Delay: tone → crusher → delay. Crusher out: tone → delay. Crusher back in:
-   * tone → delay → crusher. The patch saves that order (`connectionOrder`), and reopening it keeps it. */
+  /** SPEC-CONNECTIONS-PROXIMITY R4a: a source's effects run in the order they connected, as in v1;
+   * the patch saves that order (`connectionOrder`), and reopening it keeps it. */
   async 'effect-order'(errors: string[]) {
     const page = await open(
       browser,
@@ -310,15 +336,15 @@ export const optionsTests: Record<string, RegressionTest> = {
       await page.waitForTimeout(400);
     };
     const order = async () => {
-      const s = await page.evaluate(() => {
-        const st = window.__bd_probe.state;
+      const seen = await page.evaluate(() => {
+        const probeState = window.__bd_probe.state;
         return {
-          order: st.patch.connectionOrder ?? [],
-          types: Object.fromEntries(st.patch.blocks.map((b) => [b.id, b.type])),
+          order: probeState.patch.connectionOrder ?? [],
+          types: Object.fromEntries(probeState.patch.blocks.map((b) => [b.id, b.type])),
         };
       });
-      return (s.order as [string, string][]).map((pr) =>
-        pr.map((id) => s.types[id].replace(/^(source|fx)\./, '')).join('+'),
+      return seen.order.map((pair) =>
+        pair.map((id) => seen.types[id].replace(/^(source|fx)\./, '')).join('+'),
       );
     };
     await dragTo(14, -8, 3, 0); // crusher in
@@ -331,19 +357,20 @@ export const optionsTests: Record<string, RegressionTest> = {
     const saved = await page.evaluate(() => window.__bd_probe.state.patch);
     await page.close();
     // Reopen the saved patch in a new visit (the autosave): the engine replays the order.
-    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-    await ctx.addInitScript((pt) => {
-      localStorage.setItem('blokdust2.autosave', pt);
+    const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    await context.addInitScript((autosave) => {
+      localStorage.setItem('blokdust2.autosave', autosave);
     }, JSON.stringify(saved));
-    const otherPage = await ctx.newPage();
+    const otherPage = await context.newPage();
     otherPage.on('pageerror', (error) => errors.push(error.message));
     await otherPage.goto(`${url}/index.html`);
     await otherPage.waitForFunction(() => window.__bd_probe);
     await otherPage.click('#start');
     await otherPage.waitForFunction(() => window.__bd_probe.state.snapshots > 10);
     await otherPage.waitForTimeout(500);
-    const reopened = await otherPage.evaluate(() => window.__bd_probe.state.patch.connectionOrder); // from the engine's snapshots
-    await ctx.close();
+    // From the engine's snapshots.
+    const reopened = await otherPage.evaluate(() => window.__bd_probe.state.patch.connectionOrder);
+    await context.close();
     const ok =
       JSON.stringify(first) === JSON.stringify(['tone+bit-crusher', 'tone+stereo-delay']) &&
       JSON.stringify(out) === JSON.stringify(['tone+stereo-delay']) &&

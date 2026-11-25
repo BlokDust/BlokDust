@@ -70,3 +70,9 @@ export interface SceneFileButton {
 export interface SettingsFooter {
   footerLinks(): { label: string; x: number; y: number }[];
 }
+
+/** The Filter's parametric graph option: its drawn curve. */
+export interface ParametricOption {
+  LineGain: number[];
+  Smoothness: number;
+}
