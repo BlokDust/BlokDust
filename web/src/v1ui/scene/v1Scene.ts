@@ -331,6 +331,11 @@ export class V1Scene extends V1ScenePointer {
     name: string,
   ): void {
     if (!scaled && drawNewSprite(ctx, pos, name)) return; // the post-2.0 blocks: from their manifests
-    this.sprites.DrawSprite({ Ctx: ctx }, pos, scaled, name);
+    this.sprites.DrawSprite(
+      { Ctx: ctx, Width: this.Width, Height: this.Height },
+      pos,
+      scaled,
+      name,
+    );
   }
 }
