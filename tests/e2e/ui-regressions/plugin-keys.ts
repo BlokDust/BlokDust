@@ -197,8 +197,7 @@ export const pluginKeysTests: Record<string, RegressionTest> = {
     const panel = await pg.evaluate(() => {
       const optionsPanel = window.__bd_probe.scene.OptionsPanel;
       return {
-        title: (optionsPanel.SelectedBlock as V1BlockView | undefined)?.OptionsForm?.name as
-          string | undefined,
+        title: (optionsPanel.SelectedBlock as V1BlockView | undefined)?.OptionsForm?.name,
         rows: optionsPanel.Options.map((x) => x.Name),
       };
     });
