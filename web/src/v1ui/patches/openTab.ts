@@ -14,49 +14,54 @@ export abstract class PatchesOpenTab extends PatchesSaveTab {
       unit = App.Unit,
       margin = this.margin,
       pageW = this.pageW,
-      W = App.Width,
+      stageWidth = App.Width,
       txt = App.Palette[App.ThemeManager.Txt],
-      L = this.openLayout();
+      layout = this.openLayout();
     // RULE (no hint: owner, 2026-11-18) //
     App.StrokeColor(ctx, txt);
     ctx.beginPath();
-    ctx.moveTo(margin, L.rule);
-    ctx.lineTo(margin + pageW, L.rule);
+    ctx.moveTo(margin, layout.rule);
+    ctx.lineTo(margin + pageW, layout.rule);
     ctx.stroke();
 
     // ROWS (v1 SoundcloudPanel track loop), clipped to the window and scrolled //
     const n0 = this.Items.length;
     ctx.save();
     ctx.beginPath();
-    ctx.rect(margin - 5 * unit, L.rule + unit, pageW + 15 * unit, L.bottom - L.rule - unit);
+    ctx.rect(
+      margin - 5 * unit,
+      layout.rule + unit,
+      pageW + 15 * unit,
+      layout.bottom - layout.rule - unit,
+    );
     ctx.clip();
-    for (let n = 0; n < n0; n++) {
-      const y = this.openRowY(n);
-      if (y + 20 * unit < L.top || y - 40 * unit > L.bottom) continue;
-      if (n < n0 - 1) {
+    for (let index = 0; index < n0; index++) {
+      const y = this.openRowY(index);
+      if (y + 20 * unit < layout.top || y - 40 * unit > layout.bottom) continue;
+      if (index < n0 - 1) {
         App.StrokeColor(ctx, App.Palette[1]);
         ctx.beginPath();
         ctx.moveTo(margin, y + this.rowH - this.rowDivider);
         ctx.lineTo(margin + pageW, y + this.rowH - this.rowDivider);
         ctx.stroke();
       }
-      const item = this.Items[n],
-        b = this.rowButtons(n);
+      const item = this.Items[index],
+        b = this.rowButtons(index);
       App.FillColor(ctx, txt);
       ctx.font = this.rowFont;
       ctx.textAlign = 'left';
       // A long name is narrowed to the room left of OPEN, not run under it.
       const room = b.open.x - 8 * unit - (margin + unit),
-        fit = (t: string, yy: number) => {
-          const w = ctx.measureText(t).width;
-          if (w <= room) {
-            ctx.fillText(t, margin + unit, yy);
+        fit = (text: string, yy: number) => {
+          const textWidth = ctx.measureText(text).width;
+          if (textWidth <= room) {
+            ctx.fillText(text, margin + unit, yy);
             return;
           }
           ctx.save();
           ctx.translate(margin + unit, yy);
-          ctx.scale(room / w, 1);
-          ctx.fillText(t, 0, 0);
+          ctx.scale(room / textWidth, 1);
+          ctx.fillText(text, 0, 0);
           ctx.restore();
         };
       fit(item.name.toUpperCase(), y - this.rowGap);
@@ -66,18 +71,29 @@ export abstract class PatchesOpenTab extends PatchesSaveTab {
       this.drawBordered(b.open, txt);
       this.drawBordered(b.insert, App.Palette[1]);
       if (item.removable)
-        drawBin(ctx, b.bin.cx, b.bin.cy, this.roll[`bin${n}`] ? 0.55 * 1.2 : 0.55);
+        drawBin(ctx, b.bin.cx, b.bin.cy, this.roll[`bin${index}`] ? 0.55 * 1.2 : 0.55);
     }
     ctx.restore();
 
     // EMPTY / LOADING //
     App.FillColor(ctx, txt);
     if (!n0 && this.Loading)
-      App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, (L.top + L.bottom) / 2, 16, true);
+      App.AnimationsLayer.DrawSprite(
+        ctx,
+        'loading',
+        stageWidth * 0.5,
+        (layout.top + layout.bottom) / 2,
+        16,
+        true,
+      );
     else if (!n0) {
       ctx.font = App.Metrics.TxtHeader;
       ctx.textAlign = 'center';
-      ctx.fillText(COPY.empty.toUpperCase(), W * 0.5, (L.top + L.bottom) / 2 + 10 * unit);
+      ctx.fillText(
+        COPY.empty.toUpperCase(),
+        stageWidth * 0.5,
+        (layout.top + layout.bottom) / 2 + 10 * unit,
+      );
     }
 
     // OPEN FROM YOUR DEVICE: bordered, as RANDOMISE TITLE (owner, 2026-11-18) //
@@ -121,18 +137,18 @@ export abstract class PatchesOpenTab extends PatchesSaveTab {
   }
   protected drawConfirm(): void {
     const menu = App.ThemeManager.MenuOrder,
-      [a, b, c] = this.thirds();
+      [first, second, third] = this.thirds();
     this.heading(COPY.confirm, COPY.confirmLine);
     const font = App.Metrics.TxtMid;
-    this.filled(a, App.Palette[1], COPY.cancel, !!this.roll.cancel, font, 18.5);
+    this.filled(first, App.Palette[1], COPY.cancel, !!this.roll.cancel, font, 18.5);
     this.filled(
-      b,
+      second,
       App.Palette[menu[1]],
       this.Saving ? COPY.saving : COPY.saveFirst,
       !!this.roll.saveFirst && !this.Saving,
       font,
       18.5,
     );
-    this.filled(c, App.Palette[menu[3]], COPY.openAnyway, !!this.roll.openAnyway, font, 18.5);
+    this.filled(third, App.Palette[menu[3]], COPY.openAnyway, !!this.roll.openAnyway, font, 18.5);
   }
 }

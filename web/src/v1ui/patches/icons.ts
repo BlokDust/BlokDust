@@ -1,25 +1,23 @@
 // Small v1-style marks the panels draw: the like chevron, the bin, the upload mark.
 import { App } from '../shim.ts';
 
-/** The gallery (CHG-0024). */
-/** The like control (owner review 3, 2026-11-16: chosen from three; the star didn't read as an up vote and its angles
- * aren't BlokDust's 45°): the first peak of v1's triangle-wave icon (OptionButton "wave", 2) as an open up chevron,
- * centred on x, y, `s` wide, in v1's 2 px line; liked, in the options colour. */
+/** The gallery's like control (CHG-0024): v1's triangle-wave icon's first peak as an up chevron
+ * (45°, not a star) at (x, y), `s` wide, in v1's 2 px line; liked, in the options colour. */
 export function drawUpArrow(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
-  s: number,
+  size: number,
   liked: boolean,
   colour: string,
   on: string,
 ): void {
-  const h = s / 2;
+  const half = size / 2;
   ctx.save();
   ctx.beginPath();
-  ctx.moveTo(x - h, y + h / 2);
-  ctx.lineTo(x, y - h / 2);
-  ctx.lineTo(x + h, y + h / 2);
+  ctx.moveTo(x - half, y + half / 2);
+  ctx.lineTo(x, y - half / 2);
+  ctx.lineTo(x + half, y + half / 2);
   ctx.lineJoin = 'miter';
   ctx.lineCap = 'butt';
   ctx.lineWidth = 2;
@@ -28,30 +26,27 @@ export function drawUpArrow(
   ctx.restore();
 }
 
-/** v1's trash can (UI/TrashCan.Draw: a tapering bin with a cross), at `scale` and centred on (x, y). */
+/** v1's trash can (UI/TrashCan.Draw: a tapering bin with a cross), centred on (x, y). */
 export function drawBin(ctx: CanvasRenderingContext2D, x: number, y: number, scale: number): void {
   const unit = App.Unit,
-    s = scale;
+    size = scale;
   App.StrokeColor(ctx, App.Palette[App.ThemeManager.Txt]);
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(x - 11 * s * unit, y - 11 * s * unit);
-  ctx.lineTo(x + 11 * s * unit, y - 11 * s * unit);
-  ctx.lineTo(x + 8 * s * unit, y + 11 * s * unit);
-  ctx.lineTo(x - 8 * s * unit, y + 11 * s * unit);
+  ctx.moveTo(x - 11 * size * unit, y - 11 * size * unit);
+  ctx.lineTo(x + 11 * size * unit, y - 11 * size * unit);
+  ctx.lineTo(x + 8 * size * unit, y + 11 * size * unit);
+  ctx.lineTo(x - 8 * size * unit, y + 11 * size * unit);
   ctx.closePath();
-  ctx.moveTo(x - 4 * s * unit, y - 4 * s * unit);
-  ctx.lineTo(x + 4 * s * unit, y + 4 * s * unit);
-  ctx.moveTo(x + 4 * s * unit, y - 4 * s * unit);
-  ctx.lineTo(x - 4 * s * unit, y + 4 * s * unit);
+  ctx.moveTo(x - 4 * size * unit, y - 4 * size * unit);
+  ctx.lineTo(x + 4 * size * unit, y + 4 * size * unit);
+  ctx.moveTo(x + 4 * size * unit, y - 4 * size * unit);
+  ctx.lineTo(x - 4 * size * unit, y + 4 * size * unit);
   ctx.stroke();
 }
 
-/**
- * A text button for the user's files (UPLOAD FILE in the sample panel, OPEN FROM YOUR DEVICE here), like v1's
- * Randomise button: its label (v1 mid type), then the usual upload mark under it (owner, 2026-11-10: an open tray with
- * an arrow out of it), in v1's 2 px line. Hovered, the label is underlined, so it reads as a button.
- */
+/** A text button for the user's files (UPLOAD FILE, OPEN FROM YOUR DEVICE), like v1's Randomise:
+ * its label over an upload mark (an arrow out of a tray), in v1's 2 px line; hover underlines. */
 export function drawUploadLink(
   ctx: CanvasRenderingContext2D,
   label: string,
@@ -69,15 +64,15 @@ export function drawUploadLink(
   ctx.fillText(text, cx, base);
   ctx.lineWidth = 2;
   if (hover) {
-    const w = ctx.measureText(text).width;
+    const textWidth = ctx.measureText(text).width;
     ctx.beginPath();
-    ctx.moveTo(cx - w / 2, base + 3 * unit);
-    ctx.lineTo(cx + w / 2, base + 3 * unit);
+    ctx.moveTo(cx - textWidth / 2, base + 3 * unit);
+    ctx.lineTo(cx + textWidth / 2, base + 3 * unit);
     ctx.stroke();
   }
   drawUploadMark(ctx, cx, base + 7 * unit);
 }
-/** The upload mark: an arrow (its tip at (cx, top)) out of an open tray, 14 × 11 units, in v1's 2 px text-colour line. */
+/** The upload mark: an arrow (tip at (cx, top)) out of an open tray, 14 × 11 units, 2 px line. */
 export function drawUploadMark(ctx: CanvasRenderingContext2D, cx: number, top: number): void {
   const unit = App.Unit,
     txt = App.Palette[App.ThemeManager.Txt];

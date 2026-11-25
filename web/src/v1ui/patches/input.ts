@@ -1,5 +1,5 @@
 // The Patches panel's presses, drags and releases.
-import { App } from '../shim.ts';
+import { App, sceneIfMade } from '../shim.ts';
 import { MISSING_TEXT } from '../../patch/server.ts';
 import { COPY } from './copy.ts';
 import { GALLERY_SORTS } from './hosts.ts';
@@ -11,29 +11,36 @@ export abstract class PatchesInput extends PatchesSaving {
   abstract ClosePanel(): void;
   abstract selectTab(i: Tab): void;
   MouseMove(pt: { x: number; y: number }): void {
-    const d = this.galleryDrag;
-    if (d) {
-      if (Math.abs(pt.y - d.y) > 6 * App.Unit) d.moved = true;
-      if (d.moved) {
-        if (d.tab === 2) {
-          this.GalleryScroll = d.scroll;
-          this.scrollGallery(d.y - pt.y);
+    const drag = this.galleryDrag;
+    if (drag) {
+      if (Math.abs(pt.y - drag.y) > 6 * App.Unit) drag.moved = true;
+      if (drag.moved) {
+        if (drag.tab === 2) {
+          this.GalleryScroll = drag.scroll;
+          this.scrollGallery(drag.y - pt.y);
         } else {
-          this.OpenScroll = d.scroll;
-          this.scrollOpen(d.y - pt.y);
+          this.OpenScroll = drag.scroll;
+          this.scrollOpen(drag.y - pt.y);
         }
       }
     }
     this.HitTests(pt);
   }
   MouseUp(): void {
-    const d = this.galleryDrag,
-      g = this.host.gallery;
+    const drag = this.galleryDrag,
+      galleryApi = this.host.gallery;
     this.galleryDrag = null;
-    if (d && !d.moved && d.row >= 0 && d.tab === 1 && this.Tab === 1 && this.View === 'list') {
-      const item = this.Items[d.row];
+    if (
+      drag &&
+      !drag.moved &&
+      drag.row >= 0 &&
+      drag.tab === 1 &&
+      this.Tab === 1 &&
+      this.View === 'list'
+    ) {
+      const item = this.Items.at(drag.row);
       if (!item) return;
-      if (d.mode === 'bin') {
+      if (drag.mode === 'bin') {
         this.removing = item;
         this.View = 'remove';
         return;
@@ -41,16 +48,17 @@ export abstract class PatchesInput extends PatchesSaving {
       const gone = () => {
         this.Items = this.Items.filter((x) => x !== item);
       };
-      if (d.mode === 'insert') this.runOpen(() => this.host.openPatch(item, 'insert'), gone);
+      if (drag.mode === 'insert') this.runOpen(() => this.host.openPatch(item, 'insert'), gone);
       else this.requestOpen(() => this.host.openPatch(item, 'open'), gone);
       return;
     }
-    if (!d || d.moved || d.row < 0 || !g || this.Tab !== 2 || d.tab !== 2) return;
-    const row = this.GalleryItems[d.row];
+    if (!drag || drag.moved || drag.row < 0 || !galleryApi || this.Tab !== 2 || drag.tab !== 2)
+      return;
+    const row = this.GalleryItems.at(drag.row);
     if (!row) return;
-    // Likes from the list too (owner review 3: changed their mind); signed out, the host asks to sign in.
-    if (d.mode === 'like') {
-      g.like(row);
+    // Likes from the list too (owner review 3); signed out, the host asks to sign in.
+    if (drag.mode === 'like') {
+      galleryApi.like(row);
       this.settled();
       return;
     }
@@ -59,20 +67,20 @@ export abstract class PatchesInput extends PatchesSaving {
     const gone = () => {
       this.GalleryItems = this.GalleryItems.filter((x) => x !== row);
     };
-    if (d.mode === 'insert') this.runOpen(() => g.open(row, 'insert'), gone);
-    else this.requestOpen(() => g.open(row, 'open'), gone);
+    if (drag.mode === 'insert') this.runOpen(() => galleryApi.open(row, 'insert'), gone);
+    else this.requestOpen(() => galleryApi.open(row, 'open'), gone);
   }
   MouseDown(pt: { x: number; y: number }): void {
     if (this.Opening) return;
     this.OpenError = '';
     this.HitTests(pt);
-    const r = this.roll;
-    if (r.close) {
+    const rolled = this.roll;
+    if (rolled.close) {
       this.ClosePanel();
       return;
     }
     for (const i of ALL_TABS)
-      if (r[`tab${i}`]) {
+      if (rolled[`tab${i}`]) {
         this.selectTab(i);
         try {
           localStorage.setItem(TAB_KEY, String(i));
@@ -82,14 +90,14 @@ export abstract class PatchesInput extends PatchesSaving {
         return;
       }
     if (this.Tab === 2 && this.View !== 'confirm') {
-      const g = this.host.gallery;
-      if (!g) return;
-      if (r.search) {
+      const galleryApi = this.host.gallery;
+      if (!galleryApi) return;
+      if (rolled.search) {
         this.GalleryQuery = this.SearchInput.value.trim();
         void this.browse();
         return;
       }
-      const sort = GALLERY_SORTS.find((gallerySort) => r[`sort_${gallerySort}`]);
+      const sort = GALLERY_SORTS.find((gallerySort) => rolled[`sort_${gallerySort}`]);
       if (sort) {
         this.GallerySort = sort;
         try {
@@ -100,26 +108,26 @@ export abstract class PatchesInput extends PatchesSaving {
         void this.browse();
         return;
       }
-      if (r.showMore) {
+      if (rolled.showMore) {
         void this.browse(true);
         return;
       }
       // The list: a press may become a drag (scrolling); a row opens on release, if it didn't move.
-      if (r.list) {
+      if (rolled.list) {
         let row = -1,
           mode: 'open' | 'insert' | 'like' = 'open';
-        for (let n = 0; n < this.GalleryItems.length; n++) {
-          if (r[`gopen${n}`]) {
-            row = n;
+        for (let index = 0; index < this.GalleryItems.length; index++) {
+          if (rolled[`gopen${index}`]) {
+            row = index;
             break;
           }
-          if (r[`gins${n}`]) {
-            row = n;
+          if (rolled[`gins${index}`]) {
+            row = index;
             mode = 'insert';
             break;
           }
-          if (r[`glike${n}`]) {
-            row = n;
+          if (rolled[`glike${index}`]) {
+            row = index;
             mode = 'like';
             break;
           }
@@ -129,21 +137,21 @@ export abstract class PatchesInput extends PatchesSaving {
       return;
     }
     if (this.Tab === 0 && this.View === 'video') {
-      if (r.videoBack) {
+      if (rolled.videoBack) {
         if (this.VideoState === 'making') this.cancelVideo();
         this.dropPlayer();
         this.View = 'list';
         this.showDom();
         return;
       }
-      if (r.make) {
+      if (rolled.make) {
         if (this.VideoState === 'making') this.cancelVideo();
         else void this.makeVideo();
         return;
       }
       // The share sheet needs this click's user activation: call it straight away.
-      if (r.shareVideo && this.videoFile) {
-        void this.host.video?.share(this.videoFile).catch((error) => {
+      if (rolled.shareVideo && this.videoFile) {
+        void this.host.video?.share(this.videoFile).catch((error: unknown) => {
           this.VideoState = 'error';
           this.VideoMessage = (error as Error).message;
         });
@@ -152,40 +160,40 @@ export abstract class PatchesInput extends PatchesSaving {
       return;
     }
     if (this.Tab === 0) {
-      // Signed out, SIGN IN (or the greyed switch) goes to Settings › SIGN IN and comes back here after.
-      if (r.signIn || (r.gallerySwitch && this.signInShown)) {
+      // Signed out, SIGN IN (or the greyed switch) goes to Settings › SIGN IN and back here.
+      if (rolled.signIn || (rolled.gallerySwitch && this.signInShown)) {
         this.GalleryOn = true;
         this.ClosePanel();
         this.host.signInToSave?.(this.Title);
         return;
       }
-      if (r.gallerySwitch) {
+      if (rolled.gallerySwitch) {
         if (this.host.signedIn()) {
           this.GalleryOn = !this.GalleryOn;
           this.GalleryNote = '';
         }
         return;
       }
-      if (r.videoSwitch) {
+      if (rolled.videoSwitch) {
         this.VideoOn = !this.videoOn;
         return;
       }
-      if (r.randomise) {
-        this.setTitle(App.MainScene?.SharePanel?.GenerateLabel?.() ?? this.Title);
+      if (rolled.randomise) {
+        this.setTitle(sceneIfMade()?.SharePanel.GenerateLabel() ?? this.Title);
         return;
       }
-      if (r.save) {
+      if (rolled.save) {
         if (!this.Saving && this.host.hasBlocks()) void this.save();
         return;
       }
-      if (r.share) {
+      if (rolled.share) {
         if (!this.web) {
           void this.share();
           return;
         }
         const main = this.mainAction();
         if (main.off) return;
-        // SAVE, then (MAKE VIDEO on) on to the video; or just the video when there is nothing to save.
+        // SAVE, then on to the video (MAKE VIDEO on); just the video when there is nothing to save.
         if (main.kind === 'save')
           void this.share().then((ok) => {
             if (ok && this.videoOn) void this.makeVideo();
@@ -193,44 +201,44 @@ export abstract class PatchesInput extends PatchesSaving {
         else if (main.kind === 'video') void this.makeVideo();
         return;
       }
-      if (r.saveAs) {
+      if (rolled.saveAs) {
         if (this.shareState().saveAs && !this.Saving)
           void this.saveAsLink().then((ok) => {
             if (ok && this.videoOn) void this.makeVideo();
           });
         return;
       }
-      if (r.copyLink) {
+      if (rolled.copyLink) {
         void this.copyLink();
         return;
       }
-      if (r.shareLink) {
+      if (rolled.shareLink) {
         void this.shareSheet();
         return;
       }
       return;
     }
     if (this.View === 'list') {
-      if (r.file) {
+      if (rolled.file) {
         this.host.pickPatchFile();
         return;
       }
-      // The list: a press may become a drag (scrolling); a row's button acts on release, if it didn't move.
-      if (r.list) {
+      // The list: a press may become a drag (scroll); a row's button acts on release if still.
+      if (rolled.list) {
         let row = -1,
           mode: 'open' | 'insert' | 'bin' = 'open';
-        for (let n = 0; n < this.Items.length; n++) {
-          if (r[`open${n}`]) {
-            row = n;
+        for (let itemIndex = 0; itemIndex < this.Items.length; itemIndex++) {
+          if (rolled[`open${itemIndex}`]) {
+            row = itemIndex;
             break;
           }
-          if (r[`ins${n}`]) {
-            row = n;
+          if (rolled[`ins${itemIndex}`]) {
+            row = itemIndex;
             mode = 'insert';
             break;
           }
-          if (r[`bin${n}`]) {
-            row = n;
+          if (rolled[`bin${itemIndex}`]) {
+            row = itemIndex;
             mode = 'bin';
             break;
           }
@@ -241,12 +249,12 @@ export abstract class PatchesInput extends PatchesSaving {
     }
     if (this.View === 'remove') {
       const item = this.removing;
-      if (r.removeCancel) {
+      if (rolled.removeCancel) {
         this.removing = null;
         this.View = 'list';
         return;
       }
-      if (r.removeOk && item) {
+      if (rolled.removeOk && item) {
         this.removing = null;
         this.View = 'list';
         void this.host.removePatch(item).then(() => this.refresh());
@@ -254,17 +262,17 @@ export abstract class PatchesInput extends PatchesSaving {
       return;
     }
     if (this.View === 'file') {
-      if (r.fileBack) {
+      if (rolled.fileBack) {
         this.View = 'list';
         this.Picked = null;
         return;
       }
-      if (r.fileInsert) {
+      if (rolled.fileInsert) {
         this.ClosePanel();
         this.host.usePickedFile('insert');
         return;
       }
-      if (r.fileOpen) {
+      if (rolled.fileOpen) {
         this.requestOpen(() => {
           this.host.usePickedFile('open');
         });
@@ -274,23 +282,23 @@ export abstract class PatchesInput extends PatchesSaving {
     }
     // confirm
     if (this.Saving) return;
-    if (r.cancel) {
+    if (rolled.cancel) {
       this.View = this.pending?.from ?? 'list';
       this.pending = null;
       return;
     }
-    if (r.openAnyway) {
-      const p = this.pending;
+    if (rolled.openAnyway) {
+      const waiting = this.pending;
       this.pending = null;
-      if (p) this.runOpen(p.run, p.gone);
+      if (waiting) this.runOpen(waiting.run, waiting.gone);
       return;
     }
-    if (r.saveFirst) {
+    if (rolled.saveFirst) {
       void this.save().then((ok) => {
         if (!ok || !this.pending) return;
-        const p = this.pending;
+        const waiting = this.pending;
         this.pending = null;
-        this.runOpen(p.run, p.gone);
+        this.runOpen(waiting.run, waiting.gone);
       });
     }
   }
@@ -303,17 +311,17 @@ export abstract class PatchesInput extends PatchesSaving {
     this.pending = { run, from: this.View, gone };
     this.View = 'confirm';
   }
-  /** Open or Insert. A patch from the server keeps the panel up, spinning, until it is in; then the panel closes. */
+  /** Open or Insert. A server patch keeps the panel up, spinning, until it is in, then closes. */
   protected runOpen(run: OpenRun, gone?: () => void): void {
     this.OpenError = '';
-    const r = run();
-    if (!(r instanceof Promise)) {
+    const result = run();
+    if (!(result instanceof Promise)) {
       this.ClosePanel();
       return;
     }
     this.Opening = true;
     this.showDom();
-    // Couldn't: v1's message bar says why (owner, 2026-11-18); a deleted patch's row goes from the list.
+    // Couldn't: v1's message bar says why; a deleted patch's row leaves the list.
     const done = (ok: boolean | string) => {
       this.Opening = false;
       if (ok === true) this.ClosePanel();
@@ -327,9 +335,9 @@ export abstract class PatchesInput extends PatchesSaving {
       }
       this.settled();
     };
-    r.then(
+    result.then(
       (ok) => {
-        done(ok === undefined ? true : ok);
+        done(ok);
       },
       () => {
         done(false);

@@ -4,7 +4,7 @@ import { COPY } from './copy.ts';
 import { drawUpArrow } from './icons.ts';
 import { PatchesOpenTab } from './openTab.ts';
 
-const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
+const plural = (count: number, one: string) => `${count} ${one}${count === 1 ? '' : 's'}`;
 
 export abstract class PatchesGalleryTab extends PatchesOpenTab {
   /** Scroll the list by `dy` device px; near its end, the next page loads. */
@@ -27,20 +27,20 @@ export abstract class PatchesGalleryTab extends PatchesOpenTab {
   protected drawGallery(): void {
     const ctx = this.Ctx,
       unit = App.Unit,
-      W = App.Width,
+      stageWidth = App.Width,
       cy = this.cy,
       margin = this.margin,
       txt = App.Palette[App.ThemeManager.Txt];
-    const L = this.galleryLayout(),
+    const layout = this.galleryLayout(),
       win = this.galleryWindow();
-    // SEARCH (v1 SoundcloudPanel: the rule under the field, SEARCH bordered above it at the right) //
+    // SEARCH (v1 SoundcloudPanel: a rule under the field, SEARCH bordered above it at right) //
     App.StrokeColor(ctx, txt);
     ctx.beginPath();
-    ctx.moveTo(margin, L.rule);
-    ctx.lineTo(margin + this.pageW, L.rule);
+    ctx.moveTo(margin, layout.rule);
+    ctx.lineTo(margin + this.pageW, layout.rule);
     ctx.stroke();
-    this.drawBordered(L.search, txt);
-    // POPULAR · NEW · EXAMPLES · TUTORIALS (the chosen one underlined; the others underline on hover) //
+    this.drawBordered(layout.search, txt);
+    // POPULAR · NEW · EXAMPLES · TUTORIALS (the chosen one underlined, the others on hover) //
     App.FillColor(ctx, txt);
     App.StrokeColor(ctx, txt);
     ctx.textAlign = 'left';
@@ -62,12 +62,12 @@ export abstract class PatchesGalleryTab extends PatchesOpenTab {
     ctx.beginPath();
     ctx.rect(margin - 5 * unit, win.clip, this.pageW + 15 * unit, win.bottom - win.clip);
     ctx.clip();
-    for (let n = 0; n < n0; n++) {
-      const y = this.galleryRowY(n),
-        it = this.GalleryItems[n],
-        b = this.galleryRow(n);
+    for (let index = 0; index < n0; index++) {
+      const y = this.galleryRowY(index),
+        it = this.GalleryItems[index],
+        b = this.galleryRow(index);
       if (y + 20 * unit < win.top || y - 40 * unit > win.bottom) continue;
-      if (n < n0 - 1 || this.GalleryMore) {
+      if (index < n0 - 1 || this.GalleryMore) {
         App.StrokeColor(ctx, App.Palette[1]);
         ctx.beginPath();
         ctx.moveTo(margin, y + this.rowH - this.rowDivider);
@@ -79,16 +79,16 @@ export abstract class PatchesGalleryTab extends PatchesOpenTab {
       ctx.textAlign = 'left';
       const left = margin + unit + 30 * unit,
         maxW = b.textRight - left;
-      const fit = (t: string, yy: number, x = left) => {
-        const w = ctx.measureText(t).width;
-        if (w <= maxW - (x - left)) {
-          ctx.fillText(t, x, yy);
+      const fit = (text: string, yy: number, x = left) => {
+        const textWidth = ctx.measureText(text).width;
+        if (textWidth <= maxW - (x - left)) {
+          ctx.fillText(text, x, yy);
           return;
         }
         ctx.save();
         ctx.translate(x, yy);
-        ctx.scale((maxW - (x - left)) / w, 1);
-        ctx.fillText(t, 0, 0);
+        ctx.scale((maxW - (x - left)) / textWidth, 1);
+        ctx.fillText(text, 0, 0);
         ctx.restore();
       };
       const on = App.Palette[App.ThemeManager.OptionsOrder[2]];
@@ -97,7 +97,7 @@ export abstract class PatchesGalleryTab extends PatchesOpenTab {
           ? ` \u00b7 ${plural(it.remixes, 'remix').replace('remixs', 'remixes')}`
           : '',
         views = plural(it.views, 'view');
-      // Reddit's column (owner's pick, B): the like chevron over the count, left of the row; pressing it likes.
+      // Reddit's column (owner's pick B): the like chevron over the count; pressing it likes.
       drawUpArrow(ctx, margin + 12 * unit, y - 15 * unit, 10 * unit, it.liked, txt, on);
       ctx.textAlign = 'center';
       ctx.fillText(String(it.likes), margin + 12 * unit, y);
@@ -112,7 +112,7 @@ export abstract class PatchesGalleryTab extends PatchesOpenTab {
       App.AnimationsLayer.DrawSprite(
         ctx,
         'loading',
-        W * 0.5,
+        stageWidth * 0.5,
         this.galleryRowY(n0) - 9 * unit,
         16,
         true,
@@ -122,11 +122,11 @@ export abstract class PatchesGalleryTab extends PatchesOpenTab {
     ctx.restore();
     App.FillColor(ctx, txt);
     if (!n0 && this.GalleryLoading)
-      App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy, 16, true);
+      App.AnimationsLayer.DrawSprite(ctx, 'loading', stageWidth * 0.5, cy, 16, true);
     else if (!n0) {
       ctx.font = App.Metrics.TxtHeader;
       ctx.textAlign = 'center';
-      ctx.fillText(COPY.noneYet.toUpperCase(), W * 0.5, cy + 10 * unit);
+      ctx.fillText(COPY.noneYet.toUpperCase(), stageWidth * 0.5, cy + 10 * unit);
     }
     if (this.GalleryMessage) {
       App.FillColor(ctx, txt);
@@ -141,10 +141,10 @@ export abstract class PatchesGalleryTab extends PatchesOpenTab {
       );
     }
   }
-  /** Fetch the list from the top, or (`more`) the next page onto its end. Stale answers (an earlier search) are dropped. */
+  /** Fetch the list from the top, or (`more`) the next page onto its end; stale answers drop. */
   async browse(more = false): Promise<void> {
-    const g = this.host.gallery;
-    if (!g) return;
+    const galleryApi = this.host.gallery;
+    if (!galleryApi) return;
     if (more && (!this.GalleryMore || this.GalleryLoading)) return;
     const ask = ++this.galleryAsk,
       page = more ? this.GalleryPage + 1 : 1;
@@ -156,17 +156,17 @@ export abstract class PatchesGalleryTab extends PatchesOpenTab {
     this.GalleryLoading = true;
     this.showDom();
     try {
-      const r = await g.browse(this.GallerySort, this.GalleryQuery, page);
+      const results = await galleryApi.browse(this.GallerySort, this.GalleryQuery, page);
       if (ask !== this.galleryAsk) return;
       // A patch can move up between pages (POPULAR changes as people like): keep each once.
       const have = new Set(this.GalleryItems.map((i) => i.id));
       this.GalleryItems = [
         ...this.GalleryItems,
-        ...(r?.items ?? []).filter((i) => !have.has(i.id)),
+        ...(results?.items ?? []).filter((i) => !have.has(i.id)),
       ];
-      this.GalleryMore = !!r?.more;
+      this.GalleryMore = !!results?.more;
       this.GalleryPage = page;
-      if (!r) this.GalleryMessage = 'The gallery is not available here.';
+      if (!results) this.GalleryMessage = 'The gallery is not available here.';
     } catch (error) {
       if (ask === this.galleryAsk) this.GalleryMessage = (error as Error).message;
     } finally {

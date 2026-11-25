@@ -13,7 +13,7 @@ export abstract class PatchesVideo extends PatchesDrawParts {
       txt = App.Palette[App.ThemeManager.Txt],
       menu = App.ThemeManager.MenuOrder;
     this.drawBack();
-    const m = this.videoMain(),
+    const main = this.videoMain(),
       pb = this.playerBox(),
       mid = pb.y + pb.h / 2;
     // The player's frame, in every state (the DOM video sits inside it once made; its edge in the
@@ -31,10 +31,10 @@ export abstract class PatchesVideo extends PatchesDrawParts {
         mid + 25 * unit,
       );
       App.AnimationsLayer.DrawSprite(ctx, 'loading', width * 0.5, mid, 16, true);
-      this.filled(m, App.Palette[1], COPY.cancelVideo, !!this.roll.make);
+      this.filled(main, App.Palette[1], COPY.cancelVideo, !!this.roll.make);
     } else if (this.VideoState === 'ready') {
       this.filled(
-        m,
+        main,
         App.Palette[menu[3]],
         this.shareFiles ? COPY.shareVideo : COPY.downloadVideo,
         !!this.roll.shareVideo,
@@ -52,28 +52,34 @@ export abstract class PatchesVideo extends PatchesDrawParts {
         this.wordWrap(line, pb.x + 10 * unit, mid, 14 * unit, pb.w - 20 * unit);
       }
       this.filled(
-        m,
+        main,
         App.Palette[this.host.hasBlocks() ? menu[3] : 1],
         this.VideoState === 'error' ? COPY.tryAgain : COPY.makeVideo,
         !!this.roll.make && this.host.hasBlocks(),
       );
     }
-    // THE LINK, to share on its own (v1 SharePanel's line + URL box; the field over it copies on a click) //
+    // THE LINK, shared on its own (v1 SharePanel's line + URL box; the field copies on a click) //
     if (this.link && this.web) {
-      const L = this.videoLink();
+      const linkBox = this.videoLink();
       App.FillColor(ctx, txt);
       ctx.font = App.Metrics.TxtItalic2;
       ctx.textAlign = 'left';
-      this.wordWrap(this.label('url', COPY.linkLine), this.margin, L.line, 14 * unit, this.pageW);
+      this.wordWrap(
+        this.label('url', COPY.linkLine),
+        this.margin,
+        linkBox.line,
+        14 * unit,
+        this.pageW,
+      );
       App.FillColor(ctx, App.Palette[1]);
-      ctx.fillRect(this.margin, L.box, this.pageW, 40 * unit);
+      ctx.fillRect(this.margin, linkBox.box, this.pageW, 40 * unit);
     }
   }
 
-  /** Make the video (portrait, videoSeconds long) and show it; on desktop it also downloads once made. */
+  /** Make the video (portrait, videoSeconds long) and show it; desktop also downloads it. */
   protected async makeVideo(): Promise<void> {
-    const v = this.host.video;
-    if (!v || this.VideoState === 'making' || !this.host.hasBlocks()) return;
+    const videoHost = this.host.video;
+    if (!videoHost || this.VideoState === 'making' || !this.host.hasBlocks()) return;
     this.View = 'video';
     this.dropPlayer();
     const abort = (this.videoAbort = new AbortController());
@@ -82,11 +88,11 @@ export abstract class PatchesVideo extends PatchesDrawParts {
     this.videoFile = null;
     this.VideoMessage = '';
     this.showDom();
-    // Only the current render may change the panel: a cancelled one winds down on its own (CANCEL takes effect at once).
+    // Only the current render may change the panel: a cancelled one winds down (CANCEL acts now).
     const current = () => this.videoAbort === abort;
     try {
-      const file = await v.make(
-        { shape: 'portrait', seconds: v.seconds() },
+      const file = await videoHost.make(
+        { shape: 'portrait', seconds: videoHost.seconds() },
         (videoProgressInfo) => {
           if (current()) this.VideoProgress = videoProgressInfo;
         },
@@ -96,8 +102,8 @@ export abstract class PatchesVideo extends PatchesDrawParts {
       this.videoFile = file;
       this.VideoState = 'ready';
       this.showPlayer(file);
-      // Where the share sheet can't take files (desktop browsers), it downloads at once (owner, 2026-11-15).
-      if (!this.shareFiles) await v.share(file).catch(() => {});
+      // Where the share sheet can't take files (desktop browsers), it downloads at once.
+      if (!this.shareFiles) await videoHost.share(file).catch(() => {});
     } catch (error) {
       if (current()) {
         this.VideoState = 'error';

@@ -29,13 +29,13 @@ export abstract class PatchesDrawParts extends PatchesDom {
     App.FillColor(ctx, text);
     ctx.textAlign = 'center';
     ctx.font = font;
-    // v1's 24-unit type, narrowed to fit a half button when a label is longer than v1's ("OVERWRITE", "CREATE NEW").
-    const w = ctx.measureText(label.toUpperCase()).width,
+    // v1's 24-unit type, narrowed to fit a half button when a label is longer ("CREATE NEW").
+    const labelWidth = ctx.measureText(label.toUpperCase()).width,
       max = b.w - 12 * unit;
-    if (w > max) {
+    if (labelWidth > max) {
       ctx.save();
       ctx.translate(b.cx, 0);
-      ctx.scale(max / w, 1);
+      ctx.scale(max / labelWidth, 1);
       ctx.fillText(label.toUpperCase(), 0, b.y + textDy * unit);
       ctx.restore();
     } else ctx.fillText(label.toUpperCase(), b.cx, b.y + textDy * unit);
@@ -110,7 +110,7 @@ export abstract class PatchesDrawParts extends PatchesDom {
     }
   }
 
-  /** The heading of the file and confirm steps: v1's header type over italic copy (SharePanel title + share line). */
+  /** The file and confirm steps' heading: v1's header type over italic copy (SharePanel). */
   protected heading(title: string, line: string): void {
     const ctx = this.Ctx,
       unit = App.Unit,
@@ -119,11 +119,11 @@ export abstract class PatchesDrawParts extends PatchesDom {
     ctx.textAlign = 'left';
     ctx.font = App.Metrics.TxtHeader;
     // A long patch name is narrowed to the page width rather than run off it.
-    const w = ctx.measureText(title.toUpperCase()).width;
-    if (w > this.pageW) {
+    const titleWidth = ctx.measureText(title.toUpperCase()).width;
+    if (titleWidth > this.pageW) {
       ctx.save();
       ctx.translate(this.margin, 0);
-      ctx.scale(this.pageW / w, 1);
+      ctx.scale(this.pageW / titleWidth, 1);
       ctx.fillText(title.toUpperCase(), 0, cy - 72 * unit);
       ctx.restore();
     } else ctx.fillText(title.toUpperCase(), this.margin, cy - 72 * unit);
@@ -164,8 +164,8 @@ export abstract class PatchesDrawParts extends PatchesDom {
       line = 0,
       idx = 1;
     while (words.length > 0 && idx <= words.length) {
-      const w = ctx.measureText(words.slice(0, idx).join(' ')).width;
-      if (w > fitWidth) {
+      const firstWidth = ctx.measureText(words.slice(0, idx).join(' ')).width;
+      if (firstWidth > fitWidth) {
         if (idx === 1) idx = 2;
         ctx.fillText(words.slice(0, idx - 1).join(' '), x, y + lineHeight * line);
         line++;

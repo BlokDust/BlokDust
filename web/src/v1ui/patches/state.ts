@@ -16,8 +16,8 @@ export const SORT_KEY = 'blokdust.gallerySort';
 export const TAB_KEY = 'blokdust.patchesTab';
 export function rememberedTab(): Tab {
   try {
-    const t = Number(localStorage.getItem(TAB_KEY));
-    return (t >= 0 && t <= 2 ? t : 0) as Tab;
+    const tab = Number(localStorage.getItem(TAB_KEY));
+    return (tab >= 0 && tab <= 2 ? tab : 0) as Tab;
   } catch {
     return 0;
   }
@@ -29,7 +29,7 @@ export type View = 'list' | 'file' | 'confirm' | 'remove' | 'video';
 
 export abstract class PatchesState extends DisplayObject {
   Open = false;
-  /** Drawn while open or sliding away: closing hands input back at once, so a click right after isn't swallowed. */
+  /** Drawn while open or sliding away; closing hands input back at once (no swallowed click). */
   protected shown = false;
   OffsetX = 0;
   OffsetY = 0;
@@ -43,9 +43,10 @@ export abstract class PatchesState extends DisplayObject {
   Saving = false;
   /** A short label in place of a button's own (SAVED, COPIED) until `flashUntil`. */
   protected flash: { key: string; label: string; until: number } | null = null;
-  /** OPEN's list, scrolled (owner, 2026-11-16: one scrolling list, as the gallery, not pages of five). */
+  /** OPEN's list, scrolled: one scrolling list, as the gallery, not pages of five. */
   OpenScroll = 0;
-  protected roll: Record<string, boolean> = {};
+  /** What the pointer is over, by control name (an unnamed control is not hovered). */
+  protected roll: Partial<Record<string, boolean>> = {};
   /** Tab fills, 0..1 (v1 MenuCategory.Selected, tweened). */
   protected selected = [1, 0, 0];
   /** The GALLERY tab (CHG-0024). */
@@ -63,11 +64,11 @@ export abstract class PatchesState extends DisplayObject {
   GalleryMore = false;
   GalleryLoading = false;
   GalleryMessage = '';
-  GalleryView: 'list' = 'list';
-  /** The list's scroll, device px from the top (owner review 2: one scrolling list, pages appended). */
+  GalleryView = 'list' as const;
+  /** The list's scroll, device px from the top (one scrolling list, pages appended). */
   GalleryScroll = 0;
-  /** A press on the list: where it started, and whether it has become a drag (a drag doesn't open the row under it). */
-  /** A press on a list (OPEN's or the gallery's): it scrolls if it moves, else the row's button acts on release. */
+  /** A press on a list (OPEN's or the gallery's): it scrolls if it moves (and opens no row), else
+   * the row's button acts on release. */
   protected galleryDrag: {
     tab: 1 | 2;
     y: number;
@@ -80,12 +81,12 @@ export abstract class PatchesState extends DisplayObject {
   protected galleryAsk = 0;
   SearchContainer!: HTMLElement;
   SearchInput!: HTMLInputElement;
-  /** SAVE / SHARE › ADD TO GALLERY (on by default, owner 2026-11-15), and what the last save made of it. */
+  /** SAVE / SHARE › ADD TO GALLERY (on by default), and what the last save made of it. */
   GalleryOn = true;
   protected savedGallery: boolean | null = null;
   /** Why the last save could not publish (a Recorder, the user's own files, a rude title). */
   GalleryNote = '';
-  /** SAVE / SHARE › MAKE VIDEO (CHG-0022, owner review 2): on by default where the video can go to the share sheet. */
+  /** SAVE / SHARE › MAKE VIDEO (CHG-0022): on by default where the video can be shared. */
   VideoOn: boolean | null = null;
   VideoState: 'idle' | 'making' | 'ready' | 'error' = 'idle';
   VideoProgress: VideoProgressInfo = { phase: 'preparing', done: 0 };
@@ -99,8 +100,8 @@ export abstract class PatchesState extends DisplayObject {
   protected removing: PatchItem | null = null;
   /** What OPEN ANYWAY / SAVE FIRST go on to do, and the view to go back to on CANCEL. */
   protected pending: { run: OpenRun; from: View; gone?: () => void } | null = null;
-  /** A patch is being fetched to open or insert: the panel stays up with v1's spinner (owner review 3, 2026-11-16: the
-   * old stage showed, and could be changed, for the seconds it took), then closes. */
+  /** A patch is being fetched to open or insert: the panel stays up with v1's spinner, then closes
+   * (else the old stage showed, and could be changed, while it loaded). */
   Opening = false;
   OpenError = '';
   TitleContainer!: HTMLElement;
@@ -134,12 +135,13 @@ export abstract class PatchesState extends DisplayObject {
       (!!this.flash && now < this.flash.until + 250)
     );
   }
-  /** Keep drawing a moment after something async lands (a save, a link, the list), so its last state is drawn. */
+  /** Keep drawing a moment after something async lands (save, link, list), so its end is drawn. */
   protected settle = 0;
   protected settled(): void {
     this.settle = performance.now() + 250;
   }
   protected label(key: string, normal: string): string {
-    return this.flashing(key) ? this.flash!.label : normal;
+    const flash = this.flash;
+    return flash && this.flashing(key) ? flash.label : normal;
   }
 }

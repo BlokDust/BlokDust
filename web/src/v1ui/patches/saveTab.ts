@@ -54,21 +54,25 @@ export abstract class PatchesSaveTab extends PatchesVideo {
     if (this.signInShown)
       this.drawBordered(this.signInButton(), this.roll.signIn ? txt : App.Palette[1]);
 
-    // SAVE (SAVE CHANGES once there is a link), or MAKE VIDEO when there is nothing to save (the GUIDE button,
-    // SharePanel's SAVE colour). Saved with nothing changed, there is no button: the link takes its place (owner,
-    // 2026-11-18). While saving the button says so: no spinner or line under it.
+    // SAVE (SAVE CHANGES once linked), or MAKE VIDEO with nothing to save; saved and unchanged,
+    // the link takes its place. While saving the button says so: no spinner or line under it.
     const main = this.mainAction(),
-      m = this.mainButton();
+      mainBox = this.mainButton();
     if (!this.linkOnly) {
       const label = this.Saving
         ? COPY.savingButton
         : main.kind === 'save' && link && this.shareState().save === 'save'
           ? COPY.saveChanges
           : main.label;
-      this.filled(m, App.Palette[main.off ? 1 : menu[3]], label, !!this.roll.share && !main.off);
+      this.filled(
+        mainBox,
+        App.Palette[main.off ? 1 : menu[3]],
+        label,
+        !!this.roll.share && !main.off,
+      );
     }
 
-    // THE LINK: its line, the link small on a rule (a DOM field: a click copies it), COPY LINK (and SHARE on a phone) //
+    // THE LINK: its line, the link small on a rule (a click copies it), COPY LINK, phone SHARE //
     App.FillColor(ctx, txt);
     let warnY = cy + 85 * unit;
     if (link && !this.Saving) {
@@ -89,8 +93,8 @@ export abstract class PatchesSaveTab extends PatchesVideo {
       ctx.moveTo(this.margin, this.urlTop() + 32 * unit);
       ctx.lineTo(this.margin + this.urlWidth(), this.urlTop() + 32 * unit);
       ctx.stroke();
-      const c = this.copyButton();
-      this.drawBordered(c, this.roll.copyLink ? txt : this.linkOnly ? txt : App.Palette[1]);
+      const copy = this.copyButton();
+      this.drawBordered(copy, this.roll.copyLink ? txt : this.linkOnly ? txt : App.Palette[1]);
       if (this.canShare) this.drawBordered(this.shareButton(), txt);
       ctx.restore();
       warnY = this.urlTop() + (this.mobile ? 85 : 60) * unit;

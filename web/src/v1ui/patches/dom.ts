@@ -13,7 +13,7 @@ function copySelection(): void {
 export abstract class PatchesDom extends PatchesLayout {
   abstract browse(more?: boolean): Promise<void>;
   /** v1 sizes its panels (Resize) before Init makes their fields. */
-  private domReady = false;
+  protected domReady = false;
   Init(drawTo: DisplayContext): void {
     super.Init(drawTo);
     this.OffsetY = -this.DrawTo.Height;

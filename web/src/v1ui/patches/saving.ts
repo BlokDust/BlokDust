@@ -4,22 +4,25 @@ import { COPY } from './copy.ts';
 import type { PatchItem } from './hosts.ts';
 import { PatchesHitTests } from './hitTests.ts';
 
-/** A name not among `taken` (case ignored): "Name", else "Name (2)", "Name (3)", … (owner, 2026-11-18: your own
- * patches don't share a name). A name already ending in " (n)" counts on from its base. */
+/** A name not among `taken` (case ignored): "Name", else "Name (2)", "Name (3)"…; a name ending
+ * in " (n)" counts on from its base. */
 export function uniqueTitle(title: string, taken: Iterable<string>): string {
-  const used = new Set([...taken].map((t) => t.trim().toLowerCase()));
+  const used = new Set([...taken].map((title) => title.trim().toLowerCase()));
   if (!used.has(title.trim().toLowerCase())) return title;
   const base = title.replace(/\s*\(\d+\)$/, '');
-  for (let n = 2; ; n++) {
-    const t = `${base} (${n})`;
-    if (!used.has(t.toLowerCase())) return t;
+  for (let number = 2; ; number++) {
+    const candidate = `${base} (${number})`;
+    if (!used.has(candidate.toLowerCase())) return candidate;
   }
 }
+
+/** The clipboard, which browsers leave out of insecure (http) pages. */
+const clipboardOf = (browser: Navigator): Clipboard | undefined => browser.clipboard;
 
 export abstract class PatchesSaving extends PatchesHitTests {
   async save(): Promise<boolean> {
     this.Saving = true;
-    let ok = false;
+    let ok: boolean;
     try {
       ok = await this.host.savePatch(this.Title.trim() || 'Untitled');
     } finally {
@@ -68,9 +71,8 @@ export abstract class PatchesSaving extends PatchesHitTests {
     this.say(copied ? COPY.savedCopied : COPY.saved);
     this.settled();
   }
-  /** Saving a link copies it (owner, 2026-11-17, CHG-0035): no second click on the link. The clipboard is asked in
-   * the press itself, with the link to follow (a ClipboardItem promise), as browsers allow a copy only in a user's
-   * press; where that is refused, the link is copied as it arrives if the browser still allows it. */
+  /** Saving a link copies it: browsers copy only in a press, so the press hands the clipboard a
+   * promise of the link (ClipboardItem); where refused, it is copied on arrival if allowed. */
   protected copying: Promise<boolean> | null = null;
   /** Tests: the last save's button and whether its link was copied. */
   lastSaved: { key: string; copied: boolean } | null = null;
@@ -80,31 +82,32 @@ export abstract class PatchesSaving extends PatchesHitTests {
       !this.web ||
       this.host.links?.external ||
       typeof navigator === 'undefined' ||
-      !navigator.clipboard
+      !clipboardOf(navigator)
     ) {
       this.copying = null;
       return done;
     }
     const url = new Promise<string>((res, rej) => {
-      done = (u) => {
-        u ? res(u) : rej(new Error('not saved'));
+      done = (link) => {
+        if (link) res(link);
+        else rej(new Error('not saved'));
       };
     });
     url.catch(() => {});
     const text = () =>
       url
-        .then((u) => navigator.clipboard.writeText(u))
+        .then((link) => navigator.clipboard.writeText(link))
         .then(
           () => true,
           () => false,
         );
     try {
       this.copying =
-        typeof ClipboardItem === 'function' && navigator.clipboard.write
+        typeof ClipboardItem === 'function' && 'write' in navigator.clipboard
           ? navigator.clipboard
               .write([
                 new ClipboardItem({
-                  'text/plain': url.then((u) => new Blob([u], { type: 'text/plain' })),
+                  'text/plain': url.then((link) => new Blob([link], { type: 'text/plain' })),
                 }),
               ])
               .then(() => true, text)
@@ -119,8 +122,8 @@ export abstract class PatchesSaving extends PatchesHitTests {
     this.Saving = true;
     this.showDom();
     const copy = this.copyWhenSaved();
-    // Your own patches don't share a name: one already used by another of them gets " (2)", shown in the name field
-    // before it saves (owner, 2026-11-18). Saving over this link may keep its own name.
+    // Your own patches don't share a name: a used one gets " (2)", shown before it saves; saving
+    // over this link may keep its own name.
     if (this.web) {
       const mine = await this.host.listPatches().catch(() => [] as PatchItem[]);
       const here = mode === 'save' ? App.CompositionId : null;
@@ -130,15 +133,15 @@ export abstract class PatchesSaving extends PatchesHitTests {
       );
       if (title !== (this.Title.trim() || 'Untitled')) this.setTitle(title);
     }
-    // Signed out, the gallery is left as it is (only signed-in users can publish, SPEC-SHARING-GALLERY R2).
+    // Signed out, the gallery stays as it is (only the signed in publish: SPEC-SHARING-GALLERY R2).
     const gallery =
       this.web && this.host.gallery && this.host.signedIn() ? this.GalleryOn : undefined;
     let url: string | null = null;
     try {
-      const g = await this.host.links.make(mode, this.Title.trim() || 'Untitled', gallery);
-      if (g) {
-        this.savedGallery = g.published;
-        this.GalleryNote = g.reason ?? '';
+      const made = await this.host.links.make(mode, this.Title.trim() || 'Untitled', gallery);
+      if (made) {
+        this.savedGallery = made.published;
+        this.GalleryNote = made.reason ?? '';
       }
       url = this.link?.url ?? null;
       return true;
@@ -149,9 +152,9 @@ export abstract class PatchesSaving extends PatchesHitTests {
       this.showDom();
     }
   }
-  setTitle(t: string): void {
-    this.Title = t;
-    if (this.Input) this.Input.value = t;
+  setTitle(title: string): void {
+    this.Title = title;
+    if (this.domReady) this.Input.value = title;
   }
 
   async refresh(): Promise<void> {

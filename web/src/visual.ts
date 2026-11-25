@@ -99,7 +99,7 @@ async function renderFixture(input: FixtureInput) {
       themes: () => THEMES,
       listPatches: () => Promise.resolve([]),
       savePatch: () => Promise.resolve(false),
-      openPatch: noop,
+      openPatch: () => undefined,
       pickPatchFile: noop,
       usePickedFile: noop,
       isDirty: () => false,

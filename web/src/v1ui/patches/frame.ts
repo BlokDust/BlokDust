@@ -31,7 +31,7 @@ export abstract class PatchesFrame extends PatchesGalleryTab {
 
     // TABS (v1 SettingsPanel categories + MenuCategory.Draw) //
     const { tabs, half } = this.tabs(),
-      h = Math.round(60 * unit);
+      headerHeight = Math.round(60 * unit);
     App.StrokeColor(ctx, App.Palette[1]);
     ctx.beginPath();
     ctx.moveTo(width * 0.5 - half, tabY + 60 * unit - 1);
@@ -45,7 +45,7 @@ export abstract class PatchesFrame extends PatchesGalleryTab {
     ctx.textAlign = 'center';
     ctx.font = App.Metrics.TxtMid;
     tabs.forEach((tab, i) => {
-      const s = this.selected[tab.id],
+      const selection = this.selected[tab.id],
         hw = tab.w * 0.5,
         x = tab.x;
       App.FillColor(
@@ -55,15 +55,15 @@ export abstract class PatchesFrame extends PatchesGalleryTab {
       ctx.beginPath();
       ctx.moveTo(x - hw, tabY);
       ctx.lineTo(x + hw, tabY);
-      ctx.lineTo(x + hw, tabY + h * s);
-      ctx.lineTo(x + 10 * unit, tabY + h * s);
-      ctx.lineTo(x, tabY + (h + 10 * unit) * s);
-      ctx.lineTo(x - 10 * unit, tabY + h * s);
-      ctx.lineTo(x - hw, tabY + h * s);
+      ctx.lineTo(x + hw, tabY + headerHeight * selection);
+      ctx.lineTo(x + 10 * unit, tabY + headerHeight * selection);
+      ctx.lineTo(x, tabY + (headerHeight + 10 * unit) * selection);
+      ctx.lineTo(x - 10 * unit, tabY + headerHeight * selection);
+      ctx.lineTo(x - hw, tabY + headerHeight * selection);
       ctx.closePath();
       ctx.fill();
       App.FillColor(ctx, txt);
-      ctx.fillText(tab.name, x, tabY + h * 0.5 + 10 * unit * 0.38);
+      ctx.fillText(tab.name, x, tabY + headerHeight * 0.5 + 10 * unit * 0.38);
     });
 
     // CLOSE (v1 SettingsPanel) //
@@ -76,7 +76,7 @@ export abstract class PatchesFrame extends PatchesGalleryTab {
     ctx.lineTo(width * 0.5 + half + 12.5 * unit, closeY + 7.5 * unit);
     ctx.stroke();
 
-    // THE PAGES, sliding under the tabs (v1 SettingsPanel's clipping box: from the tabs' rule down) //
+    // THE PAGES, sliding under the tabs (v1 SettingsPanel clips them from the tabs' rule down) //
     ctx.save();
     ctx.beginPath();
     ctx.rect(0, tabY + 60 * unit, width, App.Height);

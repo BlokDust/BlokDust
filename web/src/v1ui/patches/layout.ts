@@ -23,20 +23,19 @@ export abstract class PatchesLayout extends PatchesState {
   protected get pageW() {
     return 420 * App.Unit;
   }
-  /** Phones (portrait, owner 2026-11-16): OPEN, GALLERY and the video are laid out from the tabs down to the bottom of
-   * the screen (v1 centred its pages, which left wide gaps above and below on a tall phone), the rows taller and their
-   * type larger. `top` is the tabs' rule, `bottom` the screen's foot. */
+  /** Phones (portrait): OPEN, GALLERY and the video fill from the tabs (`top`, their rule) to the
+   * screen's foot (`bottom`), with taller rows and larger type (v1 centred, leaving wide gaps). */
   protected get top() {
     return this.OffsetY + this.pageDy[this.Tab] + 60 * App.Unit;
   }
   protected get bottom() {
     return this.OffsetY + this.pageDy[this.Tab] + App.Height;
   }
-  /** Each tab's page offset (v1 SettingsPanel's category YOffset): 0 on show, −height away; a new tab's page drops
-   * in as the old one lifts out (owner, 2026-11-17, CHG-0035: as Settings' tabs do). */
+  /** Each tab's page offset (v1 SettingsPanel's category YOffset): 0 shown, −height away; a new
+   * tab's page drops in as the old one lifts out, as Settings' tabs do (CHG-0035). */
   protected pageDy: number[] = [0, 0, 0];
   protected leaving: Tab | null = null;
-  /** A list window's height: whole rows and a half (owner, 2026-11-17: the half row says there is more below). */
+  /** A list window's height: whole rows and a half (the half row says there is more below). */
   protected windowH(room: number) {
     const k = Math.max(1, Math.floor(room / this.rowH - 0.5));
     return (k + 0.5) * this.rowH;
@@ -47,9 +46,8 @@ export abstract class PatchesLayout extends PatchesState {
   protected get rowFont() {
     return this.mobile ? App.Metrics.TxtItalic3 : App.Metrics.TxtItalic;
   }
-  /** A row's first line sits this far above its second (v1: 10 units). */
-  /** A row's second baseline under its top, and its divider over that baseline: the text and buttons sit in the middle of
-   * the row (a phone's rows are taller: owner, 2026-11-18, they sat a few units high). */
+  /** A row's second baseline under its top, and its divider over it: text and buttons sit in
+   * the row's middle (a phone's rows are taller). */
   protected get rowBase() {
     return (this.mobile ? 35 : 30) * App.Unit;
   }
@@ -59,13 +57,13 @@ export abstract class PatchesLayout extends PatchesState {
   protected get rowGap() {
     return (this.mobile ? 13 : 10) * App.Unit;
   }
-  /** OPEN FROM YOUR DEVICE: not in a phone's browser (owner: it opens nothing useful there; the list does). */
+  /** OPEN FROM YOUR DEVICE: not in a phone's browser (it opens nothing useful there). */
   protected get fileButtonShown() {
     return !(this.mobile && this.web);
   }
-  protected textW(t: string, font = App.Metrics.TxtMid) {
+  protected textW(text: string, font = App.Metrics.TxtMid) {
     this.Ctx.font = font;
-    return this.Ctx.measureText(t.toUpperCase()).width;
+    return this.Ctx.measureText(text.toUpperCase()).width;
   }
   /** v1 SettingsPanel.Populate: the tab bar's width, and each tab's centre and width. */
   protected tabs() {
@@ -76,10 +74,10 @@ export abstract class PatchesLayout extends PatchesState {
     let x = width * 0.5 - menuWidth * 0.5;
     const tabs = ALL_TABS.filter((id) => this.hasTab(id)).map((id) => {
       const name = COPY.tabs[id],
-        w = this.textW(name, `400 ${unit * 10}px Dosis`) + gutter * unit,
-        t = { id, name: name.toUpperCase(), x: x + w * 0.5, w };
-      x += w;
-      return t;
+        width = this.textW(name, `400 ${unit * 10}px Dosis`) + gutter * unit,
+        tab = { id, name: name.toUpperCase(), x: x + width * 0.5, w: width };
+      x += width;
+      return tab;
     });
     return { tabs, half: menuWidth * 0.5 };
   }
@@ -87,17 +85,17 @@ export abstract class PatchesLayout extends PatchesState {
   protected hasTab(id: Tab): boolean {
     return id < 2 || (id === 2 && !!this.host.gallery);
   }
-  /** v1's bordered button (Search Freesound, Randomise Title): right edge at `right`, text baseline 14 units under `top`. */
+  /** v1's bordered button (Search Freesound, Randomise Title): right edge `right`, text 14 down. */
   protected bordered(label: string, right: number, top: number) {
     const unit = App.Unit,
-      w = this.textW(label);
+      width = this.textW(label);
     return {
       label,
-      x: right - 10 * unit - w,
+      x: right - 10 * unit - width,
       y: top,
-      w: w + 10 * unit,
+      w: width + 10 * unit,
       h: 20 * unit,
-      textX: right - 5 * unit - w,
+      textX: right - 5 * unit - width,
       textY: top + 14 * unit,
     };
   }
@@ -131,9 +129,8 @@ export abstract class PatchesLayout extends PatchesState {
   protected get web(): boolean {
     return !!this.host.links && !this.host.links.external;
   }
-  /** What SAVE does now. Web: no link yet → make one; changed since it was saved → save over it (v1 SAVE), or, for a
-   * link made elsewhere (can't be saved over), make a new one; unchanged → nothing (off). Plugin: always a new link,
-   * made in the browser. SAVE AS: a new link, once the patch has changed since the last (no repeated copies). */
+  /** What SAVE does now (web): make the link, save over it when changed (or a new one for a link
+   * made elsewhere), or nothing if unchanged; the plugin always makes a new link in the browser. */
   shareState(): { save: 'make' | 'save' | 'new' | null; saveAs: boolean } {
     const links = this.host.links,
       link = this.link;
@@ -162,10 +159,10 @@ export abstract class PatchesLayout extends PatchesState {
       cx: width * 0.5 + (dx + 65) * unit,
     }));
   }
-  /** OPEN, INSERT and (the user's own patches) a bin at the right: a small copy of v1's trash can. */
-  protected rowButtons(n: number) {
+  /** OPEN, INSERT and (the user's own patches) a bin at the right: v1's trash can, small. */
+  protected rowButtons(row: number) {
     const unit = App.Unit,
-      y = this.openRowY(n);
+      y = this.openRowY(row);
     const insert = this.bordered(COPY.insert, this.margin + this.pageW - 30 * unit, y - 19 * unit);
     const open = this.bordered(COPY.open, insert.x - 10 * unit, y - 19 * unit);
     return {
@@ -187,15 +184,13 @@ export abstract class PatchesLayout extends PatchesState {
     const unit = App.Unit;
     return this.bordered(COPY.file, this.margin + this.pageW, this.listFoot - 14 * unit);
   }
-  // ---- SAVE / SHARE (web): units from the panel centre ----
-  /** ADD TO GALLERY and MAKE VIDEO: v1's OptionSwitch in an options-panel row's proportions (60 units: the icons sit 7
-   * units clear of the underline; owner review 2), one under the other between the name and SAVE. */
-  /** ADD TO GALLERY and MAKE VIDEO side by side, each in half the page (owner review 3, 2026-11-16). */
+  // SAVE / SHARE (web): units from the panel centre. ADD TO GALLERY and MAKE VIDEO (v1's
+  // OptionSwitch in an options row's proportions) side by side, each in half the page:
   protected gallerySwitch() {
     const unit = App.Unit;
     return { x: this.margin, y: this.cy - 72 * unit, w: 60 * unit, h: 60 * unit };
   }
-  /** SIGN IN (signed out): bordered, right of ADD TO GALLERY, under RANDOMISE TITLE (owner, 2026-11-17, CHG-0035). */
+  /** SIGN IN (signed out): bordered, right of ADD TO GALLERY, under RANDOMISE TITLE (CHG-0035). */
   protected signInButton() {
     const unit = App.Unit;
     return this.bordered(COPY.signIn, App.Width * 0.5 + 210 * unit, this.cy - 61 * unit);
@@ -223,7 +218,7 @@ export abstract class PatchesLayout extends PatchesState {
   protected urlTop() {
     return this.linkLineY() + 12 * App.Unit;
   }
-  /** COPY LINK: at the right of the link on a desktop; under it on a phone, with SHARE beside it. */
+  /** COPY LINK: right of the link on a desktop; under it on a phone, with SHARE beside it. */
   protected copyButton() {
     const unit = App.Unit;
     if (!this.mobile)
@@ -236,11 +231,11 @@ export abstract class PatchesLayout extends PatchesState {
   }
   protected shareButton() {
     const unit = App.Unit,
-      c = this.copyButton();
+      copy = this.copyButton();
     return this.bordered(
       COPY.shareLink,
-      c.x + c.w + 15 * unit + this.textW(COPY.shareLink) + 10 * unit,
-      c.y,
+      copy.x + copy.w + 15 * unit + this.textW(COPY.shareLink) + 10 * unit,
+      copy.y,
     );
   }
   /** The link field's width: up to COPY LINK on a desktop, the page on a phone. */
@@ -260,27 +255,27 @@ export abstract class PatchesLayout extends PatchesState {
       cx: width * 0.5,
     };
   }
-  /** SAVE AS (left) and DOWNLOAD PATCH (right, not on phones): v1's bordered buttons at the bottom. */
+  /** SAVE AS (left) and DOWNLOAD PATCH (right, not on phones): v1's bordered buttons. */
   protected secondary() {
     const unit = App.Unit,
       top = this.cy + 190 * unit,
-      L = this.margin;
+      left = this.margin;
     return {
-      saveAs: this.bordered(COPY.saveAs, L + this.textW(COPY.saveAs) + 10 * unit, top),
-      download: this.mobile ? null : this.bordered(COPY.download, L + this.pageW, top),
+      saveAs: this.bordered(COPY.saveAs, left + this.textW(COPY.saveAs) + 10 * unit, top),
+      download: this.mobile ? null : this.bordered(COPY.download, left + this.pageW, top),
     };
   }
-  /** The video view: the portrait player (9:16), the button under it and the link under that (owner, 2026-11-16: no
-   * name or RANDOMISE here, the name is chosen by now; BACK at the top left; larger on a phone). */
+  /** The video view: the portrait player (9:16), its button and the link under that; no name or
+   * RANDOMISE (chosen by now), BACK at the top left, larger on a phone. */
   protected playerBox() {
     const unit = App.Unit,
-      w = (this.mobile ? 252 : 126) * unit,
-      h = (w * 16) / 9;
+      width = (this.mobile ? 252 : 126) * unit,
+      height = (width * 16) / 9;
     return {
-      x: App.Width * 0.5 - w / 2,
+      x: App.Width * 0.5 - width / 2,
       y: this.mobile ? this.top + 70 * unit : this.cy - 150 * unit,
-      w,
-      h,
+      w: width,
+      h: height,
     };
   }
   protected videoMain() {
@@ -295,11 +290,11 @@ export abstract class PatchesLayout extends PatchesState {
       cx: width * 0.5,
     };
   }
-  /** The link's line (baseline) and its box's top, under the video's button: the link can be shared alone. */
+  /** The link's baseline and box top, under the video's button: the link can be shared alone. */
   protected videoLink() {
     const unit = App.Unit,
-      m = this.videoMain();
-    return { line: m.y + m.h + 30 * unit, box: m.y + m.h + 42 * unit };
+      main = this.videoMain();
+    return { line: main.y + main.h + 30 * unit, box: main.y + main.h + 42 * unit };
   }
   protected get videoOn(): boolean {
     return !!this.host.video && (this.VideoOn ?? this.shareFiles);
@@ -307,9 +302,8 @@ export abstract class PatchesLayout extends PatchesState {
   protected get shareFiles(): boolean {
     return !!this.host.video?.canShareFiles();
   }
-  /** v1 SharePanel's back chevron and its SKIP-style label, at the top right of the page, under the tabs (owner
-   * review 2: the same place on every device). `x` is the chevron's middle (the label is centred under it), `y` its
-   * point, in device px. */
+  /** v1 SharePanel's back chevron and SKIP-style label, top right under the tabs on every device:
+   * `x` is the chevron's middle (the label centred under it), `y` its point, in device px. */
   protected backArrow() {
     const unit = App.Unit,
       video = this.Tab === 0 && this.View === 'video';
@@ -328,7 +322,7 @@ export abstract class PatchesLayout extends PatchesState {
     return this.host.links?.current() ?? null;
   }
 
-  /** What the main button does: SAVE (see shareState); with nothing to save and MAKE VIDEO on, MAKE VIDEO. */
+  /** What the main button does: SAVE (see shareState); nothing to save and MAKE VIDEO on: video. */
   protected mainAction(): { kind: 'save' | 'video' | null; label: string; off: boolean } {
     const st = this.shareState(),
       blocks = this.host.hasBlocks() && !this.Saving;
@@ -337,9 +331,8 @@ export abstract class PatchesLayout extends PatchesState {
     return { kind: null, label: COPY.saveLink, off: true };
   }
 
-  /** OPEN and GALLERY's rule (OPEN's top line, GALLERY's search rule): as high as it goes, 50 units under the tabs
-   * (SEARCH above it stays clear of the tab's notch), at most 175 units over the centre (owner, 2026-11-18: the lists
-   * started too low). */
+  /** OPEN's top line and GALLERY's search rule: 50 units under the tabs (SEARCH clears the tab's
+   * notch), at most 175 units over the centre. */
   protected get listRule() {
     const unit = App.Unit;
     return this.mobile
@@ -351,7 +344,7 @@ export abstract class PatchesLayout extends PatchesState {
     const unit = App.Unit;
     return this.mobile ? this.bottom - 30 * unit : this.cy + 185 * unit;
   }
-  /** OPEN: a rule, then the list in a window, scrolled, the same size as the gallery's (owner, 2026-11-18). */
+  /** OPEN: a rule, then the list in a window, scrolled, the same size as the gallery's. */
   protected openLayout() {
     const unit = App.Unit,
       rule = this.listRule,
@@ -361,22 +354,18 @@ export abstract class PatchesLayout extends PatchesState {
     return { rule, top, bottom: top + this.windowH(this.listFoot - 35 * unit - top) };
   }
   /** Row n's second line's baseline, scrolled. */
-  protected openRowY(n: number) {
-    return this.openLayout().top + this.rowBase + n * this.rowH - this.OpenScroll;
+  protected openRowY(row: number) {
+    return this.openLayout().top + this.rowBase + row * this.rowH - this.OpenScroll;
   }
   /** The last row ends 10 units above the window's foot (owner, 2026-11-17: it was cut off). */
   protected openMaxScroll() {
-    const L = this.openLayout(),
+    const layout = this.openLayout(),
       lengthValue = this.Items.length;
-    return Math.max(0, lengthValue * this.rowH + 10 * App.Unit - (L.bottom - L.top));
+    return Math.max(0, lengthValue * this.rowH + 10 * App.Unit - (layout.bottom - layout.top));
   }
 
-  // ---- GALLERY tab (CHG-0024) ----
-  // v1 SoundcloudPanel's layout: SEARCH bordered above the rule at its right (the field is a DOM input over the rule),
-  // five rows a page with their count bottom left, POPULAR / NEW bottom right where v1 had RANDOMISE, page arrows;
-  // each row's bordered buttons (OPEN · LIKE · REPORT, or UNPUBLISH on your own).
-  /** SEARCH and its rule at the top, POPULAR · NEW · … at the bottom; on a phone, right under the
-   * tabs and at the foot of the screen, the list between them (owner, 2026-11-16). */
+  /** GALLERY (CHG-0024, v1 SoundcloudPanel's layout): SEARCH and its rule at the top, the sorts at
+   * the bottom, the list between; on a phone right under the tabs and at the screen's foot. */
   protected galleryLayout() {
     const unit = App.Unit,
       right = App.Width * 0.5 + 210 * unit,
@@ -388,42 +377,45 @@ export abstract class PatchesLayout extends PatchesState {
       sortRight: right,
     };
   }
-  /** The list's window: under the search rule, above POPULAR / NEW. */
-  /** The list's window: from the search rule (rows go under it as they scroll; a row's top is 2 units above its
-   * divider) to 45 units above the sorts, holding whole rows and a half (owner, 2026-11-17, CHG-0035). */
+  /** The list's window: from the search rule (rows scroll under it; a row's top is 2 units over its
+   * divider) to 45 units above the sorts, holding whole rows and a half (CHG-0035). */
   protected galleryWindow() {
     const unit = App.Unit,
-      L = this.galleryLayout(),
-      top = L.rule - 2 * unit;
-    return { top, bottom: top + this.windowH(L.sortY - 35 * unit - top), clip: L.rule + unit };
+      layout = this.galleryLayout(),
+      top = layout.rule - 2 * unit;
+    return {
+      top,
+      bottom: top + this.windowH(layout.sortY - 35 * unit - top),
+      clip: layout.rule + unit,
+    };
   }
-  /** Row n's second line's baseline (v1 SoundcloudPanel's row: name 10 units above it), scrolled. */
-  protected galleryRowY(n: number) {
-    return this.galleryWindow().top + this.rowBase + n * this.rowH - this.GalleryScroll;
+  /** Row n's second baseline (v1 SoundcloudPanel: the name 10 units above), scrolled. */
+  protected galleryRowY(row: number) {
+    return this.galleryWindow().top + this.rowBase + row * this.rowH - this.GalleryScroll;
   }
-  /** Every row, the SHOW MORE row when there are more, and 10 units under the last (owner, 2026-11-17: it was cut off). */
+  /** Every row, SHOW MORE when there are more, and 10 units under the last. */
   protected galleryMaxScroll() {
     const unit = App.Unit,
-      w = this.galleryWindow();
+      visible = this.galleryWindow();
     return Math.max(
       0,
       this.GalleryItems.length * this.rowH +
         (this.GalleryMore || this.GalleryLoading ? this.rowH : 0) +
         10 * unit -
-        (w.bottom - w.top),
+        (visible.bottom - visible.top),
     );
   }
   /** SHOW MORE, centred in the row after the last (more to fetch; a spinner while they come). */
   protected showMoreButton() {
     const unit = App.Unit,
       y = this.galleryRowY(this.GalleryItems.length),
-      w = this.textW(COPY.showMore);
-    return this.bordered(COPY.showMore, App.Width * 0.5 + (w + 10 * unit) / 2, y - 19 * unit);
+      width = this.textW(COPY.showMore);
+    return this.bordered(COPY.showMore, App.Width * 0.5 + (width + 10 * unit) / 2, y - 19 * unit);
   }
   /** OPEN and INSERT, as OPEN's rows (owner review 3: insert from the gallery too). */
-  protected galleryRow(n: number) {
+  protected galleryRow(row: number) {
     const unit = App.Unit,
-      y = this.galleryRowY(n),
+      y = this.galleryRowY(row),
       insert = this.bordered(COPY.insert, this.margin + this.pageW, y - 19 * unit);
     const open = this.bordered(COPY.open, insert.x - 10 * unit, y - 19 * unit);
     return { open, insert, textRight: open.x - 6 * unit };
@@ -431,7 +423,7 @@ export abstract class PatchesLayout extends PatchesState {
   /** POPULAR · NEW · EXAMPLES · TUTORIALS along the bottom (where v1 SoundcloudPanel had its count
    * and RANDOMISE), spread across the page; the chosen one underlined. */
   sortButtons() {
-    const L = this.galleryLayout(),
+    const layout = this.galleryLayout(),
       ctx = this.Ctx;
     ctx.font = App.Metrics.TxtMid;
     const names = GALLERY_SORTS.map((gallerySort) => COPY.sorts[gallerySort].toUpperCase()),
@@ -439,7 +431,7 @@ export abstract class PatchesLayout extends PatchesState {
     const gap = (this.pageW - ws.reduce((a, b) => a + b, 0)) / (names.length - 1);
     let x = this.margin;
     return GALLERY_SORTS.map((sort, i) => {
-      const b = { sort, label: names[i], x, y: L.sortY, w: ws[i] };
+      const b = { sort, label: names[i], x, y: layout.sortY, w: ws[i] };
       x += ws[i] + gap;
       return b;
     });
