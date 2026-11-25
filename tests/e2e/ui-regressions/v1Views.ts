@@ -74,9 +74,14 @@ export interface SceneFileButton {
   fileButtonRect(): Box & { label: string };
 }
 
-/** What Release 1 adds to v1's Settings panel for tests: each footer link's centre in CSS px. */
+type ReleaseFile = { file: string; url: string; sha256: string; bytes: number } | null;
+
+/** What Release 1 adds to v1's Settings panel for tests (v1ui/scene.ts): centres in CSS px. */
 export interface SettingsFooter {
   footerLinks(): { label: string; x: number; y: number }[];
+  tourButton(): { x: number; y: number } | null;
+  downloadButtons(): { key: string; x: number; y: number; url: string | null }[];
+  setRelease(release: { version: string | null; macos: ReleaseFile; windows: ReleaseFile }): void;
 }
 
 /** The Filter's parametric graph option: its drawn curve. */
