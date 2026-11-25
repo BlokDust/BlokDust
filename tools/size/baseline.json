@@ -11,10 +11,5 @@
   "plugin/tests/host_render.cpp": 5983,
   "tools/block-designer/page.html": 11923,
   "tools/plugin/index.ts": 11056,
-  "tools/plugin/ios.ts": 5237,
-  "web/src/v1ui/accountPage.ts": 12808,
-  "web/src/v1ui/blocks.ts": 6803,
-  "web/src/v1ui/newBlocks.ts": 7228,
-  "web/src/v1ui/patches.ts": 26824,
-  "web/src/v1ui/scene.ts": 21379
+  "tools/plugin/ios.ts": 5237
 }

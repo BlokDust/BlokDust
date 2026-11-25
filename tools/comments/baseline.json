@@ -482,17 +482,9 @@
     "comment-block-lines": 4,
     "comment-line-length": 58
   },
-  "web/src/v1ui/adsrPanel.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 11
-  },
   "web/src/v1ui/blocks.ts": {
     "comment-block-lines": 4,
     "comment-line-length": 40
-  },
-  "web/src/v1ui/filterPanel.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 10
   },
   "web/src/v1ui/newBlockRows.ts": {
     "comment-block-lines": 3,
@@ -502,10 +494,6 @@
     "comment-block-lines": 3,
     "comment-line-length": 35
   },
-  "web/src/v1ui/noteBars.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 8
-  },
   "web/src/v1ui/patches.ts": {
     "comment-block-lines": 15,
     "comment-line-length": 143
@@ -513,25 +501,5 @@
   "web/src/v1ui/scene.ts": {
     "comment-block-lines": 17,
     "comment-line-length": 132
-  },
-  "web/src/v1ui/selectorOption.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 4
-  },
-  "web/src/v1ui/shim.ts": {
-    "comment-block-lines": 4,
-    "comment-line-length": 21
-  },
-  "web/src/v1ui/touchpadPanel.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 15
-  },
-  "web/src/v1ui/tutorial.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 9
-  },
-  "web/src/v1ui/waveZoom.ts": {
-    "comment-block-lines": 3,
-    "comment-line-length": 29
   }
 }
