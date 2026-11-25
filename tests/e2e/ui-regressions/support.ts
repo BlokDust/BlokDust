@@ -1,9 +1,10 @@
 // ui-regressions: Settings › Support: connecting to support.
 import { OUT, browser, open, type RegressionTest } from './harness.ts';
+import type { SupportDrawing } from '../pageGlobals.ts';
 
 export const supportTests: Record<string, RegressionTest> = {
-  /** CHG-0036 owner review: Connect holds the form; existing canvas controls and typography supply its chrome. */
-  /** CHG-0036 review: intro, matching input type, square switch cells and a vertically centred attachment row. */
+  /** CHG-0036: Connect holds the form in v1's canvas controls and type: an intro, matching inputs,
+   * square switch cells and a vertically centred attachment row. */
   async 'support-connect-spacing'(errors: string[]) {
     const page = await open(browser, [], errors);
     for (
@@ -22,18 +23,20 @@ export const supportTests: Record<string, RegressionTest> = {
     await page.waitForTimeout(1000);
     await page.evaluate(() => {
       const proto = CanvasRenderingContext2D.prototype,
+        descriptor = (name: keyof CanvasRenderingContext2D) =>
+          Object.getOwnPropertyDescriptor(proto, name)?.value as unknown,
         original = {
-          fillText: proto.fillText,
-          fillRect: proto.fillRect,
-          moveTo: proto.moveTo,
-          lineTo: proto.lineTo,
+          fillText: descriptor('fillText') as typeof proto.fillText,
+          fillRect: descriptor('fillRect') as typeof proto.fillRect,
+          moveTo: descriptor('moveTo') as typeof proto.moveTo,
+          lineTo: descriptor('lineTo') as typeof proto.lineTo,
         };
-      let drawing: any = null,
+      let drawing: SupportDrawing | null = null,
         from = [0, 0],
         rule = 0,
         intro = 0,
         message = 0;
-      proto.fillText = function (text: string, x: number, y: number, ...rest: any[]) {
+      proto.fillText = function (text: string, x: number, y: number, ...rest: [number?]) {
         if (text.startsWith('Tell us')) intro = y; // SUGGESTION's line (CHG-0041)
         if (text === 'YOUR MESSAGE') message = y;
         if (text.endsWith('PATCH AND DIAGNOSTICS')) drawing = { rule, intro, message };
@@ -41,7 +44,7 @@ export const supportTests: Record<string, RegressionTest> = {
           window.__supportDrawing = drawing;
           drawing = null;
         }
-        return (original.fillText as any).call(this, text, x, y, ...rest);
+        original.fillText.call(this, text, x, y, ...rest);
       };
       proto.moveTo = function (x, y) {
         from = [x, y];
@@ -49,10 +52,12 @@ export const supportTests: Record<string, RegressionTest> = {
         original.moveTo.call(this, x, y);
       };
       proto.lineTo = function (x, y) {
-        const email = document.getElementById('feedback-email')!.getBoundingClientRect(),
-          send = document.getElementById('feedback-send')!.getBoundingClientRect(),
+        const email = document.getElementById('feedback-email')?.getBoundingClientRect(),
+          send = document.getElementById('feedback-send')?.getBoundingClientRect(),
           pr = devicePixelRatio;
         if (
+          email &&
+          send &&
           from[1] === y &&
           Math.abs(Math.abs(x - from[0]) - email.width * pr) < 1 &&
           y > email.bottom * pr &&
@@ -73,26 +78,35 @@ export const supportTests: Record<string, RegressionTest> = {
     await page.mouse.move(10, 120);
     await page.waitForTimeout(200);
     const result = await page.evaluate(() => {
-      const email = document.getElementById('feedback-email')!,
-        msg = document.getElementById('feedback-message')!,
-        send = document.getElementById('feedback-send')!;
-      const d = window.__supportDrawing,
+      const element = (id: string) => {
+        const found = document.getElementById(id);
+        if (!found) throw new Error(`no #${id}`);
+        return found;
+      };
+      const email = element('feedback-email'),
+        msg = element('feedback-message'),
+        send = element('feedback-send');
+      const drawn = window.__supportDrawing,
+        bar = drawn?.bar,
+        separator = drawn?.separator,
         unit = window.__bd_probe.v1App.Unit;
       return {
-        d,
+        d: drawn,
         sameType: getComputedStyle(email).font === getComputedStyle(msg).font,
         compactEmail: email.getBoundingClientRect().height < msg.getBoundingClientRect().height / 2,
-        square: !!d && Math.abs(d.bar.w / d.separator.height - 1) < 0.05,
-        gap: d ? (d.bar.y - d.glyphBottom) / unit : 0,
+        square: !!bar && !!separator && Math.abs(bar.w / separator.height - 1) < 0.05,
+        gap: drawn && bar ? (bar.y - (drawn.glyphBottom ?? NaN)) / unit : 0,
         centred:
-          !!d &&
+          !!drawn &&
+          !!bar &&
+          !!separator &&
           Math.abs(
-            (d.separator.top + d.bar.y + d.bar.h) / 2 -
-              (d.rule + send.getBoundingClientRect().top * devicePixelRatio) / 2,
+            (separator.top + bar.y + bar.h) / 2 -
+              (drawn.rule + send.getBoundingClientRect().top * devicePixelRatio) / 2,
           ) <=
             2 * unit,
-        intro: !!d && d.intro > 0 && d.intro < d.message,
-        label: document.getElementById('feedback-include')!.getAttribute('aria-label'),
+        intro: !!drawn && drawn.intro > 0 && drawn.intro < drawn.message,
+        label: element('feedback-include').getAttribute('aria-label'),
       };
     });
     await page.screenshot({ path: `${OUT}/support-connect-spacing.png` });
@@ -139,9 +153,7 @@ export const supportTests: Record<string, RegressionTest> = {
     await toggle.click();
     const off = await toggle.getAttribute('aria-checked');
     const tabs = await page.evaluate(() =>
-      window.__bd_probe.scene.SettingsPanel.MenuItems.map(
-        (MenuItem) => MenuItem.Name,
-      ),
+      window.__bd_probe.scene.SettingsPanel.MenuItems.map((MenuItem) => MenuItem.Name),
     );
     await page.close();
     return [
