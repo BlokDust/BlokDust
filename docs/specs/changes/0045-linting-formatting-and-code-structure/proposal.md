@@ -3,8 +3,8 @@ id: CHG-0045
 title: Linting, formatting and code structure
 status: in-progress
 date: 2026-11-23
-specs: []
-adrs: [PROCESS-0002, PROCESS-0004, SIMULATION-0001]
+specs: [SPEC-PATCH-FORMAT-V2]
+adrs: [PROCESS-0002, PROCESS-0004, PROCESS-0006, SIMULATION-0001]
 ---
 # CHG-0045: Linting, formatting and code structure
 
@@ -30,8 +30,8 @@ files mixed many concerns. The owner wants every file linted, formatted and spli
 Behaviour changes. Every golden hash, visual diff and black-box test must pass unchanged.
 
 ## Acceptance
-- `pnpm lint` passes with empty baselines.
-- `pnpm bd size check` passes with an empty baseline.
+- `pnpm lint` and `pnpm bd size check` pass; their baselines may only shrink (PROCESS-0006). The owner moved emptying
+  them for `tools/` typing, the block designer, short C++ names and the C++ splits to follow-up changes (tasks 4a–9a).
 - `pnpm bd ci` passes; `pnpm bd render --check --configs release,dev` hashes are unchanged.
 - Staging deploy works for an owner playtest.
 
