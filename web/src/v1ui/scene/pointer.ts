@@ -82,10 +82,10 @@ export abstract class V1ScenePointer extends V1SceneTouch {
   pointerUp(x: number, y: number, moved: boolean): 'delete' | null {
     const point = new Point(x, y);
     let result: 'delete' | null = null;
-    // Where the pointer is now, not where it last moved: a finger lifts and lands elsewhere with no move between, so
-    // after one drop on the trash the next tap "ended over the trash" too (owner, 2026-11-08, mobile).
+    // Where the pointer is now: a finger lands elsewhere with no move between, so after one drop
+    // on the trash the next tap "ended over the trash" too.
     this.TrashCan.MouseMove(point);
-    if (this.IsDraggingABlock && this.TrashCan.MouseUp?.()) result = 'delete';
+    if (this.IsDraggingABlock && this.TrashCan.MouseUp()) result = 'delete';
     this.IsDraggingABlock = false;
     if (!result && this.SelectedBlock) {
       this.SelectedBlock.IsPressed = false;
@@ -178,44 +178,49 @@ export abstract class V1ScenePointer extends V1SceneTouch {
     }
     if (!over && toolTip.Open) this.toolTipClose();
   }
-  protected toolTipTimer: any;
+  protected toolTipTimer: ReturnType<typeof setTimeout> | undefined;
   ToolTipClose(): void {
     this.toolTipClose();
   }
   protected toolTipClose(): void {
     const toolTip = this.ToolTip;
     clearTimeout(this.toolTipTimer);
-    toolTip.StopTween?.();
+    toolTip.StopTween();
     toolTip.AlphaTo(toolTip, 0, 200);
     toolTip.Open = false;
   }
 
-  /** v2 addition to the sample panel (DATA-0005: the user's own audio comes first): an UPLOAD FILE button centred under
-   * the results, styled like v1's Randomise button beside it, with the upload mark (owner, 2026-11-10). */
+  /** The sample panel's UPLOAD FILE (v2; the user's own audio first, DATA-0005): under the results,
+   * styled as v1's Randomise beside it, with the upload mark. */
   protected fileButtonRect(): { x: number; y: number; w: number; h: number; label: string } {
     const unit = App.Unit,
       label = 'UPLOAD FILE';
     this.Ctx.font = App.Metrics.TxtMid;
-    const w = this.Ctx.measureText(label).width;
+    const labelWidth = this.Ctx.measureText(label).width;
     const cy = this.SoundcloudPanel.OffsetY + App.Height * 0.5;
     return {
-      x: App.Width * 0.5 - w * 0.5 - 5 * unit,
+      x: App.Width * 0.5 - labelWidth * 0.5 - 5 * unit,
       y: cy + 136 * unit,
-      w: w + 10 * unit,
+      w: labelWidth + 10 * unit,
       h: 46 * unit,
       label,
     };
   }
   protected fileButtonHit(point: Point): boolean {
-    const r = this.fileButtonRect();
-    return point.x >= r.x && point.x <= r.x + r.w && point.y >= r.y && point.y <= r.y + r.h;
+    const rect = this.fileButtonRect();
+    return (
+      point.x >= rect.x &&
+      point.x <= rect.x + rect.w &&
+      point.y >= rect.y &&
+      point.y <= rect.y + rect.h
+    );
   }
   protected drawFileButton(): void {
-    const r = this.fileButtonRect(),
+    const rect = this.fileButtonRect(),
       cy = this.SoundcloudPanel.OffsetY + App.Height * 0.5;
     drawUploadLink(
       this.Ctx,
-      r.label,
+      rect.label,
       App.Width * 0.5,
       cy + 160 * App.Unit,
       this.fileButtonHit(this.pointer),

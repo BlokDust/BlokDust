@@ -3,18 +3,14 @@ import { App, Dimensions } from '../shim.ts';
 import { V1SceneSplash } from './splash.ts';
 
 export abstract class V1ScenePower extends V1SceneSplash {
-  // ---- the power switch (owner, 2026-11-11; not in v1) ----
   worldPower = true;
   protected powerHover = false;
   setWorldPower(on: boolean): void {
     this.worldPower = on;
     this.host.setWorldPower(on);
   }
-  /**
-   * DAW plugins (owner, 2026-11-16, CHG-0025): a third cell, HOST, hands the power to the DAW's transport: powered
-   * while it plays, off while it is stopped. Its icon shows the transport (▷ stopped, ■ playing). A plugin can't press
-   * the DAW's play (AUv3, AU and VST3 give it no way), so pressing HOST again says where play is.
-   */
+  /** DAW plugins (CHG-0025): HOST, a third cell, powers the world while the DAW plays (▷ or ■); a
+   * plugin can't press the DAW's play (AUv3, AU, VST3), so HOST pressed again says where it is. */
   hostPower = false;
   powerMode: 0 | 1 | 2 = 1;
   hostPlaying = false;
@@ -38,25 +34,28 @@ export abstract class V1ScenePower extends V1SceneSplash {
       this.setWorldPower(!this.worldPower);
       return;
     }
-    const r = this.powerRect(),
-      cell = Math.max(0, Math.min(2, Math.floor((x - r.x) / (r.w / 3)))) as 0 | 1 | 2;
+    const rect = this.powerRect(),
+      cell = Math.max(0, Math.min(2, Math.floor((x - rect.x) / (rect.w / 3)))) as 0 | 1 | 2;
     if (cell === 2 && this.powerMode === 2) {
       this.hostHintUntil = performance.now() + 2500;
       return;
     }
     this.setPowerMode(cell);
   }
-  /** Bottom centre, between the zoom buttons and the trash: v1's off/on switch (OptionSwitch, "offOn"), at its own size
-   * (a 60u options row, 60u wide; 90u with HOST's cell). Its dash and diamond sit level with +, − and the trash (30u up,
-   * v1 ZoomButtons and TrashCan); the label goes above it, where v1's zoom shows its percentage (50u up), as below
-   * would meet the edge. */
+  /** Bottom centre: v1's OptionSwitch "offOn" in a 60u row (60u wide, 90u with HOST), level with
+   * the zoom buttons and trash (30u up); its label above, where v1's zoom shows its percentage. */
   protected powerRect() {
     const unit = App.Unit,
-      w = (this.hostPower ? 90 : 60) * unit,
-      h = 60 * unit;
-    return { x: App.Width * 0.5 - w * 0.5, y: App.Height - 30 * unit - h * 0.35, w, h };
+      width = (this.hostPower ? 90 : 60) * unit,
+      height = 60 * unit;
+    return {
+      x: App.Width * 0.5 - width * 0.5,
+      y: App.Height - 30 * unit - height * 0.35,
+      w: width,
+      h: height,
+    };
   }
-  protected powerHit(p: { x: number; y: number }): boolean {
+  protected powerHit(point: { x: number; y: number }): boolean {
     if (
       this.SharePanel.Open ||
       this.SettingsPanel.Open ||
@@ -65,19 +64,15 @@ export abstract class V1ScenePower extends V1SceneSplash {
     )
       return false;
     const unit = App.Unit,
-      r = this.powerRect();
-    return Dimensions.hitRect(r.x, App.Height - 66 * unit, r.w, 66 * unit, p.x, p.y);
+      rect = this.powerRect();
+    return Dimensions.hitRect(rect.x, App.Height - 66 * unit, rect.w, 66 * unit, point.x, point.y);
   }
   /** Hosts: the HOST hint is showing (the stage keeps redrawing until it goes). */
   protected get hostHinting(): boolean {
     return this.hostHintUntil > performance.now();
   }
-  /**
-   * v1 OptionSwitch (style 1, "offOn"), its proportions unchanged: dividers from 0.15h to 0.55h, the dash (off),
-   * diamond (on) and HOST's ▷/■ at 0.35h, the chosen cell underlined at 0.55h. The label: POWER; when off, POWER OFF
-   * on the red of v1's record button (its right half, palette 13), so a stopped world is never mistaken for a broken
-   * one; HOST with the host stopped reads SYNCED TO HOST on the same red (owner, 2026-11-20). Space toggles it too (web).
-   */
+  /** v1 OptionSwitch "offOn" proportions; POWER, or POWER OFF / SYNCED TO HOST (stopped) on v1's
+   * record red (palette 13) so a stopped world never looks broken. Space toggles it too (web). */
   protected drawPower(): void {
     const ctx = this.Ctx,
       unit = App.Unit,
@@ -148,7 +143,7 @@ export abstract class V1ScenePower extends V1SceneSplash {
         textMetrics.width + 12 * unit,
         boxH,
       );
-      // The letters sit in the middle of the fill (owner, 2026-11-13: they sat a pixel or two high).
+      // The letters sit in the middle of the fill (else a pixel or two high).
       base =
         boxY +
         boxH * 0.5 +

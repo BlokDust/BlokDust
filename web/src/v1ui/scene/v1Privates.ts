@@ -24,3 +24,7 @@ export const canvasOf = (target: unknown): CanvasRenderingContext2D =>
   typeof target === 'object' && target !== null && 'Ctx' in target
     ? (target as DisplayContext).Ctx
     : (target as CanvasRenderingContext2D);
+
+/** The Share panel's warning flag (v1 SharePanel.GetWarning sets it). */
+export const shareWarningOf = (panel: SharePanel): { _Warning: boolean } =>
+  panel as unknown as { _Warning: boolean };
