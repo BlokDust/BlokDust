@@ -6,15 +6,15 @@ export const shareTests: Record<string, RegressionTest> = {
   /** Share text fields use the theme's text colour (v1 ThemeManager sets #shareUrl/#shareTitle colour); now the Patches
    * panel's name and link fields. */
   async 'share-text-colour'(errors) {
-    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
-    await makeLink(p);
-    const colours = await p.evaluate(() =>
+    const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await makeLink(page);
+    const colours = await page.evaluate(() =>
       ['patchTitleInput', 'patchUrlText'].map(
         (id) => getComputedStyle(document.getElementById(id)!).color,
       ),
     );
-    await p.screenshot({ path: `${OUT}/share-text-colour.png` });
-    await p.close();
+    await page.screenshot({ path: `${OUT}/share-text-colour.png` });
+    await page.close();
     return [
       colours.every((colour) => colour === txt),
       { want: txt, title: colours[0], url: colours[1] },
@@ -23,9 +23,9 @@ export const shareTests: Record<string, RegressionTest> = {
   /** The share link field: one line like the title field, scrollbars hidden (headless Chrome never draws them, so
    * the style is checked too), and a click selects the whole link. */
   async 'share-url-field'(errors) {
-    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
-    await makeLink(p);
-    const el = await p.evaluate(() => {
+    const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await makeLink(page);
+    const el = await page.evaluate(() => {
       const input = document.getElementById('patchUrlText') as HTMLInputElement,
         boundingClientRect = input.getBoundingClientRect();
       const cs = getComputedStyle(input);
@@ -44,14 +44,14 @@ export const shareTests: Record<string, RegressionTest> = {
         scrollbarWidth: cs.scrollbarWidth,
       };
     });
-    await p.mouse.click(el.rect[0] + el.rect[2] / 2, el.rect[1] + el.rect[3] / 2);
-    await p.waitForTimeout(200);
-    const sel = await p.evaluate(() => {
+    await page.mouse.click(el.rect[0] + el.rect[2] / 2, el.rect[1] + el.rect[3] / 2);
+    await page.waitForTimeout(200);
+    const sel = await page.evaluate(() => {
       const input = document.getElementById('patchUrlText') as HTMLInputElement;
       return [input.selectionStart, input.selectionEnd, document.activeElement === input];
     });
-    await p.screenshot({ path: `${OUT}/share-url-field.png` });
-    await p.close();
+    await page.screenshot({ path: `${OUT}/share-url-field.png` });
+    await page.close();
     const pass =
       el.len > 20 &&
       el.scrollbarX === 0 &&
@@ -79,53 +79,53 @@ export const shareTests: Record<string, RegressionTest> = {
       ],
     };
     const token = 'p' + deflateRawSync(Buffer.from(JSON.stringify(patch))).toString('base64url');
-    const p = await browser.newPage({
+    const page = await browser.newPage({
       viewport: { width: 1280, height: 800 },
       deviceScaleFactor: 1,
     });
-    p.on('pageerror', (e) => errors.push(e.message));
-    await p.goto(
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(
       `${url}/index.html?splash=1&c=${token}&t=${encodeURIComponent('Bass + Bells')}&share=1`,
     );
-    await p.waitForFunction(() => (window as any).__bd_probe);
-    await p.waitForTimeout(1500);
-    const before = await p.evaluate(() => ({
-      panel: (window as any).__bd_probe.scene.PatchesPanel.Open,
-      link: !!(window as any).__bd_probe.scene.host.links.current(),
+    await page.waitForFunction(() => window.__bd_probe);
+    await page.waitForTimeout(1500);
+    const before = await page.evaluate(() => ({
+      panel: window.__bd_probe.scene.PatchesPanel.Open,
+      link: !!window.__bd_probe.scene.host.links.current(),
     }));
-    await p.screenshot({ path: `${OUT}/share-from-plugin-start.png` });
-    await p.mouse.click(640, 400);
-    await p
+    await page.screenshot({ path: `${OUT}/share-from-plugin-start.png` });
+    await page.mouse.click(640, 400);
+    await page
       .waitForFunction(() => !document.getElementById('start'), null, { timeout: 10000 })
       .catch(() => {});
-    await p.waitForTimeout(1000);
-    const r = await p.evaluate(() => {
-      const pp = (window as any).__bd_probe.scene.PatchesPanel,
-        link = (window as any).__bd_probe.scene.host.links.current();
+    await page.waitForTimeout(1000);
+    const result = await page.evaluate(() => {
+      const pp = window.__bd_probe.scene.PatchesPanel,
+        link = window.__bd_probe.scene.host.links.current();
       return {
         open: pp.Open,
         title: pp.Title,
-        blocks: (window as any).__bd_probe.state.blocks.length,
+        blocks: window.__bd_probe.state.blocks.length,
         search: location.search,
         link: link?.url ?? null,
         stale: link?.stale,
         state: pp.shareState(),
       };
     });
-    await p.screenshot({ path: `${OUT}/share-from-plugin.png` });
-    await p.close();
+    await page.screenshot({ path: `${OUT}/share-from-plugin.png` });
+    await page.close();
     const ok =
       !before.panel &&
-      !r.open &&
-      r.title === 'Bass + Bells' &&
-      r.blocks === 2 &&
-      !r.search.includes('share=') &&
-      r.search.includes('c=p') &&
-      !!r.link &&
-      r.link.endsWith(r.search) &&
-      r.stale === false &&
-      r.state.save !== 'make';
-    return [ok, { before, ...r, link: r.link?.slice(0, 60) }];
+      !result.open &&
+      result.title === 'Bass + Bells' &&
+      result.blocks === 2 &&
+      !result.search.includes('share=') &&
+      result.search.includes('c=p') &&
+      !!result.link &&
+      result.link.endsWith(result.search) &&
+      result.stale === false &&
+      result.state.save !== 'make';
+    return [ok, { before, ...result, link: result.link?.slice(0, 60) }];
   },
   /** Owner (2026-11-11): the web SAVE tab has SAVE · SAVE AS · DOWNLOAD PATCH, with no help lines (owner review 2,
    * option A: SAVE the main button, SAVE AS and DOWNLOAD PATCH quiet below it, left and right); the
@@ -138,73 +138,73 @@ export const shareTests: Record<string, RegressionTest> = {
       deviceScaleFactor: 1,
       permissions: ['clipboard-read', 'clipboard-write'],
     });
-    const p = await ctx.newPage();
-    p.on('pageerror', (e) => errors.push(e.message));
-    await p.addInitScript(() => {
-      const seen: string[] = ((window as any).__texts = []);
-      const f = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) {
-        seen.push(t);
-        return (f as any).call(this, t, ...a);
+    const page = await ctx.newPage();
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.addInitScript(() => {
+      const seen: string[] = (window.__texts = []);
+      const drawText = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (text: string, ...a: any[]) {
+        seen.push(text);
+        return (drawText as any).call(this, text, ...a);
       };
     });
-    await p.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
-    await p.waitForFunction(() => (window as any).__bd_probe);
-    await p.click('#start');
-    await p.waitForTimeout(2500);
-    const link = () => p.evaluate(() => (window as any).__bd_probe.scene.host.links.current());
+    await page.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
+    await page.waitForFunction(() => window.__bd_probe);
+    await page.click('#start');
+    await page.waitForTimeout(2500);
+    const link = () => page.evaluate(() => window.__bd_probe.scene.host.links.current());
     const state = () =>
-      p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.shareState());
+      page.evaluate(() => window.__bd_probe.scene.PatchesPanel.shareState());
     const texts = () =>
-      p.evaluate(() => {
-        const t = (window as any).__texts as string[];
+      page.evaluate(() => {
+        const t = window.__texts as string[];
         const r = [...new Set(t)];
         t.length = 0;
         return r;
       });
     await texts();
-    await openPatches(p);
-    await p.waitForTimeout(300);
+    await openPatches(page);
+    await page.waitForTimeout(300);
     const before = await texts(),
-      at = await p.evaluate(() =>
-        ['share', 'saveAs', 'save'].map((n) =>
-          (window as any).__bd_probe.scene.PatchesPanel.centreOf(n),
+      at = await page.evaluate(() =>
+        ['share', 'saveAs', 'save'].map((name) =>
+          window.__bd_probe.scene.PatchesPanel.centreOf(name),
         ),
       ),
       xs = at.map((c) => c[0]);
-    await p.screenshot({ path: `${OUT}/save-tab.png` });
-    await patchesClick(p, 'close', 900);
-    const first = await makeLink(p);
+    await page.screenshot({ path: `${OUT}/save-tab.png` });
+    await patchesClick(page, 'close', 900);
+    const first = await makeLink(page);
     const fresh = await link(),
       freshState = await state();
     await texts();
-    await p.mouse.move(5, 5);
-    await p.mouse.move(8, 8);
-    await p.waitForTimeout(300);
+    await page.mouse.move(5, 5);
+    await page.mouse.move(8, 8);
+    await page.waitForTimeout(300);
     const withLink = await texts();
-    await p.evaluate(() => navigator.clipboard.writeText(''));
-    await patchesClick(p, 'copyLink', 300); // COPY LINK (owner, 2026-11-18): the message bar says so
+    await page.evaluate(() => navigator.clipboard.writeText(''));
+    await patchesClick(page, 'copyLink', 300); // COPY LINK (owner, 2026-11-18): the message bar says so
     const copied = {
-      line: await p.evaluate(() => {
-        const messagePanel = (window as any).__bd_probe.scene.MessagePanel;
+      line: await page.evaluate(() => {
+        const messagePanel = window.__bd_probe.scene.MessagePanel;
         return messagePanel.Open && /link copied/i.test(messagePanel._Value?.string ?? '');
       }),
-      clip: await p.evaluate(() => navigator.clipboard.readText()),
+      clip: await page.evaluate(() => navigator.clipboard.readText()),
     };
-    await p.screenshot({ path: `${OUT}/share-link-inline.png` });
-    await patchesClick(p, 'close', 900);
-    const [x, y] = await toCss(p, 0, 0.2);
-    await p.mouse.move(x, y);
-    await p.mouse.down();
-    await p.mouse.move(x + 120, y, { steps: 6 });
-    await p.mouse.up();
-    await p.waitForTimeout(300);
-    await openPatches(p);
+    await page.screenshot({ path: `${OUT}/share-link-inline.png` });
+    await patchesClick(page, 'close', 900);
+    const [x, y] = await toCss(page, 0, 0.2);
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + 120, y, { steps: 6 });
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+    await openPatches(page);
     const stale = await link(),
       staleState = await state();
-    await p.screenshot({ path: `${OUT}/share-link-stale.png` });
-    await patchesClick(p, 'share', 200); // SAVE: can't save over this link → a new one
-    await p.waitForFunction(
+    await page.screenshot({ path: `${OUT}/share-link-stale.png` });
+    await patchesClick(page, 'share', 200); // SAVE: can't save over this link → a new one
+    await page.waitForFunction(
       (prev) => (document.getElementById('patchUrlText') as HTMLInputElement).value !== prev,
       first,
       { timeout: 20000 },
@@ -259,25 +259,25 @@ export const shareTests: Record<string, RegressionTest> = {
   },
   // Owner (2026-11-17, CHG-0035): saving a link copies it at once (no second click on the link): LINK COPIED.
   async 'save-copies-link'(errors: string[]) {
-    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
-    await p.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: url });
-    const link = await makeLink(p);
-    await p
-      .waitForFunction(() => !!(window as any).__bd_probe.scene.PatchesPanel.lastSaved, null, {
+    const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: url });
+    const link = await makeLink(page);
+    await page
+      .waitForFunction(() => !!window.__bd_probe.scene.PatchesPanel.lastSaved, null, {
         timeout: 5000,
       })
       .catch(() => {});
     // The SAVE button goes once saved (owner, 2026-11-18): the message bar says SAVED · LINK COPIED.
-    const r = await p.evaluate(async () => {
-      const s = (window as any).__bd_probe.scene;
+    const result = await page.evaluate(async () => {
+      const scene = window.__bd_probe.scene;
       return {
         clip: await navigator.clipboard.readText(),
-        saved: s.PatchesPanel.lastSaved,
-        bar: String(s.MessagePanel._Value?.string ?? ''),
+        saved: scene.PatchesPanel.lastSaved,
+        bar: String(scene.MessagePanel._Value?.string ?? ''),
       };
     });
-    await p.close();
-    return [r.clip === link && !!r.saved?.copied && /link copied/i.test(r.bar), { link, ...r }];
+    await page.close();
+    return [result.clip === link && !!result.saved?.copied && /link copied/i.test(result.bar), { link, ...result }];
   },
   /** Owner (2026-11-18, option 3c): on a phone, COPY LINK and SHARE (the device's share sheet) under the link. */
   async 'share-link-phone'(errors: string[]) {
@@ -287,33 +287,33 @@ export const shareTests: Record<string, RegressionTest> = {
       isMobile: true,
       hasTouch: true,
     });
-    const p = await ctx.newPage();
-    p.on('pageerror', (e) => errors.push(e.message));
-    await p.addInitScript(() => {
+    const page = await ctx.newPage();
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.addInitScript(() => {
       (navigator as any).share = async (d: unknown) => {
-        (window as any).__shared = d;
+        window.__shared = d;
       };
     });
-    await p.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
-    await p.waitForFunction(() => (window as any).__bd_probe);
-    await p.click('#start');
-    await p.waitForTimeout(1500);
-    await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.OpenPanel(0));
-    await p.waitForTimeout(1200);
-    const [sx, sy] = await p.evaluate(() =>
-      (window as any).__bd_probe.scene.PatchesPanel.centreOf('share'),
+    await page.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
+    await page.waitForFunction(() => window.__bd_probe);
+    await page.click('#start');
+    await page.waitForTimeout(1500);
+    await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.OpenPanel(0));
+    await page.waitForTimeout(1200);
+    const [sx, sy] = await page.evaluate(() =>
+      window.__bd_probe.scene.PatchesPanel.centreOf('share'),
     );
-    await p.touchscreen.tap(sx, sy);
-    await p
+    await page.touchscreen.tap(sx, sy);
+    await page
       .waitForFunction(
-        () => !!(window as any).__bd_probe.scene.PatchesPanel.centreOf('shareLink'),
+        () => !!window.__bd_probe.scene.PatchesPanel.centreOf('shareLink'),
         null,
         { timeout: 20000 },
       )
       .catch(() => {});
-    await p.waitForTimeout(400);
-    const at = await p.evaluate(() => {
-      const pp = (window as any).__bd_probe.scene.PatchesPanel;
+    await page.waitForTimeout(400);
+    const at = await page.evaluate(() => {
+      const pp = window.__bd_probe.scene.PatchesPanel;
       return {
         copy: pp.centreOf('copyLink'),
         share: pp.centreOf('shareLink'),
@@ -321,11 +321,11 @@ export const shareTests: Record<string, RegressionTest> = {
       };
     });
     if (at.share) {
-      await p.touchscreen.tap(at.share[0], at.share[1]);
-      await p.waitForTimeout(300);
+      await page.touchscreen.tap(at.share[0], at.share[1]);
+      await page.waitForTimeout(300);
     }
-    const shared = await p.evaluate(() => (window as any).__shared ?? null);
-    await p.screenshot({ path: `${OUT}/share-link-phone.png` });
+    const shared = await page.evaluate(() => window.__shared ?? null);
+    await page.screenshot({ path: `${OUT}/share-link-phone.png` });
     await ctx.close();
     const ok =
       !!at.copy &&

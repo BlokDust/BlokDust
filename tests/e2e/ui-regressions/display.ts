@@ -11,28 +11,28 @@ export interface DisplayHarness {
 
 /** Every layer of the stage and v1's UI drawn for the window as it is now: the canvases' backing stores are the window
  * in device pixels, and the stage and v1's UI share one unit. */
-const layout = (p: Page) =>
-  p.evaluate(() => {
+const layout = (page: Page) =>
+  page.evaluate(() => {
     const dpr = devicePixelRatio,
-      w = innerWidth,
-      h = innerHeight,
-      A = (window as any).__bd_probe.v1App;
+      width = innerWidth,
+      height = innerHeight,
+      v1App = window.__bd_probe.v1App;
     const canvases = [...document.querySelectorAll('#stage canvas')].map((element) => {
       const canvas = element as HTMLCanvasElement;
       return [canvas.width, canvas.height];
     });
-    const unit = (Math.min(w, h * 2) / 850) * dpr; // Metrics: MAX_ASPECT 2, desktop division 850
+    const unit = (Math.min(width, height * 2) / 850) * dpr; // Metrics: MAX_ASPECT 2, desktop division 850
     return {
       dpr,
-      w,
-      h,
+      w: width,
+      h: height,
       canvases,
-      v1: { unit: A.Unit, width: A.Width, height: A.Height },
+      v1: { unit: v1App.Unit, width: v1App.Width, height: v1App.Height },
       unit,
       fits:
-        canvases.every(([cw, ch]) => Math.abs(cw - w * dpr) <= 1 && Math.abs(ch - h * dpr) <= 1) &&
-        Math.abs(A.Width - w * dpr) <= 1 &&
-        Math.abs(A.Unit - unit) < 1e-6,
+        canvases.every(([cw, ch]) => Math.abs(cw - width * dpr) <= 1 && Math.abs(ch - height * dpr) <= 1) &&
+        Math.abs(v1App.Width - width * dpr) <= 1 &&
+        Math.abs(v1App.Unit - unit) < 1e-6,
     };
   });
 
@@ -54,23 +54,23 @@ export function displayTests({
       viewport: { width: 1000, height: 528 },
       deviceScaleFactor: 2,
     });
-    const p = await ctx.newPage();
-    p.on('pageerror', (e) => errors.push(e.message));
-    await p.goto(`${url}/index.html?v1=${demo}`);
-    await p.waitForFunction(() => (window as any).__bd_probe);
-    const before = await layout(p);
-    const cdp = await ctx.newCDPSession(p);
+    const page = await ctx.newPage();
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(`${url}/index.html?v1=${demo}`);
+    await page.waitForFunction(() => window.__bd_probe);
+    const before = await layout(page);
+    const cdp = await ctx.newCDPSession(page);
     await cdp.send('Emulation.setDeviceMetricsOverride', {
       ...to,
       deviceScaleFactor: 1,
       mobile: false,
     });
-    await p.waitForFunction(() => devicePixelRatio === 1);
+    await page.waitForFunction(() => devicePixelRatio === 1);
     // Headless emulation fires neither resize nor the resolution media query for a ratio-only change (a real display
     // move does fire the media query); coming back to the tab is the owner's path and must be enough on its own.
-    if (tabReturn) await p.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
-    await p.waitForTimeout(500);
-    const after = await layout(p);
+    if (tabReturn) await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+    await page.waitForTimeout(500);
+    const after = await layout(page);
     // Through the same CDP session: Playwright's own screenshot drops the override.
     writeFileSync(
       `${OUT}/${name}.png`,

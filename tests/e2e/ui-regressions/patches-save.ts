@@ -4,17 +4,17 @@ import { makeLink, openPatches, patchesClick } from './patchesPanel.ts';
 
 export const patchesSaveTests: Record<string, RegressionTest> = {
   async 'patches-tab-remembered'(errors: string[]) {
-    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
-    const tab = () => p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Tab);
-    await openPatches(p);
+    const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    const tab = () => page.evaluate(() => window.__bd_probe.scene.PatchesPanel.Tab);
+    await openPatches(page);
     const first = await tab();
-    await patchesClick(p, 'tab1', 600);
-    await patchesClick(p, 'close', 800);
-    await openPatches(p, true);
+    await patchesClick(page, 'tab1', 600);
+    await patchesClick(page, 'close', 800);
+    await openPatches(page, true);
     const reopened = await tab();
-    const fill = await p.evaluate(() => {
-      const pp = (window as any).__bd_probe.scene.PatchesPanel,
-        app = (window as any).__bd_probe.v1App,
+    const fill = await page.evaluate(() => {
+      const pp = window.__bd_probe.scene.PatchesPanel,
+        app = window.__bd_probe.v1App,
         [x, y] = pp.centreOf('file');
       const canvas = document.querySelector('canvas')!,
         pr = app.Metrics.PixelRatio;
@@ -33,18 +33,18 @@ export const patchesSaveTests: Record<string, RegressionTest> = {
       w.fillRect(0, 0, 1, 1);
       return { px, want: Array.from(w.getImageData(0, 0, 1, 1).data.slice(0, 3)) };
     });
-    await p.screenshot({ path: `${OUT}/patches-open-tab.png` });
-    await p.reload();
-    await p.waitForFunction(() => (window as any).__bd_probe);
-    await p.click('#start');
-    await p.waitForTimeout(2000);
-    await openPatches(p, true);
+    await page.screenshot({ path: `${OUT}/patches-open-tab.png` });
+    await page.reload();
+    await page.waitForFunction(() => window.__bd_probe);
+    await page.click('#start');
+    await page.waitForTimeout(2000);
+    await openPatches(page, true);
     const reloaded = await tab();
-    await patchesClick(p, 'tab0', 600);
-    await patchesClick(p, 'close', 800);
-    await openPatches(p, true);
+    await patchesClick(page, 'tab0', 600);
+    await patchesClick(page, 'close', 800);
+    await openPatches(page, true);
     const back = await tab();
-    await p.close();
+    await page.close();
     // OPEN FROM YOUR DEVICE is a small bordered button now (owner, 2026-11-18), not the wide filled one: 190 px left of
     // its centre is the panel, not the button's colour.
     const small = !fill.px.every((v: number, i: number) => Math.abs(v - fill.want[i]) <= 3);
@@ -54,26 +54,26 @@ export const patchesSaveTests: Record<string, RegressionTest> = {
   /** Owner (2026-11-18): own patches don't share a name; a new link with a name already used gets " (2)", shown in the
    * name field. Saving over the same link keeps its name. */
   async 'save-names-unique'(errors: string[]) {
-    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
-    await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.setTitle('Song'));
-    await makeLink(p);
-    const t1 = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Title);
-    await patchesClick(p, 'close', 900);
-    await p.evaluate(() => (window as any).__bd_probe.scene.host.createBlock('ToneSource', 4, 4));
-    await p.waitForTimeout(300);
-    await openPatches(p);
-    await patchesClick(p, 'saveAs', 200);
-    await p.waitForFunction(() => !(window as any).__bd_probe.scene.PatchesPanel.Saving, null, {
+    const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.setTitle('Song'));
+    await makeLink(page);
+    const t1 = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.Title);
+    await patchesClick(page, 'close', 900);
+    await page.evaluate(() => window.__bd_probe.scene.host.createBlock('ToneSource', 4, 4));
+    await page.waitForTimeout(300);
+    await openPatches(page);
+    await patchesClick(page, 'saveAs', 200);
+    await page.waitForFunction(() => !window.__bd_probe.scene.PatchesPanel.Saving, null, {
       timeout: 20000,
     });
-    await p.waitForTimeout(300);
-    const t2 = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Title);
-    const titles = await p.evaluate(() =>
+    await page.waitForTimeout(300);
+    const t2 = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.Title);
+    const titles = await page.evaluate(() =>
       JSON.parse(localStorage.getItem('blokdust.myPatches') ?? '[]').map(
         (m: { title: string }) => m.title,
       ),
     );
-    await p.close();
+    await page.close();
     return [
       t1 === 'Song' && t2 === 'Song (2)' && titles.includes('Song') && titles.includes('Song (2)'),
       { t1, t2, titles },
@@ -82,165 +82,165 @@ export const patchesSaveTests: Record<string, RegressionTest> = {
   /** Owner (2026-11-10): a patch name keeps "+" and other symbols (v1's title field stripped punctuation, because the
    * title went into the link unescaped; the presets themselves are named "… + …"). */
   async 'patch-title-plus'(errors: string[]) {
-    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
-    await openPatches(p);
-    await p.evaluate(() => {
+    const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await openPatches(page);
+    await page.evaluate(() => {
       const i = document.getElementById('patchTitleInput') as HTMLInputElement;
       i.value = '';
     });
-    await p.click('#patchTitleInput');
-    await p.keyboard.type('Bass + Bells (2) & co.');
-    const r = await p.evaluate(() => ({
+    await page.click('#patchTitleInput');
+    await page.keyboard.type('Bass + Bells (2) & co.');
+    const result = await page.evaluate(() => ({
       field: (document.getElementById('patchTitleInput') as HTMLInputElement).value,
-      title: (window as any).__bd_probe.scene.PatchesPanel.Title,
+      title: window.__bd_probe.scene.PatchesPanel.Title,
     }));
-    await p.close();
-    return [r.field === 'Bass + Bells (2) & co.' && r.title === r.field, r];
+    await page.close();
+    return [result.field === 'Bass + Bells (2) & co.' && result.title === result.field, result];
   },
   // ---- Quick save (CHG-0033, owner 2026-11-17; SPEC-SHARING-BACKEND R18) ----
   /** Cmd/Ctrl+S with no link of this browser's own (here: no backend, a v1 composition) opens Patches › SAVE, and the
    * browser's "Save page" never opens (the key is cancelled), also while typing in a field. No corner line. */
   async 'quick-save-no-link-opens-save'(errors: string[]) {
-    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
-    await p.evaluate(() => {
+    const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await page.evaluate(() => {
       try {
         localStorage.setItem('blokdust.patchesTab', '1');
       } catch {
         /* */
       }
     }); // last tab OPEN: Cmd+S still shows SAVE
-    await p.evaluate(() => {
+    await page.evaluate(() => {
       window.addEventListener('keydown', (event) => {
-        (window as any).__prevented = event.defaultPrevented;
+        window.__prevented = event.defaultPrevented;
       });
     });
-    await p.keyboard.press('ControlOrMeta+s');
-    await p.waitForTimeout(1200);
-    const r = await p.evaluate(() => {
-      const s = (window as any).__bd_probe,
-        pp = s.scene.PatchesPanel;
+    await page.keyboard.press('ControlOrMeta+s');
+    await page.waitForTimeout(1200);
+    const result = await page.evaluate(() => {
+      const probe = window.__bd_probe,
+        pp = probe.scene.PatchesPanel;
       return {
         open: pp.Open,
         tab: pp.Tab,
-        prevented: (window as any).__prevented,
-        own: s.corners.own,
+        prevented: window.__prevented,
+        own: probe.corners.own,
         saving: pp.Saving,
       };
     });
-    await p.screenshot({ path: `${OUT}/quick-save-no-link.png` });
+    await page.screenshot({ path: `${OUT}/quick-save-no-link.png` });
     // Typing in the title field: still cancelled (and the panel stays on SAVE).
-    await p.click('#patchTitleInput');
-    await p.evaluate(() => {
-      (window as any).__prevented = null;
+    await page.click('#patchTitleInput');
+    await page.evaluate(() => {
+      window.__prevented = null;
     });
-    await p.keyboard.press('ControlOrMeta+s');
-    await p.waitForTimeout(400);
-    const typing = await p.evaluate(() => ({
-      prevented: (window as any).__prevented,
-      open: (window as any).__bd_probe.scene.PatchesPanel.Open,
-      tab: (window as any).__bd_probe.scene.PatchesPanel.Tab,
+    await page.keyboard.press('ControlOrMeta+s');
+    await page.waitForTimeout(400);
+    const typing = await page.evaluate(() => ({
+      prevented: window.__prevented,
+      open: window.__bd_probe.scene.PatchesPanel.Open,
+      tab: window.__bd_probe.scene.PatchesPanel.Tab,
     }));
-    await p.close();
+    await page.close();
     return [
-      r.open &&
-        r.tab === 0 &&
-        r.prevented === true &&
-        r.own === null &&
-        !r.saving &&
+      result.open &&
+        result.tab === 0 &&
+        result.prevented === true &&
+        result.own === null &&
+        !result.saving &&
         typing.prevented === true &&
         typing.open &&
         typing.tab === 0,
-      { r, typing },
+      { r: result, typing },
     ];
   },
   /** Owner (2026-11-10): the sample panel's file button reads UPLOAD FILE with the upload mark, and text buttons like it
    * (and OPEN FROM YOUR DEVICE) are underlined on hover, so they read as buttons. */
   async 'upload-file-button'(errors: string[]) {
-    const p = await open(browser, [blk(1, 'Sample', 0, 0)], errors);
-    await p.mouse.click(640, 402);
-    await p.waitForTimeout(1000); // the Sample: its options panel
-    await p.evaluate(() => {
-      const seen: string[] = ((window as any).__texts = []);
-      const f = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) {
-        seen.push(t);
-        return (f as any).call(this, t, ...a);
+    const page = await open(browser, [blk(1, 'Sample', 0, 0)], errors);
+    await page.mouse.click(640, 402);
+    await page.waitForTimeout(1000); // the Sample: its options panel
+    await page.evaluate(() => {
+      const seen: string[] = (window.__texts = []);
+      const drawText = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (text: string, ...a: any[]) {
+        seen.push(text);
+        return (drawText as any).call(this, text, ...a);
       };
     });
-    await p.mouse.move(941, 443);
-    await p.mouse.click(941, 443);
-    await p.waitForTimeout(1200); // LOAD NEW SAMPLE → the search panel
-    const r = await p.evaluate(() => {
-      const s = (window as any).__bd_probe.scene,
-        x = s.fileButtonRect(),
-        pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio;
-      return { x: x.x / pr, y: x.y / pr, w: x.w / pr, h: x.h / pr, open: s.SoundcloudPanel.Open };
+    await page.mouse.move(941, 443);
+    await page.mouse.click(941, 443);
+    await page.waitForTimeout(1200); // LOAD NEW SAMPLE → the search panel
+    const result = await page.evaluate(() => {
+      const scene = window.__bd_probe.scene,
+        x = scene.fileButtonRect(),
+        pr = window.__bd_probe.v1App.Metrics.PixelRatio;
+      return { x: x.x / pr, y: x.y / pr, w: x.w / pr, h: x.h / pr, open: scene.SoundcloudPanel.Open };
     });
-    const clip = { x: r.x - 10, y: r.y, width: r.w + 20, height: r.h };
-    await p.mouse.move(r.x - 200, r.y - 100);
-    await p.waitForTimeout(300);
-    const idle = await p.screenshot({ clip });
-    await p.mouse.move(r.x + r.w / 2, r.y + 20);
-    await p.waitForTimeout(300);
-    const hover = await p.screenshot({ clip });
-    await p.screenshot({ path: `${OUT}/upload-file-button.png` });
-    const texts = await p.evaluate(() =>
-      (window as any).__texts.filter((__text: string) => __text.includes('FILE')).slice(0, 3),
+    const clip = { x: result.x - 10, y: result.y, width: result.w + 20, height: result.h };
+    await page.mouse.move(result.x - 200, result.y - 100);
+    await page.waitForTimeout(300);
+    const idle = await page.screenshot({ clip });
+    await page.mouse.move(result.x + result.w / 2, result.y + 20);
+    await page.waitForTimeout(300);
+    const hover = await page.screenshot({ clip });
+    await page.screenshot({ path: `${OUT}/upload-file-button.png` });
+    const texts = await page.evaluate(() =>
+      window.__texts.filter((__text: string) => __text.includes('FILE')).slice(0, 3),
     );
-    await p.close();
+    await page.close();
     const ok =
-      r.open &&
+      result.open &&
       texts.includes('UPLOAD FILE') &&
       !texts.includes('YOUR FILE') &&
       !idle.equals(hover);
-    return [ok, { open: r.open, texts, hoverChangesIt: !idle.equals(hover) }];
+    return [ok, { open: result.open, texts, hoverChangesIt: !idle.equals(hover) }];
   },
   /** Owner (2026-11-10): SAVE TO COMPUTER lets the user pick where. Where the browser has a save dialog it is used,
    * starting in Music (browsers can't open a sub-folder that the page hasn't been given) and remembering the folder
    * last used for patches (`id`). */
   async 'save-picker'(errors: string[]) {
-    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
-    await p.evaluate(() => {
-      (window as any).__written = [];
-      (window as any).showSaveFilePicker = async (o: any) => {
-        (window as any).__opts = o;
+    const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await page.evaluate(() => {
+      window.__written = [];
+      window.showSaveFilePicker = async (savePickerOptions) => {
+        window.__opts = savePickerOptions;
         return {
           createWritable: async () => ({
-            write: async (t: string) => (window as any).__written.push(t),
+            write: async (text: string) => window.__written.push(text),
             close: async () => {},
           }),
         };
       };
     });
-    await openPatches(p);
-    await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.setTitle('Bass + Bells'));
-    await patchesClick(p, 'save', 600);
-    const r = await p.evaluate(() => ({
-      opts: (window as any).__opts,
-      file: JSON.parse((window as any).__written[0] ?? '{}'),
-      saved: (window as any).__bd_probe.scene.PatchesPanel.flashing('save'),
+    await openPatches(page);
+    await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.setTitle('Bass + Bells'));
+    await patchesClick(page, 'save', 600);
+    const result = await page.evaluate(() => ({
+      opts: window.__opts,
+      file: JSON.parse(window.__written[0] ?? '{}'),
+      saved: window.__bd_probe.scene.PatchesPanel.flashing('save'),
     }));
     // Cancelling the dialog saves nothing and says nothing.
-    await p.evaluate(() => {
-      (window as any).showSaveFilePicker = async () => {
+    await page.evaluate(() => {
+      window.showSaveFilePicker = async () => {
         throw new DOMException('cancelled', 'AbortError');
       };
     });
-    await p.waitForTimeout(1800);
-    await patchesClick(p, 'save', 400);
-    const cancelled = await p.evaluate(() =>
-      (window as any).__bd_probe.scene.PatchesPanel.flashing('save'),
+    await page.waitForTimeout(1800);
+    await patchesClick(page, 'save', 400);
+    const cancelled = await page.evaluate(() =>
+      window.__bd_probe.scene.PatchesPanel.flashing('save'),
     );
-    await p.close();
+    await page.close();
     const ok =
-      r.opts?.startIn === 'music' &&
-      r.opts?.id === 'blokdust-patches' &&
-      r.opts?.suggestedName === 'Bass + Bells.blokdust' &&
-      r.file.meta?.title === 'Bass + Bells' &&
-      r.file.blocks?.length === 1 &&
-      r.saved === true &&
+      result.opts?.startIn === 'music' &&
+      result.opts?.id === 'blokdust-patches' &&
+      result.opts?.suggestedName === 'Bass + Bells.blokdust' &&
+      result.file.meta?.title === 'Bass + Bells' &&
+      result.file.blocks?.length === 1 &&
+      result.saved === true &&
       cancelled === false;
-    return [ok, { opts: r.opts, title: r.file.meta?.title, saved: r.saved, cancelled }];
+    return [ok, { opts: result.opts, title: result.file.meta?.title, saved: result.saved, cancelled }];
   },
   /** Owner review 2 (option A, 2026-11-15): DOWNLOAD PATCH is a quiet bordered button at the bottom right (it was a
    * filled button in v1's third options colour, owner 2026-11-11), and phones don't offer it. */
@@ -252,25 +252,25 @@ export const patchesSaveTests: Record<string, RegressionTest> = {
         isMobile: phone,
         hasTouch: phone,
       });
-      const p = await ctx.newPage();
-      p.on('pageerror', (e) => errors.push(e.message));
-      await p.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
-      await p.waitForFunction(() => (window as any).__bd_probe);
-      await p.click('#start');
-      await p.waitForTimeout(1500);
-      await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.OpenPanel(0));
-      await p.waitForTimeout(1200);
-      const r = await p.evaluate(() => {
-        const pp = (window as any).__bd_probe.scene.PatchesPanel;
+      const page = await ctx.newPage();
+      page.on('pageerror', (error) => errors.push(error.message));
+      await page.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
+      await page.waitForFunction(() => window.__bd_probe);
+      await page.click('#start');
+      await page.waitForTimeout(1500);
+      await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.OpenPanel(0));
+      await page.waitForTimeout(1200);
+      const result = await page.evaluate(() => {
+        const pp = window.__bd_probe.scene.PatchesPanel;
         return {
           main: pp.centreOf('share'),
           download: pp.centreOf('save'),
           saveAs: pp.centreOf('saveAs'),
         };
       });
-      if (!phone) await p.screenshot({ path: `${OUT}/save-tab-option-a.png` });
+      if (!phone) await page.screenshot({ path: `${OUT}/save-tab-option-a.png` });
       await ctx.close();
-      return r;
+      return result;
     };
     const desk = await at(false),
       phone = await at(true);

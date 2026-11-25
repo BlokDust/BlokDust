@@ -5,22 +5,22 @@ export const supportTests: Record<string, RegressionTest> = {
   /** CHG-0036 owner review: Connect holds the form; existing canvas controls and typography supply its chrome. */
   /** CHG-0036 review: intro, matching input type, square switch cells and a vertically centred attachment row. */
   async 'support-connect-spacing'(errors: string[]) {
-    const p = await open(browser, [], errors);
+    const page = await open(browser, [], errors);
     for (
       let i = 0;
-      i < 6 && !(await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.Open));
+      i < 6 && !(await page.evaluate(() => window.__bd_probe.scene.SettingsPanel.Open));
       i++
     ) {
-      await p.mouse.click(1233, 45);
-      await p.waitForTimeout(700);
+      await page.mouse.click(1233, 45);
+      await page.waitForTimeout(700);
     }
-    const point = await p.evaluate(() => {
-      const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+    const point = await page.evaluate(() => {
+      const settingsPanel = window.__bd_probe.scene.SettingsPanel;
       return [settingsPanel.MenuItems[1].Position.x / devicePixelRatio, 30];
     });
-    await p.mouse.click(point[0], point[1]);
-    await p.waitForTimeout(1000);
-    await p.evaluate(() => {
+    await page.mouse.click(point[0], point[1]);
+    await page.waitForTimeout(1000);
+    await page.evaluate(() => {
       const proto = CanvasRenderingContext2D.prototype,
         original = {
           fillText: proto.fillText,
@@ -38,7 +38,7 @@ export const supportTests: Record<string, RegressionTest> = {
         if (text === 'YOUR MESSAGE') message = y;
         if (text.endsWith('PATCH AND DIAGNOSTICS')) drawing = { rule, intro, message };
         else if (drawing && text === '') {
-          (window as any).__supportDrawing = drawing;
+          window.__supportDrawing = drawing;
           drawing = null;
         }
         return (original.fillText as any).call(this, text, x, y, ...rest);
@@ -65,19 +65,19 @@ export const supportTests: Record<string, RegressionTest> = {
         from = [x, y];
         original.lineTo.call(this, x, y);
       };
-      proto.fillRect = function (x, y, w, h) {
-        if (drawing && !drawing.bar) drawing.bar = { x, y, w, h };
-        original.fillRect.call(this, x, y, w, h);
+      proto.fillRect = function (x, y, width, height) {
+        if (drawing && !drawing.bar) drawing.bar = { x, y, w: width, h: height };
+        original.fillRect.call(this, x, y, width, height);
       };
     });
-    await p.mouse.move(10, 120);
-    await p.waitForTimeout(200);
-    const result = await p.evaluate(() => {
+    await page.mouse.move(10, 120);
+    await page.waitForTimeout(200);
+    const result = await page.evaluate(() => {
       const email = document.getElementById('feedback-email')!,
         msg = document.getElementById('feedback-message')!,
         send = document.getElementById('feedback-send')!;
-      const d = (window as any).__supportDrawing,
-        unit = (window as any).__bd_probe.v1App.Unit;
+      const d = window.__supportDrawing,
+        unit = window.__bd_probe.v1App.Unit;
       return {
         d,
         sameType: getComputedStyle(email).font === getComputedStyle(msg).font,
@@ -95,8 +95,8 @@ export const supportTests: Record<string, RegressionTest> = {
         label: document.getElementById('feedback-include')!.getAttribute('aria-label'),
       };
     });
-    await p.screenshot({ path: `${OUT}/support-connect-spacing.png` });
-    await p.close();
+    await page.screenshot({ path: `${OUT}/support-connect-spacing.png` });
+    await page.close();
     return [
       result.sameType &&
         result.compactEmail &&
@@ -109,41 +109,41 @@ export const supportTests: Record<string, RegressionTest> = {
     ];
   },
   async 'support-connect'(errors: string[]) {
-    const p = await open(browser, [], errors);
+    const page = await open(browser, [], errors);
     for (
       let i = 0;
-      i < 6 && !(await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.Open));
+      i < 6 && !(await page.evaluate(() => window.__bd_probe.scene.SettingsPanel.Open));
       i++
     ) {
-      await p.mouse.click(1233, 45);
-      await p.waitForTimeout(700);
+      await page.mouse.click(1233, 45);
+      await page.waitForTimeout(700);
     }
-    const point = await p.evaluate(() => {
-      const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel,
-        t = settingsPanel.MenuItems[1];
+    const point = await page.evaluate(() => {
+      const settingsPanel = window.__bd_probe.scene.SettingsPanel,
+        menuCategory = settingsPanel.MenuItems[1];
       return [
-        t.Position.x / devicePixelRatio,
-        (settingsPanel.OffsetY + 30 * (window as any).__bd_probe.v1App.Unit) / devicePixelRatio,
+        menuCategory.Position.x / devicePixelRatio,
+        (settingsPanel.OffsetY + 30 * window.__bd_probe.v1App.Unit) / devicePixelRatio,
       ];
     });
-    await p.mouse.click(point[0], point[1]);
-    await p.waitForTimeout(1200);
-    const visible = await p.locator('#feedback-message').isVisible();
-    const copy = await p.locator('#feedback-panel').textContent();
-    const style = await p.locator('#feedback-message').evaluate((el) => ({
+    await page.mouse.click(point[0], point[1]);
+    await page.waitForTimeout(1200);
+    const visible = await page.locator('#feedback-message').isVisible();
+    const copy = await page.locator('#feedback-panel').textContent();
+    const style = await page.locator('#feedback-message').evaluate((el) => ({
       border: getComputedStyle(el).borderTopWidth,
       font: getComputedStyle(el).fontFamily,
     }));
-    const toggle = p.getByRole('switch', { name: 'Share patch and diagnostics' });
+    const toggle = page.getByRole('switch', { name: 'Share patch and diagnostics' });
     const on = await toggle.getAttribute('aria-checked');
     await toggle.click();
     const off = await toggle.getAttribute('aria-checked');
-    const tabs = await p.evaluate(() =>
-      (window as any).__bd_probe.scene.SettingsPanel.MenuItems.map(
-        (MenuItem: any) => MenuItem.Name,
+    const tabs = await page.evaluate(() =>
+      window.__bd_probe.scene.SettingsPanel.MenuItems.map(
+        (MenuItem) => MenuItem.Name,
       ),
     );
-    await p.close();
+    await page.close();
     return [
       visible &&
         !copy?.includes('technical diagnostics') &&

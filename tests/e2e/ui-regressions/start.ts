@@ -7,74 +7,74 @@ export const startTests: Record<string, RegressionTest> = {
    * v1 showed it on iOS) with START under it in v1's header type; START plays v1's intro (panels sliding to
    * BLOKDUST), then the stage shows and takes input. `splash=1`: automated browsers skip it otherwise. */
   async 'start-button'(errors: string[]) {
-    const p = await browser.newPage({
+    const page = await browser.newPage({
       viewport: { width: 1280, height: 800 },
       deviceScaleFactor: 1,
     });
-    p.on('pageerror', (e) => errors.push(e.message));
-    await p.addInitScript(() => {
-      const seen: string[] = ((window as any).__texts = []);
-      const f = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) {
-        seen.push(t);
-        return (f as any).call(this, t, ...a);
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.addInitScript(() => {
+      const seen: string[] = (window.__texts = []);
+      const drawText = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (text: string, ...a: any[]) {
+        seen.push(text);
+        return (drawText as any).call(this, text, ...a);
       };
     });
-    await p.goto(
+    await page.goto(
       `${url}/index.html?splash=1&v1=${comp([blk(1, 'ToneSource', -3, 3), blk(2, 'Power', -6, 3)])}`,
     );
-    await p.waitForFunction(() => (window as any).__bd_probe);
-    await p.waitForTimeout(1200);
+    await page.waitForFunction(() => window.__bd_probe);
+    await page.waitForTimeout(1200);
     const { PNG } = await import('pngjs');
     const pixel = async (x: number, y: number) => {
-      const b = await p.screenshot({ clip: { x, y, width: 1, height: 1 } });
+      const b = await page.screenshot({ clip: { x, y, width: 1, height: 1 } });
       const png = PNG.sync.read(b);
       return [png.data[0], png.data[1], png.data[2]];
     };
     const green = THEMES[0].colors[7].match(/\d+/g)!.slice(0, 3).map(Number);
     const triangle = await pixel(630, 400),
-      start = await p.evaluate(() => (window as any).__texts.includes('START'));
-    await p.screenshot({ path: `${OUT}/start-button.png` });
-    await p.evaluate(() => {
-      const g: number[] = ((window as any).__gaps = []);
+      start = await page.evaluate(() => window.__texts.includes('START'));
+    await page.screenshot({ path: `${OUT}/start-button.png` });
+    await page.evaluate(() => {
+      const g: number[] = (window.__gaps = []);
       let last = performance.now();
       const t0 = last;
-      const sp = () => (window as any).__bd_probe.scene.splash;
+      const sp = () => window.__bd_probe.scene.splash;
       const f = (t: number) => {
         g.push(t - last);
         last = t;
-        if (sp().ButtonOffset > 0 && !(window as any).__moved) (window as any).__moved = g.length;
+        if (sp().ButtonOffset > 0 && !window.__moved) window.__moved = g.length;
         if (t - t0 < 1500) requestAnimationFrame(f);
       };
       requestAnimationFrame(f);
     });
-    await p.mouse.click(640, 400);
-    await p.waitForTimeout(1500);
-    const worstFrameMs = await p.evaluate(() => Math.round(Math.max(...(window as any).__gaps)));
-    const worstMovingMs = await p.evaluate(() =>
-      Math.round(Math.max(...(window as any).__gaps.slice((window as any).__moved ?? 0))),
+    await page.mouse.click(640, 400);
+    await page.waitForTimeout(1500);
+    const worstFrameMs = await page.evaluate(() => Math.round(Math.max(...window.__gaps)));
+    const worstMovingMs = await page.evaluate(() =>
+      Math.round(Math.max(...window.__gaps.slice(window.__moved ?? 0))),
     );
-    const gapsAt = await p.evaluate(() => {
+    const gapsAt = await page.evaluate(() => {
       let t = 0;
-      return (window as any).__gaps
+      return window.__gaps
         .map((__gap: number) => [Math.round((t += __gap)), Math.round(__gap)])
         .filter((x: number[]) => x[1] > 25);
     });
-    const during = await p.evaluate(() => ({
+    const during = await page.evaluate(() => ({
       held: !!document.getElementById('start'),
-      title: (window as any).__texts.includes('BLOKDUST 2'),
+      title: window.__texts.includes('BLOKDUST 2'),
     })); // the app's name (owner, 2026-11-14)
-    await p.screenshot({ path: `${OUT}/start-intro.png` });
-    await p.waitForFunction(() => !document.getElementById('start'), null, { timeout: 10000 });
-    await p.waitForTimeout(1000);
-    const after = await p.evaluate(() => ({
-      started: (window as any).__bd_probe.state.started,
-      rms: (window as any).__bd_probe.state.rms,
+    await page.screenshot({ path: `${OUT}/start-intro.png` });
+    await page.waitForFunction(() => !document.getElementById('start'), null, { timeout: 10000 });
+    await page.waitForTimeout(1000);
+    const after = await page.evaluate(() => ({
+      started: window.__bd_probe.state.started,
+      rms: window.__bd_probe.state.rms,
     }));
-    await p.screenshot({ path: `${OUT}/start-after.png` });
+    await page.screenshot({ path: `${OUT}/start-after.png` });
     const stageShows = (await pixel(640, 400)).join() !== '10,10,10';
-    await p.close();
-    const r = {
+    await page.close();
+    const result = {
       triangle,
       green,
       start,
@@ -94,7 +94,7 @@ export const startTests: Record<string, RegressionTest> = {
       after.rms > 0.01 &&
       stageShows &&
       worstMovingMs < 50;
-    return [ok, r];
+    return [ok, result];
   },
   /** Owner (2026-11-12): START felt slow, seconds between the press and the intro. The intro starts on the press
    * (v1 Splash.MouseDown), not the release, and does not wait for the engine: the AudioContext, worklet and WASM are
@@ -105,60 +105,60 @@ export const startTests: Record<string, RegressionTest> = {
       viewport: { width: 1280, height: 800 },
       deviceScaleFactor: 1,
     });
-    const p = await ctx.newPage();
-    p.on('pageerror', (e) => errors.push(e.message));
-    await p.goto(
+    const page = await ctx.newPage();
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(
       `${url}/index.html?splash=1&v1=${comp([blk(1, 'ToneSource', -3, 3), blk(2, 'Power', -6, 3)])}`,
     );
-    await p.waitForFunction(() => (window as any).__bd_probe);
-    await p.waitForTimeout(1000);
-    await p.mouse.move(640, 400);
-    await p.evaluate(() => {
-      (window as any).__downAt = 0;
+    await page.waitForFunction(() => window.__bd_probe);
+    await page.waitForTimeout(1000);
+    await page.mouse.move(640, 400);
+    await page.evaluate(() => {
+      window.__downAt = 0;
       addEventListener(
         'pointerdown',
         () => {
-          (window as any).__downAt = performance.now();
+          window.__downAt = performance.now();
         },
         { capture: true, once: true },
       );
     });
-    await p.mouse.down();
-    const begun = await p
+    await page.mouse.down();
+    const begun = await page
       .waitForFunction(
         () => {
-          const s = (window as any).__bd_probe.scene.splash;
-          return s && !s.IOSPause ? performance.now() - (window as any).__downAt : 0;
+          const s = window.__bd_probe.scene.splash;
+          return s && !s.IOSPause ? performance.now() - window.__downAt : 0;
         },
         null,
         { timeout: 5000 },
       )
       .then((h) => h.jsonValue())
       .catch(() => -1);
-    await p.waitForTimeout(500); // v1 holds the button still for 300 ms, then slides it away
-    const stillDown = await p.evaluate(
-      () => (window as any).__bd_probe.scene.splash?.ButtonOffset ?? 0,
+    await page.waitForTimeout(500); // v1 holds the button still for 300 ms, then slides it away
+    const stillDown = await page.evaluate(
+      () => window.__bd_probe.scene.splash?.ButtonOffset ?? 0,
     );
-    await p.mouse.up();
-    await p
+    await page.mouse.up();
+    await page
       .waitForFunction(() => !document.getElementById('start'), null, { timeout: 10000 })
       .catch(() => {});
-    await p.waitForTimeout(800);
-    const after = await p.evaluate(() => ({
+    await page.waitForTimeout(800);
+    const after = await page.evaluate(() => ({
       held: !!document.getElementById('start'),
-      started: (window as any).__bd_probe.state.started,
-      rms: (window as any).__bd_probe.state.rms,
+      started: window.__bd_probe.state.started,
+      rms: window.__bd_probe.state.rms,
     }));
     await ctx.close();
-    const r = { pressToIntroMs: Math.round(begun), buttonMovingWhileHeld: stillDown > 0, ...after };
+    const result = { pressToIntroMs: Math.round(begun), buttonMovingWhileHeld: stillDown > 0, ...after };
     return [
       begun >= 0 &&
         begun < 100 &&
-        r.buttonMovingWhileHeld &&
+        result.buttonMovingWhileHeld &&
         !after.held &&
         after.started &&
         after.rms > 0.01,
-      r,
+      result,
     ];
   },
   /** Owner (PR #1 review, 2026-11-12): a click or a touch while the intro plays skips it: the tweens stop, the splash
@@ -171,45 +171,45 @@ export const startTests: Record<string, RegressionTest> = {
         deviceScaleFactor: 1,
         hasTouch: touch,
       });
-      const p = await ctx.newPage();
-      p.on('pageerror', (e) => errors.push(e.message));
-      await p.goto(
+      const page = await ctx.newPage();
+      page.on('pageerror', (error) => errors.push(error.message));
+      await page.goto(
         `${url}/index.html?splash=1&v1=${comp([blk(1, 'ToneSource', -3, 3), blk(2, 'Power', -6, 3)])}`,
       );
-      await p.waitForFunction(() => (window as any).__bd_probe);
-      await p.waitForTimeout(1000);
+      await page.waitForFunction(() => window.__bd_probe);
+      await page.waitForTimeout(1000);
       const t0 = Date.now();
       if (touch) {
-        await p.touchscreen.tap(640, 400);
-        await p.waitForTimeout(50);
-        await p.touchscreen.tap(300, 200);
+        await page.touchscreen.tap(640, 400);
+        await page.waitForTimeout(50);
+        await page.touchscreen.tap(300, 200);
       } else {
-        await p.mouse.click(640, 400);
-        await p.waitForTimeout(700);
-        await p.mouse.click(300, 200);
+        await page.mouse.click(640, 400);
+        await page.waitForTimeout(700);
+        await page.mouse.click(300, 200);
       }
-      await p
+      await page
         .waitForFunction(() => !document.getElementById('start'), null, { timeout: 10000 })
         .catch(() => {});
       const ms = Date.now() - t0;
-      const st = await p.evaluate(() => {
-        const sc = (window as any).__bd_probe.scene;
+      const st = await page.evaluate(() => {
+        const sc = window.__bd_probe.scene;
         return {
           drawing: sc.splashDrawing,
           splashing: sc.splashing,
           held: !!document.getElementById('start'),
-          started: (window as any).__bd_probe.state.started,
-          blocks: (window as any).__bd_probe.state.patch.blocks.length,
+          started: window.__bd_probe.state.started,
+          blocks: window.__bd_probe.state.patch.blocks.length,
         };
       });
-      await p.screenshot({ path: `${OUT}/splash-skip-${touch ? 'touch' : 'mouse'}.png` });
+      await page.screenshot({ path: `${OUT}/splash-skip-${touch ? 'touch' : 'mouse'}.png` });
       await ctx.close();
       return { ms, ...st };
     };
     const mouse = await run(false),
       touch = await run(true);
-    const good = (r: typeof mouse) =>
-      r.ms < 2000 && !r.drawing && !r.splashing && !r.held && r.started && r.blocks === 2;
+    const good = (result: typeof mouse) =>
+      result.ms < 2000 && !result.drawing && !result.splashing && !result.held && result.started && result.blocks === 2;
     return [good(mouse) && good(touch), { mouse, touch }];
   },
   // Owner (2026-11-17, CHG-0035): on a phone held upright the splash title BLOKDUST 2 nearly touched the edges.
@@ -220,21 +220,21 @@ export const startTests: Record<string, RegressionTest> = {
       isMobile: true,
       hasTouch: true,
     });
-    const p = await ctx.newPage();
-    p.on('pageerror', (e) => errors.push(e.message));
-    await p.addInitScript(() => {
-      const seen: number[] = ((window as any).__title = []);
-      const f = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) {
-        if (t === 'BLOKDUST 2') seen.push(this.measureText(t).width / this.canvas.width);
-        return (f as any).call(this, t, ...a);
+    const page = await ctx.newPage();
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.addInitScript(() => {
+      const seen: number[] = (window.__title = []);
+      const drawText = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (text: string, ...a: any[]) {
+        if (text === 'BLOKDUST 2') seen.push(this.measureText(text).width / this.canvas.width);
+        return (drawText as any).call(this, text, ...a);
       };
     });
-    await p.goto(`${url}/index.html?splash=1&v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
-    await p.waitForFunction(() => (window as any).__bd_probe);
-    await p.tap('#start');
-    await p.waitForTimeout(4000);
-    const widths = await p.evaluate(() => (window as any).__title as number[]);
+    await page.goto(`${url}/index.html?splash=1&v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
+    await page.waitForFunction(() => window.__bd_probe);
+    await page.tap('#start');
+    await page.waitForTimeout(4000);
+    const widths = await page.evaluate(() => window.__title as number[]);
     await ctx.close();
     const widest = Math.max(0, ...widths);
     return [widths.length > 0 && widest <= 0.81, { drawn: widths.length, widest }];

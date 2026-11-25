@@ -8,10 +8,10 @@ export const patchLoadingTests: Record<string, RegressionTest> = {
    * or with a button that opens the file picker. While the sample is missing, v1's LOAD NEW SAMPLE reads LOCATE FILE
    * and opens the picker (the plugin's native one, or the browser's) instead of the sample search. */
   async 'locate-missing-file'(errors: string[]) {
-    const p = await open(browser, [], errors);
-    await openList(p);
-    const chooser = p.waitForEvent('filechooser');
-    await patchesClick(p, 'file', 0);
+    const page = await open(browser, [], errors);
+    await openList(page);
+    const chooser = page.waitForEvent('filechooser');
+    await patchesClick(page, 'file', 0);
     await (
       await chooser
     ).setFiles({
@@ -42,39 +42,39 @@ export const patchLoadingTests: Record<string, RegressionTest> = {
         }),
       ),
     });
-    await p.waitForTimeout(600);
-    await patchesClick(p, 'fileOpen', 1200);
-    await p.evaluate(() => {
-      const seen: string[] = ((window as any).__texts = []);
-      const f = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) {
-        seen.push(t);
-        return (f as any).call(this, t, ...a);
+    await page.waitForTimeout(600);
+    await patchesClick(page, 'fileOpen', 1200);
+    await page.evaluate(() => {
+      const seen: string[] = (window.__texts = []);
+      const drawText = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (text: string, ...a: any[]) {
+        seen.push(text);
+        return (drawText as any).call(this, text, ...a);
       };
-      const host = (window as any).__bd_probe.scene.host;
-      (window as any).__picked = [];
-      host.loadSample = (id: number) => (window as any).__picked.push(id);
+      const host = window.__bd_probe.scene.host;
+      window.__picked = [];
+      host.loadSample = (id: number) => window.__picked.push(id);
     });
-    await p.mouse.click(640, 402);
-    await p.waitForTimeout(1000); // the block: its options panel
-    await p.mouse.move(941, 443);
-    await p.mouse.click(941, 443);
-    await p.waitForTimeout(800); // v1's LOAD NEW SAMPLE button
-    const r = await p.evaluate(() => ({
-      texts: (window as any).__texts
+    await page.mouse.click(640, 402);
+    await page.waitForTimeout(1000); // the block: its options panel
+    await page.mouse.move(941, 443);
+    await page.mouse.click(941, 443);
+    await page.waitForTimeout(800); // v1's LOAD NEW SAMPLE button
+    const result = await page.evaluate(() => ({
+      texts: window.__texts
         .filter((__text: string) => /LOCATE|LOAD NEW|MISSING/.test(__text))
         .slice(0, 4),
-      picked: (window as any).__picked,
-      search: (window as any).__bd_probe.scene.SoundcloudPanel.Open,
+      picked: window.__picked,
+      search: window.__bd_probe.scene.SoundcloudPanel.Open,
     }));
-    await p.screenshot({ path: `${OUT}/locate-missing-file.png` });
-    await p.close();
+    await page.screenshot({ path: `${OUT}/locate-missing-file.png` });
+    await page.close();
     return [
-      r.texts.includes('LOCATE FILE') &&
-        !r.texts.includes('LOAD NEW SAMPLE') &&
-        r.picked.length === 1 &&
-        !r.search,
-      r,
+      result.texts.includes('LOCATE FILE') &&
+        !result.texts.includes('LOAD NEW SAMPLE') &&
+        result.picked.length === 1 &&
+        !result.search,
+      result,
     ];
   },
   /** The page's loader (a Stage's inner world on the website) drops an unknown param with a warning instead of
@@ -98,7 +98,7 @@ export const patchLoadingTests: Record<string, RegressionTest> = {
       loaded.ids.size === 2 &&
       loaded.warnings?.length === 1 &&
       /fromTheFuture/.test(loaded.warnings[0]) &&
-      loaded.commands.some((command: any) => command.type === 3 && command.value === 7);
+      loaded.commands.some((command) => command.type === 3 && command.value === 7);
     return [ok, { error, ids: loaded?.ids.size, warnings: loaded?.warnings }];
   },
   /** On the website a patch's Audio In is a Microphone (it needs power). Someone else's patch (here a link) starts
@@ -123,41 +123,41 @@ export const patchLoadingTests: Record<string, RegressionTest> = {
     });
     try {
       const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } });
-      const p = await ctx.newPage();
-      p.on('pageerror', (e) => errors.push(e.message));
-      await p.addInitScript(() => {
-        const t: string[] = ((window as any).__texts = []),
-          f = CanvasRenderingContext2D.prototype.fillText;
+      const page = await ctx.newPage();
+      page.on('pageerror', (error) => errors.push(error.message));
+      await page.addInitScript(() => {
+        const texts: string[] = (window.__texts = []),
+          drawText = CanvasRenderingContext2D.prototype.fillText;
         CanvasRenderingContext2D.prototype.fillText = function (x: string, ...a: any[]) {
-          t.push(x);
-          return (f as any).call(this, x, ...a);
+          texts.push(x);
+          return (drawText as any).call(this, x, ...a);
         };
       });
-      await p.goto(`${url}/index.html?c=${code}`);
-      await p.waitForFunction(() => (window as any).__bd_probe);
-      await p.click('#start');
-      await p.waitForFunction(() => (window as any).__bd_probe.state.started, null, {
+      await page.goto(`${url}/index.html?c=${code}`);
+      await page.waitForFunction(() => window.__bd_probe);
+      await page.click('#start');
+      await page.waitForFunction(() => window.__bd_probe.state.started, null, {
         timeout: 20000,
       });
-      await p.waitForTimeout(2000);
-      const types = await p.evaluate(() =>
-        ((window as any).__bd_probe.state.patch.blocks as { type: string }[]).map((x) => x.type),
+      await page.waitForTimeout(2000);
+      const types = await page.evaluate(() =>
+        (window.__bd_probe.state.patch.blocks as { type: string }[]).map((x) => x.type),
       );
-      const before = await p.evaluate(() => ({
-        mic: (window as any).__bd_probe.microphoneOpen,
-        guarded: (window as any).__bd_probe.guarded,
-        asked: ((window as any).__texts as string[]).some((t) =>
-          /THIS PATCH USES YOUR MICROPHONE/i.test(t),
+      const before = await page.evaluate(() => ({
+        mic: window.__bd_probe.microphoneOpen,
+        guarded: window.__bd_probe.guarded,
+        asked: (window.__texts as string[]).some((text) =>
+          /THIS PATCH USES YOUR MICROPHONE/i.test(text),
         ),
       }));
-      await p.screenshot({ path: `${OUT}/others-patch-mic.png` });
-      await p.evaluate(() => (window as any).__bd_probe.scene.MessagePanel._Value.buttonEvent()); // TURN ON
-      await p
-        .waitForFunction(() => (window as any).__bd_probe.microphoneOpen, null, { timeout: 10000 })
+      await page.screenshot({ path: `${OUT}/others-patch-mic.png` });
+      await page.evaluate(() => window.__bd_probe.scene.MessagePanel._Value.buttonEvent()); // TURN ON
+      await page
+        .waitForFunction(() => window.__bd_probe.microphoneOpen, null, { timeout: 10000 })
         .catch(() => {});
-      await p.waitForTimeout(800);
-      const on = await p.evaluate(() => (window as any).__bd_probe.microphoneOpen);
-      const unpowered = await maxOver(p, 'rms', 1500);
+      await page.waitForTimeout(800);
+      const on = await page.evaluate(() => window.__bd_probe.microphoneOpen);
+      const unpowered = await maxOver(page, 'rms', 1500);
       await ctx.close();
       const ok =
         types.includes('source.microphone') &&

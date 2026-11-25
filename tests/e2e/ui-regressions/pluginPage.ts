@@ -18,13 +18,13 @@ export async function openPlugin(
     ([p, ids, standalone, extra]) => {
       const listeners: Record<string, ((x: unknown) => void)[]> = {};
       const sent: { id: string; v: any }[] = [];
-      (window as any).__sent = sent;
-      (window as any).__fire = (id: string, v: unknown) => {
-        listeners[id]?.forEach((f) => {
-          f(v);
+      window.__sent = sent;
+      window.__fire = (id: string, value: unknown) => {
+        listeners[id]?.forEach((listener) => {
+          listener(value);
         });
       };
-      (window as any).__JUCE__ = {
+      window.__JUCE__ = {
         backend: {
           addEventListener: (id: string, fn: (x: unknown) => void) => {
             (listeners[id] ??= []).push(fn);
@@ -49,9 +49,9 @@ export async function openPlugin(
     [patch, ids, standalone, extra] as const,
   );
   const pg = await ctx.newPage();
-  pg.on('pageerror', (e) => errors.push(e.message));
+  pg.on('pageerror', (error) => errors.push(error.message));
   await pg.goto(`${url}/index.html`);
-  await pg.waitForFunction(() => (window as any).__bd_probe?.state.started, null, {
+  await pg.waitForFunction(() => window.__bd_probe?.state.started, null, {
     timeout: 15000,
   });
   await pg.waitForTimeout(1500);

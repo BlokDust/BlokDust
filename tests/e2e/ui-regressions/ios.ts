@@ -13,11 +13,11 @@ export const iosTests: Record<string, RegressionTest> = {
       hasTouch: true,
       isMobile: true,
     });
-    const p = await ctx.newPage();
-    p.on('pageerror', (e) => errors.push(e.message));
-    await p.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
-    await p.waitForFunction(() => (window as any).__bd_probe);
-    const r = await p.evaluate(() => {
+    const page = await ctx.newPage();
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
+    await page.waitForFunction(() => window.__bd_probe);
+    const result = await page.evaluate(() => {
       const canvas = document.querySelector('#stage canvas')!,
         cs = (element: Element) => getComputedStyle(element) as any;
       const touch = (el: Element) => {
@@ -51,13 +51,13 @@ export const iosTests: Record<string, RegressionTest> = {
     });
     await ctx.close();
     const ok =
-      r.coarse &&
-      r.select.every((v) => v === 'none') &&
-      r.fieldSelect !== 'none' &&
-      r.stageTouchCancelled &&
-      !r.fieldTouchCancelled &&
-      r.callout;
-    return [ok, r];
+      result.coarse &&
+      result.select.every((value) => value === 'none') &&
+      result.fieldSelect !== 'none' &&
+      result.stageTouchCancelled &&
+      !result.fieldTouchCancelled &&
+      result.callout;
+    return [ok, result];
   },
   /** Owner (2026-11-08): on iOS there was no sound with the silent switch on. Safari's default audio session
    * ("auto") routes the page like a notification sound; `navigator.audioSession.type = 'playback'`, set before the
@@ -69,55 +69,55 @@ export const iosTests: Record<string, RegressionTest> = {
   // Coming back to the page, or the next press, resumes it; a press also kicks a context that says it runs but renders
   // nothing (suspend, then resume).
   async 'audio-resumes-after-interruption'(errors) {
-    const p = await browser.newPage();
-    p.on('pageerror', (e) => errors.push(e.message));
-    await p.addInitScript(() => {
+    const page = await browser.newPage();
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.addInitScript(() => {
       const AC = window.AudioContext;
-      (window as any).AudioContext = class extends AC {
-        constructor(o?: AudioContextOptions) {
-          super(o);
-          (window as any).__ctx = this;
+      window.AudioContext = class extends AC {
+        constructor(options?: AudioContextOptions) {
+          super(options);
+          window.__ctx = this;
         }
       };
     });
-    await p.goto(
+    await page.goto(
       `${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0), blk(2, 'Power', 0, 0)])}`,
     );
-    await p.waitForFunction(() => (window as any).__bd_probe);
-    await p.click('#start');
-    await p.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 2);
-    const snaps = () => p.evaluate(() => (window as any).__bd_probe.state.snapshots as number);
-    const interrupt = () => p.evaluate(() => (window as any).__ctx.suspend());
+    await page.waitForFunction(() => window.__bd_probe);
+    await page.click('#start');
+    await page.waitForFunction(() => window.__bd_probe.state.snapshots > 2);
+    const snaps = () => page.evaluate(() => window.__bd_probe.state.snapshots as number);
+    const interrupt = () => page.evaluate(() => window.__ctx.suspend());
     // Interrupted while away; the page shows again.
     await interrupt();
-    await p.waitForTimeout(200);
-    await p.evaluate(() => {
+    await page.waitForTimeout(200);
+    await page.evaluate(() => {
       document.dispatchEvent(new Event('visibilitychange'));
       window.dispatchEvent(new Event('pageshow'));
     });
-    await p.waitForTimeout(500);
+    await page.waitForTimeout(500);
     const a = await snaps();
-    await p.waitForTimeout(300);
+    await page.waitForTimeout(300);
     const backOnShow =
-      (await snaps()) > a && (await p.evaluate(() => (window as any).__ctx.state)) === 'running';
+      (await snaps()) > a && (await page.evaluate(() => window.__ctx.state)) === 'running';
     // Interrupted again with no page event: the next press on the stage brings it back.
     await interrupt();
-    await p.waitForTimeout(300);
-    await p.mouse.click(900, 650);
-    await p.waitForTimeout(500);
+    await page.waitForTimeout(300);
+    await page.mouse.click(900, 650);
+    await page.waitForTimeout(500);
     const b = await snaps();
-    await p.waitForTimeout(300);
+    await page.waitForTimeout(300);
     const backOnPress =
-      (await snaps()) > b && (await p.evaluate(() => (window as any).__ctx.state)) === 'running';
-    await p.close();
+      (await snaps()) > b && (await page.evaluate(() => window.__ctx.state)) === 'running';
+    await page.close();
     return [backOnShow && backOnPress, { backOnShow, backOnPress }];
   },
   async 'ios-silent-switch'(errors) {
     const run = async (blocks: Block[]) => {
-      const p = await browser.newPage();
-      p.on('pageerror', (e) => errors.push(e.message));
-      await p.addInitScript(() => {
-        const log: string[] = ((window as any).__session = []);
+      const page = await browser.newPage();
+      page.on('pageerror', (error) => errors.push(error.message));
+      await page.addInitScript(() => {
+        const log: string[] = (window.__session = []);
         let type = 'auto';
         Object.defineProperty(navigator, 'audioSession', {
           value: {
@@ -131,25 +131,25 @@ export const iosTests: Record<string, RegressionTest> = {
           },
         });
         const AC = window.AudioContext;
-        (window as any).AudioContext = class extends AC {
-          constructor(o?: AudioContextOptions) {
+        window.AudioContext = class extends AC {
+          constructor(options?: AudioContextOptions) {
             log.push('AudioContext');
-            super(o);
+            super(options);
           }
         };
         const gum = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-        navigator.mediaDevices.getUserMedia = (c?: MediaStreamConstraints) => {
+        navigator.mediaDevices.getUserMedia = (constraints?: MediaStreamConstraints) => {
           log.push('getUserMedia');
-          return gum(c);
+          return gum(constraints);
         };
       });
-      await p.goto(`${url}/index.html?v1=${comp(blocks)}`);
-      await p.waitForFunction(() => (window as any).__bd_probe);
-      await p.click('#start');
-      await p.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 2);
-      await p.waitForTimeout(300);
-      const log = await p.evaluate(() => (window as any).__session as string[]);
-      await p.close();
+      await page.goto(`${url}/index.html?v1=${comp(blocks)}`);
+      await page.waitForFunction(() => window.__bd_probe);
+      await page.click('#start');
+      await page.waitForFunction(() => window.__bd_probe.state.snapshots > 2);
+      await page.waitForTimeout(300);
+      const log = await page.evaluate(() => window.__session as string[]);
+      await page.close();
       return log;
     };
     const plain = await run([blk(1, 'ToneSource', 0, 0)]);
@@ -167,68 +167,68 @@ export const iosTests: Record<string, RegressionTest> = {
    * it shows no links: About keeps the developers' blurbs but not their websites or Twitter names, and the footer's
    * "View the code on GitHub" is gone; pressing where they were opens nothing. */
   async 'ipad-extension-no-links'(errors: string[]) {
-    const p = await open(browser, [], errors);
-    await p.evaluate(() => {
-      const seen: string[] = ((window as any).__texts = []);
-      const f = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) {
-        seen.push(t);
-        return (f as any).call(this, t, ...a);
+    const page = await open(browser, [], errors);
+    await page.evaluate(() => {
+      const seen: string[] = (window.__texts = []);
+      const drawText = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (text: string, ...a: any[]) {
+        seen.push(text);
+        return (drawText as any).call(this, text, ...a);
       };
-      (window as any).__opened = [];
-      window.open = (u?: string | URL) => {
-        (window as any).__opened.push(String(u));
+      window.__opened = [];
+      window.open = (target?: string | URL) => {
+        window.__opened.push(String(target));
         return null;
       };
     });
-    const linkAt = await p.evaluate(() => {
-      const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+    const linkAt = await page.evaluate(() => {
+      const settingsPanel = window.__bd_probe.scene.SettingsPanel;
       settingsPanel.OpenPanel();
       return null;
     });
-    await p.waitForTimeout(1200);
-    const before = await p.evaluate(() =>
-      (window as any).__bd_probe.scene.SettingsPanel.footerLinks(),
+    await page.waitForTimeout(1200);
+    const before = await page.evaluate(() =>
+      window.__bd_probe.scene.SettingsPanel.footerLinks(),
     );
-    await p.evaluate(() => {
-      (window as any).__bd_probe.hideLinks();
-      (window as any).__texts.length = 0;
+    await page.evaluate(() => {
+      window.__bd_probe.hideLinks();
+      window.__texts.length = 0;
     });
-    const about = await p.evaluate(() => {
-      const m = (window as any).__bd_probe.scene.SettingsPanel.MenuItems[2],
-        pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio;
-      return [m.Position.x / pr, 30];
+    const about = await page.evaluate(() => {
+      const menuCategory = window.__bd_probe.scene.SettingsPanel.MenuItems[2],
+        pr = window.__bd_probe.v1App.Metrics.PixelRatio;
+      return [menuCategory.Position.x / pr, 30];
     });
-    await p.mouse.move(about[0], about[1]);
-    await p.mouse.click(about[0], about[1]);
-    await p.waitForTimeout(1200);
-    const after = await p.evaluate(() =>
-      (window as any).__bd_probe.scene.SettingsPanel.footerLinks(),
+    await page.mouse.move(about[0], about[1]);
+    await page.mouse.click(about[0], about[1]);
+    await page.waitForTimeout(1200);
+    const after = await page.evaluate(() =>
+      window.__bd_probe.scene.SettingsPanel.footerLinks(),
     );
     // Press across the About columns' link lines and where the footer link was.
     for (let x = 100; x < 1200; x += 40)
-      for (const y of [440, 455, 470, 485, 500]) await p.mouse.click(x, y);
-    if (before[0]) await p.mouse.click(before[0].x, before[0].y);
-    await p.waitForTimeout(300);
-    const r = await p.evaluate(() => {
-      const t: string[] = (window as any).__texts;
+      for (const y of [440, 455, 470, 485, 500]) await page.mouse.click(x, y);
+    if (before[0]) await page.mouse.click(before[0].x, before[0].y);
+    await page.waitForTimeout(300);
+    const result = await page.evaluate(() => {
+      const texts: string[] = window.__texts;
       return {
-        github: t.includes('View the code on GitHub'),
-        twitter: t.some((x) => x.startsWith('@')),
-        blurb: t.some((x) => x.includes('Luke')),
-        opened: (window as any).__opened,
+        github: texts.includes('View the code on GitHub'),
+        twitter: texts.some((x) => x.startsWith('@')),
+        blurb: texts.some((x) => x.includes('Luke')),
+        opened: window.__opened,
       };
     });
-    await p.screenshot({ path: `${OUT}/ipad-extension-no-links.png` });
-    await p.close();
+    await page.screenshot({ path: `${OUT}/ipad-extension-no-links.png` });
+    await page.close();
     linkAt;
     const ok =
       before.length === 1 &&
       after.length === 0 &&
-      !r.github &&
-      !r.twitter &&
-      r.blurb &&
-      r.opened.length === 0;
-    return [ok, { footerBefore: before.length, footerAfter: after.length, ...r }];
+      !result.github &&
+      !result.twitter &&
+      result.blurb &&
+      result.opened.length === 0;
+    return [ok, { footerBefore: before.length, footerAfter: after.length, ...result }];
   },
 };

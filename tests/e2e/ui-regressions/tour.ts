@@ -5,7 +5,7 @@ export interface TourHarness {
   browser: Browser;
   url: string;
   OUT: string;
-  toCss: (p: Page, x: number, y: number) => Promise<[number, number]>;
+  toCss: (page: Page, x: number, y: number) => Promise<[number, number]>;
   maxOver: (p: Page, key: 'rms' | 'particles', ms: number) => Promise<number>;
 }
 
@@ -22,73 +22,73 @@ export function tourTests({
         viewport: { width: 1280, height: 800 },
         deviceScaleFactor: 1,
       });
-      const p = await ctx.newPage();
-      p.on('pageerror', (e) => errors.push(e.message));
-      await p.goto(`${url}/index.html?tour=1`);
-      await p.waitForFunction(() => (window as any).__bd_probe);
-      await p.click('#start');
-      await p.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 10);
-      await p.waitForTimeout(1800);
-      const r = await p.evaluate(() => {
-        const b = (window as any).__bd_probe,
+      const page = await ctx.newPage();
+      page.on('pageerror', (error) => errors.push(error.message));
+      await page.goto(`${url}/index.html?tour=1`);
+      await page.waitForFunction(() => window.__bd_probe);
+      await page.click('#start');
+      await page.waitForFunction(() => window.__bd_probe.state.snapshots > 10);
+      await page.waitForTimeout(1800);
+      const result = await page.evaluate(() => {
+        const b = window.__bd_probe,
           tutorial = b.scene.Tutorial;
         return { blocks: b.state.blocks.length, asked: !!(tutorial.SplashOpen || tutorial.Open) };
       });
-      await p.screenshot({ path: `${OUT}/first-visit-empty.png` });
+      await page.screenshot({ path: `${OUT}/first-visit-empty.png` });
       await ctx.close();
-      return [r.blocks === 0 && r.asked, r];
+      return [result.blocks === 0 && result.asked, result];
     },
     async tour(errors: string[]) {
       const ctx = await browser.newContext({
         viewport: { width: 1280, height: 800 },
         deviceScaleFactor: 1,
       });
-      const p = await ctx.newPage();
-      p.on('pageerror', (e) => errors.push(e.message));
-      await p.goto(`${url}/index.html?demo&tour=1`);
-      await p.waitForFunction(() => (window as any).__bd_probe);
-      await p.click('#start');
-      await p.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 10);
-      await p.waitForTimeout(1800);
+      const page = await ctx.newPage();
+      page.on('pageerror', (error) => errors.push(error.message));
+      await page.goto(`${url}/index.html?demo&tour=1`);
+      await page.waitForFunction(() => window.__bd_probe);
+      await page.click('#start');
+      await page.waitForFunction(() => window.__bd_probe.state.snapshots > 10);
+      await page.waitForTimeout(1800);
       const tut = () =>
-        p.evaluate(() => {
-          const tutorial = (window as any).__bd_probe.scene.Tutorial;
+        page.evaluate(() => {
+          const tutorial = window.__bd_probe.scene.Tutorial;
           return {
             splash: tutorial.SplashOpen,
             open: tutorial.Open,
             scene: tutorial.CurrentScene,
             total: tutorial.TotalScenes,
-            hot: (window as any).__bd_probe.scene.TutorialHotspots.Points.length,
-            blocks: (window as any).__bd_probe.state.blocks.length,
+            hot: window.__bd_probe.scene.TutorialHotspots.Points.length,
+            blocks: window.__bd_probe.state.blocks.length,
           };
         });
       const asked = await tut();
-      await p.screenshot({ path: `${OUT}/tour-welcome.png` });
-      await p.evaluate(() => (window as any).__bd_probe.scene.setWorldPower(false)); // owner: power off before the tour
+      await page.screenshot({ path: `${OUT}/tour-welcome.png` });
+      await page.evaluate(() => window.__bd_probe.scene.setWorldPower(false)); // owner: power off before the tour
       // TAKE THE TOUR: v1's hit box, left of the centre line under the message.
-      const take = await p.evaluate(() => {
-        const A = (window as any).__bd_probe.v1App,
-          unit = A.Unit,
-          pr = A.Metrics.PixelRatio;
-        return [(A.Width / 2 - 60 * unit) / pr, (A.Height / 2 + 20 * unit) / pr];
+      const take = await page.evaluate(() => {
+        const v1App = window.__bd_probe.v1App,
+          unit = v1App.Unit,
+          pr = v1App.Metrics.PixelRatio;
+        return [(v1App.Width / 2 - 60 * unit) / pr, (v1App.Height / 2 + 20 * unit) / pr];
       });
-      await p.mouse.move(take[0], take[1]);
-      await p.mouse.click(take[0], take[1]);
-      await p.waitForTimeout(1500);
+      await page.mouse.move(take[0], take[1]);
+      await page.mouse.click(take[0], take[1]);
+      await page.waitForTimeout(1500);
       const started = await tut();
       const host = (type: string, x: number, y: number) =>
-        p.evaluate(([t, gx, gy]) => (window as any).__bd_probe.scene.host.createBlock(t, gx, gy), [
+        page.evaluate(([text, gx, gy]) => window.__bd_probe.scene.host.createBlock(text, gx, gy), [
           type,
           x,
           y,
         ] as const);
       const until = async (n: number) => {
-        await p
-          .waitForFunction((k) => (window as any).__bd_probe.scene.Tutorial.CurrentScene >= k, n, {
+        await page
+          .waitForFunction((k) => window.__bd_probe.scene.Tutorial.CurrentScene >= k, n, {
             timeout: 8000,
           })
           .catch(() => {});
-        await p.waitForTimeout(600);
+        await page.waitForTimeout(600);
         return (await tut()).scene;
       };
       const steps: number[] = [];
@@ -99,46 +99,46 @@ export function tourTests({
       const chop = await host('Chopper', 3, 0);
       steps.push(await until(4));
       // The options step: open the Chopper, use a slider, close the panel.
-      const [cx, cy] = await toCss(p, 3, 0);
-      await p.mouse.click(cx + 8, cy + 8);
-      await p.waitForTimeout(1300);
-      const slider = await p.evaluate(() => {
-        const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
-          A = (window as any).__bd_probe.v1App,
+      const [cx, cy] = await toCss(page, 3, 0);
+      await page.mouse.click(cx + 8, cy + 8);
+      await page.waitForTimeout(1300);
+      const slider = await page.evaluate(() => {
+        const optionsPanel = window.__bd_probe.scene.OptionsPanel,
+          A = window.__bd_probe.v1App,
           pr = A.Metrics.PixelRatio,
           s = (optionsPanel.Options as any[]).findIndex((q) => q.Type === 'slider');
-        const q = optionsPanel.Options[s];
+        const option = optionsPanel.Options[s];
         return [
           (optionsPanel.Position.x + optionsPanel.Margin + optionsPanel.Range * 0.3) / pr,
-          (optionsPanel.Position.y + q.Position.y + q.Size.height / 2) / pr,
+          (optionsPanel.Position.y + option.Position.y + option.Size.height / 2) / pr,
         ];
       });
-      await p.mouse.click(slider[0], slider[1]);
-      await p.waitForTimeout(300);
-      await p.mouse.click(200, 600);
+      await page.mouse.click(slider[0], slider[1]);
+      await page.waitForTimeout(300);
+      await page.mouse.click(200, 600);
       steps.push(await until(5)); // the empty stage: the panel closes
-      await p.evaluate((id) => (window as any).__bd_probe.scene.host.deleteBlock(id), kb);
+      await page.evaluate((id) => window.__bd_probe.scene.host.deleteBlock(id), kb);
       steps.push(await until(6));
       await host('ParticleEmitter', 0, 4);
       steps.push(await until(7));
       await host('Power', -3, 4);
       steps.push(await until(8));
-      const last = await p.evaluate(() => {
-        const tutorial = (window as any).__bd_probe.scene.Tutorial;
+      const last = await page.evaluate(() => {
+        const tutorial = window.__bd_probe.scene.Tutorial;
         return tutorial.Text.Scenes[tutorial.CurrentScene - 1].Intro;
       });
-      await p.screenshot({ path: `${OUT}/tour-last.png` });
-      const kept = await p.evaluate(() => localStorage.getItem('bd.skipTour'));
+      await page.screenshot({ path: `${OUT}/tour-last.png` });
+      const kept = await page.evaluate(() => localStorage.getItem('bd.skipTour'));
       const end = {
-        power: await p.evaluate(() => (window as any).__bd_probe.scene.worldPower),
-        particles: await maxOver(p, 'particles', 3000),
+        power: await page.evaluate(() => window.__bd_probe.scene.worldPower),
+        particles: await maxOver(page, 'particles', 3000),
       };
       // Asked once: the next visit is not asked.
-      await p.goto(`${url}/index.html?demo&tour=1`);
-      await p.waitForFunction(() => (window as any).__bd_probe);
-      await p.click('#start');
-      await p.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 10);
-      await p.waitForTimeout(1800);
+      await page.goto(`${url}/index.html?demo&tour=1`);
+      await page.waitForFunction(() => window.__bd_probe);
+      await page.click('#start');
+      await page.waitForFunction(() => window.__bd_probe.state.snapshots > 10);
+      await page.waitForTimeout(1800);
       const again = await tut();
       await ctx.close();
       chop;

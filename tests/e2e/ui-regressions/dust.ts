@@ -18,13 +18,13 @@ export const dustTests: Record<string, RegressionTest> = {
     await ctx.addInitScript((p) => {
       const listeners: Record<string, ((x: unknown) => void)[]> = {};
       const sent: { id: string; v: any }[] = [];
-      (window as any).__sent = sent;
-      (window as any).__fire = (id: string, v: unknown) => {
-        listeners[id]?.forEach((f) => {
-          f(v);
+      window.__sent = sent;
+      window.__fire = (id: string, value: unknown) => {
+        listeners[id]?.forEach((listener) => {
+          listener(value);
         });
       };
-      (window as any).__JUCE__ = {
+      window.__JUCE__ = {
         backend: {
           addEventListener: (id: string, fn: (x: unknown) => void) => {
             (listeners[id] ??= []).push(fn);
@@ -42,20 +42,20 @@ export const dustTests: Record<string, RegressionTest> = {
       };
     }, patch);
     const pg = await ctx.newPage();
-    pg.on('pageerror', (e) => errors.push(e.message));
+    pg.on('pageerror', (error) => errors.push(error.message));
     await pg.goto(`${url}/index.html`);
-    await pg.waitForFunction(() => (window as any).__bd_probe?.state.started, null, {
+    await pg.waitForFunction(() => window.__bd_probe?.state.started, null, {
       timeout: 15000,
     });
     await pg.waitForTimeout(800);
     const id = (await state(pg)).blocks[0].id;
-    const [bx, by] = await pg.evaluate((i) => (window as any).__bd_probe.blockPoint(i), id);
+    const [bx, by] = await pg.evaluate((i) => window.__bd_probe.blockPoint(i), id);
     await pg.mouse.click(bx, by);
     await pg.waitForTimeout(1200);
     // The first slider's track, right-clicked (css px from the panel's own geometry).
     const [sx, sy] = await pg.evaluate(() => {
-      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
-        sl = optionsPanel.Options.find((Option: any) => Option.Type === 'slider'),
+      const optionsPanel = window.__bd_probe.scene.OptionsPanel,
+        sl = optionsPanel.Options.find((Option) => Option.Type === 'slider'),
         pr = devicePixelRatio;
       return [
         (optionsPanel.Position.x + optionsPanel.Margin + optionsPanel.Range * 0.5) / pr,
@@ -70,16 +70,16 @@ export const dustTests: Record<string, RegressionTest> = {
     const items = await pg.$$eval('#dust-menu div', (d) => d.map((x) => x.textContent));
     await pg.click('#dust-menu div:text("DUST 3")');
     const assigned = await pg.evaluate(
-      () => (window as any).__sent.filter((x: any) => x.id === 'bd_automation').pop()?.v,
+      () => window.__sent.filter((x) => x.id === 'bd_automation').pop()?.v,
     );
     await openMenu();
     const learnLabel = await pg.textContent('#dust-menu [data-learn]');
     await pg.click('#dust-menu [data-learn]');
     const learn = await pg.evaluate(
-      () => (window as any).__sent.filter((x: any) => x.id === 'bd_learnCC').pop()?.v,
+      () => window.__sent.filter((x) => x.id === 'bd_learnCC').pop()?.v,
     );
     await pg.waitForTimeout(1000);
-    await pg.evaluate(() => (window as any).__fire('bd_ccLearned', { slot: 3, cc: 21 }));
+    await pg.evaluate(() => window.__fire('bd_ccLearned', { slot: 3, cc: 21 }));
     await openMenu();
     const learnedLabel = await pg.textContent('#dust-menu [data-learn]');
     await pg.screenshot({ path: `${OUT}/dust-menu.png` });
@@ -104,30 +104,30 @@ export const dustTests: Record<string, RegressionTest> = {
       blocks: [{ id: 'f', type: 'fx.filter', x: 0, y: 0, params: {} }],
     };
     const { pg, close } = await openPlugin(patch, errors);
-    await pg.waitForFunction(() => (window as any).__bd_probe?.state.started, null, {
+    await pg.waitForFunction(() => window.__bd_probe?.state.started, null, {
       timeout: 15000,
     });
     await pg.waitForTimeout(800);
     const id = (await state(pg)).blocks[0].id;
-    const [bx, by] = await pg.evaluate((i) => (window as any).__bd_probe.blockPoint(i), id);
+    const [bx, by] = await pg.evaluate((i) => window.__bd_probe.blockPoint(i), id);
     await pg.mouse.click(bx, by);
     await pg.waitForTimeout(1200);
     const spots = await pg.evaluate(() => {
-      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
-        g = optionsPanel.Options.find((Option: any) => Option.Type === 'parametric'),
+      const optionsPanel = window.__bd_probe.scene.OptionsPanel,
+        option = optionsPanel.Options.find((Option) => Option.Type === 'parametric'),
         pr = devicePixelRatio;
-      const hx = optionsPanel.Position.x + optionsPanel.Margin + g.Handles[1].Position.x,
-        top = optionsPanel.Position.y + g.Position.y;
+      const hx = optionsPanel.Position.x + optionsPanel.Margin + option.Handles[1].Position.x,
+        top = optionsPanel.Position.y + option.Position.y;
       return {
         graph: [
           (optionsPanel.Position.x + optionsPanel.Margin + optionsPanel.Range * 0.15) / pr,
-          (top + g.Size.height * 0.3) / pr,
+          (top + option.Size.height * 0.3) / pr,
         ],
-        handle: [hx / pr, (top + g.Size.height * 0.8 - g.Handles[1].Position.y) / pr],
-        bar: [(hx + g.SubHandles[1].Position.x * 0.5) / pr, (top + g.Size.height * 0.9) / pr],
+        handle: [hx / pr, (top + option.Size.height * 0.8 - option.Handles[1].Position.y) / pr],
+        bar: [(hx + option.SubHandles[1].Position.x * 0.5) / pr, (top + option.Size.height * 0.9) / pr],
       };
     });
-    const r: Record<string, unknown> = {};
+    const result: Record<string, unknown> = {};
     for (const [k, [x, y]] of Object.entries(spots) as [string, number[]][]) {
       await pg.mouse.move(x, y);
       await pg.waitForTimeout(100);
@@ -135,22 +135,22 @@ export const dustTests: Record<string, RegressionTest> = {
       await pg.waitForSelector('#dust-menu', { timeout: 3000 });
       const title = await pg.textContent('#dust-menu div');
       await pg.click('#dust-menu div:text("DUST 2")');
-      r[k] = {
+      result[k] = {
         title,
         param: await pg.evaluate(
-          () => (window as any).__sent.filter((x: any) => x.id === 'bd_automation').pop()?.v?.param,
+          () => window.__sent.filter((x) => x.id === 'bd_automation').pop()?.v?.param,
         ),
       };
     }
     await close();
     const ok =
-      JSON.stringify(r) ===
+      JSON.stringify(result) ===
       JSON.stringify({
         graph: { title: 'FILTER › FREQUENCY', param: 'frequency' },
         handle: { title: 'FILTER › GAIN', param: 'gain' },
         bar: { title: 'FILTER › WIDTH', param: 'Q' },
       });
-    return [ok, r];
+    return [ok, result];
   },
   /** Owner (Ableton, 2026-11-12): automating a Dust lane moves the block's slider in the plugin, live, with its panel
    * open; a closed panel opens at the new value. The processor sends `bd_paramValues` (here faked) for what Dust moved;
@@ -166,15 +166,15 @@ export const dustTests: Record<string, RegressionTest> = {
       ],
     };
     const { pg, close } = await openPlugin(patch, errors);
-    await pg.waitForFunction(() => (window as any).__bd_probe?.state.started, null, {
+    await pg.waitForFunction(() => window.__bd_probe?.state.started, null, {
       timeout: 15000,
     });
     await pg.waitForTimeout(800);
-    const [key, f] = (await state(pg)).blocks.map((b: any) => b.id);
+    const [key, f] = (await state(pg)).blocks.map((b) => b.id);
     const panel = () =>
       pg.evaluate(() => {
-        const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel;
-        return optionsPanel.Options.map((Option: any) =>
+        const optionsPanel = window.__bd_probe.scene.OptionsPanel;
+        return optionsPanel.Options.map((Option) =>
           Option.Type === 'slider'
             ? [Option.Setting, +Option.Value.toFixed(3)]
             : Option.Type === 'parametric'
@@ -182,13 +182,13 @@ export const dustTests: Record<string, RegressionTest> = {
               : [Option.Type],
         );
       });
-    const [bx, by] = await pg.evaluate((i) => (window as any).__bd_probe.blockPoint(i), key);
+    const [bx, by] = await pg.evaluate((i) => window.__bd_probe.blockPoint(i), key);
     await pg.mouse.click(bx, by);
     await pg.waitForTimeout(1200);
     const before = await panel();
     await pg.evaluate(
       ([id]) =>
-        (window as any).__fire('bd_paramValues', { values: [{ id, param: 'drive', value: 0.9 }] }),
+        window.__fire('bd_paramValues', { values: [{ id, param: 'drive', value: 0.9 }] }),
       [key],
     );
     await pg.waitForTimeout(200);
@@ -196,16 +196,16 @@ export const dustTests: Record<string, RegressionTest> = {
     // The Filter's panel is closed while its gain is automated; opened, it shows the new gain.
     await pg.evaluate(
       ([id]) =>
-        (window as any).__fire('bd_paramValues', { values: [{ id, param: 'gain', value: 17.5 }] }),
+        window.__fire('bd_paramValues', { values: [{ id, param: 'gain', value: 17.5 }] }),
       [f],
     );
-    const [fx, fy] = await pg.evaluate((i) => (window as any).__bd_probe.blockPoint(i), f);
+    const [fx, fy] = await pg.evaluate((i) => window.__bd_probe.blockPoint(i), f);
     for (
       let i = 0;
       i < 3 &&
       !(await pg.evaluate(() =>
-        (window as any).__bd_probe.scene.OptionsPanel.Options.some(
-          (Option: any) => Option.Type === 'parametric',
+        window.__bd_probe.scene.OptionsPanel.Options.some(
+          (Option) => Option.Type === 'parametric',
         ),
       ));
       i++
@@ -215,7 +215,7 @@ export const dustTests: Record<string, RegressionTest> = {
     }
     const filter = await panel();
     const saved = await pg.evaluate(() =>
-      (window as any).__bd_probe.state.patch.blocks.map((b: any) => b.params),
+      window.__bd_probe.state.patch.blocks.map((b) => b.params),
     );
     await close();
     const drive = (p: any[]) => p.find((x) => x[0] === 'drive')?.[1];

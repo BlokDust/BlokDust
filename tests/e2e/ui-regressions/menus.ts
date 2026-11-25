@@ -5,13 +5,13 @@ export const menusTests: Record<string, RegressionTest> = {
   // Owner (2026-11-17, CHG-0035): Sources, Powers and Interactions list the most used blocks first, in the owner's
   // order; Effects stay alphabetical (it was every category alphabetical, 2026-11-14).
   async 'menus-in-owner-order'(errors: string[]) {
-    const p = await open(browser, [], errors);
-    const cats = await p.evaluate(() =>
-      ((window as any).__bd_probe.scene.Header.MenuItems as any[]).map((c) =>
+    const page = await open(browser, [], errors);
+    const cats = await page.evaluate(() =>
+      (window.__bd_probe.scene.Header.MenuItems as any[]).map((c) =>
         (c.Items as any[]).map((i) => String(i.Name).toLowerCase()),
       ),
     );
-    await p.close();
+    await page.close();
     const effects = [...cats[1]].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
     const want = {
       source: [
@@ -42,7 +42,7 @@ export const menusTests: Record<string, RegressionTest> = {
     };
     // Gate is on its own branch: the order is checked over the blocks this build has.
     const inOrder = (got: string[], want: string[]) => {
-      const order = want.map((n) => n.toLowerCase());
+      const order = want.map((name) => name.toLowerCase());
       return (
         got.join() === order.filter((n) => got.includes(n)).join() && got.length >= order.length - 1
       );
@@ -59,15 +59,15 @@ export const menusTests: Record<string, RegressionTest> = {
   // Owner (2026-11-17, CHG-0035): the menu's ? hints said SoundCloud (Granular, Sample: "must be creative commons or
   // tagged #blokdust"), "Chrome only" (MIDI); every hint is now the block's manifest description, in the owner's words.
   async 'menu-hints-in-owner-words'(errors: string[]) {
-    const p = await open(browser, [], errors);
-    const hints = await p.evaluate(() =>
+    const page = await open(browser, [], errors);
+    const hints = await page.evaluate(() =>
       Object.fromEntries(
-        ((window as any).__bd_probe.scene.Header.MenuItems as any[]).flatMap((c) =>
+        (window.__bd_probe.scene.Header.MenuItems as any[]).flatMap((c) =>
           (c.Items as any[]).map((i) => [String(i.Name).toLowerCase(), String(i.Description)]),
         ),
       ),
     );
-    await p.close();
+    await page.close();
     const all = Object.values(hints).join(' ');
     const pass =
       !/soundcloud|creative commons|#blokdust|chrome only/i.test(all) &&
@@ -91,25 +91,25 @@ export const menusTests: Record<string, RegressionTest> = {
         viewport: { width: w, height: h },
         deviceScaleFactor: 2,
       });
-      const p = await ctx.newPage();
-      p.on('pageerror', (e) => errors.push(e.message));
-      await p.goto(`${url}/index.html`);
-      await p.waitForFunction(() => (window as any).__bd_probe);
-      await p.click('#start');
-      await p.waitForTimeout(1500);
-      const at = await p.evaluate(() => {
-        const hd = (window as any).__bd_probe.scene.Header,
-          c = hd.MenuItems[0],
-          unit = (window as any).__bd_probe.v1App.Unit;
-        return [c.Position.x / devicePixelRatio, (hd.Height * 0.5 * unit) / devicePixelRatio];
+      const page = await ctx.newPage();
+      page.on('pageerror', (error) => errors.push(error.message));
+      await page.goto(`${url}/index.html`);
+      await page.waitForFunction(() => window.__bd_probe);
+      await page.click('#start');
+      await page.waitForTimeout(1500);
+      const at = await page.evaluate(() => {
+        const hd = window.__bd_probe.scene.Header,
+          menuCategory = hd.MenuItems[0],
+          unit = window.__bd_probe.v1App.Unit;
+        return [menuCategory.Position.x / devicePixelRatio, (hd.Height * 0.5 * unit) / devicePixelRatio];
       });
-      await p.mouse.move(at[0], at[1]);
-      await p.mouse.down();
-      await p.mouse.up();
-      await p.waitForTimeout(1200);
-      const r = await p.evaluate(() => {
-        const hd = (window as any).__bd_probe.scene.Header,
-          unit = (window as any).__bd_probe.v1App.Unit,
+      await page.mouse.move(at[0], at[1]);
+      await page.mouse.down();
+      await page.mouse.up();
+      await page.waitForTimeout(1200);
+      const result = await page.evaluate(() => {
+        const hd = window.__bd_probe.scene.Header,
+          unit = window.__bd_probe.v1App.Unit,
           it = hd.MenuItems[0].Items[0];
         return {
           drop: hd.DropDown,
@@ -118,13 +118,13 @@ export const menusTests: Record<string, RegressionTest> = {
           itemY: it.Position.y,
         };
       });
-      await p.screenshot({ path: `${OUT}/block-menu-${name}.png` });
+      await page.screenshot({ path: `${OUT}/block-menu-${name}.png` });
       await ctx.close();
-      const centred = Math.abs(r.itemY - r.centre) < 1;
+      const centred = Math.abs(result.itemY - result.centre) < 1;
       // Up to MaxAspect (2:1) v1's height; past it, in proportion (GarageBand 1000×290: 58%).
-      const want = r.full * Math.min(1, (h * 2) / w);
-      const good = r.drop > 0 && Math.abs(r.drop - want) < 0.5 && centred;
-      out[name] = { good, drop: Math.round(r.drop), full: Math.round(r.full), centred };
+      const want = result.full * Math.min(1, (h * 2) / w);
+      const good = result.drop > 0 && Math.abs(result.drop - want) < 0.5 && centred;
+      out[name] = { good, drop: Math.round(result.drop), full: Math.round(result.full), centred };
       ok &&= good;
     }
     return [ok, out];

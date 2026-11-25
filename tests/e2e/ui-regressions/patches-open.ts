@@ -16,81 +16,81 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
    * Cmd/Ctrl+Z takes them out again. SAVE TO COMPUTER downloads a `.blokdust` file where the browser has no save dialog.
    * FROM YOUR COMPUTER and a dropped file ask Open or Insert. */
   async 'patches-web'(errors: string[]) {
-    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
-    await p.evaluate(() => {
-      delete (window as any).showSaveFilePicker;
+    const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await page.evaluate(() => {
+      delete window.showSaveFilePicker;
     }); // a browser without a save dialog
-    await keepPresets(p);
-    const count = async () => (await state(p)).patch.blocks.length;
+    await keepPresets(page);
+    const count = async () => (await state(page)).patch.blocks.length;
     const centre = async (from: number) =>
-      p.evaluate((n) => {
-        const b = (window as any).__bd_probe.state.patch.blocks.slice(n);
-        const xs = b.map((q: any) => q.x),
-          ys = b.map((q: any) => q.y);
+      page.evaluate((n) => {
+        const b = window.__bd_probe.state.patch.blocks.slice(n);
+        const xs = b.map((patchBlock) => patchBlock.x),
+          ys = b.map((patchBlock) => patchBlock.y);
         return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
       }, from) as Promise<[number, number]>;
-    await openPatches(p);
-    const tab = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Tab);
-    const title = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Title);
-    await patchesClick(p, 'tab1', 1100);
-    const items = await p.evaluate(() =>
-      (window as any).__bd_probe.scene.PatchesPanel.Items.map((i: any) => i.name),
+    await openPatches(page);
+    const tab = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.Tab);
+    const title = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.Title);
+    await patchesClick(page, 'tab1', 1100);
+    const items = await page.evaluate(() =>
+      window.__bd_probe.scene.PatchesPanel.Items.map((i) => i.name),
     );
-    await p.screenshot({ path: `${OUT}/patches-web.png` });
+    await page.screenshot({ path: `${OUT}/patches-web.png` });
     // INSERT: the blocks follow the pointer, drawn like a pressed block, until a click.
-    await patchesClick(p, 'ins0', 100);
-    await p.mouse.move(400, 600, { steps: 8 });
-    await p.waitForTimeout(300);
-    const placing = await p.evaluate(() => (window as any).__bd_placing());
-    await p.screenshot({ path: `${OUT}/patches-web-placing.png` });
-    await p.mouse.click(400, 600);
-    await p.waitForTimeout(300);
+    await patchesClick(page, 'ins0', 100);
+    await page.mouse.move(400, 600, { steps: 8 });
+    await page.waitForTimeout(300);
+    const placing = await page.evaluate(() => window.__bd_placing());
+    await page.screenshot({ path: `${OUT}/patches-web-placing.png` });
+    await page.mouse.click(400, 600);
+    await page.waitForTimeout(300);
     const placed = {
       count: await count(),
       centre: await centre(1),
-      placing: await p.evaluate(() => (window as any).__bd_placing()),
+      placing: await page.evaluate(() => window.__bd_placing()),
     };
-    const [cx, cy] = await toCss(p, placed.centre[0], placed.centre[1]);
-    await p.keyboard.press('ControlOrMeta+z');
-    await p.waitForTimeout(300);
+    const [cx, cy] = await toCss(page, placed.centre[0], placed.centre[1]);
+    await page.keyboard.press('ControlOrMeta+z');
+    await page.waitForTimeout(300);
     const undone = await count();
     // Esc while placing puts nothing down.
-    await openList(p);
-    await patchesClick(p, 'ins0', 100);
-    await p.mouse.move(500, 300, { steps: 4 });
-    await p.keyboard.press('Escape');
-    await p.waitForTimeout(300);
+    await openList(page);
+    await patchesClick(page, 'ins0', 100);
+    await page.mouse.move(500, 300, { steps: 4 });
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
     const escaped = await count();
     // SAVE TO COMPUTER (download)
-    await openPatches(p);
-    const dl = p.waitForEvent('download');
-    await patchesClick(p, 'save');
-    const d = await dl,
-      file = JSON.parse(readFileSync(await d.path(), 'utf8'));
+    await openPatches(page);
+    const dl = page.waitForEvent('download');
+    await patchesClick(page, 'save');
+    const download = await dl,
+      file = JSON.parse(readFileSync(await download.path(), 'utf8'));
     const saved = {
-      name: d.suggestedFilename(),
+      name: download.suggestedFilename(),
       title: file.meta?.title,
       blocks: file.blocks?.length,
       format: file.format,
     };
     // The saved patch is listed first (this browser only); OPEN a preset: just saved, so no question.
-    await openList(p);
-    const mine = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Items[0]);
-    await rowButton(p, 'open', 'Computer Keys + 2 Tones');
+    await openList(page);
+    const mine = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.Items[0]);
+    await rowButton(page, 'open', 'Computer Keys + 2 Tones');
     const afterOpen = await count();
-    await openList(p);
-    await rowButton(p, 'open', title); // the saved one (nothing changed since the preset opened: no question)
+    await openList(page);
+    await rowButton(page, 'open', title); // the saved one (nothing changed since the preset opened: no question)
     const reopened = {
       blocks: await count(),
-      title: await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Title),
+      title: await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.Title),
     };
-    await openList(p);
-    await rowButton(p, 'open', 'Computer Keys + 2 Tones');
-    const openTitle = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Title);
+    await openList(page);
+    await rowButton(page, 'open', 'Computer Keys + 2 Tones');
+    const openTitle = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.Title);
     // FROM YOUR COMPUTER → Insert
-    await openList(p);
-    const chooser = p.waitForEvent('filechooser');
-    await patchesClick(p, 'file', 0);
+    await openList(page);
+    const chooser = page.waitForEvent('filechooser');
+    await patchesClick(page, 'file', 0);
     await (
       await chooser
     ).setFiles({
@@ -108,19 +108,19 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
         }),
       ),
     });
-    await p.waitForTimeout(600);
-    const choice = await p.evaluate(() => {
-      const pp = (window as any).__bd_probe.scene.PatchesPanel;
+    await page.waitForTimeout(600);
+    const choice = await page.evaluate(() => {
+      const pp = window.__bd_probe.scene.PatchesPanel;
       return { view: pp.View, picked: pp.Picked };
     });
-    await p.screenshot({ path: `${OUT}/patches-web-file.png` });
-    await patchesClick(p, 'fileInsert', 100);
-    await p.mouse.move(900, 600, { steps: 4 });
-    await p.mouse.click(900, 600);
-    await p.waitForTimeout(300);
+    await page.screenshot({ path: `${OUT}/patches-web-file.png` });
+    await patchesClick(page, 'fileInsert', 100);
+    await page.mouse.move(900, 600, { steps: 4 });
+    await page.mouse.click(900, 600);
+    await page.waitForTimeout(300);
     const afterFile = await count();
     // A dropped file: the same question
-    await p.evaluate(() => {
+    await page.evaluate(() => {
       const dt = new DataTransfer();
       dt.items.add(
         new File(
@@ -145,15 +145,15 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
         }),
       );
     });
-    await p.waitForTimeout(1200);
-    const dropView = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View);
-    await patchesClick(p, 'fileInsert', 100);
-    await p.mouse.move(300, 650, { steps: 4 });
-    await p.mouse.click(300, 650);
-    await p.waitForTimeout(300);
+    await page.waitForTimeout(1200);
+    const dropView = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.View);
+    await patchesClick(page, 'fileInsert', 100);
+    await page.mouse.move(300, 650, { steps: 4 });
+    await page.mouse.click(300, 650);
+    await page.waitForTimeout(300);
     const afterDrop = await count();
-    await p.screenshot({ path: `${OUT}/patches-web-after.png` });
-    await p.close();
+    await page.screenshot({ path: `${OUT}/patches-web-after.png` });
+    await page.close();
     const ok =
       tab === 0 &&
       items.includes('MIDI Keys + 2 Tones') &&
@@ -206,62 +206,62 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
   /** Owner (2026-11-10): Open over unsaved changes asks first (CANCEL · SAVE FIRST · OPEN ANYWAY); an unchanged patch
    * opens straight away, and Insert never asks. SAVE FIRST saves, then opens. */
   async 'open-confirms-unsaved'(errors: string[]) {
-    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
-    await p.evaluate(() => {
-      delete (window as any).showSaveFilePicker;
+    const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await page.evaluate(() => {
+      delete window.showSaveFilePicker;
     });
-    await keepPresets(p);
-    const count = async () => (await state(p)).patch.blocks.length;
+    await keepPresets(page);
+    const count = async () => (await state(page)).patch.blocks.length;
     /** Drag the patch's first block 4 cells right: a change. */
     const change = async () => {
-      const b = (await state(p)).patch.blocks[0],
-        [x, y] = await toCss(p, b.x, b.y + 0.2),
-        [x2, y2] = await toCss(p, b.x + 4, b.y + 0.2);
-      await p.mouse.move(x, y);
-      await p.mouse.down();
-      await p.mouse.move(x2, y2, { steps: 6 });
-      await p.mouse.up();
-      await p.waitForTimeout(300);
+      const b = (await state(page)).patch.blocks[0],
+        [x, y] = await toCss(page, b.x, b.y + 0.2),
+        [x2, y2] = await toCss(page, b.x + 4, b.y + 0.2);
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      await page.mouse.move(x2, y2, { steps: 6 });
+      await page.mouse.up();
+      await page.waitForTimeout(300);
     };
     const view = () =>
-      p.evaluate(() => {
-        const pp = (window as any).__bd_probe.scene.PatchesPanel;
+      page.evaluate(() => {
+        const pp = window.__bd_probe.scene.PatchesPanel;
         return pp.Open ? pp.View : 'closed';
       });
     // Unchanged (opened from a link): no question.
-    await openList(p);
-    await rowButton(p, 'open', 'Rotating Sequencer');
+    await openList(page);
+    await rowButton(page, 'open', 'Rotating Sequencer');
     const unchanged = { view: await view(), blocks: await count() };
     // Changed: asked; CANCEL keeps the work.
     await change();
-    await openList(p);
-    await rowButton(p, 'open', 'Computer Keys + 2 Tones');
+    await openList(page);
+    await rowButton(page, 'open', 'Computer Keys + 2 Tones');
     const asked = await view();
-    await p.screenshot({ path: `${OUT}/open-confirms-unsaved.png` });
-    await patchesClick(p, 'cancel');
+    await page.screenshot({ path: `${OUT}/open-confirms-unsaved.png` });
+    await patchesClick(page, 'cancel');
     const cancelled = { view: await view(), blocks: await count() };
     // INSERT never asks.
-    await rowButton(p, 'ins', 'Microphone + Recorder', 100);
-    await p.mouse.click(300, 600);
-    await p.waitForTimeout(300);
+    await rowButton(page, 'ins', 'Microphone + Recorder', 100);
+    await page.mouse.click(300, 600);
+    await page.waitForTimeout(300);
     const inserted = { view: await view(), blocks: await count() };
     // SAVE FIRST: the file is saved, then the patch opens.
-    await openList(p);
-    await rowButton(p, 'open', 'Computer Keys + 2 Tones', 300);
-    const dl = p.waitForEvent('download');
-    await patchesClick(p, 'saveFirst', 0);
-    const d = await dl,
-      savedBlocks = JSON.parse(readFileSync(await d.path(), 'utf8')).blocks.length;
-    await p.waitForTimeout(800);
+    await openList(page);
+    await rowButton(page, 'open', 'Computer Keys + 2 Tones', 300);
+    const dl = page.waitForEvent('download');
+    await patchesClick(page, 'saveFirst', 0);
+    const download = await dl,
+      savedBlocks = JSON.parse(readFileSync(await download.path(), 'utf8')).blocks.length;
+    await page.waitForTimeout(800);
     const afterSaveFirst = { view: await view(), blocks: await count() };
     // OPEN ANYWAY
     await change();
-    await openList(p);
-    await rowButton(p, 'open', 'Step Sequencer');
+    await openList(page);
+    await rowButton(page, 'open', 'Step Sequencer');
     const asked2 = await view();
-    await patchesClick(p, 'openAnyway', 600);
+    await patchesClick(page, 'openAnyway', 600);
     const anyway = { view: await view(), blocks: await count() };
-    await p.close();
+    await page.close();
     // Rotating Sequencer has 10 blocks, Step Sequencer 21 (the owner's presets, 2026-11-12).
     const ok =
       unchanged.view === 'closed' &&
@@ -285,11 +285,11 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
   /** CHG-0005: every built-in preset opens with all its blocks, and the self-playing ones (Rotating Sequencer, Step
    * Sequencer: Power blocks run their laser and emitters) are heard without touching anything. Keys and Microphone presets wait for the player. */
   async 'presets-load'(errors: string[]) {
-    const p = await open(browser, [], errors);
-    await keepPresets(p);
-    await openList(p);
-    const items: string[] = await p.evaluate(() =>
-      (window as any).__bd_probe.scene.PatchesPanel.Items.map((i: any) => i.name),
+    const page = await open(browser, [], errors);
+    await keepPresets(page);
+    await openList(page);
+    const items: string[] = await page.evaluate(() =>
+      window.__bd_probe.scene.PatchesPanel.Items.map((i) => i.name),
     );
     const want: Record<string, number> = {
       'Computer Keys + 2 Tones': 6,
@@ -302,29 +302,29 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
     const selfPlaying = new Set(['Rotating Sequencer', 'Step Sequencer', 'Self Playing Scene']);
     const got: Record<string, unknown> = {};
     for (let i = 0; i < items.length; i++) {
-      if (i) await openList(p);
-      await rowButton(p, 'open', items[i], 400); // a preset just opened is saved: no confirm
-      const pb = (await state(p)).patch.blocks,
+      if (i) await openList(page);
+      await rowButton(page, 'open', items[i], 400); // a preset just opened is saved: no confirm
+      const pb = (await state(page)).patch.blocks,
         blocks = pb.length;
       // Owner (PR #1 review, 2026-11-12): lasers and emitters are never self-powered; a Power block next to each runs it.
-      if (pb.some((b: any) => /laser|emitter/.test(b.type) && b.params?.selfPoweredMode))
+      if (pb.some((b) => /laser|emitter/.test(b.type) && b.params?.selfPoweredMode))
         got[`${items[i]}: self-powered`] = true;
       // CHG-0013: the owner's Self Playing Scene opens with its two Toggles opposite (they flip together: the chords take turns).
       const toggles = pb
-        .filter((b: any) => b.type === 'power.toggle')
-        .map((b: any) => !!b.params?.logic);
-      const plays = selfPlaying.has(items[i]) ? await maxOver(p, 'rms', 3000) : null;
+        .filter((b) => b.type === 'power.toggle')
+        .map((b) => !!b.params?.logic);
+      const plays = selfPlaying.has(items[i]) ? await maxOver(page, 'rms', 3000) : null;
       got[items[i]] = {
         blocks,
         ...(plays !== null ? { rms: plays } : {}),
         ...(toggles.length ? { toggles } : {}),
       };
     }
-    await p.close();
+    await page.close();
     const ok =
       Object.entries(want).every(([key, k]) => (got[key] as any)?.blocks === k) &&
       !Object.keys(got).some((k) => k.endsWith('self-powered')) &&
-      [...selfPlaying].every((n) => (got[n] as any)?.rms > 0.001) &&
+      [...selfPlaying].every((name) => (got[name] as any)?.rms > 0.001) &&
       (got['Self Playing Scene'] as any)?.toggles?.length === 2 &&
       (got['Self Playing Scene'] as any).toggles[0] !==
         (got['Self Playing Scene'] as any).toggles[1];
@@ -334,61 +334,61 @@ export const patchesOpenTests: Record<string, RegressionTest> = {
    * then takes the patch off this browser's list. Owner review 3 (2026-11-16): OPEN lists only the user's own patches
    * (no presets: they are @blokdust's in the gallery), so with that one gone it is empty. */
   async 'patch-delete'(errors: string[]) {
-    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
-    await p.evaluate(() => {
-      delete (window as any).showSaveFilePicker;
+    const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await page.evaluate(() => {
+      delete window.showSaveFilePicker;
     });
-    await openPatches(p);
-    await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.setTitle('Bass + Bells'));
-    const dl = p.waitForEvent('download');
-    await patchesClick(p, 'save', 600);
+    await openPatches(page);
+    await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.setTitle('Bass + Bells'));
+    const dl = page.waitForEvent('download');
+    await patchesClick(page, 'save', 600);
     await dl;
-    await openList(p);
-    const listed = await p.evaluate(() =>
-      (window as any).__bd_probe.scene.PatchesPanel.Items.map(
-        (i: any) => `${i.name}${i.removable ? ' [bin]' : ''}`,
+    await openList(page);
+    const listed = await page.evaluate(() =>
+      window.__bd_probe.scene.PatchesPanel.Items.map(
+        (i) => `${i.name}${i.removable ? ' [bin]' : ''}`,
       ),
     );
-    const [bx, by] = await patchesAt(p, 'bin0');
-    await p.mouse.move(bx, by);
-    await p.waitForTimeout(200);
-    await p.screenshot({ path: `${OUT}/patch-delete.png` });
-    await p.evaluate(() => {
-      const seen: string[] = ((window as any).__texts = []);
-      const f = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) {
-        seen.push(t);
-        return (f as any).call(this, t, ...a);
+    const [bx, by] = await patchesAt(page, 'bin0');
+    await page.mouse.move(bx, by);
+    await page.waitForTimeout(200);
+    await page.screenshot({ path: `${OUT}/patch-delete.png` });
+    await page.evaluate(() => {
+      const seen: string[] = (window.__texts = []);
+      const drawText = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (text: string, ...a: any[]) {
+        seen.push(text);
+        return (drawText as any).call(this, text, ...a);
       };
     });
-    await p.mouse.click(bx, by);
-    await p.waitForTimeout(400);
-    const asked = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View);
+    await page.mouse.click(bx, by);
+    await page.waitForTimeout(400);
+    const asked = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.View);
     // Owner's wording (2026-11-10): "Delete <name>?", then what is and isn't touched.
-    const words = await p.evaluate(() => {
-      const t: string[] = (window as any).__texts;
+    const words = await page.evaluate(() => {
+      const texts: string[] = window.__texts;
       return {
-        title: t.includes('DELETE BASS + BELLS?'),
-        line: t
+        title: texts.includes('DELETE BASS + BELLS?'),
+        line: texts
           .join(' ')
           .includes('This patch will be removed from the patches list. Your local downloaded'),
       };
     });
-    await p.screenshot({ path: `${OUT}/patch-delete-confirm.png` });
-    await patchesClick(p, 'removeCancel', 400);
-    const kept = await p.evaluate(
-      () => (window as any).__bd_probe.scene.PatchesPanel.Items[0]?.name,
+    await page.screenshot({ path: `${OUT}/patch-delete-confirm.png` });
+    await patchesClick(page, 'removeCancel', 400);
+    const kept = await page.evaluate(
+      () => window.__bd_probe.scene.PatchesPanel.Items[0]?.name,
     );
-    await patchesClick(p, 'bin0', 400);
-    await patchesClick(p, 'removeOk', 800);
-    const after = await p.evaluate(() => ({
-      items: (window as any).__bd_probe.scene.PatchesPanel.Items.map((i: any) => i.name),
+    await patchesClick(page, 'bin0', 400);
+    await patchesClick(page, 'removeOk', 800);
+    const after = await page.evaluate(() => ({
+      items: window.__bd_probe.scene.PatchesPanel.Items.map((i) => i.name),
       stored: JSON.parse(localStorage.getItem('blokdust.myPatches') ?? '[]').length,
     }));
-    await p.waitForTimeout(300);
-    const empty = await p.evaluate(() => (window as any).__texts.includes('NO PATCHES YET'));
-    await p.screenshot({ path: `${OUT}/open-empty.png` });
-    await p.close();
+    await page.waitForTimeout(300);
+    const empty = await page.evaluate(() => window.__texts.includes('NO PATCHES YET'));
+    await page.screenshot({ path: `${OUT}/open-empty.png` });
+    await page.close();
     const ok =
       listed.length === 1 &&
       listed[0] === 'Bass + Bells [bin]' &&

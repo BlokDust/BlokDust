@@ -27,28 +27,28 @@ export const pluginStageTests: Record<string, RegressionTest> = {
       innerIds: { s: { t: 5, pw: 6 } },
     });
     const menu = await pg.evaluate(() =>
-      ((window as any).__bd_probe.v1App.BlockCreator.MenuJson.categories as any[])
+      (window.__bd_probe.v1App.BlockCreator.MenuJson.categories as any[])
         .find((c) => c.name === 'Source')
-        .items.map((i: any) => i.name),
+        .items.map((i) => i.name),
     );
     await pg.evaluate(() => {
-      (window as any).__sent.length = 0;
+      window.__sent.length = 0;
     });
-    await pg.evaluate(() => (window as any).__bd_stage.enter(1));
+    await pg.evaluate(() => window.__bd_stage.enter(1));
     await pg.waitForTimeout(700);
-    const inside = await pg.evaluate(() => (window as any).__bd_probe.inside?.stage ?? null);
+    const inside = await pg.evaluate(() => window.__bd_probe.inside?.stage ?? null);
     const sent = (id: string) =>
       pg.evaluate(
         (k) =>
-          ((window as any).__sent as { id: string; v: any }[])
-            .filter((e) => e.id === k)
+          (window.__sent as { id: string; v: any }[])
+            .filter((message) => message.id === k)
             .map((e) => e.v),
         id,
       );
-    const views = (await sent('bd_stageView')).map((v: any) => v.stage);
-    const innerTone = await pg.evaluate(() => (window as any).__bd_probe.idOf('t'));
+    const views = (await sent('bd_stageView')).map((value) => value.stage);
+    const innerTone = await pg.evaluate(() => window.__bd_probe.idOf('t'));
     // drag the inner Tone: its move goes to the Stage's world
-    const at = (await pg.evaluate((i) => (window as any).__bd_probe.blockPoint(i), innerTone)) as
+    const at = (await pg.evaluate((i) => window.__bd_probe.blockPoint(i), innerTone)) as
       [number, number] | null;
     if (at) {
       await pg.mouse.move(at[0], at[1]);
@@ -58,15 +58,15 @@ export const pluginStageTests: Record<string, RegressionTest> = {
       await pg.waitForTimeout(400);
     }
     const moves = (await sent('bd_commands'))
-      .flatMap((v: any) => v.commands)
-      .filter((c: any) => c.type === 2);
+      .flatMap((v) => v.commands)
+      .filter((c) => c.type === 2);
     const movedInside =
-      moves.length > 0 && moves.every((move: any) => move.stage === 1 && move.id === innerTone);
+      moves.length > 0 && moves.every((move) => move.stage === 1 && move.id === innerTone);
     // a frame of the outer world is dropped while inside; one of this Stage's world shows
     const frame = (view: number, n: number) =>
       pg.evaluate(
         ([key, k]) =>
-          (window as any).__fire('bd_snapshot', {
+          window.__fire('bd_snapshot', {
             view: key,
             particles: Array.from({ length: k * 3 }, () => 1),
             connections: [],
@@ -75,21 +75,21 @@ export const pluginStageTests: Record<string, RegressionTest> = {
           }),
         [view, n] as const,
       );
-    const before = await pg.evaluate(() => (window as any).__bd_probe.state.particles);
+    const before = await pg.evaluate(() => window.__bd_probe.state.particles);
     await frame(0, 4);
     await pg.waitForTimeout(100);
-    const afterOuter = await pg.evaluate(() => (window as any).__bd_probe.state.particles);
+    const afterOuter = await pg.evaluate(() => window.__bd_probe.state.particles);
     await frame(1, 2);
     await pg.waitForTimeout(100);
-    const afterInner = await pg.evaluate(() => (window as any).__bd_probe.state.particles);
+    const afterInner = await pg.evaluate(() => window.__bd_probe.state.particles);
     await pg.keyboard.press('Escape');
     await pg.waitForTimeout(500);
-    const out = await pg.evaluate(() => (window as any).__bd_probe.inside === null);
-    const back = (await sent('bd_stageView')).map((v: any) => v.stage).slice(1);
+    const out = await pg.evaluate(() => window.__bd_probe.inside === null);
+    const back = (await sent('bd_stageView')).map((v) => v.stage).slice(1);
     const macros = (await sent('bd_macros')).pop()?.macros ?? [];
     const t = macros
-      .find((macro: any) => macro.block === 's')
-      ?.blocks.find((b: any) => b.id === 't');
+      .find((macro) => macro.block === 's')
+      ?.blocks.find((b) => b.id === 't');
     await close();
     const ok =
       menu.includes('Stage') &&
@@ -129,7 +129,7 @@ export const pluginStageTests: Record<string, RegressionTest> = {
       errors,
       { s: 1 },
     );
-    const at = (await pg.evaluate(() => (window as any).__bd_probe.blockPoint(1))) as
+    const at = (await pg.evaluate(() => window.__bd_probe.blockPoint(1))) as
       [number, number] | null;
     if (at) {
       await pg.mouse.move(at[0], at[1]);
@@ -138,7 +138,7 @@ export const pluginStageTests: Record<string, RegressionTest> = {
     await pg
       .waitForFunction(
         () => {
-          const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel;
+          const optionsPanel = window.__bd_probe.scene.OptionsPanel;
           return (
             optionsPanel.Scale === 1 &&
             !optionsPanel.Opening &&
@@ -151,13 +151,13 @@ export const pluginStageTests: Record<string, RegressionTest> = {
       .catch(() => {});
     await pg.waitForTimeout(400);
     const settings = await pg.evaluate(() =>
-      ((window as any).__bd_probe.scene.OptionsPanel.Options as any[]).map((o) => o.Setting),
+      (window.__bd_probe.scene.OptionsPanel.Options as any[]).map((o) => o.Setting),
     );
     await pg.evaluate(() =>
-      (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock?.SetParam('openStage', 1),
+      window.__bd_probe.scene.OptionsPanel.SelectedBlock?.SetParam('openStage', 1),
     );
     await pg.waitForTimeout(700);
-    const opened = await pg.evaluate(() => (window as any).__bd_probe.inside?.stage ?? null);
+    const opened = await pg.evaluate(() => window.__bd_probe.inside?.stage ?? null);
     await close();
     const ok = settings.includes('openStage') && opened === 1;
     return [ok, { settings, opened }];
@@ -175,42 +175,42 @@ export const pluginStageTests: Record<string, RegressionTest> = {
       { a: 1, b: 2 },
     );
     await pg.evaluate(() => {
-      (window as any).__sent.length = 0;
+      window.__sent.length = 0;
     });
-    const made = await pg.evaluate(() => (window as any).__bd_stage.wrap([1, 2], 0, 0));
+    const made = await pg.evaluate(() => window.__bd_stage.wrap([1, 2], 0, 0));
     await pg.waitForTimeout(400);
-    const all = () => pg.evaluate(() => (window as any).__sent as { id: string; v: any }[]);
+    const all = () => pg.evaluate(() => window.__sent as { id: string; v: any }[]);
     const sent1 = await all();
-    const cmds1 = sent1.filter((e) => e.id === 'bd_commands').flatMap((e) => e.v.commands);
-    const innerAdds1 = cmds1.filter((c: any) => c.type === 0 && c.stage === made);
+    const cmds1 = sent1.filter((message) => message.id === 'bd_commands').flatMap((e) => e.v.commands);
+    const innerAdds1 = cmds1.filter((c) => c.type === 0 && c.stage === made);
     const stray1 = cmds1.filter(
-      (c: any) => c.type === 0 && !c.stage && c.blockType !== undefined && c.id !== made,
+      (c) => c.type === 0 && !c.stage && c.blockType !== undefined && c.id !== made,
     );
     const m1 = sent1.filter((e) => e.id === 'bd_macros').pop()?.v.macros ?? [];
     const uid = await pg.evaluate(
       () =>
-        (window as any).__bd_probe.state.patch.blocks.find((b: any) => b.type === 'source.stage')
+        window.__bd_probe.state.patch.blocks.find((b) => b.type === 'source.stage')
           ?.id,
     );
     // copy it
     await pg.evaluate(() => {
-      (window as any).__sent.length = 0;
+      window.__sent.length = 0;
     });
-    await pg.evaluate((i) => (window as any).__bd_probe.select([i]), made);
+    await pg.evaluate((i) => window.__bd_probe.select([i]), made);
     await pg.keyboard.press(process.platform === 'darwin' ? 'Meta+d' : 'Control+d');
     await pg.waitForTimeout(400);
     const sent2 = await all();
     const cmds2 = sent2.filter((e) => e.id === 'bd_commands').flatMap((e) => e.v.commands);
-    const copy = cmds2.find((c: any) => c.type === 0 && !c.stage && c.id !== made)?.id;
-    const innerAdds2 = cmds2.filter((c: any) => c.type === 0 && c.stage === copy);
-    const stray2 = cmds2.filter((c: any) => c.type === 0 && !c.stage && c.id !== copy);
+    const copy = cmds2.find((c) => c.type === 0 && !c.stage && c.id !== made)?.id;
+    const innerAdds2 = cmds2.filter((c) => c.type === 0 && c.stage === copy);
+    const stray2 = cmds2.filter((c) => c.type === 0 && !c.stage && c.id !== copy);
     const m2 = sent2.filter((e) => e.id === 'bd_macros').pop()?.v.macros ?? [];
     await close();
     const ok =
       typeof made === 'number' &&
       innerAdds1.length === 2 &&
       stray1.length === 0 &&
-      m1.some((m: any) => m.block === uid && m.blocks.length === 2) &&
+      m1.some((m) => m.block === uid && m.blocks.length === 2) &&
       typeof copy === 'number' &&
       innerAdds2.length === 2 &&
       stray2.length === 0 &&
@@ -221,11 +221,11 @@ export const pluginStageTests: Record<string, RegressionTest> = {
         made,
         innerAdds1: innerAdds1.length,
         stray1,
-        macros1: m1.map((m: any) => [m.block, m.blocks.length]),
+        macros1: m1.map((m) => [m.block, m.blocks.length]),
         copy,
         innerAdds2: innerAdds2.length,
         stray2,
-        macros2: m2.map((m: any) => [m.block, m.blocks.length]),
+        macros2: m2.map((m) => [m.block, m.blocks.length]),
       },
     ];
   },

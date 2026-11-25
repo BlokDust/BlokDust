@@ -103,8 +103,8 @@ export const pluginKeysTests: Record<string, RegressionTest> = {
     const appArrow = await press(app.pg, 'ArrowUp', 'ArrowUp', { repeat: true }),
       appCmd = await press(app.pg, 'KeyQ', 'q', { metaKey: true });
     await app.close();
-    const r = { dawRepeat, dawOther, appLetter, appRepeat, appArrow, appCmd };
-    return [dawRepeat && !dawOther && appLetter && appRepeat && appArrow && !appCmd, r];
+    const result = { dawRepeat, dawOther, appLetter, appRepeat, appArrow, appCmd };
+    return [dawRepeat && !dawOther && appLetter && appRepeat && appArrow && !appCmd, result];
   },
   /** Ableton: holding a computer key and clicking into the DAW left the note stuck (the web view never saw the key-up
    * and, in a plugin window, no blur either). The editor tells the page when its window loses the keys (bd_keysLost)
@@ -121,14 +121,14 @@ export const pluginKeysTests: Record<string, RegressionTest> = {
     await pg.waitForTimeout(300);
     await pg.keyboard.down('KeyZ');
     await pg.waitForTimeout(200);
-    await pg.evaluate(() => (window as any).__fire('bd_keysLost', {}));
+    await pg.evaluate(() => window.__fire('bd_keysLost', {}));
     await pg.waitForTimeout(200);
     const notes = await pg.evaluate(() =>
-      (window as any).__sent
-        .filter((x: any) => x.id === 'bd_commands')
-        .flatMap((x: any) => x.v.commands)
-        .filter((c: any) => c.type === 4 || c.type === 5)
-        .map((c: any) => `${c.type === 4 ? 'on' : 'off'}:${c.param}`),
+      window.__sent
+        .filter((x) => x.id === 'bd_commands')
+        .flatMap((x) => x.v.commands)
+        .filter((c) => c.type === 4 || c.type === 5)
+        .map((c) => `${c.type === 4 ? 'on' : 'off'}:${c.param}`),
     );
     await pg.keyboard.up('KeyZ');
     await pg.waitForTimeout(100);
@@ -151,7 +151,7 @@ export const pluginKeysTests: Record<string, RegressionTest> = {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
     await ctx.addInitScript((p) => {
       const listeners: Record<string, ((x: unknown) => void)[]> = {};
-      (window as any).__JUCE__ = {
+      window.__JUCE__ = {
         backend: {
           addEventListener: (id: string, fn: (x: unknown) => void) => {
             (listeners[id] ??= []).push(fn);
@@ -159,8 +159,8 @@ export const pluginKeysTests: Record<string, RegressionTest> = {
           emitEvent: (id: string) => {
             if (id === 'bd_hello')
               setTimeout(() => {
-                listeners.bd_patch?.forEach((f) => {
-                  f({ patch: JSON.stringify(p) });
+                listeners.bd_patch?.forEach((listener) => {
+                  listener({ patch: JSON.stringify(p) });
                 });
               }, 50);
           },
@@ -168,39 +168,39 @@ export const pluginKeysTests: Record<string, RegressionTest> = {
       };
     }, patch);
     const pg = await ctx.newPage();
-    pg.on('pageerror', (e) => errors.push(e.message));
+    pg.on('pageerror', (error) => errors.push(error.message));
     await pg.goto(`${url}/index.html`);
-    await pg.waitForFunction(() => (window as any).__bd_probe?.state.started, null, {
+    await pg.waitForFunction(() => window.__bd_probe?.state.started, null, {
       timeout: 15000,
     });
     await pg.waitForTimeout(1500);
     const menu = await pg.evaluate(() =>
-      (window as any).__bd_probe.v1App.BlockCreator.MenuJson.categories.flatMap((category: any) =>
-        category.items.map((i: any) => i.name),
+      window.__bd_probe.v1App.BlockCreator.MenuJson.categories.flatMap((category) =>
+        category.items.map((i) => i.name),
       ),
     );
     const names = await pg.evaluate(() =>
-      [...(window as any).__bd_probe.v1App.Blocks].map((b: any) => b.BlockName),
+      [...window.__bd_probe.v1App.Blocks].map((b) => b.BlockName),
     );
-    const midi = (await pg.evaluate(() => (window as any).__bd_probe.state.blocks)).find(
-      (b: any) => b.type === 'input.midi-controller',
+    const midi = (await pg.evaluate(() => window.__bd_probe.state.blocks)).find(
+      (b) => b.type === 'input.midi-controller',
     );
-    const pt = await pg.evaluate((i) => (window as any).__bd_probe.blockPoint(i), midi.id);
+    const pt = await pg.evaluate((i) => window.__bd_probe.blockPoint(i), midi.id);
     await pg.mouse.click(pt[0], pt[1]);
     await pg.waitForTimeout(1200);
     const panel = await pg.evaluate(() => {
-      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel;
+      const optionsPanel = window.__bd_probe.scene.OptionsPanel;
       return {
         title: optionsPanel.SelectedBlock?.OptionsForm?.name,
-        rows: optionsPanel.Options.map((x: any) => x.Name),
+        rows: optionsPanel.Options.map((x) => x.Name),
       };
     });
     await pg.screenshot({ path: `${OUT}/plugin-labels.png` });
     await ctx.close();
     const web = await open(browser, [blk(1, 'Microphone', 0, 0)], errors);
     const webMenu = await web.evaluate(() =>
-      (window as any).__bd_probe.v1App.BlockCreator.MenuJson.categories.flatMap((category: any) =>
-        category.items.map((i: any) => i.name),
+      window.__bd_probe.v1App.BlockCreator.MenuJson.categories.flatMap((category) =>
+        category.items.map((i) => i.name),
       ),
     );
     await web.close();

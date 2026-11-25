@@ -7,46 +7,46 @@ export const powerTests: Record<string, RegressionTest> = {
    * anything (a Power block's tone stops, particles vanish) and it reads POWER OFF on red; a held block still plays;
    * Space switches it back (web). */
   async 'power-switch'(errors: string[]) {
-    const p = await open(
+    const page = await open(
       browser,
       [blk(1, 'ToneSource', -3, 3), blk(2, 'Power', -6, 3), blk(3, 'ParticleEmitter', 6, -4)],
       errors,
     );
-    await p.evaluate(() => {
-      const seen: string[] = ((window as any).__texts = []);
-      const f = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) {
-        seen.push(t);
-        return (f as any).call(this, t, ...a);
+    await page.evaluate(() => {
+      const seen: string[] = (window.__texts = []);
+      const drawText = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (text: string, ...a: any[]) {
+        seen.push(text);
+        return (drawText as any).call(this, text, ...a);
       };
     });
     const level = async () => {
-      await p.waitForTimeout(1200);
-      return p.evaluate(() => (window as any).__bd_probe.state.rms);
+      await page.waitForTimeout(1200);
+      return page.evaluate(() => window.__bd_probe.state.rms);
     };
-    const where = await p.evaluate(() => {
-      const a = (window as any).__bd_probe.v1App,
+    const where = await page.evaluate(() => {
+      const a = window.__bd_probe.v1App,
         pr = a.Metrics.PixelRatio;
       return [a.Width / 2 / pr, (a.Height - 47 * a.Unit) / pr];
     });
     const before = await level();
-    await p.screenshot({ path: `${OUT}/power-on.png` });
-    await p.mouse.move(where[0], where[1]);
-    await p.mouse.click(where[0], where[1]);
+    await page.screenshot({ path: `${OUT}/power-on.png` });
+    await page.mouse.move(where[0], where[1]);
+    await page.mouse.click(where[0], where[1]);
     const off = await level(),
-      particles = await p.evaluate(() => (window as any).__bd_probe.state.particles);
-    const label = await p.evaluate(() => (window as any).__texts.includes('POWER OFF'));
-    await p.screenshot({ path: `${OUT}/power-off.png` });
-    const pt = await p.evaluate(() => (window as any).__bd_probe.blockPoint(1));
-    await p.mouse.move(pt[0], pt[1]);
-    await p.mouse.down();
+      particles = await page.evaluate(() => window.__bd_probe.state.particles);
+    const label = await page.evaluate(() => window.__texts.includes('POWER OFF'));
+    await page.screenshot({ path: `${OUT}/power-off.png` });
+    const pt = await page.evaluate(() => window.__bd_probe.blockPoint(1));
+    await page.mouse.move(pt[0], pt[1]);
+    await page.mouse.down();
     const held = await level();
-    await p.mouse.up();
-    await p.mouse.move(640, 200);
-    await p.keyboard.press('Space');
+    await page.mouse.up();
+    await page.mouse.move(640, 200);
+    await page.keyboard.press('Space');
     const back = await level(),
-      on = await p.evaluate(() => (window as any).__bd_probe.scene.worldPower);
-    await p.close();
+      on = await page.evaluate(() => window.__bd_probe.scene.worldPower);
+    await page.close();
     const ok =
       before > 0.01 &&
       off < 0.001 &&
@@ -66,26 +66,26 @@ export const powerTests: Record<string, RegressionTest> = {
         viewport: { width: 1280, height: 800 },
         deviceScaleFactor: dpr,
       });
-      const p = await ctx.newPage();
-      p.on('pageerror', (e) => errors.push(e.message));
-      await p.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', -3, 3)])}`);
-      await p.waitForFunction(() => (window as any).__bd_probe);
-      await p.click('#start');
-      await p.waitForTimeout(1500);
-      await p.evaluate(() => (window as any).__bd_probe.scene.setWorldPower(false));
-      const want = await p.evaluate(() => {
-        const a = (window as any).__bd_probe.v1App,
+      const page = await ctx.newPage();
+      page.on('pageerror', (error) => errors.push(error.message));
+      await page.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', -3, 3)])}`);
+      await page.waitForFunction(() => window.__bd_probe);
+      await page.click('#start');
+      await page.waitForTimeout(1500);
+      await page.evaluate(() => window.__bd_probe.scene.setWorldPower(false));
+      const want = await page.evaluate(() => {
+        const a = window.__bd_probe.v1App,
           ctx = document.createElement('canvas').getContext('2d')!;
         ctx.fillStyle = a.Palette[13];
         ctx.fillRect(0, 0, 1, 1);
         return [...ctx.getImageData(0, 0, 1, 1).data.slice(0, 3)];
       }); // the record button's red (owner, 2026-11-20)
-      await p.mouse.move(640, 300);
-      await p.waitForTimeout(500);
+      await page.mouse.move(640, 300);
+      await page.waitForTimeout(500);
       const png = PNG.sync.read(
-        await p.screenshot({ clip: { x: 560, y: 690, width: 160, height: 60 } }),
+        await page.screenshot({ clip: { x: 560, y: 690, width: 160, height: 60 } }),
       );
-      await p.screenshot({
+      await page.screenshot({
         path: `${OUT}/power-off-label-${dpr}x.png`,
         clip: { x: 560, y: 690, width: 160, height: 60 },
       });
@@ -151,24 +151,24 @@ export const powerTests: Record<string, RegressionTest> = {
       errors,
     );
     await pg.evaluate(() => {
-      const seen: string[] = ((window as any).__texts = []);
-      const f = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) {
-        seen.push(t);
-        return (f as any).call(this, t, ...a);
+      const seen: string[] = (window.__texts = []);
+      const drawText = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (text: string, ...a: any[]) {
+        seen.push(text);
+        return (drawText as any).call(this, text, ...a);
       };
     });
     const cell = (i: number) =>
       pg.evaluate((k) => {
-        const A = (window as any).__bd_probe.v1App,
-          unit = A.Unit,
-          pr = A.Metrics.PixelRatio,
-          w = 90 * unit;
-        return [(A.Width / 2 - w / 2 + (w / 3) * (k + 0.5)) / pr, (A.Height - 30 * unit) / pr];
+        const v1App = window.__bd_probe.v1App,
+          unit = v1App.Unit,
+          pr = v1App.Metrics.PixelRatio,
+          width = 90 * unit;
+        return [(v1App.Width / 2 - width / 2 + (width / 3) * (k + 0.5)) / pr, (v1App.Height - 30 * unit) / pr];
       }, i);
     const label = async () => {
       await pg.evaluate(() => {
-        (window as any).__texts.length = 0;
+        window.__texts.length = 0;
       });
       await pg.mouse.move(5, 5);
       await pg.mouse.move(6, 6);
@@ -176,7 +176,7 @@ export const powerTests: Record<string, RegressionTest> = {
       // The switch's own labels (the header's POWER menu is drawn after it).
       return pg.evaluate(
         () =>
-          ((window as any).__texts as string[]).filter((t) =>
+          (window.__texts as string[]).filter((t) =>
             /^(POWER|POWER OFF|POWER · HOST PLAYING|SYNCED TO HOST|USE THE HOST'S PLAY BUTTON)$/.test(
               t,
             ),
@@ -185,21 +185,21 @@ export const powerTests: Record<string, RegressionTest> = {
     }; // first: the switch draws before the header
     const sent = () =>
       pg.evaluate(() =>
-        ((window as any).__sent as { id: string; v: any }[])
+        (window.__sent as { id: string; v: any }[])
           .filter(
-            (e) =>
-              e.id === 'bd_powerMode' ||
-              (e.id === 'bd_commands' && JSON.stringify(e.v).includes('"type":10')),
+            (message) =>
+              message.id === 'bd_powerMode' ||
+              (message.id === 'bd_commands' && JSON.stringify(message.v).includes('"type":10')),
           )
           .map((e) =>
             e.id === 'bd_powerMode'
               ? `mode${e.v.mode}`
-              : `power${e.v.commands.find((command: any) => command.type === 10).value}`,
+              : `power${e.v.commands.find((command) => command.type === 10).value}`,
           ),
       );
-    const hostCell = await pg.evaluate(() => (window as any).__bd_probe.scene.hostPower);
+    const hostCell = await pg.evaluate(() => window.__bd_probe.scene.hostPower);
     await pg.evaluate(() => {
-      (window as any).__sent.length = 0;
+      window.__sent.length = 0;
     });
     const press = async (i: number) => {
       const [x, y] = await cell(i);
@@ -213,18 +213,18 @@ export const powerTests: Record<string, RegressionTest> = {
       path: `${OUT}/power-host-stopped.png`,
       clip: { x: 440, y: 690, width: 400, height: 110 },
     });
-    await pg.evaluate(() => (window as any).__fire('bd_hostState', { mode: 2, playing: true }));
+    await pg.evaluate(() => window.__fire('bd_hostState', { mode: 2, playing: true }));
     const hostPlaying = await label();
     await pg.screenshot({
       path: `${OUT}/power-host-playing.png`,
       clip: { x: 440, y: 690, width: 400, height: 110 },
     });
     await pg.evaluate(() => {
-      (window as any).__sent.length = 0;
+      window.__sent.length = 0;
     });
     await press(2);
     const hint = await pg.evaluate(() =>
-      ((window as any).__texts as string[]).filter((t) => t.includes('HOST')).pop(),
+      (window.__texts as string[]).filter((t) => t.includes('HOST')).pop(),
     );
     const againSent = await sent();
     await pg.waitForTimeout(2800);
@@ -233,7 +233,7 @@ export const powerTests: Record<string, RegressionTest> = {
     const backOn = await sent();
     const onLabel = await label();
     await pg.evaluate(() => {
-      (window as any).__sent.length = 0;
+      window.__sent.length = 0;
     });
     await press(0);
     const offSent = await sent();
@@ -245,7 +245,7 @@ export const powerTests: Record<string, RegressionTest> = {
       undefined,
       true,
     );
-    const appCells = await app.pg.evaluate(() => (window as any).__bd_probe.scene.hostPower);
+    const appCells = await app.pg.evaluate(() => window.__bd_probe.scene.hostPower);
     await app.close();
     const ok =
       hostCell &&
@@ -307,59 +307,59 @@ export const powerTests: Record<string, RegressionTest> = {
         localStorage.setItem('blokdust2.autosave', pt);
       }
     }, JSON.stringify(patch));
-    const p = await ctx.newPage();
-    p.on('pageerror', (e) => errors.push(e.message));
-    await p.goto(`${url}/index.html`);
-    await p.waitForFunction(() => (window as any).__bd_probe);
-    await p.click('#start');
+    const page = await ctx.newPage();
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(`${url}/index.html`);
+    await page.waitForFunction(() => window.__bd_probe);
+    await page.click('#start');
     const logic = (id: string) =>
-      p.evaluate(
+      page.evaluate(
         (i) =>
-          (window as any).__bd_probe.state.patch.blocks.find((b: any) => b.id === i).params.logic,
+          window.__bd_probe.state.patch.blocks.find((b) => b.id === i).params.logic,
         id,
       );
     const seen = new Set<string>();
     for (let t = 0; t < 6000 && seen.size < 2; t += 100) {
       seen.add(String(!!(await logic('on'))));
-      await p.waitForTimeout(100);
+      await page.waitForTimeout(100);
     }
     // Freeze the world, then the patch, the panel's switch, the autosave and a reload all agree.
-    await p.evaluate(() => (window as any).__bd_probe.scene.setWorldPower(false));
-    await p.waitForTimeout(1600);
+    await page.evaluate(() => window.__bd_probe.scene.setWorldPower(false));
+    await page.waitForTimeout(1600);
     const now = !!(await logic('on')),
       other = !!(await logic('off'));
-    const saved = await p.evaluate(
+    const saved = await page.evaluate(
       () =>
         JSON.parse(localStorage.getItem('blokdust2.autosave')!).blocks.find(
-          (b: any) => b.id === 'on',
+          (b) => b.id === 'on',
         ).params.logic,
     );
-    await p.reload();
-    await p.waitForFunction(() => (window as any).__bd_probe?.state.patch);
+    await page.reload();
+    await page.waitForFunction(() => window.__bd_probe?.state.patch);
     const reopened = !!(await logic('on')); // before START: as saved
     await ctx.close();
     // Opened from a link (counted as saved), the flips are not unsaved changes.
     const { deflateRawSync } = await import('node:zlib');
     const token = 'p' + deflateRawSync(Buffer.from(JSON.stringify(patch))).toString('base64url');
-    const q = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-    q.on('pageerror', (e) => errors.push(e.message));
-    await q.goto(`${url}/index.html?c=${token}`);
-    await q.waitForFunction(() => (window as any).__bd_probe);
-    await q.click('#start');
-    await q
+    const otherPage = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    otherPage.on('pageerror', (e) => errors.push(e.message));
+    await otherPage.goto(`${url}/index.html?c=${token}`);
+    await otherPage.waitForFunction(() => window.__bd_probe);
+    await otherPage.click('#start');
+    await otherPage
       .waitForFunction(
         () =>
-          !(window as any).__bd_probe.state.patch.blocks.find((b: any) => b.id === 'on').params
+          !window.__bd_probe.state.patch.blocks.find((b) => b.id === 'on').params
             .logic,
         null,
         { timeout: 6000 },
       )
       .catch(() => {});
-    const dirty = await q.evaluate(() =>
-      (window as any).__bd_probe.scene.PatchesPanel.host.isDirty(),
+    const dirty = await otherPage.evaluate(() =>
+      window.__bd_probe.scene.PatchesPanel.host.isDirty(),
     );
-    await q.close();
-    const r = { seen: [...seen], now, other, saved, reopened, dirty };
-    return [seen.size === 2 && !!saved === now && reopened === now && !other && dirty === false, r];
+    await otherPage.close();
+    const result = { seen: [...seen], now, other, saved, reopened, dirty };
+    return [seen.size === 2 && !!saved === now && reopened === now && !other && dirty === false, result];
   },
 };

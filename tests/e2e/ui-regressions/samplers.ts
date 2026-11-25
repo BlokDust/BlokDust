@@ -19,67 +19,67 @@ export const samplersTests: Record<string, RegressionTest> = {
    * loaded sample resets the region (v1 Sample.SetBuffers) in the engine as well as the panel. */
   async 'sample-loop-region'(errors: string[]) {
     cdn.seconds = 3;
-    const p = await open(browser, [blk(1, 'Sample', 0, 0)], errors);
-    await p.waitForFunction(
-      () => (window as any).__bd_probe.samples.some((x: any) => x.loaded),
+    const page = await open(browser, [blk(1, 'Sample', 0, 0)], errors);
+    await page.waitForFunction(
+      () => window.__bd_probe.samples.some((x) => x.loaded),
       null,
       { timeout: 10000 },
     ); // default sound (3 s here)
-    const id = (await state(p)).blocks[0].id;
-    await p.evaluate(
+    const id = (await state(page)).blocks[0].id;
+    await page.evaluate(
       ([i, bytes]) =>
-        (window as any).__bd_loadSample(i, 'one-second.wav', new Uint8Array(bytes).buffer),
+        window.__bd_loadSample(i, 'one-second.wav', new Uint8Array(bytes).buffer),
       [id, [...decayWav(1)]] as const,
     );
-    const [x, y] = await toCss(p, 0, 0.5);
-    await p.mouse.click(x, y);
-    await p.waitForTimeout(1200);
-    const r = await regionOf(p, id);
-    const handles = await p.evaluate(() => {
-      const w = (window as any).__bd_probe.scene.OptionsPanel.Options.find(
-        (Option: any) => Option.Type === 'waveregion',
+    const [x, y] = await toCss(page, 0, 0.5);
+    await page.mouse.click(x, y);
+    await page.waitForTimeout(1200);
+    const result = await regionOf(page, id);
+    const handles = await page.evaluate(() => {
+      const option = window.__bd_probe.scene.OptionsPanel.Options.find(
+        (Option) => Option.Type === 'waveregion',
       );
-      return { mode: w?.Mode, handles: w?.Handles?.length };
+      return { mode: option?.Mode, handles: option?.Handles?.length };
     });
-    await p.screenshot({ path: `${OUT}/sample-loop-region.png` });
-    await p.close();
+    await page.screenshot({ path: `${OUT}/sample-loop-region.png` });
+    await page.close();
     return [
-      near(r.ui, [0, 1, 0.5, 1]) &&
-        near(r.patch, r.ui) &&
+      near(result.ui, [0, 1, 0.5, 1]) &&
+        near(result.patch, result.ui) &&
         handles.mode === true &&
         handles.handles === 4,
-      { ui: r.ui, patch: r.patch, ...handles },
+      { ui: result.ui, patch: result.patch, ...handles },
     ];
   },
   /** 2 + 3. Reverse acts at once: the waveform flips immediately (v1 SwitchBuffer) and the start/end and loop points are
    * mirrored, so the same stretch of audio stays selected and now plays backwards (owner request; v1 kept the numbers). */
   async 'sample-reverse-mirrors'(errors: string[]) {
     cdn.seconds = 2;
-    const p = await open(browser, [blk(1, 'Sample', 0, 0)], errors);
-    await p.waitForFunction(
-      () => (window as any).__bd_probe.samples.some((x: any) => x.loaded),
+    const page = await open(browser, [blk(1, 'Sample', 0, 0)], errors);
+    await page.waitForFunction(
+      () => window.__bd_probe.samples.some((x) => x.loaded),
       null,
       { timeout: 10000 },
     );
-    const id = (await state(p)).blocks[0].id;
-    const [x, y] = await toCss(p, 0, 0.5);
-    await p.mouse.click(x, y);
-    await p.waitForTimeout(1200);
-    await p.evaluate(() => {
-      const selectedBlock = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock;
+    const id = (await state(page)).blocks[0].id;
+    const [x, y] = await toCss(page, 0, 0.5);
+    await page.mouse.click(x, y);
+    await page.waitForTimeout(1200);
+    await page.evaluate(() => {
+      const selectedBlock = window.__bd_probe.scene.OptionsPanel.SelectedBlock;
       selectedBlock.SetParam('startPosition', 0.2);
       selectedBlock.SetParam('endPosition', 1.6);
       selectedBlock.SetParam('loopStart', 0.5);
       selectedBlock.SetParam('loopEnd', 0.9);
     });
-    const before = await regionOf(p, id);
-    await p.evaluate(() =>
-      (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('reverse', true),
+    const before = await regionOf(page, id);
+    await page.evaluate(() =>
+      window.__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('reverse', true),
     );
-    await p.waitForTimeout(100);
-    const after = await regionOf(p, id);
-    await p.screenshot({ path: `${OUT}/sample-reverse-mirrors.png` });
-    await p.close();
+    await page.waitForTimeout(100);
+    const after = await regionOf(page, id);
+    await page.screenshot({ path: `${OUT}/sample-reverse-mirrors.png` });
+    await page.close();
     const flipped =
       after.wave.length > 0 &&
       JSON.stringify(after.wave) === JSON.stringify([...before.wave].reverse());
@@ -102,21 +102,21 @@ export const samplersTests: Record<string, RegressionTest> = {
     cdn.seconds = 1;
     cdn.delayMs = 6000; // the default sound starts loading with the page; check while it still is
     try {
-      const p = await open(browser, [blk(1, 'Sample', 0, 0)], errors);
-      const during = await p.evaluate(
-        () => ((window as any).__bd_probe.scene.AnimationsLayer?.ActiveBlocks ?? []).length,
+      const page = await open(browser, [blk(1, 'Sample', 0, 0)], errors);
+      const during = await page.evaluate(
+        () => (window.__bd_probe.scene.AnimationsLayer?.ActiveBlocks ?? []).length,
       );
-      await p.screenshot({ path: `${OUT}/sample-loading-indicator.png` });
-      await p.waitForFunction(
-        () => (window as any).__bd_probe.samples.some((x: any) => x.loaded),
+      await page.screenshot({ path: `${OUT}/sample-loading-indicator.png` });
+      await page.waitForFunction(
+        () => window.__bd_probe.samples.some((x) => x.loaded),
         null,
         { timeout: 10000 },
       );
-      await p.waitForTimeout(200);
-      const after = await p.evaluate(
-        () => ((window as any).__bd_probe.scene.AnimationsLayer?.ActiveBlocks ?? []).length,
+      await page.waitForTimeout(200);
+      const after = await page.evaluate(
+        () => (window.__bd_probe.scene.AnimationsLayer?.ActiveBlocks ?? []).length,
       );
-      await p.close();
+      await page.close();
       return [during === 1 && after === 0, { loadingBlocksDuring: during, after }];
     } finally {
       cdn.delayMs = 0;
@@ -128,24 +128,24 @@ export const samplersTests: Record<string, RegressionTest> = {
     cdn.seconds = 1;
     cdn.delayMs = 8000;
     try {
-      const p = await open(browser, [blk(1, 'Sample', 0, 0)], errors);
-      const [x, y] = await toCss(p, 0, 0.5);
-      await p.mouse.click(x, y);
-      await p.waitForTimeout(1000);
-      const box = await p.evaluate(() => {
-        const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
-          w = optionsPanel.Options.find((Option: any) => Option.Type === 'waveregion'),
+      const page = await open(browser, [blk(1, 'Sample', 0, 0)], errors);
+      const [x, y] = await toCss(page, 0, 0.5);
+      await page.mouse.click(x, y);
+      await page.waitForTimeout(1000);
+      const box = await page.evaluate(() => {
+        const optionsPanel = window.__bd_probe.scene.OptionsPanel,
+          option = optionsPanel.Options.find((Option) => Option.Type === 'waveregion'),
           pr = devicePixelRatio;
         return {
           x: (optionsPanel.Position.x + optionsPanel.Margin) / pr,
-          y: (optionsPanel.Position.y + w.Position.y) / pr,
+          y: (optionsPanel.Position.y + option.Position.y) / pr,
           width: optionsPanel.Range / pr,
-          height: w.Size.height / pr,
+          height: option.Size.height / pr,
         };
       });
-      const change = await maxChange(p, box, 300);
-      await p.screenshot({ path: `${OUT}/sample-region-spinner.png` });
-      await p.close();
+      const change = await maxChange(page, box, 300);
+      await page.screenshot({ path: `${OUT}/sample-region-spinner.png` });
+      await page.close();
       return [change > 40, { maxPixelChangeIn300ms: change }];
     } finally {
       cdn.delayMs = 0;
@@ -160,36 +160,36 @@ export const samplersTests: Record<string, RegressionTest> = {
       ['Convolver', false],
       ['Granular', true],
     ] as const) {
-      const p = await open(browser, [blk(1, type, 0, 0)], errors);
+      const page = await open(browser, [blk(1, type, 0, 0)], errors);
       if (load) {
-        const id = (await state(p)).blocks[0].id;
-        await p.evaluate(
+        const id = (await state(page)).blocks[0].id;
+        await page.evaluate(
           ([i, bytes]) =>
-            (window as any).__bd_loadSample(i, 'sine.wav', new Uint8Array(bytes).buffer),
+            window.__bd_loadSample(i, 'sine.wav', new Uint8Array(bytes).buffer),
           [id, sineWav()] as const,
         );
       }
-      const [x, y] = await toCss(p, 0, 0.5);
-      await p.mouse.click(x, y);
-      await p.waitForTimeout(1500);
-      seen[type] = await waveDrawn(p);
-      await p.screenshot({ path: `${OUT}/waveform-${type}.png` });
-      await p.close();
+      const [x, y] = await toCss(page, 0, 0.5);
+      await page.mouse.click(x, y);
+      await page.waitForTimeout(1500);
+      seen[type] = await waveDrawn(page);
+      await page.screenshot({ path: `${OUT}/waveform-${type}.png` });
+      await page.close();
     }
     return [Object.values(seen).every((n) => n > 0), { waveformPoints: seen }];
   },
   // Owner (2026-11-14): Looping off still showed the loop markers on a Sample's waveform, and on again a Recorder's
   // showed only Start and End: the panel was not drawn again when the switch changed (v1 Sample.SetParam('loop') is).
   async 'looping-switch-redraws-waveform'(errors: string[]) {
-    const r: Record<string, unknown> = {};
+    const result: Record<string, unknown> = {};
     for (const type of ['Sample', 'Recorder']) {
-      const p = await open(browser, [blk(1, type, 0, 0)], errors);
-      const [x, y] = await toCss(p, 0, 0);
-      await p.mouse.click(x + 8, y + 8);
-      await p.waitForTimeout(1000);
+      const page = await open(browser, [blk(1, type, 0, 0)], errors);
+      const [x, y] = await toCss(page, 0, 0);
+      await page.mouse.click(x + 8, y + 8);
+      await page.waitForTimeout(1000);
       const mode = () =>
-        p.evaluate(() => {
-          const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel;
+        page.evaluate(() => {
+          const optionsPanel = window.__bd_probe.scene.OptionsPanel;
           return {
             loop: !!optionsPanel.SelectedBlock.Params.loop,
             mode: !!(optionsPanel.Options as any[]).find((x) => x.Type === 'waveregion')?.Mode,
@@ -197,26 +197,26 @@ export const samplersTests: Record<string, RegressionTest> = {
         });
       const seen = [await mode()];
       for (const v of [false, true, false]) {
-        await p.evaluate(
-          (on) => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('loop', on),
+        await page.evaluate(
+          (on) => window.__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('loop', on),
           v,
         );
-        await p.waitForTimeout(200);
+        await page.waitForTimeout(200);
         seen.push(await mode());
       }
-      await p.close();
-      r[type] = seen;
+      await page.close();
+      result[type] = seen;
     }
     const ok = (seen: any[]) =>
       seen.every((s) => s.loop === s.mode) &&
       seen.map((s) => s.loop).join() === [seen[0].loop, false, true, false].join();
-    return [ok(r.Sample as any[]) && ok(r.Recorder as any[]), r];
+    return [ok(result.Sample as any[]) && ok(result.Recorder as any[]), result];
   },
   /** Owner (new in v2): while a sampler's options are open, its waveform shows where it is playing: a line per
    * sounding voice (Sample) and one per grain (Granular), moving as it plays. */
   async 'waveform-playheads'(errors: string[]) {
     cdn.seconds = 3;
-    const p = await open(
+    const page = await open(
       browser,
       [
         { ...blk(1, 'Sample', 0, 0), Params: { loop: true } } as Block,
@@ -226,30 +226,30 @@ export const samplersTests: Record<string, RegressionTest> = {
       ],
       errors,
     );
-    await p.waitForFunction(
-      () => (window as any).__bd_probe.samples.filter((x: any) => x.loaded).length === 2,
+    await page.waitForFunction(
+      () => window.__bd_probe.samples.filter((x) => x.loaded).length === 2,
       null,
       { timeout: 10000 },
     );
     const lines = () =>
-      p.evaluate(() => (window as any).__bd_probe.scene.playheadLines()?.xs ?? null);
+      page.evaluate(() => window.__bd_probe.scene.playheadLines()?.xs ?? null);
     const look = async (gx: number, shot: string) => {
-      const [x, y] = await toCss(p, gx, 0.5);
-      await p.mouse.click(x, y);
-      await p.waitForTimeout(1200);
+      const [x, y] = await toCss(page, gx, 0.5);
+      await page.mouse.click(x, y);
+      await page.waitForTimeout(1200);
       const a = await lines();
-      await p.waitForTimeout(300);
+      await page.waitForTimeout(300);
       const b = await lines();
-      await p.screenshot({ path: `${OUT}/${shot}.png` });
-      await p.mouse.click(1100, 720);
-      await p.waitForTimeout(700);
+      await page.screenshot({ path: `${OUT}/${shot}.png` });
+      await page.mouse.click(1100, 720);
+      await page.waitForTimeout(700);
       return { a, b };
     };
     const sample = await look(0, 'waveform-playheads-sample');
     const granular = await look(12, 'waveform-playheads-granular');
-    await p.close();
-    const moved = (r: { a: number[] | null; b: number[] | null }) =>
-      !!r.a && !!r.b && JSON.stringify(r.a) !== JSON.stringify(r.b);
+    await page.close();
+    const moved = (result: { a: number[] | null; b: number[] | null }) =>
+      !!result.a && !!result.b && JSON.stringify(result.a) !== JSON.stringify(result.b);
     const ok =
       sample.a?.length === 1 && moved(sample) && (granular.a?.length ?? 0) >= 1 && moved(granular);
     return [ok, { sample, granular }];
@@ -260,18 +260,18 @@ export const samplersTests: Record<string, RegressionTest> = {
     cdn.seconds = 2;
     cdn.delayMs = 0;
     try {
-      const p = await open(browser, [blk(1, 'Granular', 0, 0)], errors);
-      await p.waitForFunction(
-        () => (window as any).__bd_probe.samples.some((x: any) => x.loaded),
+      const page = await open(browser, [blk(1, 'Granular', 0, 0)], errors);
+      await page.waitForFunction(
+        () => window.__bd_probe.samples.some((x) => x.loaded),
         null,
         { timeout: 10000 },
       );
-      const [x, y] = await toCss(p, 0, 0.5);
-      await p.mouse.click(x, y);
-      await p.waitForTimeout(1200);
+      const [x, y] = await toCss(page, 0, 0.5);
+      await page.mouse.click(x, y);
+      await page.waitForTimeout(1200);
       cdn.delayMs = 8000; // a sound picked in the panel's search (v1 LoadTrack) takes a while to arrive
-      await p.evaluate(() => {
-        const selectedBlock = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock;
+      await page.evaluate(() => {
+        const selectedBlock = window.__bd_probe.scene.OptionsPanel.SelectedBlock;
         selectedBlock.LoadTrack({
           TitleShort: 'PAD',
           UserShort: 'SOMEONE',
@@ -288,13 +288,13 @@ export const samplersTests: Record<string, RegressionTest> = {
           },
         });
       });
-      await p.waitForTimeout(300);
-      const bubble = await p.evaluate(
-        () => (window as any).__bd_probe.scene.AnimationsLayer.ActiveBlocks.length,
+      await page.waitForTimeout(300);
+      const bubble = await page.evaluate(
+        () => window.__bd_probe.scene.AnimationsLayer.ActiveBlocks.length,
       );
-      const change = await maxChange(p, await waveBox(p), 300);
-      await p.screenshot({ path: `${OUT}/granular-loading-spinner.png` });
-      await p.close();
+      const change = await maxChange(page, await waveBox(page), 300);
+      await page.screenshot({ path: `${OUT}/granular-loading-spinner.png` });
+      await page.close();
       return [bubble === 1 && change > 40, { bubble, panelPixelChangeIn300ms: change }];
     } finally {
       cdn.delayMs = 0;
@@ -305,56 +305,56 @@ export const samplersTests: Record<string, RegressionTest> = {
    * point (the region param the grains play from). */
   async 'granular-waveslider'(errors: string[]) {
     cdn.seconds = 2;
-    const p = await open(browser, [blk(1, 'Granular', 0, 0)], errors);
-    await p.waitForFunction(
-      () => (window as any).__bd_probe.samples.some((x: any) => x.loaded),
+    const page = await open(browser, [blk(1, 'Granular', 0, 0)], errors);
+    await page.waitForFunction(
+      () => window.__bd_probe.samples.some((x) => x.loaded),
       null,
       { timeout: 10000 },
     );
-    const [x, y] = await toCss(p, 0, 0.5);
-    await p.mouse.click(x, y);
-    await p.waitForTimeout(1200);
+    const [x, y] = await toCss(page, 0, 0.5);
+    await page.mouse.click(x, y);
+    await page.waitForTimeout(1200);
     const slider = () =>
-      p.evaluate(() => {
-        const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
-          w = optionsPanel.Options.find((Option: any) => Option.Type === 'waveslider');
+      page.evaluate(() => {
+        const optionsPanel = window.__bd_probe.scene.OptionsPanel,
+          option = optionsPanel.Options.find((Option) => Option.Type === 'waveslider');
         return {
-          max: w?.Max,
-          value: w?.Value,
-          spread: w?.Spread,
-          wave: w?.Waveform?.length ?? 0,
+          max: option?.Max,
+          value: option?.Value,
+          spread: option?.Spread,
+          wave: option?.Waveform?.length ?? 0,
           region: optionsPanel.SelectedBlock?.Params.region,
         };
       });
     const start = await slider();
     // Drag the Spread slider's handle right by a quarter of its range (+1 s of the 0–4 range).
-    const handle = await p.evaluate(() => {
-      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
-        w = optionsPanel.Options.find((Option: any) => Option.Name === 'Spread'),
+    const handle = await page.evaluate(() => {
+      const optionsPanel = window.__bd_probe.scene.OptionsPanel,
+        option = optionsPanel.Options.find((Option) => Option.Name === 'Spread'),
         pr = devicePixelRatio;
       return {
-        x: (optionsPanel.Position.x + optionsPanel.Margin + w.Position.x) / pr,
-        y: (optionsPanel.Position.y + w.Position.y + w.Size.height / 2) / pr,
+        x: (optionsPanel.Position.x + optionsPanel.Margin + option.Position.x) / pr,
+        y: (optionsPanel.Position.y + option.Position.y + option.Size.height / 2) / pr,
         range: optionsPanel.Range / pr,
       };
     });
-    await p.mouse.move(handle.x, handle.y);
-    await p.mouse.down();
-    await p.mouse.move(handle.x + handle.range * 0.25, handle.y, { steps: 5 });
-    await p.mouse.up();
-    await p.waitForTimeout(100);
+    await page.mouse.move(handle.x, handle.y);
+    await page.mouse.down();
+    await page.mouse.move(handle.x + handle.range * 0.25, handle.y, { steps: 5 });
+    await page.mouse.up();
+    await page.waitForTimeout(100);
     const spreadUi = (await slider()).spread;
-    const box = await waveBox(p);
-    await p.mouse.move(box.x + box.width * 0.5, box.y + box.height / 2);
-    await p.mouse.down();
-    await p.mouse.move(box.x + box.width * 0.25, box.y + box.height / 2, { steps: 5 });
-    await p.waitForTimeout(100);
-    await p.screenshot({ path: `${OUT}/granular-waveslider.png` });
-    await p.mouse.up();
-    await p.waitForTimeout(100);
+    const box = await waveBox(page);
+    await page.mouse.move(box.x + box.width * 0.5, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * 0.25, box.y + box.height / 2, { steps: 5 });
+    await page.waitForTimeout(100);
+    await page.screenshot({ path: `${OUT}/granular-waveslider.png` });
+    await page.mouse.up();
+    await page.waitForTimeout(100);
     const dragged = await slider();
-    const patchRegion = (await state(p)).patch.blocks[0].params.region;
-    await p.close();
+    const patchRegion = (await state(page)).patch.blocks[0].params.region;
+    await page.close();
     const ok =
       start.max > 1.9 &&
       start.wave > 0 &&
