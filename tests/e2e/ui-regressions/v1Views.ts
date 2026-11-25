@@ -2,6 +2,7 @@
 import type { V1Block } from '../../../web/src/v1ui/blocks.ts';
 import type { Splash } from '../../../web/src/v1ui/ported/Splash.ts';
 import type { PatchesHost } from '../../../web/src/v1ui/patches.ts';
+import type { FreesoundSound } from '../../../web/src/patch/samples.ts';
 
 /** A v1 block's options form (v1 UpdateOptionsForm's result). */
 export interface V1OptionsForm {
@@ -9,10 +10,17 @@ export interface V1OptionsForm {
   parameters?: { type: string; name: string; setting?: string }[];
 }
 
-/** A v1 block with its params read as unknown values (V1Block's are `any`). */
-export type V1BlockView = Omit<V1Block, 'Params' | 'OptionsForm'> & {
+/** A v1 block with its params read as unknown values (V1Block's are `any`); LoadTrack takes the
+ * track fields it reads (v1's track is a SoundCloudTrack). */
+export type V1BlockView = Omit<V1Block, 'Params' | 'OptionsForm' | 'LoadTrack'> & {
   Params: Record<string, unknown>;
   OptionsForm: V1OptionsForm | null;
+  LoadTrack(track: {
+    TitleShort: string;
+    UserShort: string;
+    Permalink: string;
+    Sound: FreesoundSound;
+  }): void;
 };
 
 /** MessagePanel's private message (v1 MessagePanel._Value): what the bar says. */
