@@ -1,22 +1,11 @@
 // One check per bug found in review, each failing first on the build that had it: real app, real
 // pointer, real AudioWorklet. Usage: pnpm test:ui-regressions [--only name,name]
 import { writeFileSync } from 'node:fs';
-import {
-  OUT,
-  blk,
-  browser,
-  comp,
-  server,
-  toCss,
-  url,
-  type RegressionTest,
-} from './ui-regressions/harness.ts';
+import { OUT, browser, server, type RegressionTest } from './ui-regressions/harness.ts';
 import { ORDER } from './ui-regressions/order.ts';
-import { openPlugin, plugPatch } from './ui-regressions/pluginPage.ts';
 import { waveformTests } from './ui-regressions/waveform.ts';
 import { tourTests } from './ui-regressions/tour.ts';
 import { displayTests } from './ui-regressions/display.ts';
-import { decayWav } from './ui-regressions/wav.ts';
 import { stageViewTests } from './ui-regressions/stage-view.ts';
 import { stageEditingTests } from './ui-regressions/stage-editing.ts';
 import { undoTests } from './ui-regressions/undo.ts';
@@ -84,11 +73,7 @@ if (unordered.length) throw new Error(`not in ui-regressions/order.ts: ${unorder
 const tests: Record<string, RegressionTest> = {};
 for (const name of ORDER) tests[name] = byName[name];
 
-// The waveform zoom's tests (CHG-0028), in their own file.
-Object.assign(
-  tests,
-  waveformTests({ browser, url, OUT, comp, blk, toCss, decayWav, openPlugin, plugPatch }),
-);
+Object.assign(tests, waveformTests);
 Object.assign(tests, tourTests);
 Object.assign(tests, displayTests);
 /** Bugs captured but not fixed yet: reported as KNOWN with the reason, not failing CI. */
