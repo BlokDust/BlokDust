@@ -1,11 +1,36 @@
 // CHG-0036 / SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS R1–R8.
-// Real Worker + dedicated local D1 + actual Settings pointer actions. No external services or audio uploads.
+// The real Worker, its own local D1 and real Settings pointer actions; no outside service or audio.
 import assert from 'node:assert/strict';
 import { readFileSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
 import { startLocal, run, WRANGLER } from '../../tools/server/lib.ts';
-import { diagnosticText, supportDiagnostics, supportPatch } from '../../shared/support.ts';
+import {
+  diagnosticText,
+  supportDiagnostics,
+  supportPatch,
+  type SupportReport,
+} from '../../shared/support.ts';
+import type { AppSettingsPanel, MessagePanelPrivates } from './pageGlobals.shared.ts';
+
+/** A stored report (server/ support_reports). */
+interface StoredReport {
+  message: string;
+  status: string;
+  category: string;
+  severity: string;
+  priority: number;
+  fingerprint: string;
+  review_due: number;
+  created: number;
+}
+/** A report's stored context (server/ support_context). */
+interface StoredContext {
+  patch_json: string;
+  diagnostics_json: string;
+  system_json: string;
+  expires: number;
+}
 
 const state = resolve('.cache/server/support-test');
 const based = process.argv.includes('--based');
@@ -23,8 +48,8 @@ function check(name: string, ok: unknown, detail?: unknown) {
   count++;
   console.error(`PASS ${name}`);
 }
-async function sql(command: string, db = 'blokdust-support-dev'): Promise<any[]> {
-  const r = await run(
+async function sql(command: string, db = 'blokdust-support-dev'): Promise<unknown[]> {
+  const query = await run(
     [
       WRANGLER,
       'd1',
@@ -39,8 +64,8 @@ async function sql(command: string, db = 'blokdust-support-dev'): Promise<any[]>
     ],
     { quiet: true },
   );
-  assert.equal(r.code, 0, r.out);
-  return JSON.parse(r.out)[0].results;
+  assert.equal(query.code, 0, query.out);
+  return (JSON.parse(query.out) as { results: unknown[] }[])[0].results;
 }
 let ip = 10;
 const patch = {
@@ -91,7 +116,8 @@ async function post(value: unknown, address = `192.0.2.${ip++}`) {
   });
 }
 try {
-  // R2/R3: privacy allowlist, event count/age and hostile strings. User text is data, never executable content.
+  // R2/R3: privacy allowlist, event count/age and hostile strings. User text is data, never
+  // executable content.
   const clean = JSON.stringify(supportPatch(patch));
   check(
     'patch allowlist preserves configuration but drops audio, credentials, filenames and custom identifiers',
@@ -142,7 +168,7 @@ try {
     response.status === 201 && response.headers.get('access-control-allow-origin') === '*',
   );
   const { id } = (await response.json()) as { id: string };
-  const stored = (await sql(`SELECT * FROM support_reports WHERE id = '${id}'`))[0];
+  const stored = (await sql(`SELECT * FROM support_reports WHERE id = '${id}'`))[0] as StoredReport;
   check(
     'triage fields ready; original text safely stored with parameterised SQL',
     stored.message === hostile &&
@@ -153,7 +179,9 @@ try {
       stored.fingerprint.length === 64 &&
       stored.review_due - stored.created === 7 * 86400000,
   );
-  const context = (await sql(`SELECT * FROM support_context WHERE report_id = '${id}'`))[0];
+  const context = (
+    await sql(`SELECT * FROM support_context WHERE report_id = '${id}'`)
+  )[0] as StoredContext;
   check(
     'server repeats privacy filtering and enforces 90-day context retention',
     !/PRIVATE|SECRET|private-recording|example.invalid|private-name/.test(
@@ -164,7 +192,7 @@ try {
   const withoutId = ((await without.json()) as { id: string }).id;
   const withoutContext = (
     await sql(`SELECT * FROM support_context WHERE report_id='${withoutId}'`)
-  )[0];
+  )[0] as StoredContext;
   check(
     'backend strips context when disabled',
     withoutContext.patch_json === 'null' &&
@@ -191,46 +219,48 @@ try {
     ).status === 204,
   );
   const codes = [];
-  for (let n = 0; n < 7; n++) codes.push((await post(report(), '192.0.2.200')).status);
+  for (let attempt = 0; attempt < 7; attempt++)
+    codes.push((await post(report(), '192.0.2.200')).status);
   check('server rate limit stops flooding', codes.includes(429));
 
-  // R1/R4/R5/R6: actual panel, failed sends retain text, no queue/retry, opt-in persistence and bounded automatic reports.
+  // R1/R4/R5/R6: the real panel; failed sends keep the text, no queue or retry, opt-in persistence,
+  // bounded automatic reports.
   const browserContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-  await browserContext.route('https://cdn.freesound.org/**', (r) => r.abort());
+  await browserContext.route('https://cdn.freesound.org/**', (route) => route.abort());
   const page = await browserContext.newPage();
   await page.goto(`${service.url}/?demo=1`);
-  await page.waitForFunction(() => (window as any).__bd_probe);
+  await page.waitForFunction(() => window.__bd_probe);
   await page.click('#start');
-  await page.waitForFunction(() => (window as any).__bd_probe.state.started);
-  for (let n = 0; n < 6; n++) {
+  await page.waitForFunction(() => window.__bd_probe.state.started);
+  for (let attempt = 0; attempt < 6; attempt++) {
     await page.mouse.click(1220, 45);
     try {
-      await page.waitForFunction(() => (window as any).__bd_probe.scene.SettingsPanel.Open, null, {
+      await page.waitForFunction(() => window.__bd_probe.scene.SettingsPanel.Open, null, {
         timeout: 1500,
       });
       break;
     } catch {
-      /* header entrance */
+      // The header is still coming in: click again.
     }
   }
   await page.waitForTimeout(900);
   const point = await page.evaluate(() => {
-    const { scene: s, v1App: a } = (window as any).__bd_probe,
-      settingsPanel = s.SettingsPanel;
+    const { scene, v1App } = window.__bd_probe,
+      settingsPanel = scene.SettingsPanel as AppSettingsPanel;
     return [
       settingsPanel.MenuItems[1].Position.x / devicePixelRatio,
-      (settingsPanel.OffsetY + 30 * a.Unit) / devicePixelRatio,
+      (settingsPanel.OffsetY + 30 * v1App.Unit) / devicePixelRatio,
     ];
   });
   await page.mouse.click(point[0], point[1]);
-  // Owner (2026-11-18): Connect's page popped in once its tab had arrived; it slides in under the tabs, as the others do.
+  // FEEDBACK's page slides in under the tabs with its tab, as the others do (it used to pop in).
   await page.waitForTimeout(450);
   const sliding = await page.evaluate(() => {
-    const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel,
+    const settingsPanel = window.__bd_probe.scene.SettingsPanel as AppSettingsPanel,
       element = document.querySelector<HTMLElement>('#feedback-panel');
     return {
       y: settingsPanel.MenuItems[1].YOffset,
-      h: settingsPanel.DrawTo.Height,
+      h: (settingsPanel.DrawTo as { Height: number }).Height,
       shown: !!element && !element.hidden,
     };
   });
@@ -248,10 +278,9 @@ try {
     'context included by default',
     (await page.getByRole('switch').getAttribute('aria-checked')) === 'true',
   );
-  const submissions: any[] = [];
+  const submissions: SupportReport[] = [];
   await page.route('**/api/support', async (route) => {
-    const value = route.request().postDataJSON();
-    submissions.push(value);
+    submissions.push(route.request().postDataJSON() as SupportReport);
     await route.continue({
       headers: { ...route.request().headers(), 'cf-connecting-ip': `192.0.2.${ip++}` },
     });
@@ -295,20 +324,22 @@ try {
   await page.click('#feedback-send');
   await page.getByRole('status').filter({ hasText: 'Message sent' }).waitFor();
   const bar = await page.evaluate(() => {
-    const messagePanel = (window as any).__bd_probe.scene.MessagePanel;
-    return { open: messagePanel.Open, text: messagePanel._Value?.string };
+    const messagePanel = window.__bd_probe.scene.MessagePanel;
+    const privates = messagePanel as unknown as MessagePanelPrivates;
+    return { open: messagePanel.Open, text: privates._Value?.string };
   });
   check(
-    "sent: v1's message bar says MESSAGE SENT, not a line under the form (owner, 2026-11-18)",
+    "sent: v1's message bar says MESSAGE SENT, not a line under the form",
     bar.open && /message sent/i.test(bar.text ?? ''),
     bar,
   );
   check(
     'manual feedback captures actual patch/build/system/diagnostics without storage secrets',
     submissions.length === 1 &&
-      submissions[0].patch.blocks.length > 0 &&
-      submissions[0].version === JSON.parse(readFileSync('package.json', 'utf8')).version &&
-      submissions[0].build &&
+      (submissions[0].patch?.blocks.length ?? 0) > 0 &&
+      submissions[0].version ===
+        (JSON.parse(readFileSync('package.json', 'utf8')) as { version: string }).version &&
+      !!submissions[0].build &&
       submissions[0].system.surface === 'web' &&
       submissions[0].diagnostics.length > 0 &&
       !JSON.stringify(submissions).includes('SECRET'),
@@ -325,16 +356,16 @@ try {
       submissions[1].diagnostics.length === 0 &&
       Object.keys(submissions[1].system).length === 0,
   );
-  // FEEDBACK (CHG-0041): SUGGESTION · BUG · REPORT A PATCH; a message goes with its choice as its kind.
+  // FEEDBACK (CHG-0041): SUGGESTION, BUG, REPORT A PATCH; a message goes with its choice as kind.
   const tabName = await page.evaluate(
-    () => (window as any).__bd_probe.scene.SettingsPanel.MenuItems[1]?.Name,
+    () => window.__bd_probe.scene.SettingsPanel.MenuItems[1]?.Name,
   );
   check(
     'CHG-0041: the tab is FEEDBACK; SUGGESTION is chosen first and sent as a suggestion',
-    /feedback/i.test(tabName ?? '') &&
+    /feedback/i.test(tabName) &&
       submissions[0].kind === 'suggestion' &&
       submissions[1].kind === 'suggestion',
-    { tabName, kinds: submissions.map((x) => x.kind) },
+    { tabName, kinds: submissions.map((submission) => submission.kind) },
   );
   await page.getByRole('radio', { name: 'Bug' }).click();
   await page.locator('#feedback-message').fill('Something broke');
@@ -342,16 +373,23 @@ try {
   await page.getByRole('status').filter({ hasText: 'Message sent' }).waitFor();
   await page.getByRole('radio', { name: 'Report a patch' }).click();
   await page.waitForTimeout(300);
-  const reportView = await page.evaluate(() => ({
-    intro: document.getElementById('feedback-intro')!.textContent,
-    send: getComputedStyle(document.getElementById('feedback-send')!).display,
-    email: getComputedStyle(document.getElementById('feedback-email')!).display,
-  }));
+  const reportView = await page.evaluate(() => {
+    const byId = (id: string) => {
+      const element = document.getElementById(id);
+      if (!element) throw new Error(`no #${id}`);
+      return element;
+    };
+    return {
+      intro: byId('feedback-intro').textContent,
+      send: getComputedStyle(byId('feedback-send')).display,
+      email: getComputedStyle(byId('feedback-email')).display,
+    };
+  });
   check(
     "CHG-0041: BUG is sent as a bug; REPORT A PATCH with no one else's patch open says what to do, no fields",
     submissions.length === 3 &&
       submissions[2].kind === 'bug' &&
-      (reportView.intro ?? '').includes('Open the patch you want to report') &&
+      reportView.intro.includes('Open the patch you want to report') &&
       reportView.send === 'none' &&
       reportView.email === 'none',
     { kind: submissions[2]?.kind, reportView },
@@ -384,12 +422,14 @@ try {
   await page.screenshot({ path: 'tests/e2e/output/support/mobile.png' });
   check(
     'panel works at mobile width without horizontal overflow',
-    await page.evaluate(() => document.querySelector('#feedback-panel')!.scrollWidth <= innerWidth),
+    await page.evaluate(
+      () => (document.querySelector('#feedback-panel')?.scrollWidth ?? Infinity) <= innerWidth,
+    ),
   );
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.waitForTimeout(300);
   const settingsPoint = await page.evaluate(() => {
-    const settingsPanel = (window as any).__bd_probe.scene.SettingsPanel;
+    const settingsPanel = window.__bd_probe.scene.SettingsPanel as AppSettingsPanel;
     return [settingsPanel.MenuItems[0].Position.x / devicePixelRatio, 30];
   });
   await page.mouse.click(settingsPoint[0], settingsPoint[1]);

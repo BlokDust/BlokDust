@@ -1,12 +1,12 @@
-// Video export (CHG-0022, SPEC-SHARING-VIDEO-EXPORT): the real app, real AudioWorklet, real pointer.
-//   pnpm test:video [--only name,name] [--chromium]
-// Runs in Google Chrome (H.264 + AAC encoders, as users have) unless --chromium; checks the MP4 with ffprobe.
+// pnpm test:video [--only a,b] [--chromium]: video export (CHG-0022, SPEC-SHARING-VIDEO-EXPORT)
+// in Google Chrome (its H.264 + AAC encoders) unless --chromium; the MP4 is checked with ffprobe.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium, type Browser, type Page } from 'playwright';
 import { serveDist } from './serve.ts';
 import { THEMES } from '../../web/src/generated/palettes.gen.ts';
 import { videoSeconds } from '../../web/src/video/length.ts';
+import type { PatchesPanelPrivates } from './pageGlobals.shared.ts';
 
 const OUT = 'tests/e2e/output/video';
 mkdirSync(OUT, { recursive: true });
@@ -37,7 +37,8 @@ const blk = (Id: number, Type: string, x: number, y: number): Block => ({
   Type,
   Position: { x, y },
 });
-/** A powered emitter firing particles, a powered tone through a delay: particles, hits and sound from the start. */
+/** A powered emitter firing particles, a powered tone through a delay: particles, hits and sound
+ * from the start. */
 const SCENE = [
   blk(1, 'ParticleEmitter', -8, 0),
   blk(6, 'Power', -10, 0),
@@ -47,8 +48,8 @@ const SCENE = [
   blk(5, 'StereoDelay', 8, 9),
 ];
 
-/** `share`: 'none' — the browser can't share files, so SHARE VIDEO downloads (desktop Chrome); 'sheet' — a share
- * sheet that records what it was handed (window.__shared). */
+/** `share`: 'none', the browser can't share files, so SHARE VIDEO downloads (desktop Chrome);
+ * 'sheet', a share sheet that records what it was handed (window.__shared). */
 async function open(
   b: Browser,
   blocks: Block[],
@@ -60,93 +61,101 @@ async function open(
     deviceScaleFactor: 1,
     acceptDownloads: true,
   });
-  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('pageerror', (error) => errors.push(error.message));
   await page.addInitScript((mode) => {
-    const n = navigator as any;
+    const sharing = navigator as Omit<Navigator, 'share' | 'canShare'> & {
+      share?: (data: ShareData) => Promise<void>;
+      canShare?: (data: ShareData) => boolean;
+    };
     if (mode === 'none') {
-      n.share = undefined;
-      n.canShare = undefined;
+      sharing.share = undefined;
+      sharing.canShare = undefined;
       return;
     }
-    n.canShare = (d: any) => !!d?.files?.length;
-    n.share = async (d: any) => {
-      if (!(navigator as any).userActivation?.isActive)
-        throw new DOMException('needs a click', 'NotAllowedError');
-      const f = d.files[0];
-      (window as any).__shared = {
-        name: f.name,
-        type: f.type,
-        size: f.size,
-        title: d.title,
-        text: d.text,
+    sharing.canShare = (data) => !!data.files?.length;
+    sharing.share = (data) => {
+      if (!navigator.userActivation.isActive)
+        return Promise.reject(new DOMException('needs a click', 'NotAllowedError'));
+      const file = data.files?.[0];
+      if (!file) return Promise.reject(new TypeError('no file to share'));
+      window.__shared = {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        title: data.title,
+        text: data.text,
       };
+      return Promise.resolve();
     };
   }, share);
-  await page.goto(`${url}/index.html?video=1&v1=${comp(blocks)}`); // video=1: MAKE VIDEO is hidden by default (CHG-0035)
-  await page.waitForFunction(() => (window as any).__bd_probe);
+  // video=1: MAKE VIDEO is hidden by default (CHG-0035).
+  await page.goto(`${url}/index.html?video=1&v1=${comp(blocks)}`);
+  await page.waitForFunction(() => window.__bd_probe);
   await page.click('#start');
-  await page.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 10);
+  await page.waitForFunction(() => window.__bd_probe.state.snapshots > 10);
   await page.waitForTimeout(1200);
   return page;
 }
-const centre = (p: Page, name: string) =>
-  p.evaluate((n) => (window as any).__bd_probe.scene.PatchesPanel.centreOf(n), name) as Promise<
-    [number, number]
-  >;
-async function click(p: Page, name: string, wait = 500): Promise<void> {
-  const [x, y] = await centre(p, name);
-  await p.mouse.move(x, y);
-  await p.mouse.click(x, y);
-  await p.waitForTimeout(wait);
+async function click(page: Page, name: string, wait = 500): Promise<void> {
+  const centre = await page.evaluate(
+    (control) => window.__bd_probe.scene.PatchesPanel.centreOf(control),
+    name,
+  );
+  if (!centre) throw new Error(`no control ${name}`);
+  const [x, y] = centre;
+  await page.mouse.move(x, y);
+  await page.mouse.click(x, y);
+  await page.waitForTimeout(wait);
 }
-/** Patches › SAVE / SHARE (the header's PATCHES slot opens the panel). These tests have no server to save to, so the
- * video is started as SAVE starts it once saved (owner review 2, option A); test:gallery presses SAVE itself. */
-async function openVideoTab(p: Page): Promise<void> {
-  await p.evaluate(() => {
+/** Patches › SAVE / SHARE. With no server to save to, the video starts as SAVE starts it once
+ * saved; test:gallery presses SAVE itself. */
+async function openVideoTab(page: Page): Promise<void> {
+  await page.evaluate(() => {
     try {
       localStorage.removeItem('blokdust.patchesTab');
     } catch {
-      /* */
+      // Storage may be off; the tab is then the default anyway.
     }
   });
-  await p.mouse.move(1138, 45);
-  await p.mouse.click(1138, 45);
-  await p.waitForTimeout(1500);
-  await click(p, 'tab0', 1100);
+  await page.mouse.move(1138, 45);
+  await page.mouse.click(1138, 45);
+  await page.waitForTimeout(1500);
+  await click(page, 'tab0', 1100);
 }
-const startVideo = (p: Page) =>
-  p.evaluate(() => {
-    void (window as any).__bd_probe.scene.PatchesPanel.makeVideo();
+const startVideo = (page: Page) =>
+  page.evaluate(() => {
+    const privates = window.__bd_probe.scene.PatchesPanel as unknown as PatchesPanelPrivates;
+    void privates.makeVideo();
   });
-const panel = (p: Page) =>
-  p.evaluate(() => {
-    const pp = (window as any).__bd_probe.scene.PatchesPanel,
-      elementById = document.getElementById('patchVideo') as HTMLVideoElement;
+const panel = (page: Page) =>
+  page.evaluate(() => {
+    const patchesPanel = window.__bd_probe.scene.PatchesPanel,
+      player = document.getElementById('patchVideo') as HTMLVideoElement;
     return {
-      state: pp.VideoState,
-      view: pp.View,
-      message: pp.VideoMessage,
-      progress: pp.VideoProgress,
-      videoOn: pp.videoOn,
-      seconds: (window as any).__bd_probe.scene.host.video.seconds(),
-      player: { shown: elementById.style.display === 'block', src: !!elementById.src },
+      state: patchesPanel.VideoState,
+      view: patchesPanel.View,
+      message: patchesPanel.VideoMessage,
+      progress: patchesPanel.VideoProgress,
+      videoOn: (patchesPanel as unknown as PatchesPanelPrivates).videoOn,
+      seconds: window.__bd_probe.scene.host.video?.seconds(),
+      player: { shown: player.style.display === 'block', src: !!player.src },
     };
   });
-/** Make the video and save what downloads (desktop Chrome can't share files: it downloads once made). */
+/** Make the video and save what downloads (desktop Chrome can't share files: it downloads). */
 async function makeAndSave(
-  p: Page,
+  page: Page,
   name: string,
 ): Promise<{ file: string; ms: number; state: Awaited<ReturnType<typeof panel>> }> {
-  const t0 = Date.now();
-  if (await p.evaluate(() => (window as any).__bd_probe.scene.host.video.canShareFiles()))
+  const startedAt = Date.now();
+  if (await page.evaluate(() => window.__bd_probe.scene.host.video?.canShareFiles()))
     throw new Error('this test expects a browser that downloads videos');
   const [download] = await Promise.all([
-    p.waitForEvent('download', { timeout: 180_000 }),
-    startVideo(p),
+    page.waitForEvent('download', { timeout: 180_000 }),
+    startVideo(page),
   ]);
-  await p.waitForTimeout(300);
-  const ms = Date.now() - t0,
-    state = await panel(p);
+  await page.waitForTimeout(300);
+  const ms = Date.now() - startedAt,
+    state = await panel(page);
   const file = `${OUT}/${name}.mp4`;
   await download.saveAs(file);
   return { file, ms, state };
@@ -164,12 +173,12 @@ interface Probe {
   }[];
   format: { duration: string };
 }
-const ffprobe = (file: string): Probe =>
+const ffprobe = (file: string) =>
   JSON.parse(
     execFileSync('ffprobe', ['-v', 'error', '-show_streams', '-show_format', '-of', 'json', file], {
       encoding: 'utf8',
     }),
-  );
+  ) as Probe;
 /** Mean audio level in dB (ffmpeg volumedetect, which reports on stderr). */
 function meanDb(file: string): number {
   const result = spawnSync(
@@ -185,11 +194,11 @@ const frameHashes = (file: string) =>
     encoding: 'utf8',
   })
     .split('\n')
-    .filter((l) => l && !l.startsWith('#'))
-    .map((l) => l.split(',').pop()!.trim());
+    .filter((line) => line && !line.startsWith('#'))
+    .map((line) => (line.split(',').pop() ?? '').trim());
 
-/** Decoded frame `n` as rgb24. */
-const rawFrame = (file: string, n: number) =>
+/** Decoded frame `index` as rgb24. */
+const rawFrame = (file: string, index: number) =>
   execFileSync(
     'ffmpeg',
     [
@@ -198,7 +207,7 @@ const rawFrame = (file: string, n: number) =>
       '-i',
       file,
       '-vf',
-      `select=eq(n\\,${n})`,
+      `select=eq(n\\,${index})`,
       '-frames:v',
       '1',
       '-f',
@@ -209,46 +218,48 @@ const rawFrame = (file: string, n: number) =>
     ],
     { maxBuffer: 1 << 27 },
   );
-/** R6: particles fly. Pixels that are the particle colour (the theme's power colour) in frame n and not 5 frames later,
- * or the other way round: blocks and lines don't move, so only particles (and beams) count. */
+/** R6: particles fly. Pixels of the particle colour (the theme's power colour) in one frame and not
+ * 5 frames later, or the other way round: blocks and lines don't move, so only particles count. */
 function particlesMoving(file: string): number {
   const theme = THEMES[0],
-    [red, g, b] = theme.colors[theme.roles.power].match(/\d+/g)!.map(Number);
-  const is = (x: Buffer, i: number) =>
-    Math.abs(x[i] - red) + Math.abs(x[i + 1] - g) + Math.abs(x[i + 2] - b) < 60;
+    [red, green, blue] = (theme.colors[theme.roles.power].match(/\d+/g) ?? []).map(Number);
+  const isParticle = (frame: Buffer, i: number) =>
+    Math.abs(frame[i] - red) + Math.abs(frame[i + 1] - green) + Math.abs(frame[i + 2] - blue) < 60;
   let most = 0;
-  for (const n of [45, 90, 135]) {
-    const a = rawFrame(file, n),
-      nonSharedBuffer = rawFrame(file, n + 5);
-    let k = 0;
-    for (let i = 0; i + 2 < a.length; i += 3) if (is(a, i) !== is(nonSharedBuffer, i)) k++;
-    most = Math.max(most, k);
+  for (const index of [45, 90, 135]) {
+    const frame = rawFrame(file, index),
+      later = rawFrame(file, index + 5);
+    let changed = 0;
+    for (let i = 0; i + 2 < frame.length; i += 3)
+      if (isParticle(frame, i) !== isParticle(later, i)) changed++;
+    most = Math.max(most, changed);
   }
   return most;
 }
 
-/** H.264 + AAC stereo MP4 of w×h at 30 fps, `seconds` long (or within [min, max]), with particles moving and sound. */
+/** H.264 + AAC stereo MP4 of width×height at 30 fps, `seconds` long (or within [min, max]), with
+ * particles moving and sound. */
 function checkMp4(
   file: string,
-  w: number,
-  h: number,
+  width: number,
+  height: number,
   seconds: number | [number, number],
 ): [boolean, Record<string, unknown>] {
-  const pr = ffprobe(file),
-    v = pr.streams.find((stream) => stream.codec_type === 'video'),
-    a = pr.streams.find((stream) => stream.codec_type === 'audio');
-  const dur = Number(pr.format.duration),
+  const probe = ffprobe(file),
+    video = probe.streams.find((stream) => stream.codec_type === 'video'),
+    audio = probe.streams.find((stream) => stream.codec_type === 'audio');
+  const dur = Number(probe.format.duration),
     hashes = frameHashes(file),
     distinct = new Set(hashes).size,
     db = meanDb(file),
     moving = particlesMoving(file);
   const ok =
-    v?.codec_name === 'h264' &&
-    a?.codec_name === 'aac' &&
-    v.width === w &&
-    v.height === h &&
-    v.avg_frame_rate === '30/1' &&
-    a.channels === 2 &&
+    video?.codec_name === 'h264' &&
+    audio?.codec_name === 'aac' &&
+    video.width === width &&
+    video.height === height &&
+    video.avg_frame_rate === '30/1' &&
+    audio.channels === 2 &&
     (typeof seconds === 'number'
       ? Math.abs(dur - seconds) < 0.15
       : dur >= seconds[0] && dur <= seconds[1]) &&
@@ -258,8 +269,11 @@ function checkMp4(
   return [
     ok,
     {
-      video: v && `${v.codec_name} ${v.width}x${v.height} ${v.avg_frame_rate}`,
-      audio: a && `${a.codec_name} ${a.sample_rate} ${a.channels}ch`,
+      video:
+        video &&
+        `${video.codec_name} ${String(video.width)}x${String(video.height)} ${String(video.avg_frame_rate)}`,
+      audio:
+        audio && `${audio.codec_name} ${String(audio.sample_rate)} ${String(audio.channels)}ch`,
       duration: dur,
       expected: seconds,
       frames: hashes.length,
@@ -271,34 +285,33 @@ function checkMp4(
 }
 
 const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> = {
-  /** R5, R9, R13, R15: portrait only; a patch without timers runs 15 s, then the 3 s end card. Desktop Chrome can't
-   * share files, so it downloads once made, and the player shows it with DOWNLOAD VIDEO; MAKE VIDEO is off by default
-   * there. */
+  /** R5, R9, R13, R15: portrait; no timers: 15 s, then the 3 s end card. Desktop Chrome downloads
+   * it, the player shows it with DOWNLOAD VIDEO, and MAKE VIDEO is off by default there. */
   'portrait-default': async (errors) => {
-    const p = await open(browser, SCENE, errors);
-    await openVideoTab(p);
-    const before = await panel(p);
-    const r = await makeAndSave(p, 'portrait-default');
-    await p.mouse.move(5, 5);
-    await p.waitForTimeout(300);
-    await p.screenshot({ path: `${OUT}/player-desktop.png` });
-    await p.close();
-    if (!r.file) return [false, r];
-    const [ok, info] = checkMp4(r.file, 1080, 1920, 18);
+    const page = await open(browser, SCENE, errors);
+    await openVideoTab(page);
+    const before = await panel(page);
+    const made = await makeAndSave(page, 'portrait-default');
+    await page.mouse.move(5, 5);
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: `${OUT}/player-desktop.png` });
+    await page.close();
+    if (!made.file) return [false, made];
+    const [ok, info] = checkMp4(made.file, 1080, 1920, 18);
     return [
       ok &&
         before.seconds === 15 &&
-        before.videoOn === false &&
-        r.state.state === 'ready' &&
-        r.state.view === 'video' &&
-        r.state.player.shown &&
-        r.state.player.src,
-      { ...info, before, after: r.state, ms: r.ms },
+        !before.videoOn &&
+        made.state.state === 'ready' &&
+        made.state.view === 'video' &&
+        made.state.player.shown &&
+        made.state.player.src,
+      { ...info, before, after: made.state, ms: made.ms },
     ];
   },
-  /** R5 (owner review 2): the length is whole cycles of the longest timer, 10–30 s. */
-  'length-from-timers': async () => {
-    const d = (_type: string, key: string) =>
+  /** R5: the length is whole cycles of the longest timer, 10–30 s. */
+  'length-from-timers': () => {
+    const defaults = (_type: string, key: string) =>
       (
         ({ sync: false, turnBeats: 4, division: 1, pulseBeats: 0.25, rate: 1, steps: 8 }) as Record<
           string,
@@ -306,16 +319,20 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
         >
       )[key];
     const cases: [string, number, number][] = [
-      ['none', videoSeconds([{ type: 'source.tone', params: {} }], 120, d), 15],
-      ['lfo 1 Hz', videoSeconds([{ type: 'fx.lfo', params: { rate: 1 } }], 120, d), 10],
+      ['none', videoSeconds([{ type: 'source.tone', params: {} }], 120, defaults), 15],
+      ['lfo 1 Hz', videoSeconds([{ type: 'fx.lfo', params: { rate: 1 } }], 120, defaults), 10],
       [
         'lfo 0.07 Hz',
-        videoSeconds([{ type: 'fx.lfo', params: { rate: 0.07 } }], 120, d),
+        videoSeconds([{ type: 'fx.lfo', params: { rate: 0.07 } }], 120, defaults),
         Math.round(30 / 0.07) / 30,
       ],
       [
         'laser 32 beats',
-        videoSeconds([{ type: 'power.laser', params: { sync: true, turnBeats: -32 } }], 120, d),
+        videoSeconds(
+          [{ type: 'power.laser', params: { sync: true, turnBeats: -32 } }],
+          120,
+          defaults,
+        ),
         16,
       ],
       [
@@ -326,72 +343,76 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
             { type: 'power.counter', params: { steps: 16 } },
           ],
           120,
-          d,
+          defaults,
         ),
         16,
       ],
       [
         'lfo 0.02 Hz: capped',
-        videoSeconds([{ type: 'fx.lfo', params: { rate: 0.02 } }], 120, d),
+        videoSeconds([{ type: 'fx.lfo', params: { rate: 0.02 } }], 120, defaults),
         30,
       ],
     ];
-    return [cases.every(([, got, want]) => Math.abs(got - want) < 1e-6), cases];
+    return Promise.resolve([cases.every(([, got, want]) => Math.abs(got - want) < 1e-6), cases]);
   },
-  /** R13: where the browser can share files, MAKE VIDEO is on by default, and SHARE VIDEO under the player hands the
+  /** R13: where the browser can share files, MAKE VIDEO is on by default, and SHARE VIDEO hands the
    * MP4 to the share sheet, in the click, with the title and the link as text. */
   'share-sheet': async (errors) => {
-    const p = await open(browser, SCENE, errors, 'sheet');
-    await openVideoTab(p);
-    const on = (await panel(p)).videoOn;
-    await startVideo(p);
-    await p.waitForFunction(
-      () => (window as any).__bd_probe.scene.PatchesPanel.VideoState === 'ready',
+    const page = await open(browser, SCENE, errors, 'sheet');
+    await openVideoTab(page);
+    const on = (await panel(page)).videoOn;
+    await startVideo(page);
+    await page.waitForFunction(
+      () => window.__bd_probe.scene.PatchesPanel.VideoState === 'ready',
       null,
       { timeout: 120_000 },
     );
-    await click(p, 'shareVideo', 500);
-    const shared = await p.evaluate(() => (window as any).__shared);
-    await p.close();
+    await click(page, 'shareVideo', 500);
+    const shared = await page.evaluate(() => window.__shared);
+    await page.close();
     return [
-      on === true &&
+      on &&
         !!shared &&
         shared.type === 'video/mp4' &&
         shared.name.endsWith('.mp4') &&
         shared.size > 50_000 &&
-        /made with BlokDust/.test(shared.text) &&
-        /https?:\/\//.test(shared.text),
+        (shared.text ?? '').includes('made with BlokDust') &&
+        /https?:\/\//.test(shared.text ?? ''),
       { on, shared },
     ];
   },
-  /** R2: the same patch draws the same frames (the encoder may still vary bytes, so compare decoded frames). */
+  /** R2: the same patch draws the same frames (the encoder may still vary bytes, so decoded frames
+   * are compared). */
   'from-start-repeatable': async (errors) => {
-    const p = await open(browser, SCENE, errors);
-    await openVideoTab(p);
-    const a = await makeAndSave(p, 'repeat-a');
-    const b = await makeAndSave(p, 'repeat-b');
-    await p.close();
-    if (!a.file || !b.file) return [false, { a, b }];
-    const ha = frameHashes(a.file),
-      hb = frameHashes(b.file),
-      same = ha.filter((h, i) => h === hb[i]).length;
+    const page = await open(browser, SCENE, errors);
+    await openVideoTab(page);
+    const first = await makeAndSave(page, 'repeat-a');
+    const second = await makeAndSave(page, 'repeat-b');
+    await page.close();
+    if (!first.file || !second.file) return [false, { a: first, b: second }];
+    const firstHashes = frameHashes(first.file),
+      secondHashes = frameHashes(second.file),
+      same = firstHashes.filter((hash, i) => hash === secondHashes[i]).length;
     return [
-      same === ha.length && ha.length === hb.length && ha.length > 0,
-      { frames: ha.length, identicalFrames: same },
+      same === firstHashes.length &&
+        firstHashes.length === secondHashes.length &&
+        firstHashes.length > 0,
+      { frames: firstHashes.length, identicalFrames: same },
     ];
   },
   /** R11: CANCEL stops it at once; BACK returns to SAVE / SHARE. */
   cancel: async (errors) => {
-    const p = await open(browser, SCENE, errors);
-    await openVideoTab(p);
-    await startVideo(p);
-    await p.waitForTimeout(1500);
-    const during = await panel(p);
-    await click(p, 'make', 1000); // CANCEL
-    const after = await panel(p);
-    await click(p, 'videoBack', 500);
-    const back = await panel(p);
-    await p.close();
+    const page = await open(browser, SCENE, errors);
+    await openVideoTab(page);
+    await startVideo(page);
+    await page.waitForTimeout(1500);
+    const during = await panel(page);
+    // CANCEL.
+    await click(page, 'make', 1000);
+    const after = await panel(page);
+    await click(page, 'videoBack', 500);
+    const back = await panel(page);
+    await page.close();
     return [
       during.state === 'making' &&
         after.state === 'idle' &&
@@ -400,27 +421,28 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
       { during, after, back },
     ];
   },
-  /** Bug (found making screenshots): CANCEL, then at once MAKE VIDEO. The cancelled render was still winding down, so
-   * the panel still said making: MAKE cancelled again and nothing was made. */
+  /** Bug: CANCEL, then at once MAKE VIDEO. The cancelled render was still winding down, so the
+   * panel still said making: MAKE cancelled again and nothing was made. */
   'cancel-then-make-at-once': async (errors) => {
-    const p = await open(browser, SCENE, errors, 'sheet');
-    await openVideoTab(p);
-    await startVideo(p);
-    await p.waitForTimeout(1500);
-    await click(p, 'make', 0); // CANCEL
-    await click(p, 'make', 0); // MAKE VIDEO
-    await p
+    const page = await open(browser, SCENE, errors, 'sheet');
+    await openVideoTab(page);
+    await startVideo(page);
+    await page.waitForTimeout(1500);
+    // CANCEL, then MAKE VIDEO.
+    await click(page, 'make', 0);
+    await click(page, 'make', 0);
+    await page
       .waitForFunction(
         () => {
-          const videoState = (window as any).__bd_probe.scene.PatchesPanel.VideoState;
+          const videoState = window.__bd_probe.scene.PatchesPanel.VideoState;
           return videoState === 'ready' || videoState === 'error';
         },
         null,
         { timeout: 60_000 },
       )
       .catch(() => {});
-    const after = await panel(p);
-    await p.close();
+    const after = await panel(page);
+    await page.close();
     return [after.state === 'ready', after];
   },
 };

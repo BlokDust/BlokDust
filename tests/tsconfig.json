@@ -5,6 +5,6 @@
     "moduleResolution": "bundler",
     "erasableSyntaxOnly": false
   },
-  "include": ["."],
+  "include": [".", "../web/src/vite-env.d.ts"],
   "exclude": ["**/node_modules", "visual/output", "audio/output", "e2e/output"]
 }

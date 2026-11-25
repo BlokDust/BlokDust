@@ -1,6 +1,5 @@
-// Black-box smoke test for the web build: serve web/dist, open the block library in headless Chromium,
-// fail on any page/console error, and check that blocks were actually rendered (non-background pixels).
-// Usage: pnpm test:web   (expects `pnpm -C web build` first)
+// Smoke test of the web build (pnpm test:web, after `pnpm -C web build`): the block library in
+// headless Chromium renders blocks (non-background pixels) with no page or console error.
 import { mkdirSync, readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { serveDist } from './serve.ts';
@@ -16,9 +15,9 @@ try {
       deviceScaleFactor: 2,
     });
     const errors: string[] = [];
-    page.on('pageerror', (e) => errors.push(e.message));
-    page.on('console', (m) => {
-      if (m.type() === 'error') errors.push(m.text());
+    page.on('pageerror', (error) => errors.push(error.message));
+    page.on('console', (message) => {
+      if (message.type() === 'error') errors.push(message.text());
     });
     await page.goto(`${url}/library.html?theme=${theme}`);
     await page.waitForFunction(() => document.querySelector('canvas') !== null);
