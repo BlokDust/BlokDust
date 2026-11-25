@@ -4,7 +4,7 @@ import { mkdirSync } from 'node:fs';
 import { chromium, type BrowserContext, type CDPSession, type Page } from 'playwright';
 import { startLocal } from '../../../tools/server/lib.ts';
 import { sineWav, startMockServices } from '../mock-services.ts';
-import type { AppSettingsPanel } from '../pageGlobals.shared.ts';
+import type { AppSettingsPanel } from '../pageGlobals.ts';
 import type { ApiAnswer } from './answers.ts';
 
 export type AccountTests = Record<string, () => Promise<void>>;

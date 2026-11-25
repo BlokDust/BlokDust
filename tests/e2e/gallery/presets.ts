@@ -13,7 +13,7 @@ import {
   bd,
   galleryItems,
 } from './harness.ts';
-import type { MessageBarState } from '../pageGlobals.shared.ts';
+import type { MessageBarState } from '../pageGlobals.ts';
 
 export async function presetExamples({ anon, carol }: Pick<Cast, 'anon' | 'carol'>): Promise<void> {
   // ---- R16 (owner review 3): the presets are @blokdust's EXAMPLES; OPEN lists only the user's own

@@ -5,7 +5,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import { serveDist } from '../serve.ts';
 import { encodePatch } from '../../../web/src/patch/share.ts';
 import type { Patch, PatchBlock } from '../../../web/src/patch/loadPatch.ts';
-import type { OptionRow, OptionsBlock, RowShown } from '../pageGlobals.shared.ts';
+import type { OptionRow, OptionsBlock, RowShown } from '../pageGlobals.ts';
 
 export type Tests = Record<string, (errors: string[]) => Promise<[boolean, unknown]>>;
 

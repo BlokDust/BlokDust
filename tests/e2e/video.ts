@@ -6,7 +6,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import { serveDist } from './serve.ts';
 import { THEMES } from '../../web/src/generated/palettes.gen.ts';
 import { videoSeconds } from '../../web/src/video/length.ts';
-import type { PatchesPanelPrivates } from './pageGlobals.shared.ts';
+import type { PatchesPanelState } from './pageGlobals.ts';
 
 const OUT = 'tests/e2e/output/video';
 mkdirSync(OUT, { recursive: true });
@@ -124,7 +124,7 @@ async function openVideoTab(page: Page): Promise<void> {
 }
 const startVideo = (page: Page) =>
   page.evaluate(() => {
-    const privates = window.__bd_probe.scene.PatchesPanel as unknown as PatchesPanelPrivates;
+    const privates = window.__bd_probe.scene.PatchesPanel as unknown as PatchesPanelState;
     void privates.makeVideo();
   });
 const panel = (page: Page) =>
@@ -136,7 +136,7 @@ const panel = (page: Page) =>
       view: patchesPanel.View,
       message: patchesPanel.VideoMessage,
       progress: patchesPanel.VideoProgress,
-      videoOn: (patchesPanel as unknown as PatchesPanelPrivates).videoOn,
+      videoOn: (patchesPanel as unknown as PatchesPanelState).videoOn,
       seconds: window.__bd_probe.scene.host.video?.seconds(),
       player: { shown: player.style.display === 'block', src: !!player.src },
     };
@@ -374,8 +374,8 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
       on &&
         !!shared &&
         shared.type === 'video/mp4' &&
-        shared.name.endsWith('.mp4') &&
-        shared.size > 50_000 &&
+        (shared.name ?? '').endsWith('.mp4') &&
+        (shared.size ?? 0) > 50_000 &&
         (shared.text ?? '').includes('made with BlokDust') &&
         /https?:\/\//.test(shared.text ?? ''),
       { on, shared },

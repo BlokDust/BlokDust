@@ -6,7 +6,7 @@ import { chromium, type BrowserContext, type Page } from 'playwright';
 import { startLocal } from '../../../tools/server/lib.ts';
 import { sineWav, startMockServices } from '../mock-services.ts';
 import { located } from '../located.ts';
-import type { AppSettingsPanel } from '../pageGlobals.shared.ts';
+import type { AppSettingsPanel } from '../pageGlobals.ts';
 import type { BdGalleryAnswer, GalleryList, PatchAnswer } from './answers.ts';
 
 export const OUT = 'tests/e2e/output/gallery';

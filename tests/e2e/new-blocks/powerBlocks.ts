@@ -14,7 +14,7 @@ import {
   state,
   type Tests,
 } from './harness.ts';
-import type { OptionRow } from '../pageGlobals.shared.ts';
+import type { OptionRow } from '../pageGlobals.ts';
 
 export const powerBlockTests: Tests = {
   // CHG-0016: a Sound Laser hears the Tone beside it; its beam powers a second Tone; a higher

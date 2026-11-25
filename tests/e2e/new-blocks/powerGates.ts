@@ -12,7 +12,7 @@ import {
   state,
   type Tests,
 } from './harness.ts';
-import type { OptionsBlock, PrismOptionsPanel } from '../pageGlobals.shared.ts';
+import type { OptionsBlock, PrismOptionsPanel } from '../pageGlobals.ts';
 
 export const powerGateTests: Tests = {
   // CHG-0015 (SPEC-SIMULATION R2d): a Chance at 100% switches the Tone beside it on and holds it

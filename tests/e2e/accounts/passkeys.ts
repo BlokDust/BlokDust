@@ -26,7 +26,7 @@ function inOrderDown(points: ([number, number] | null)[]): boolean {
       point !== null && (index === 0 || (points[index - 1]?.[1] ?? Infinity) < point[1]),
   );
 }
-import type { AppSettingsPanel } from '../pageGlobals.shared.ts';
+import type { AppSettingsPanel } from '../pageGlobals.ts';
 
 export const passkeyTests: AccountTests = {
   /** R1, R3, R6, R9, R13: CONTINUE WITH PASSKEY on a device with none asks a name, makes the

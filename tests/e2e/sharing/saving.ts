@@ -18,7 +18,7 @@ import {
   hasTranspose,
 } from './harness.ts';
 import { located } from '../located.ts';
-import type { MessageBarState } from '../pageGlobals.shared.ts';
+import type { MessageBarState } from '../pageGlobals.ts';
 
 export const savingTests: SharingTests = {
   /** A link to no patch: the message bar says why, the stage starts blank, the link leaves the

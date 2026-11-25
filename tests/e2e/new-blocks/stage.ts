@@ -1,7 +1,7 @@
 // Stage block tests: making a Stage and going into it (CHG-0021, UI-0012); run by
 // tests/e2e/new-blocks.ts.
 import type { Page } from 'playwright';
-import type { AppSettingsPanel } from '../pageGlobals.shared.ts';
+import type { AppSettingsPanel } from '../pageGlobals.ts';
 import { steadySineWav } from '../steadySine.ts';
 import {
   OUT,

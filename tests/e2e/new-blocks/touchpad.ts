@@ -14,7 +14,7 @@ import {
   savedParams,
   setParam,
 } from './harness.ts';
-import type { OptionRow, OptionsBlock } from '../pageGlobals.shared.ts';
+import type { OptionRow, OptionsBlock } from '../pageGlobals.ts';
 
 export const touchpadTests: Tests = {
   // CHG-0019 (UI-0010): the Touchpad's pads are in its panel, in key; a pad plays, a slide is

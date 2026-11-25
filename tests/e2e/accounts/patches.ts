@@ -15,7 +15,7 @@ import {
   sharedDevice,
   type AccountTests,
 } from './harness.ts';
-import type { PatchesPanelState } from '../pageGlobals.shared.ts';
+import type { PatchesPanelState } from '../pageGlobals.ts';
 
 export const patchTests: AccountTests = {
   /** R8, R8a: signed in, OPEN lists each account patch once, each with a bin; deleting one makes

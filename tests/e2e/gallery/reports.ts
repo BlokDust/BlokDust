@@ -14,7 +14,7 @@ import {
   bd,
   galleryItems,
 } from './harness.ts';
-import type { MessageBarState, SettingsTabState } from '../pageGlobals.shared.ts';
+import type { MessageBarState, SettingsTabState } from '../pageGlobals.ts';
 import { located } from '../located.ts';
 
 export async function reportAndReview({

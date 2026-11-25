@@ -4,7 +4,7 @@ import { createServer, type Server } from 'node:http';
 import { generateKeyPairSync, createSign, randomUUID, type KeyObject } from 'node:crypto';
 import { chromium, type Page } from 'playwright';
 import { startLocal, type LocalServer } from '../../tools/server/lib.ts';
-import type { AppSettingsPanel } from './pageGlobals.shared.ts';
+import type { AppSettingsPanel } from './pageGlobals.ts';
 
 const results: { name: string; ok: boolean; detail?: unknown }[] = [];
 function check(name: string, ok: boolean, detail?: unknown) {

@@ -14,7 +14,7 @@ import {
   api,
   PATCH,
 } from './harness.ts';
-import type { SettingsTabState } from '../pageGlobals.shared.ts';
+import type { SettingsTabState } from '../pageGlobals.ts';
 import { located } from '../located.ts';
 
 export async function publishAndLike(): Promise<Pick<Cast, 'alice' | 'aliceId' | 'anon' | 'bob'>> {

@@ -15,7 +15,7 @@ import {
   setParam,
   pointOf,
 } from './harness.ts';
-import type { OptionRow, OptionsBlock, RowShown } from '../pageGlobals.shared.ts';
+import type { OptionRow, OptionsBlock, RowShown } from '../pageGlobals.ts';
 
 /** What the open panel's row `setting` last drew. */
 const shownOf = (page: Page, setting: string) =>

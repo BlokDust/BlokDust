@@ -1,7 +1,7 @@
 // The Compressor's meter, the emitter's Offset row, the Power and Laser panels and the Pulse's
 // Delay (CHG-0014, CHG-0029), run by tests/e2e/new-blocks.ts.
 import type { Page } from 'playwright';
-import type { PrismOptionsPanel } from '../pageGlobals.shared.ts';
+import type { PrismOptionsPanel } from '../pageGlobals.ts';
 import {
   OUT,
   blk,

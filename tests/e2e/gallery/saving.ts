@@ -15,7 +15,7 @@ import {
   galleryItems,
 } from './harness.ts';
 import { located } from '../located.ts';
-import type { PatchesPanelState } from '../pageGlobals.shared.ts';
+import type { PatchesPanelState } from '../pageGlobals.ts';
 
 export async function saveVideoAndScroll({
   alice,

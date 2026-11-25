@@ -18,7 +18,7 @@ import {
   sharedDevice,
   type AccountTests,
 } from './harness.ts';
-import type { AppSettingsPanel } from '../pageGlobals.shared.ts';
+import type { AppSettingsPanel } from '../pageGlobals.ts';
 
 export const statsTests: AccountTests = {
   /** R15 (CHG-0027): ACCOUNT's stats come with the one `/api/me?stats=1` it asks; favourite blocks

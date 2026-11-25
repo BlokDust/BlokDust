@@ -11,7 +11,7 @@ import {
   tab,
   idle,
 } from './harness.ts';
-import type { SentMessage } from '../pageGlobals.shared.ts';
+import type { SentMessage } from '../pageGlobals.ts';
 import type { Patch } from '../../../web/src/patch/loadPatch.ts';
 
 export async function pluginGallery(): Promise<void> {

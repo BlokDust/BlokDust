@@ -16,7 +16,7 @@ import {
   type AccountTests,
 } from './harness.ts';
 import { locationOf } from '../located.ts';
-import type { AppSettingsPanel } from '../pageGlobals.shared.ts';
+import type { AppSettingsPanel } from '../pageGlobals.ts';
 
 export const signInMethodTests: AccountTests = {
   /** R2a, R6: Sign in with Google (PKCE S256); a new Google account picks its name; the callback

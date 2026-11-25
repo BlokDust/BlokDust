@@ -25,7 +25,7 @@ import {
   transposeTone,
   hasTranspose,
 } from './harness.ts';
-import type { PatchesPanelState } from '../pageGlobals.shared.ts';
+import type { PatchesPanelState } from '../pageGlobals.ts';
 
 export const shareLinkTests: SharingTests = {
   /** CHG-0013: the plugin's CREATE SHARE LINK opens `?c=p…&t=…&share=1` here; the page makes the

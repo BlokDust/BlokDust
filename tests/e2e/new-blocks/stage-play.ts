@@ -13,7 +13,7 @@ import {
   setParam,
   pointOf,
 } from './harness.ts';
-import type { OptionRow, OptionsBlock } from '../pageGlobals.shared.ts';
+import type { OptionRow, OptionsBlock } from '../pageGlobals.ts';
 
 export const stagePlayTests: Tests = {
   // UI-0012: opening a Stage shows its blocks. When they sit far from the centre and its saved view

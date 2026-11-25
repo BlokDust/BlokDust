@@ -11,7 +11,7 @@ import {
   supportPatch,
   type SupportReport,
 } from '../../shared/support.ts';
-import type { AppSettingsPanel, MessagePanelPrivates } from './pageGlobals.shared.ts';
+import type { AppSettingsPanel, MessageBarState } from './pageGlobals.ts';
 
 /** A stored report (server/ support_reports). */
 interface StoredReport {
@@ -325,7 +325,7 @@ try {
   await page.getByRole('status').filter({ hasText: 'Message sent' }).waitFor();
   const bar = await page.evaluate(() => {
     const messagePanel = window.__bd_probe.scene.MessagePanel;
-    const privates = messagePanel as unknown as MessagePanelPrivates;
+    const privates = messagePanel as unknown as MessageBarState;
     return { open: messagePanel.Open, text: privates._Value?.string };
   });
   check(

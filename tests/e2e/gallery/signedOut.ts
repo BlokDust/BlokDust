@@ -11,7 +11,7 @@ import {
   api,
   galleryItems,
 } from './harness.ts';
-import type { AppSettingsPanel, SettingsTabState } from '../pageGlobals.shared.ts';
+import type { AppSettingsPanel, SettingsTabState } from '../pageGlobals.ts';
 import { located } from '../located.ts';
 
 export async function deletionAndSignIn(

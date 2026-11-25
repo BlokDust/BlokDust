@@ -22,7 +22,7 @@ import {
   mockServices,
 } from './harness.ts';
 import { located } from '../located.ts';
-import type { SelectedBlockView } from '../pageGlobals.shared.ts';
+import type { SelectedBlockView } from '../pageGlobals.ts';
 import type { FileRef, FreesoundRef } from '../../../web/src/patch/samples.ts';
 
 /** css px of a point in v1 device px (the v1 UI works in device px). */

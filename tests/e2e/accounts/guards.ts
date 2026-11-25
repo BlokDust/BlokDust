@@ -13,7 +13,7 @@ import {
   type AccountTests,
 } from './harness.ts';
 import { locationOf } from '../located.ts';
-import type { AppSettingsPanel } from '../pageGlobals.shared.ts';
+import type { AppSettingsPanel } from '../pageGlobals.ts';
 
 export const guardTests: AccountTests = {
   /** R1b (CHG-0035): a network makes ACCOUNTS_PER_DAY (here 2) new accounts a day, then is refused

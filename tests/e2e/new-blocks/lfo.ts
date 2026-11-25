@@ -12,7 +12,7 @@ import {
   state,
   type Tests,
 } from './harness.ts';
-import type { OptionRow, OptionsBlock } from '../pageGlobals.shared.ts';
+import type { OptionRow, OptionsBlock } from '../pageGlobals.ts';
 
 export const lfoTests: Tests = {
   // CHG-0018: an LFO beside a Volume aims at its Level; the Volume's open slider follows; the patch
