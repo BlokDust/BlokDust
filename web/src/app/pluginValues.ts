@@ -1,5 +1,5 @@
-// Values the plugin keeps outside the patch: the page sends bd_get ({keys}), it answers bd_values.
-// Asked at start and on every focus return; a new value is a field here and a line in EditorSend.cpp.
+// Values the plugin keeps outside the patch: bd_get ({keys}) asked at start and on focus return,
+// answered by bd_values. A new value: a field here and a line in EditorSend.cpp.
 import { onFocusReturn } from './focus.ts';
 import type { JuceBackend } from './plugin/juceBackend.ts';
 

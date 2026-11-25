@@ -8,29 +8,26 @@ import { setBaseline } from '../model/unsavedChanges.ts';
 import { keepMine } from './myPatches.ts';
 import { nativeReply } from './pluginPatches.ts';
 
-/**
- * SAVE TO COMPUTER: the user picks where (owner, 2026-11-10). Plugin: the native save dialog, starting in
- * ~/Music/BlokDust/Patches. Web: the browser's save dialog where there is one (Chromium: it starts in Music, then
- * remembers the last folder used for patches); elsewhere a download, as before.
- */
+/** SAVE TO COMPUTER, where the user picks: the plugin's dialog (from ~/Music/BlokDust/Patches), the
+ * browser's save picker (Chromium: Music, then the last patch folder), else a download. */
 export async function savePatchFile(title: string): Promise<boolean> {
   const name = `${fileNameFor(title)}.${PATCH_EXT}`;
   if (juce) {
-    const r = await nativeReply<{ ok: boolean }>(
+    const reply = await nativeReply<{ ok: boolean }>(
       (req) => juce?.emitEvent('bd_patchSave', { req, name: fileNameFor(title), title }),
       30 * 60 * 1000,
     );
-    if (r?.ok) setBaseline();
-    return !!r?.ok;
+    if (reply?.ok) setBaseline();
+    return !!reply?.ok;
   }
   const text = JSON.stringify({ ...toPatch(), meta: { title } }, null, 2);
-  const w = window as unknown as {
-    showSaveFilePicker?: (o: object) => Promise<FileSystemFileHandle>;
+  const pickerWindow = window as unknown as {
+    showSaveFilePicker?: (options: object) => Promise<FileSystemFileHandle>;
   };
-  if (w.showSaveFilePicker) {
+  if (pickerWindow.showSaveFilePicker) {
     let handle: FileSystemFileHandle;
     try {
-      handle = await w.showSaveFilePicker({
+      handle = await pickerWindow.showSaveFilePicker({
         suggestedName: name,
         startIn: 'music',
         id: 'blokdust-patches',
@@ -39,7 +36,7 @@ export async function savePatchFile(title: string): Promise<boolean> {
         ],
       });
     } catch (error) {
-      if ((error as DOMException)?.name === 'AbortError') return false; // cancelled
+      if (error instanceof DOMException && error.name === 'AbortError') return false; // cancelled
       console.warn('BlokDust: no save dialog; downloading instead', error);
       return download(name, text, title);
     }

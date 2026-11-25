@@ -70,7 +70,7 @@ export function showPatch(shown: Patch, ids?: Record<string, number>): void {
       refs.set(key, value as SampleRef);
   for (const block of patch.blocks)
     if (BLOCKS_BY_ID.has(block.type)) {
-      const fixed = ids && block.id !== undefined ? ids[block.id] : undefined;
+      const fixed = ids?.[block.id];
       if (fixed !== undefined) setNextId(fixed);
       addBlock(block.type, block.x ?? 0, block.y ?? 0, block.params ?? {}, block.id, true);
     }
@@ -105,6 +105,7 @@ export function init(): void {
   keepBlocksInView(); // its saved view may be far from its blocks
   // Someone else's patch from a link, or an embed, is guarded (CHG-0041); your own is not.
   setGuarded(
-    !!embedId || (start.source === 'link' && !(start.id && (start.mine || canOverwrite(start.id)))),
+    !!embedId ||
+      (start.source === 'link' && !(start.id && (start.mine === true || canOverwrite(start.id)))),
   );
 }

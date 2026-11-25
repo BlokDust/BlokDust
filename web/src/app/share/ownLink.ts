@@ -52,13 +52,7 @@ export function linkSaved(id: string, title: string, at = contentOf(toPatch())):
   checkOwnDirty();
 }
 
-/**
- * Quick save (CHG-0033, SPEC-SHARING-BACKEND R18–R20; owner, 2026-11-17): Cmd/Ctrl+S, or the corner's SAVE, saves the
- * patch over this device's own link: the same link and title, the gallery left as it is, no video, no panel; v1's
- * message bar says SAVED. A patch with no link of its own (never saved, someone else's, a preset; the plugin and
- * the standalone app, which keep no link) opens Patches › SAVE instead. It never falls back to a new self-contained
- * link (SAVE's no-backend path): if the server can't be reached it says so and the patch stays unsaved.
- */
+/** This device's own server link holds the patch (never in the plugins, which keep no link). */
 export const ownLink = () =>
   !juce &&
   !embedId &&
@@ -73,27 +67,29 @@ export let ownDirty = false,
   quickSaving = false;
 
 export function checkOwnDirty(): void {
-  const d = ownLink() && contentOf(toPatch()) !== shareLink!.at;
-  if (d !== ownDirty) {
-    ownDirty = d;
+  const dirty = ownLink() && contentOf(toPatch()) !== shareLink?.at;
+  if (dirty !== ownDirty) {
+    ownDirty = dirty;
     stage.redraw();
   }
 }
 
 export function openSaveTab(): void {
-  if ((scene.SettingsPanel as any).Open || scene.SoundcloudPanel.Open) return;
+  if (scene.SettingsPanel.Open || scene.SoundcloudPanel.Open) return;
   if (scene.PatchesPanel.Open) scene.PatchesPanel.selectTab(0);
   else scene.PatchesPanel.OpenPanel(0);
 }
 
+/** Cmd/Ctrl+S or SAVE (CHG-0033, SPEC-SHARING-BACKEND R18–R20): over the own link, same title and
+ * gallery; else Patches › SAVE. Never a new self-contained link: offline, it stays unsaved. */
 export async function quickSave(): Promise<void> {
   if (quickSaving || scene.PatchesPanel.Saving) return;
-  if (!ownLink()) {
+  const link = shareLink;
+  if (!link || !ownLink()) {
     openSaveTab();
     return;
   }
-  const link = shareLink!,
-    patch = toPatch(),
+  const patch = toPatch(),
     at = contentOf(patch),
     title = link.title || 'Untitled';
   if (at === link.at) {

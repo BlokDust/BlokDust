@@ -21,8 +21,8 @@ import { probe } from '../testing/probe.ts';
 
 export let overlay!: HTMLElement;
 
-/** A Toggle the engine switched (a particle or laser hit): the patch keeps its state, as v1's Toggle did (its
- * Params.logic), so a save, a share link or the autosave reopens with the Toggles as they were (owner, 2026-11-13). */
+/** A Toggle the engine switched (a particle or laser hit) keeps its state in the patch, as v1's
+ * Params.logic did, so a save, a link or the autosave reopens with the Toggles as they were. */
 export function logicFlipped(id: number, on: boolean): void {
   const b = model.get(id),
     v1Block = v1Blocks.get(id);
@@ -33,8 +33,8 @@ export function logicFlipped(id: number, on: boolean): void {
     if (scene.OptionsPanel.Scale > 0 && scene.OptionsPanel.SelectedBlock === v1Block)
       v1Block.RefreshOptionsPanel();
   }
-  // Not an edit: the autosave (when it holds this patch) catches up within a second, without marking it unsaved or
-  // putting off the save of a real edit (a running scene may flip Toggles faster than the edit debounce).
+  // Not an edit: the autosave catches up within a second, without marking the patch unsaved or
+  // putting off a real edit's save (a running scene may flip Toggles faster than the debounce).
   if (embedId || juce || !autosaveIsThis || logicSave) return;
   logicSave = setTimeout(() => {
     logicSave = undefined;
@@ -97,5 +97,7 @@ export const onSnapshot = (snapshot: Snapshot) => {
 };
 
 export function init(): void {
-  overlay = document.getElementById('start')!;
+  const startOverlay = document.getElementById('start');
+  if (!startOverlay) throw new Error('BlokDust: the page has no #start overlay');
+  overlay = startOverlay;
 }

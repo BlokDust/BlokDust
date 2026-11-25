@@ -33,13 +33,14 @@ import { INSIDE_HIDDEN, exitStage } from '../stageBlock/lookInside.ts';
 /** Open replaces the scene. Insert adds the patch's blocks, keeping their layout, for the pointer
  * to place (startPlacing): under a mouse, or mid-view on a touch screen. */
 export function applyPatch(
-  p: Patch,
+  incoming: Patch,
   mode: 'open' | 'insert',
   from?: Omit<PatchSource, 'blocks'>,
 ): void {
-  if (!juce) p = audioInAsMicrophone(p); // the website's Audio In is a Microphone (CHG-0041)
+  // the website's Audio In is a Microphone (CHG-0041)
+  if (!juce) incoming = audioInAsMicrophone(incoming);
   if (inside && mode === 'insert') {
-    insertInStage(p);
+    insertInStage(incoming);
     return;
   }
   if (inside) exitStage();
@@ -47,9 +48,12 @@ export function applyPatch(
     at = !touch && lastPointer ? lastPointer : viewCentre();
   const part =
     mode === 'open'
-      ? { blocks: p.blocks.filter((b) => BLOCKS_BY_ID.has(b.type)), refs: { ...(p.refs ?? {}) } }
+      ? {
+          blocks: incoming.blocks.filter((b) => BLOCKS_BY_ID.has(b.type)),
+          refs: { ...(incoming.refs ?? {}) },
+        }
       : insertBlocks(
-          { ...p, blocks: p.blocks.filter((b) => BLOCKS_BY_ID.has(b.type)) },
+          { ...incoming, blocks: incoming.blocks.filter((b) => BLOCKS_BY_ID.has(b.type)) },
           new Set([...model.values()].map((b) => b.uid)),
           at,
         );
@@ -69,19 +73,21 @@ export function applyPatch(
       mode,
       patch: JSON.stringify({
         ...part,
-        ...(mode === 'open' && p.tempo !== undefined ? { tempo: p.tempo } : {}),
-        ...(mode === 'open' && p.connectionOrder ? { connectionOrder: p.connectionOrder } : {}),
-        ...(mode === 'open' && p.view ? { view: p.view } : {}),
+        ...(mode === 'open' && incoming.tempo !== undefined ? { tempo: incoming.tempo } : {}),
+        ...(mode === 'open' && incoming.connectionOrder
+          ? { connectionOrder: incoming.connectionOrder }
+          : {}),
+        ...(mode === 'open' && incoming.view ? { view: incoming.view } : {}),
         ...(mode === 'open'
-          ? p.labels?.length
-            ? { labels: p.labels }
+          ? incoming.labels?.length
+            ? { labels: incoming.labels }
             : {}
           : 'labels' in part && part.labels.length
             ? { labels: part.labels }
             : {}),
         ...(mode === 'open'
-          ? p.macros?.length
-            ? { macros: p.macros }
+          ? incoming.macros?.length
+            ? { macros: incoming.macros }
             : {}
           : 'macros' in part && part.macros.length
             ? { macros: part.macros }
@@ -92,25 +98,27 @@ export function applyPatch(
   }
   if (mode === 'open') {
     scene.ResetScene();
-    if (typeof p.tempo === 'number') {
-      setTempo(p.tempo);
+    if (typeof incoming.tempo === 'number') {
+      setTempo(incoming.tempo);
       sendRaw([{ type: CommandType.Tempo, id: 0, value: tempo, x: -1 }]);
     }
   }
   for (const [k, value] of Object.entries(part.refs))
     if (value && typeof value === 'object' && 'provider' in value && !refs.has(k))
       refs.set(k, value as SampleRef);
-  for (const macro of readMacros(mode === 'open' ? p.macros : 'macros' in part ? part.macros : []))
+  for (const macro of readMacros(
+    mode === 'open' ? incoming.macros : 'macros' in part ? part.macros : [],
+  ))
     macros.set(macro.block, macro); // before their Stage blocks are added
   const ids = part.blocks.map((b) => addBlock(b.type, b.x ?? 0, b.y ?? 0, b.params ?? {}, b.id));
   // Lineage (SPEC-PATCH-FORMAT-V2 R11): opening keeps the patch's sources; inserting adds the
   // inserted patch (when it is a saved one) and carries its own sources, under the blocks' new ids.
-  if (mode === 'open') setSources(readSources(p.sources));
+  if (mode === 'open') setSources(readSources(incoming.sources));
   else {
-    const kept = p.blocks.filter((b) => BLOCKS_BY_ID.has(b.type)),
+    const kept = incoming.blocks.filter((b) => BLOCKS_BY_ID.has(b.type)),
       now = new Map(kept.map((b, i) => [b.id, part.blocks[i]?.id]));
     const moved = (bs: string[]) => bs.map((b) => now.get(b)).filter((b): b is string => !!b);
-    for (const source of readSources(p.sources)) {
+    for (const source of readSources(incoming.sources)) {
       const bs = moved(source.blocks);
       if (bs.length) sources.push({ ...source, blocks: bs });
     }
@@ -120,11 +128,11 @@ export function applyPatch(
         blocks: part.blocks.map((b) => b.id).filter((b): b is string => !!b),
       });
   }
-  addLabels(readLabels(mode === 'open' ? p.labels : 'labels' in part ? part.labels : []));
+  addLabels(readLabels(mode === 'open' ? incoming.labels : 'labels' in part ? part.labels : []));
   if (mode === 'open') {
-    setConnectionOrder([...(p.connectionOrder ?? [])]);
-    send(relinks(p, uidToId()));
-    applyView(p.view);
+    setConnectionOrder([...(incoming.connectionOrder ?? [])]);
+    send(relinks(incoming, uidToId()));
+    applyView(incoming.view);
     keepBlocksInView();
   }
   if (mode === 'open') setBaseline();

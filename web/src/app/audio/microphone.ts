@@ -8,11 +8,8 @@ import { scene } from '../scene/scene.ts';
 export const needsInput = (type: string) =>
   type === 'source.microphone' || type === 'source.audio-in';
 
-/**
- * Someone else's patch on the website (CHG-0041, owner 2026-11-19): opened from a link or the gallery and not this
- * browser's or the account's, or an embed. Its microphone waits for TURN ON in the message bar, and its sound goes
- * through the safety limit (EngineNode.setGuard). Your own patches and the plugins: neither.
- */
+/** Someone else's patch on the website (a link, the gallery, an embed; CHG-0041): its microphone
+ * waits for TURN ON, its sound goes through EngineNode.setGuard. Not your own or the plugins'. */
 export let guarded = false,
   inputAllowed = false,
   inputAsked = false;
@@ -48,11 +45,10 @@ export function listen(byUser = false): void {
   void engine.connectMicrophone();
 }
 
-/** The last block that listens (Microphone, Audio In; a Stage with one inside) is gone: the microphone is let go,
- * so the browser stops showing it in use (owner, 2026-11-17, CHG-0035). Not while looking into a Stage (the outer
- * blocks are put aside then). */
 export let inputCheckQueued = false;
 
+/** With no listening block left (Microphone, Audio In, a Stage holding one), let the microphone go
+ * so the browser stops showing it in use (CHG-0035). Not inside a Stage: outer blocks are aside. */
 export function releaseInputIfUnused(): void {
   if (inputCheckQueued) return;
   inputCheckQueued = true;

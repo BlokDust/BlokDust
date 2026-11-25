@@ -22,7 +22,9 @@ export const videoLink = () => shareLink?.url ?? PUBLIC_SITE;
 /** R8: every Freesound sound the patch uses (CC-BY asks for credit; CC0 gets it too). */
 export function videoCredits(): Credit[] {
   return Object.values(toPatch().refs ?? {})
-    .filter((r): r is FreesoundRef => (r as SampleRef).provider === 'freesound')
+    .filter(
+      (sampleRef): sampleRef is FreesoundRef => (sampleRef as SampleRef).provider === 'freesound',
+    )
     .map((ref) => ({ name: ref.name, user: ref.username, license: ref.license }));
 }
 
