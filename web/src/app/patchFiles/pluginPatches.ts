@@ -7,7 +7,8 @@ import { showPicked } from './openPatch.ts';
 /** Built-in presets: `web/src/patch/presets/*.blokdust`, listed by their title. */
 export let PRESETS!: { file: string; text: string; name: string }[];
 
-/** Plugin: one reply per request, matched by `req` (`wait` ms; the save dialog waits for the user). */
+/** Plugin: one reply per request, matched by `req` (`wait` ms; the save dialog waits for the
+ * user). */
 export let patchReq = 0;
 
 export const nativeReply = <T>(send: (req: number) => void, wait = 10000): Promise<T | null> =>
@@ -60,7 +61,8 @@ export function init(): void {
       name: patchTitle(parsePatchFile(text), fileNameOf(path).replace(/\.blokdust$/, '')),
     }))
     .sort((a, b) => a.file.localeCompare(b.file));
-  // The plugin's page can't open browser windows: links (Settings › About, the code) open in the user's browser.
+  // The plugin's page can't open browser windows: links (Settings › About, the code) open in the
+  // user's browser.
   if (juce)
     window.open = (u?: string | URL) => {
       juce?.emitEvent('bd_openUrl', { url: String(u ?? '').replace(/^http:\/\//, 'https://') });

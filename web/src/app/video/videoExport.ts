@@ -26,7 +26,8 @@ export function videoCredits(): Credit[] {
     .map((ref) => ({ name: ref.name, user: ref.username, license: ref.license }));
 }
 
-/** FROM START: what the engine is built from now, and every sample it would be given (outer world and Stages). */
+/** FROM START: what the engine is built from now, and every sample it would be given (outer world
+ * and Stages). */
 export function startSamples(): PatchSample[] {
   const out: PatchSample[] = [];
   for (const [id, buffer] of samples) if (model.has(id)) out.push({ id, stage: 0, buffer });
@@ -45,8 +46,8 @@ export async function makeVideoFile(
   signal: AbortSignal,
 ): Promise<File> {
   if (!engine) throw new Error('Press start first.');
-  // From the beginning, as the patch plays when it has just loaded (owner, 2026-11-15): the whole patch, so not
-  // while looking into a Stage.
+  // From the beginning, as the patch plays when it has just loaded (owner, 2026-11-15): the whole
+  // patch, so not while looking into a Stage.
   if (inside) throw new Error('Close the Stage first: the video plays the whole patch.');
   const sampleRate = engine.node.context.sampleRate;
   const source = startSource(sampleRate, seed, engineCommands(), startSamples());

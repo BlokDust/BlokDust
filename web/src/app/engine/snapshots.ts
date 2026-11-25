@@ -50,7 +50,8 @@ export const onSnapshot = (snapshot: Snapshot) => {
   probe.rms = snapshot.rms;
   probe.particles = snapshot.particles.length / 3;
   probe.beams = snapshot.beams.length / 4;
-  // v1 Settings › dB Meter (Tone.Meter on the master output, smoothed 0.8): level in dB from the snapshot RMS.
+  // v1 Settings › dB Meter (Tone.Meter on the master output, smoothed 0.8): level in dB from the
+  // snapshot RMS.
   scene.setLevelDb(20 * Math.log10(Math.max(snapshot.rms, 1e-5)));
   for (const engineEvent of snapshot.events) {
     if (engineEvent.type === 4) probe.gateOns++;
@@ -62,7 +63,8 @@ export const onSnapshot = (snapshot: Snapshot) => {
     stage.setConnections(snapshot.connections);
     probe.connections = Array.from(snapshot.connections);
     const order: [string, string][] = [];
-    let known = true; // a snapshot from before the blocks are shown (the plugin's first) says nothing about order
+    // a snapshot from before the blocks are shown (the plugin's first) says nothing about order
+    let known = true;
     for (let i = 0; i + 1 < snapshot.connections.length; i += 2) {
       const a = model.get(snapshot.connections[i])?.uid,
         b = model.get(snapshot.connections[i + 1])?.uid;

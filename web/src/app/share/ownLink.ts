@@ -20,8 +20,8 @@ import { keepMine } from '../patchFiles/myPatches.ts';
 import { scene } from '../scene/scene.ts';
 import { credit, setCredit } from '../stage/corners.ts';
 
-/** SAVE / SAVE AS to a share link (SPEC-SHARING-BACKEND): v1 SAVE over this browser's (or account's) link, else a
- * new one. The link goes in the address bar; the patch counts as saved. */
+/** SAVE / SAVE AS to a share link (SPEC-SHARING-BACKEND): v1 SAVE over this browser's (or
+ * account's) link, else a new one. The link goes in the address bar; the patch counts as saved. */
 export async function makeLink(
   mode: 'save' | 'saveAs',
   title: string,
@@ -36,9 +36,11 @@ export async function makeLink(
   return lastGallery;
 }
 
-/** Saved to the link `id` (`at`: the content saved): the address bar shows it and the patch counts as saved. */
+/** Saved to the link `id` (`at`: the content saved): the address bar shows it and the patch counts
+ * as saved. */
 export function linkSaved(id: string, title: string, at = contentOf(toPatch())): void {
-  // The plugins' page isn't on the site: the link is the site's, and there is no address bar to update.
+  // The plugins' page isn't on the site: the link is the site's, and there is no address bar to
+  // update.
   const url = `${juce ? PLUGIN_SITE : `${location.origin}${location.pathname}`}?c=${id}&t=${encodeURIComponent(title)}`;
   if (!juce) history.replaceState(null, '', url); // v1 AddressBarManager.UpdateURL
   setShareLink({ url, owned: isServerId(id) && !!App.SessionId, at, title });
@@ -65,7 +67,8 @@ export const ownLink = () =>
   !!App.CompositionId &&
   isServerId(App.CompositionId);
 
-/** The own link's patch has changed since it was saved (worked out when an edit settles, not every frame). */
+/** The own link's patch has changed since it was saved (worked out when an edit settles, not every
+ * frame). */
 export let ownDirty = false,
   quickSaving = false;
 
@@ -107,11 +110,13 @@ export async function quickSave(): Promise<void> {
       .split(',')[1];
     const saved = await saveShared('save', App.CompositionId, { patch, title, thumb });
     if (!saved) throw new Error('no backend');
-    // Not this device's to save over any more (its right was lost, or the patch deleted): saveShared made a new link.
+    // Not this device's to save over any more (its right was lost, or the patch deleted):
+    // saveShared made a new link.
     setLastGallery(saved.gallery ?? null);
     App.CompositionId = saved.id;
     App.SessionId = sessionFor(saved.id);
-    const still = contentOf(toPatch()) !== at; // edited while it saved: those edits are still unsaved
+    // edited while it saved: those edits are still unsaved
+    const still = contentOf(toPatch()) !== at;
     setSession({ id: saved.id, dirty: still });
     saveSession(session);
     saveLocal(toPatch());

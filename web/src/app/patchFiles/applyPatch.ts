@@ -30,10 +30,8 @@ import { readMacros } from './showPatch.ts';
 import { scene } from '../scene/scene.ts';
 import { INSIDE_HIDDEN, exitStage } from '../stageBlock/lookInside.ts';
 
-/**
- * Open replaces the scene. Insert adds the patch's blocks, keeping their layout, and hands them to the pointer to place
- * (owner, 2026-11-10): see startPlacing. With a mouse they start under it; on a touch screen in the middle of the view.
- */
+/** Open replaces the scene. Insert adds the patch's blocks, keeping their layout, for the pointer
+ * to place (startPlacing): under a mouse, or mid-view on a touch screen. */
 export function applyPatch(
   p: Patch,
   mode: 'open' | 'insert',
@@ -105,8 +103,8 @@ export function applyPatch(
   for (const macro of readMacros(mode === 'open' ? p.macros : 'macros' in part ? part.macros : []))
     macros.set(macro.block, macro); // before their Stage blocks are added
   const ids = part.blocks.map((b) => addBlock(b.type, b.x ?? 0, b.y ?? 0, b.params ?? {}, b.id));
-  // Lineage (SPEC-PATCH-FORMAT-V2 R11): opening keeps the patch's sources; inserting adds the inserted patch (when it is a saved one) and
-  // carries its own sources, under the blocks' new ids.
+  // Lineage (SPEC-PATCH-FORMAT-V2 R11): opening keeps the patch's sources; inserting adds the
+  // inserted patch (when it is a saved one) and carries its own sources, under the blocks' new ids.
   if (mode === 'open') setSources(readSources(p.sources));
   else {
     const kept = p.blocks.filter((b) => BLOCKS_BY_ID.has(b.type)),
@@ -134,14 +132,15 @@ export function applyPatch(
   stage.redraw();
 }
 
-/** INSERT with a Stage open (owner, 2026-11-20; it replaced the Stage panel's LOAD PATCH): the patch's blocks go inside
- * it, placed like any insert; its Stage blocks stay out (one level). Added as blocks put down inside are, so the
- * plugins' processor hears of them the same way. */
+/** INSERT with a Stage open: the blocks go inside, placed like any insert, minus its Stage blocks
+ * (one level); added as blocks put down inside are, so the plugins' processor hears the same. */
 export function insertInStage(patch: Patch): void {
   const touch = lastPointerType !== 'mouse',
     at = !touch && lastPointer ? lastPointer : viewCentre();
-  const fits = (t: string) =>
-    BLOCKS_BY_ID.has(t) && !INSIDE_HIDDEN.has(BLOCKS_BY_ID.get(t)!.menuId);
+  const fits = (type: string) => {
+    const def = BLOCKS_BY_ID.get(type);
+    return def !== undefined && !INSIDE_HIDDEN.has(def.menuId);
+  };
   const part = insertBlocks(
     { ...patch, blocks: patch.blocks.filter((b) => fits(b.type)), macros: [] },
     new Set([...model.values()].map((b) => b.uid)),

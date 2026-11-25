@@ -48,7 +48,8 @@ export let sources: PatchSource[] = [];
 export const uidToId = () => new Map([...model].map(([id, block]) => [block.uid, id]));
 export const typeIndex = (type: string) => BLOCKS.findIndex((definition) => definition.id === type);
 
-/** Params holding this session's engine ids (an LFO's resolved target): never taken from a patch. */
+/** Params holding this session's engine ids (an LFO's resolved target): never taken from a
+ * patch. */
 export const SESSION_PARAMS = new Set(['targetBlock', 'targetParam']);
 
 /** v1's type names, and the post-2.0 blocks' menu ids. */

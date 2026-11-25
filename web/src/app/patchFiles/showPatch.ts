@@ -46,7 +46,8 @@ export const readMacros = (list: unknown): Macro[] =>
     )
     .map((macro) => structuredClone(macro));
 
-/** Show a patch. `ids` (plugin): the processor's engine ids by patch block id, which may have gaps. */
+/** Show a patch. `ids` (plugin): the processor's engine ids by patch block id, which may have
+ * gaps. */
 export function showPatch(shown: Patch, ids?: Record<string, number>): void {
   // The website's Audio In is a Microphone (CHG-0041).
   const patch = juce ? shown : audioInAsMicrophone(shown);

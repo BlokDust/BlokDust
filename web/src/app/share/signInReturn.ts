@@ -7,7 +7,8 @@ import { model } from '../model/patchModel.ts';
 import { scene } from '../scene/scene.ts';
 import { accountPage } from '../stage/corners.ts';
 
-/** Signed in after SAVE / SHARE › SIGN IN: Settings closes and SAVE opens again, ADD TO GALLERY on, the name kept. */
+/** Signed in after SAVE / SHARE › SIGN IN: Settings closes and SAVE opens again, ADD TO GALLERY on,
+ * the name kept. */
 export function backToSave(): void {
   let want: { to?: string; title?: string; at?: number } | null = null;
   try {
@@ -16,7 +17,8 @@ export function backToSave(): void {
   } catch {
     want = null;
   }
-  // Only a sign-in finished soon after (10 minutes): one begun from SAVE and given up on is forgotten.
+  // Only a sign-in finished soon after (10 minutes): one begun from SAVE and given up on is
+  // forgotten.
   if (want?.to !== 'save' || !(Date.now() - (want.at ?? 0) < 10 * 60_000)) return;
   const t0 = performance.now();
   const go = () => {

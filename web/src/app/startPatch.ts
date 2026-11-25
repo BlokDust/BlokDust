@@ -1,5 +1,5 @@
-// The patch the website starts with (DATA-0004, CHG-0003): a share link, a v1 composition, the autosave or, on a first
-// visit, an empty stage (SPEC-VISUAL-V1-PARITY R12).
+// The patch the website starts with (DATA-0004, CHG-0003): a share link, a v1 composition, the
+// autosave or, on a first visit, an empty stage (SPEC-VISUAL-V1-PARITY R12).
 import type { Patch } from '../patch/loadPatch.ts';
 import { decodePatch, loadLocal, loadSession } from '../patch/share.ts';
 import { type Missing, isServerId, loadOrWhy } from '../patch/server.ts';
@@ -42,7 +42,8 @@ export async function initialPatch(
   if (c && isServerId(c)) {
     const session = loadSession(),
       local = loadLocal();
-    // Unsaved edits to this same composition (autosave) win over its saved version, as before a reload.
+    // Unsaved edits to this same composition (autosave) win over its saved version, as before a
+    // reload.
     if (!embedId && session.id === c && session.dirty && local)
       return { patch: local, view: {}, id: c, source: 'autosave' };
     const r = await loadOrWhy(c);
@@ -70,7 +71,8 @@ export async function initialPatch(
   if (c) {
     const p = await decodePatch(c);
     if (p) return { patch: p, view: {}, id: null, source: 'link' };
-    // Not a patch link at all (a made-up or cut-off id): say so on a blank stage, not this browser's last one.
+    // Not a patch link at all (a made-up or cut-off id): say so on a blank stage, not this
+    // browser's last one.
     return {
       patch: { format: 'blokdust.patch', version: 2, blocks: [] },
       view: {},

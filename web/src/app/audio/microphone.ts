@@ -28,8 +28,8 @@ export function setGuarded(on: boolean): void {
   if (!on && [...model.values()].some((b) => needsInput(b.type))) listen();
 }
 
-/** Open the microphone for a Microphone or Audio In block: at once, unless the patch is someone else's (then the
- * message bar asks first). `byUser`: the user put the block there themselves. */
+/** Open the microphone for a Microphone or Audio In block: at once, unless the patch is someone
+ * else's (then the message bar asks first). `byUser`: the user put the block there themselves. */
 export function listen(byUser = false): void {
   if (!engine) return;
   if (byUser) inputAllowed = true;

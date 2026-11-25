@@ -1,4 +1,5 @@
-// Block library (UI-0003, first cut): every block rendered from its generated manifest, in any v1 theme.
+// Block library (UI-0003, first cut): every block rendered from its generated manifest, in any v1
+// theme.
 import { Application, Container, Sprite, Text, Texture } from 'pixi.js';
 import { BLOCKS } from './generated/blocks.gen.ts';
 import { THEMES } from './generated/palettes.gen.ts';

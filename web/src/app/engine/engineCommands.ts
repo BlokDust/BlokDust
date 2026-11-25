@@ -14,8 +14,8 @@ import {
 } from '../model/patchModel.ts';
 
 // ---- engine ----
-/** The engine starts from the model (blocks may have been added/moved before audio started). Engine ids = model ids:
- * add blocks with explicit ids, then their params. */
+/** The engine starts from the model (blocks may have been added/moved before audio started). Engine
+ * ids = model ids: add blocks with explicit ids, then their params. */
 export function engineCommands(): Command[] {
   const commands: Command[] =
     tempo !== undefined ? [{ type: CommandType.Tempo, id: 0, value: tempo, x: -1 }] : [];
@@ -34,8 +34,8 @@ export function engineCommands(): Command[] {
         commands.push({ type: CommandType.SetParam, id, param: i, value: Number(v) });
     });
   }
-  // Looking into a Stage, the engine is running already; this builds the patch from scratch (offline renders), so the
-  // outer world it is.
+  // Looking into a Stage, the engine is running already; this builds the patch from scratch
+  // (offline renders), so the outer world it is.
   return [
     ...commands,
     ...targetSetParams(),
