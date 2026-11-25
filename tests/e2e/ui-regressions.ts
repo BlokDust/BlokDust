@@ -6,6 +6,8 @@ import { chromium, type Browser, type Page } from 'playwright';
 import { serveDist } from './serve.ts';
 import { waveformTests } from './ui-regressions/waveform.ts';
 import { tourTests } from './ui-regressions/tour.ts';
+import { displayTests } from './ui-regressions/display.ts';
+import { decayWav, sineWav } from './ui-regressions/wav.ts';
 import { THEMES } from '../../web/src/generated/palettes.gen.ts';
 import { BLOCKS } from '../../web/src/generated/blocks.gen.ts';
 import { drawnPoints, insidePolygon, selectionRing } from '../../web/src/stage/ring.ts';
@@ -59,22 +61,6 @@ async function makeLink(p: Page): Promise<string> {
   return p.evaluate(() => (document.getElementById('patchUrlText') as HTMLInputElement).value);
 }
 const toCss = (p: Page, x: number, y: number) => p.evaluate(([gx, gy]) => (window as any).__bd_probe.toCss(gx, gy), [x, y]) as Promise<[number, number]>;
-/** 1 s, 220 Hz sine, 16-bit mono 44.1 kHz WAV bytes. */
-const sineWav = () => {
-  const n = 44100, b = Buffer.alloc(44 + n * 2);
-  b.write('RIFF', 0); b.writeUInt32LE(36 + n * 2, 4); b.write('WAVEfmt ', 8); b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22);
-  b.writeUInt32LE(44100, 24); b.writeUInt32LE(88200, 28); b.writeUInt16LE(2, 32); b.writeUInt16LE(16, 34); b.write('data', 36); b.writeUInt32LE(n * 2, 40);
-  for (let i = 0; i < n; i++) b.writeInt16LE(Math.round(Math.sin((2 * Math.PI * 220 * i) / 44100) * 20000), 44 + i * 2);
-  return [...b];
-};
-/** `seconds` of a decaying 330 Hz sine (asymmetric in time, so a reversed waveform is visibly different). */
-const decayWav = (seconds: number) => {
-  const n = Math.round(44100 * seconds), b = Buffer.alloc(44 + n * 2);
-  b.write('RIFF', 0); b.writeUInt32LE(36 + n * 2, 4); b.write('WAVEfmt ', 8); b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22);
-  b.writeUInt32LE(44100, 24); b.writeUInt32LE(88200, 28); b.writeUInt16LE(2, 32); b.writeUInt16LE(16, 34); b.write('data', 36); b.writeUInt32LE(n * 2, 40);
-  for (let i = 0; i < n; i++) b.writeInt16LE(Math.round(Math.sin((2 * Math.PI * 330 * i) / 44100) * Math.exp(-3 * i / n) * 20000), 44 + i * 2);
-  return b;
-};
 const samplerState = (p: Page) => p.evaluate(() => (window as any).__bd_probe.samples as { id: number; track: string; loaded: boolean; frames: number }[]);
 /** The (only) sampler's region as the open options panel shows it and as the patch (→ engine) holds it. */
 const regionOf = (p: Page, _id: number) => p.evaluate(() => {
@@ -3554,6 +3540,7 @@ Object.assign(tests, {
 // The waveform zoom's tests (CHG-0028), in their own file.
 Object.assign(tests, waveformTests({ browser, url, OUT, comp, blk, toCss, decayWav, openPlugin, plugPatch }));
 Object.assign(tests, tourTests({ browser, url, OUT, toCss, maxOver }));
+Object.assign(tests, displayTests({ browser, url, OUT, demo: comp([blk(1, 'ToneSource', 0, 0), blk(2, 'ParticleEmitter', -4, 0), blk(3, 'Power', -4, 3)]) }));
 
 /** Bugs captured but not fixed yet: reported as KNOWN (not failing CI) with the reason; a pass says to remove it. */
 const KNOWN: Record<string, string> = {
