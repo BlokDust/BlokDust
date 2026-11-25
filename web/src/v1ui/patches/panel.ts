@@ -91,7 +91,7 @@ export class PatchesPanel extends PatchesInput {
     this.pending = null;
     this.selected = ALL_TABS.map((i) => (i === tab ? 1 : 0));
     for (const k of ALL_TABS) {
-      this.tweens[`page${k}`]?.stop();
+      this.tweens.get(`page${k}`)?.stop();
       this.pageDy[k] = k === tab ? 0 : -App.Height;
     }
     this.leaving = null;

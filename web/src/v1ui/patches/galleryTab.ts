@@ -21,7 +21,7 @@ export abstract class PatchesGalleryTab extends PatchesOpenTab {
   /** A mouse wheel over the open panel (scene.wheel). */
   Wheel(event: WheelEvent): void {
     const dy = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
-    if (this.Tab === 2 && this.GalleryView === 'list') this.scrollGallery(dy);
+    if (this.Tab === 2) this.scrollGallery(dy);
     else if (this.Tab === 1 && this.View === 'list') this.scrollOpen(dy);
   }
   protected drawGallery(): void {
