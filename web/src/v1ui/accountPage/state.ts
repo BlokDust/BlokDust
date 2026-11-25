@@ -25,7 +25,7 @@ export abstract class AccountPageState {
   /** What the pointer is over, by control name (an unnamed control is not hovered). */
   protected roll: Partial<Record<string, boolean>> = {};
   protected readonly field = pageElement('accountHandle');
-  protected readonly input = pageElement<HTMLInputElement>('accountHandleInput');
+  protected readonly input = pageElement('accountHandleInput', HTMLInputElement);
   /** Called when who is signed in changes (the tab's name, the signed-in mark on the stage). */
   onChange: () => void = () => {};
 

@@ -18,9 +18,9 @@ export abstract class PatchesDom extends PatchesLayout {
     super.Init(drawTo);
     this.OffsetY = -this.DrawTo.Height;
     this.TitleContainer = pageElement('patchTitle');
-    this.Input = pageElement<HTMLInputElement>('patchTitleInput');
+    this.Input = pageElement('patchTitleInput', HTMLInputElement);
     this.UrlContainer = pageElement('patchUrl');
-    this.UrlInput = pageElement<HTMLInputElement>('patchUrlText');
+    this.UrlInput = pageElement('patchUrlText', HTMLInputElement);
     // Any characters ("+" in a name): v1 stripped punctuation for its unescaped URL; the link
     // escapes it and the file name is made safe on its own (fileNameFor, PatchFiles::safeName).
     this.Input.addEventListener('input', () => {
@@ -32,7 +32,7 @@ export abstract class PatchesDom extends PatchesLayout {
     this.UrlInput.addEventListener('click', () => void this.copyLink());
     this.player = document.getElementById('patchVideo') as HTMLVideoElement | null;
     this.SearchContainer = pageElement('gallerySearch');
-    this.SearchInput = pageElement<HTMLInputElement>('gallerySearchInput');
+    this.SearchInput = pageElement('gallerySearchInput', HTMLInputElement);
     this.SearchInput.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
         this.SearchInput.blur();
