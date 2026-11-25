@@ -1,34 +1,39 @@
 // ui-regressions: Settings and other panels laid out on small and odd-shaped screens.
 import { OUT, blk, browser, comp, open, type RegressionTest, url } from './harness.ts';
-import { openPatches, patchesClick } from './patchesPanel.ts';
+import { openPatches, patchesAt, patchesClick } from './patchesPanel.ts';
+import type { DrawTo, PatchesPanelInternals, SettingsFooter, SettingsOpenTab } from './v1Views.ts';
 
 export const settingsLayoutTests: Record<string, RegressionTest> = {
+  /** Settings' pages slid over the tabs when switching: every text of DOWNLOAD and SIGN IN is
+   * drawn clipped, as SETTINGS and ABOUT are in v1's clipping box. */
   async 'settings-pages-clipped'(errors: string[]) {
     const page = await open(browser, [], errors);
     await page.evaluate(() => {
-      const P = CanvasRenderingContext2D.prototype as any,
+      const proto = CanvasRenderingContext2D.prototype,
         stack: boolean[] = [],
-        st = new WeakMap<object, boolean>();
-      const save = P.save,
-        restore = P.restore,
-        clip = P.clip,
-        fill = P.fillText;
-      P.save = function (this: any) {
-        stack.push(!!st.get(this));
-        return save.call(this);
+        clipped = new WeakMap<object, boolean>(),
+        original = (name: keyof CanvasRenderingContext2D) =>
+          Object.getOwnPropertyDescriptor(proto, name)?.value as unknown;
+      const save = original('save') as typeof proto.save,
+        restore = original('restore') as typeof proto.restore,
+        clip = original('clip') as (this: CanvasRenderingContext2D, ...args: unknown[]) => void,
+        fill = original('fillText') as typeof proto.fillText;
+      proto.save = function () {
+        stack.push(!!clipped.get(this));
+        save.call(this);
       };
-      P.restore = function (this: any) {
-        st.set(this, stack.pop() ?? false);
-        return restore.call(this);
+      proto.restore = function () {
+        clipped.set(this, stack.pop() ?? false);
+        restore.call(this);
       };
-      P.clip = function (this: any, ...a: any[]) {
-        st.set(this, true);
-        return clip.apply(this, a);
+      proto.clip = function (this: CanvasRenderingContext2D, ...args: unknown[]) {
+        clipped.set(this, true);
+        clip.apply(this, args);
       };
-      window.__unclipped = [];
-      P.fillText = function (this: any, text: string, ...a: any[]) {
-        if (!st.get(this)) window.__unclipped.push(text);
-        return fill.call(this, text, ...a);
+      const unclipped: string[] = (window.__unclipped = []);
+      proto.fillText = function (text: string, ...rest: [number, number, number?]) {
+        if (!clipped.get(this)) unclipped.push(text);
+        fill.call(this, text, ...rest);
       };
     });
     for (
@@ -48,13 +53,11 @@ export const settingsLayoutTests: Record<string, RegressionTest> = {
       }, i);
     // DOWNLOAD in, out to SETTINGS, then SIGN IN in and out to ABOUT: every frame of each slide.
     for (const i of [3, 0, 4, 2]) {
-      const t = await tabAt(i);
-      await page.mouse.click(t[0], t[1]);
+      const tab = await tabAt(i);
+      await page.mouse.click(tab[0], tab[1]);
       await page.waitForTimeout(900);
     }
-    const unclipped: string[] = await page.evaluate(() => [
-      ...new Set(window.__unclipped as string[]),
-    ]);
+    const unclipped = await page.evaluate(() => [...new Set(window.__unclipped ?? [])]);
     await page.close();
     const pageWords = [
       'MACOS',
@@ -65,53 +68,53 @@ export const settingsLayoutTests: Record<string, RegressionTest> = {
       'CREATE ACCOUNT',
     ];
     const leaked = unclipped.filter(
-      (t) => pageWords.includes(t) || t.startsWith('Download the standalone'),
+      (text) => pageWords.includes(text) || text.startsWith('Download the standalone'),
     );
     return [leaked.length === 0, { leaked }];
   },
-  /** Owner (2026-11-18, iPhone): Settings on a phone. The tabs share the width left of the × (SIGN IN ran under it);
-   * the rows are nearly the screen's width and taller; ABOUT's people and DOWNLOAD's buttons go one a row; and a text
-   * field no longer zooms the page in for good (viewport maximum-scale=1). */
+  /** Settings on a phone: tabs left of the ×, rows nearly the screen's width and taller, ABOUT's
+   * people and DOWNLOAD's buttons one a row, and fields don't zoom for good (maximum-scale=1). */
   async 'settings-phone-layout'(errors: string[]) {
-    const ctx = await browser.newContext({
+    const context = await browser.newContext({
       viewport: { width: 390, height: 844 },
       deviceScaleFactor: 1,
       isMobile: true,
       hasTouch: true,
     });
-    const page = await ctx.newPage();
+    const page = await context.newPage();
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
     await page.waitForFunction(() => window.__bd_probe);
     await page.click('#start');
     await page.waitForTimeout(1500);
-    await page.evaluate(() => window.__bd_probe.scene.SettingsPanel.OpenPanel());
+    await page.evaluate(() => {
+      window.__bd_probe.scene.SettingsPanel.OpenPanel();
+    });
     await page.waitForTimeout(1300);
     const result = await page.evaluate(() => {
       const settingsPanel = window.__bd_probe.scene.SettingsPanel,
-        a = window.__bd_probe.v1App,
-        W = a.Width,
-        unit = a.Unit;
+        v1App = window.__bd_probe.v1App,
+        width = v1App.Width,
+        unit = v1App.Unit;
       const last = settingsPanel.MenuItems[settingsPanel.MenuItems.length - 1],
-        tabsRight = last.Position.x + last.Size.width / 2,
-        crossLeft = W * 0.5 + settingsPanel.Range * 0 + a.SettingsMenuWidth(W) / 2 + 12.5 * unit;
+        tabsRight = last.Position.x + (last.Size as { width: number }).width / 2,
+        crossLeft = width * 0.5 + v1App.SettingsMenuWidth(width) / 2 + 12.5 * unit;
       return {
-        W,
+        W: width,
         tabsRight,
         crossLeft,
         range: settingsPanel.Range,
-        oldRange: (W / 7) * 5 - (a.SettingsMenuWidth(W) - settingsPanel.Range),
-        row: a.SettingsRow,
+        oldRange: (width / 7) * 5 - (v1App.SettingsMenuWidth(width) - settingsPanel.Range),
+        row: v1App.SettingsRow,
         viewport: document.querySelector('meta[name=viewport]')?.getAttribute('content') ?? '',
       };
     });
     const tapTab = async (i: number) => {
       const at = await page.evaluate((k) => {
-        const settingsPanel = window.__bd_probe.scene.SettingsPanel,
-          a = window.__bd_probe.v1App;
+        const settingsPanel = window.__bd_probe.scene.SettingsPanel;
         return [
           settingsPanel.MenuItems[k].Position.x / devicePixelRatio,
-          (settingsPanel.OffsetY + 30 * a.Unit) / devicePixelRatio,
+          (settingsPanel.OffsetY + 30 * window.__bd_probe.v1App.Unit) / devicePixelRatio,
         ];
       }, i);
       await page.touchscreen.tap(at[0], at[1]);
@@ -119,13 +122,13 @@ export const settingsLayoutTests: Record<string, RegressionTest> = {
     };
     await tapTab(2);
     const people = await page.evaluate(() =>
-      window.__bd_probe.scene.SettingsPanel.peoplePhone(),
+      (window.__bd_probe.scene.SettingsPanel as unknown as SettingsFooter).peoplePhone(),
     );
     await tapTab(3);
     const downloads = await page.evaluate(() =>
-      window.__bd_probe.scene.SettingsPanel.downloadButtons(),
+      (window.__bd_probe.scene.SettingsPanel as unknown as SettingsFooter).downloadButtons(),
     );
-    await ctx.close();
+    await context.close();
     const ok =
       result.tabsRight <= result.crossLeft &&
       result.range > result.oldRange &&
@@ -140,77 +143,80 @@ export const settingsLayoutTests: Record<string, RegressionTest> = {
       downloads[0].x === downloads[1].x;
     return [ok, { r: result, people, downloads }];
   },
-  // Owner (2026-11-17, CHG-0035): Settings › DOWNLOAD and ACCOUNT were narrower than ABOUT (420 units against v1's
-  // menu width); About's websites sat at different heights under blurbs of different lengths, with Twitter names
-  // under them (gone now: the websites take that line, all three level).
+  // CHG-0035: DOWNLOAD and ACCOUNT are as wide as ABOUT, whose websites sit level on the line the
+  // Twitter names had (they sat at different heights under blurbs of different lengths).
   async 'settings-pages-as-wide-as-about'(errors: string[]) {
     const page = await open(browser, [], errors);
     await page.evaluate(() => {
       const seen: { t: string; x: number; y: number }[] = (window.__texts3 = []);
-      const drawText = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (
-        text: string,
-        x: number,
-        y: number,
-        ...a: any[]
-      ) {
+      const proto = CanvasRenderingContext2D.prototype,
+        drawText = Object.getOwnPropertyDescriptor(proto, 'fillText')
+          ?.value as typeof proto.fillText;
+      proto.fillText = function (text: string, x: number, y: number, ...rest: [number?]) {
         seen.push({ t: text, x, y });
-        return (drawText as any).call(this, text, x, y, ...a);
+        drawText.call(this, text, x, y, ...rest);
       };
     });
-    const s = await page.evaluate(() => {
+    const panel = await page.evaluate(() => {
       const sp = window.__bd_probe.scene.SettingsPanel,
         v1App = window.__bd_probe.v1App,
         pr = v1App.Metrics.PixelRatio;
       sp.OpenPanel();
-      sp._OpenTab = 2;
+      (sp as unknown as SettingsOpenTab)._OpenTab = 2;
       sp.MenuItems.forEach((MenuItem, i) => {
         MenuItem.Selected = i === 2 ? 1 : 0;
-        MenuItem.YOffset = i === 2 ? 0 : -sp.DrawTo.Height;
+        MenuItem.YOffset = i === 2 ? 0 : -(sp.DrawTo as DrawTo).Height;
       });
-      const b = sp.downloadButtons(),
+      const buttons = (sp as unknown as SettingsFooter).downloadButtons(),
         half = 65 * v1App.Unit; // unused: kept for the log
       return {
         width: v1App.Width / pr,
         column: ((v1App.Width / 7) * 4) / pr,
-        buttons: b.map((x) => x.x),
+        buttons: buttons.map((x) => x.x),
         half,
       };
     });
     await page.waitForTimeout(1500);
     const about = await page.evaluate(() => {
-      const seen = window.__texts3 as { t: string; x: number; y: number }[];
+      const seen = window.__texts3 ?? [];
       const sites = ['whitevinyldesign.com', 'funputs.com', 'edsilv.com'].map(
-        (t) => seen.filter((entry) => entry.t === t).at(-1)?.y ?? null,
+        (site) => seen.filter((entry) => entry.t === site).at(-1)?.y ?? null,
       );
-      return { sites, twitter: seen.some((e) => e.t.startsWith('@')) };
+      return { sites, twitter: seen.some((entry) => entry.t.startsWith('@')) };
     });
     await page.screenshot({ path: `${OUT}/settings-about-websites.png` });
-    // DOWNLOAD's three buttons span the column: centres at 1/6, 1/2 and 5/6 of it (less the 15-unit gaps).
-    const left = (s.width - s.column) / 2,
-      spread = s.buttons[2] - s.buttons[0];
+    // DOWNLOAD's three buttons span the column: centres at 1/6, 1/2 and 5/6 of it, less the gaps.
+    const left = (panel.width - panel.column) / 2,
+      spread = panel.buttons[2] - panel.buttons[0];
     await page.close();
-    const level = about.sites.every((y) => y !== null && Math.abs(y - about.sites[0]!) < 0.5);
+    const first = about.sites[0];
+    const level = about.sites.every(
+      (y) => y !== null && first !== null && Math.abs(y - first) < 0.5,
+    );
     return [
-      level && !about.twitter && spread > s.column * 0.6 && s.buttons[0] < left + s.column * 0.2,
-      { about, s, left, spread },
+      level &&
+        !about.twitter &&
+        spread > panel.column * 0.6 &&
+        panel.buttons[0] < left + panel.column * 0.2,
+      { about, s: panel, left, spread },
     ];
   },
+  /** FEEDBACK fits a laptop (SEND was below the screen), GarageBand's plugin view and a phone. */
   async 'feedback-fits'(errors: string[]) {
     const out: Record<string, unknown> = {};
     let ok = true;
-    for (const [name, w, h, choice] of [
+    for (const [name, width, height, choice] of [
       ['laptop', 1000, 528, 'Suggestion'],
       ['garageband', 1000, 290, 'Suggestion'],
       ['tall', 1280, 800, 'Suggestion'],
       ['phone', 390, 844, 'Suggestion'],
       ['laptop-bug', 1000, 528, 'Bug'],
     ] as const) {
-      const ctx = await browser.newContext({
-        viewport: { width: w, height: h },
+      const context = await browser.newContext({
+        viewport: { width, height },
         deviceScaleFactor: 2,
       });
-      const page = await ctx.newPage();
+      const page = await context.newPage();
       page.on('pageerror', (error) => errors.push(error.message));
       await page.goto(`${url}/index.html`);
       await page.waitForFunction(() => window.__bd_probe);
@@ -218,10 +224,10 @@ export const settingsLayoutTests: Record<string, RegressionTest> = {
       await page.waitForTimeout(1500);
       await page.evaluate(() => {
         const settingsPanel = window.__bd_probe.scene.SettingsPanel;
-        settingsPanel._OpenTab = 1;
-        (settingsPanel.MenuItems as any[]).forEach((m, k) => {
-          m.Selected = k === 1 ? 1 : 0;
-          m.YOffset = k === 1 ? 0 : -settingsPanel.DrawTo.Height;
+        (settingsPanel as unknown as SettingsOpenTab)._OpenTab = 1;
+        settingsPanel.MenuItems.forEach((menuItem, k) => {
+          menuItem.Selected = k === 1 ? 1 : 0;
+          menuItem.YOffset = k === 1 ? 0 : -(settingsPanel.DrawTo as DrawTo).Height;
         });
         settingsPanel.OpenPanel();
       });
@@ -232,8 +238,10 @@ export const settingsLayoutTests: Record<string, RegressionTest> = {
       }
       const result = await page.evaluate(() => {
         const box = (id: string) => {
-          const b = document.getElementById(id)!.getBoundingClientRect();
-          return { top: b.top, bottom: b.bottom, height: b.height };
+          const element = document.getElementById(id);
+          if (!element) throw new Error(`no #${id}`);
+          const rect = element.getBoundingClientRect();
+          return { top: rect.top, bottom: rect.bottom, height: rect.height };
         };
         return {
           send: box('feedback-send'),
@@ -244,7 +252,7 @@ export const settingsLayoutTests: Record<string, RegressionTest> = {
         };
       });
       await page.screenshot({ path: `${OUT}/feedback-fits-${name}.png` });
-      await ctx.close();
+      await context.close();
       const fits =
         result.send.bottom <= result.h &&
         result.send.height > 10 &&
@@ -262,21 +270,26 @@ export const settingsLayoutTests: Record<string, RegressionTest> = {
     }
     return [ok, out];
   },
+  /** CHG-0023, CHG-0024: the GitHub link and build line show on About only; ADD TO GALLERY's icons
+   * sit clear of its underline, MAKE VIDEO beside it; the video's BACK is at the top left. */
   async 'review2-panels'(errors: string[]) {
     const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     await page.evaluate(() => {
       const seen: { t: string; x: number }[] = (window.__texts2 = []);
-      const drawText = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (text: string, x: number, ...a: any[]) {
+      const proto = CanvasRenderingContext2D.prototype,
+        drawText = Object.getOwnPropertyDescriptor(proto, 'fillText')
+          ?.value as typeof proto.fillText;
+      proto.fillText = function (text: string, x: number, ...rest: [number, number?]) {
         seen.push({ t: text, x });
-        return (drawText as any).call(this, text, x, ...a);
+        drawText.call(this, text, x, ...rest);
       };
     });
     const texts = () =>
       page.evaluate(() => {
-        const t = window.__texts2.map((omit) => omit.t);
-        window.__texts2.length = 0;
-        return t as string[];
+        const seen = window.__texts2 ?? [];
+        const drawn = seen.map((entry) => entry.t);
+        seen.length = 0;
+        return drawn;
       });
     for (
       let i = 0;
@@ -302,57 +315,60 @@ export const settingsLayoutTests: Record<string, RegressionTest> = {
     await page.mouse.move(600, 420);
     await page.waitForTimeout(400);
     const onAbout = await texts();
-    const footer = (t: string[]) => ({
-      github: t.includes('View the code on GitHub'),
-      build: t.some((x) => x.startsWith('Current Build')),
+    const footer = (drawn: string[]) => ({
+      github: drawn.includes('View the code on GitHub'),
+      build: drawn.some((x) => x.startsWith('Current Build')),
     });
-    await page.evaluate(() => window.__bd_probe.scene.SettingsPanel.ClosePanel());
+    await page.evaluate(() => {
+      window.__bd_probe.scene.SettingsPanel.ClosePanel();
+    });
     await page.waitForTimeout(800);
-    // The switch: v1 OptionSwitch puts the icons at 35% of the row and the underline at 55%: 7 units clear in a 60-unit row.
+    // v1 OptionSwitch puts the icons at 35% of the row and the underline at 55%: 7 units clear.
     await openPatches(page);
-    // Owner review 3 (2026-11-16): ADD TO GALLERY and MAKE VIDEO side by side, MAKE VIDEO in the right half.
+    // ADD TO GALLERY and MAKE VIDEO side by side, MAKE VIDEO in the right half.
     const sw = await page.evaluate(() => {
-      const pp = window.__bd_probe.scene.PatchesPanel,
+      const pp = window.__bd_probe.scene.PatchesPanel as unknown as PatchesPanelInternals,
         v1App = window.__bd_probe.v1App,
         unit = v1App.Unit,
-        g = pp.gallerySwitch(),
-        v = pp.videoSwitch();
+        gallery = pp.gallerySwitch(),
+        video = pp.videoSwitch();
       return {
-        gap: (g.h * 0.55 - (g.h * 0.35 + 5 * unit)) / unit,
-        sameRow: g.y === v.y,
-        videoRight: v.x >= v1App.Width / 2,
+        gap: (gallery.h * 0.55 - (gallery.h * 0.35 + 5 * unit)) / unit,
+        sameRow: gallery.y === video.y,
+        videoRight: video.x >= v1App.Width / 2,
       };
     });
     await page.mouse.move(5, 5);
     await page.waitForTimeout(300);
     await page.screenshot({ path: `${OUT}/review3-switches.png` });
-    // BACK on the video view (the patch has a block).
+    // BACK on the video view (the patch has a block): the step after SAVE with MAKE VIDEO on.
     await page.evaluate(() => {
       const pp = window.__bd_probe.scene.PatchesPanel;
       pp.View = 'video';
       pp.VideoState = 'idle';
-    }); // the video step (SAVE with MAKE VIDEO on)
+    });
     await page.waitForTimeout(300);
     await texts();
     await page.mouse.move(600, 700);
     await page.waitForTimeout(400);
-    const drawn = (await page.evaluate(() =>
-      window.__texts2.filter((omit) => omit.t === 'BACK').map((omit) => omit.x),
-    )) as number[];
-    const back = await page.evaluate(() => {
-      const pp = window.__bd_probe.scene.PatchesPanel,
-        a = pp.backArrow(),
+    const drawn = await page.evaluate(() =>
+      (window.__texts2 ?? []).filter((entry) => entry.t === 'BACK').map((entry) => entry.x),
+    );
+    const [, randomiseY] = await patchesAt(page, 'randomise');
+    const back = await page.evaluate((nameY) => {
+      const pp = window.__bd_probe.scene.PatchesPanel as unknown as PatchesPanelInternals,
+        arrow = pp.backArrow(),
         pr = window.__bd_probe.v1App.Metrics.PixelRatio,
         unit = window.__bd_probe.v1App.Unit;
       return {
-        x: a.x,
-        y: a.y,
+        x: arrow.x,
+        y: arrow.y,
         mid: window.__bd_probe.v1App.Width / 2,
         right: window.__bd_probe.v1App.Width / 2 + 210 * unit,
-        name: pp.centreOf('randomise')[1] * pr,
+        name: nameY * pr,
         u: unit,
       };
-    });
+    }, randomiseY);
     await page.screenshot({ path: `${OUT}/review2-video-back.png` });
     await patchesClick(page, 'videoBack', 600);
     const left = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.View);
@@ -365,7 +381,7 @@ export const settingsLayoutTests: Record<string, RegressionTest> = {
       sw.gap >= 6 &&
       sw.sameRow &&
       sw.videoRight &&
-      back.x < back.mid - 150 * back.u && // owner, 2026-11-16: the video's BACK at the top left
+      back.x < back.mid - 150 * back.u && // the video's BACK at the top left
       drawn.length > 0 &&
       drawn.every((x) => Math.abs(x - back.x) < 0.5) &&
       left === 'list';
