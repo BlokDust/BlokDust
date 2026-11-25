@@ -1,6 +1,7 @@
 // v1 objects the ported code leaves untyped, as the tests read them (casts in page code).
 import type { V1Block } from '../../../web/src/v1ui/blocks.ts';
 import type { Splash } from '../../../web/src/v1ui/ported/Splash.ts';
+import type { PatchesHost } from '../../../web/src/v1ui/patches.ts';
 
 /** A v1 block's options form (v1 UpdateOptionsForm's result). */
 export interface V1OptionsForm {
@@ -33,4 +34,29 @@ export interface SceneSplash {
 /** SettingsPanel's private open tab (v1 SettingsPanel._OpenTab). */
 export interface SettingsOpenTab {
   _OpenTab: number;
+}
+
+interface Box {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/** PatchesPanel's private layout and host (web/src/v1ui/patches.ts), read by layout tests. */
+export interface PatchesPanelInternals {
+  host: PatchesHost;
+  pageDy: number[];
+  rowH: number;
+  rowGap: number;
+  videoOn: boolean;
+  openLayout(): { rule: number; top: number; bottom: number };
+  openRowY(row: number): number;
+  openMaxScroll(): number;
+  galleryLayout(): { rule: number; sortY: number };
+  galleryWindow(): { top: number; bottom: number; clip: number };
+  gallerySwitch(): Box;
+  videoSwitch(): Box;
+  backArrow(): { x: number; y: number };
+  mainAction(): { kind: 'save' | 'video' | null; label: string; off: boolean };
 }

@@ -1,26 +1,19 @@
 // ui-regressions: The Patches panel's layout on phones and narrow screens.
 import { OUT, blk, browser, open, type RegressionTest, url } from './harness.ts';
 import { keepPresets, openList, openPatches, patchesClick } from './patchesPanel.ts';
+import type { PatchesPanelInternals } from './v1Views.ts';
 
 export const patchesLayoutTests: Record<string, RegressionTest> = {
-  /** CHG-0005 task 12 (owner, 2026-11-11: a DOWNLOAD tab, not in About): Settings on the web has SETTINGS · ABOUT ·
-   * DOWNLOAD. Before a release is published both buttons are off and say "Coming soon."; once published they open
-   * the installers (macOS .pkg, Windows .zip) with ?source=download-page; the version shows. CHG-0010 (owner, 2026-11-12):
-   * the intro's second sentence starts its own line, and the SmartScreen note is gone (it is in the zip's README.txt). */
-  /** Bug (owner, 2026-11-16): DOWNLOAD and SIGN IN / ACCOUNT slid over the tabs (or showed under them) when switching
-   * tabs; SETTINGS and ABOUT are drawn in v1's clipping box. Every text of those two pages must be drawn clipped. */
-  /** Owner review (2026-11-16, phone): the Patches panel used the middle of a tall screen, with wide gaps above and below,
-   * small row type, pages of five and an OPEN FROM YOUR DEVICE that does nothing there; the video view had the name and
-   * RANDOMISE again and BACK at the right. Now: lists from the tabs to the foot of the screen, one scrolling list,
-   * larger rows, no file button in a phone's browser; the video's BACK at the left, no name, the link under it. */
+  /** Phone: Patches lists run from the tabs to the screen's foot in one scrolling list, no file
+   * button; the video view has BACK at the left, no name, and the link under it. */
   async 'patches-phone-layout'(errors: string[]) {
-    const ctx = await browser.newContext({
+    const context = await browser.newContext({
       viewport: { width: 390, height: 844 },
       deviceScaleFactor: 2,
       isMobile: true,
       hasTouch: true,
     });
-    const page = await ctx.newPage();
+    const page = await context.newPage();
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(`${url}/index.html`);
     await page.waitForFunction(() => window.__bd_probe);
@@ -28,47 +21,47 @@ export const patchesLayoutTests: Record<string, RegressionTest> = {
     await page.waitForTimeout(2000);
     await page.evaluate(() => {
       const patchesPanel = window.__bd_probe.scene.PatchesPanel;
-      patchesPanel.host.listPatches = async () =>
-        Array.from({ length: 30 }, (_, i) => ({
-          name: `Patch ${i}`,
-          detail: 'Saved 16 Nov 2026',
-          removable: true,
-        }));
-      const t: string[] = (window.__texts = []),
-        drawText = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (x: string, ...a: any[]) {
-        t.push(x);
-        return (drawText as any).call(this, x, ...a);
+      (patchesPanel as unknown as PatchesPanelInternals).host.listPatches = () =>
+        Promise.resolve(
+          Array.from({ length: 30 }, (_, i) => ({
+            name: `Patch ${i}`,
+            detail: 'Saved 16 Nov 2026',
+            removable: true,
+          })) as Awaited<ReturnType<PatchesPanelInternals['host']['listPatches']>>,
+        );
+      const texts: string[] = (window.__texts = []),
+        proto = CanvasRenderingContext2D.prototype,
+        drawText = Object.getOwnPropertyDescriptor(proto, 'fillText')
+          ?.value as typeof proto.fillText;
+      proto.fillText = function (text: string, ...rest: [number, number, number?]) {
+        texts.push(text);
+        drawText.call(this, text, ...rest);
       };
       patchesPanel.OpenPanel(1);
     });
     await page.waitForTimeout(1200);
     const texts = () =>
       page.evaluate(() => {
-        const t = window.__texts as string[];
-        const r = [...new Set(t)];
-        t.length = 0;
-        return r;
+        const texts = window.__texts ?? [];
+        const unique = [...new Set(texts)];
+        texts.length = 0;
+        return unique;
       });
     await texts();
-    await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.scrollOpen(0));
+    await page.evaluate(() => {
+      window.__bd_probe.scene.PatchesPanel.scrollOpen(0);
+    });
     await page.waitForTimeout(300);
     const drawn = await texts();
-    const first = await page.evaluate(() =>
-      window.__bd_probe.scene.PatchesPanel.centreOf('open0'),
-    );
-    const last = await page.evaluate(() =>
-      window.__bd_probe.scene.PatchesPanel.centreOf('open12'),
-    );
+    const first = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.centreOf('open0'));
+    const last = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.centreOf('open12'));
     // A drag up scrolls the list (a touch on the list, away from the buttons).
     await page.mouse.move(60, 600);
     await page.mouse.down();
     await page.mouse.move(60, 300, { steps: 8 });
     await page.mouse.up();
     await page.waitForTimeout(300);
-    const scrolled = await page.evaluate(
-      () => window.__bd_probe.scene.PatchesPanel.OpenScroll,
-    );
+    const scrolled = await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.OpenScroll);
     // The video view.
     await page.evaluate(() => {
       const patchesPanel = window.__bd_probe.scene.PatchesPanel;
@@ -77,7 +70,9 @@ export const patchesLayoutTests: Record<string, RegressionTest> = {
     await page.waitForTimeout(800);
     await page.evaluate(() => {
       const patchesPanel = window.__bd_probe.scene.PatchesPanel;
-      patchesPanel.host.links.current = () => ({
+      const links = (patchesPanel as unknown as PatchesPanelInternals).host.links;
+      if (!links) throw new Error('no share links here');
+      links.current = () => ({
         url: 'https://example.com/?c=x',
         owned: true,
         stale: false,
@@ -96,12 +91,12 @@ export const patchesLayoutTests: Record<string, RegressionTest> = {
         back,
         player,
         link,
-        title: document.getElementById('patchTitle')!.style.display,
-        url: document.getElementById('patchUrl')!.style.display,
+        title: document.getElementById('patchTitle')?.style.display,
+        url: document.getElementById('patchUrl')?.style.display,
       };
     });
     await page.screenshot({ path: `${OUT}/patches-phone-video.png` });
-    await ctx.close();
+    await context.close();
     const ok =
       !drawn.includes('OPEN FROM YOUR DEVICE') &&
       !drawn.some((text) => / of 30$|^1\/\d/.test(text)) &&
@@ -112,28 +107,34 @@ export const patchesLayoutTests: Record<string, RegressionTest> = {
       last[1] > first[1] &&
       last[1] < 844 &&
       scrolled > 0 &&
+      !!video.back &&
       video.back[0] < 100 &&
       video.title === 'none' &&
       video.url === 'block' &&
+      !!video.link &&
+      !!video.player &&
       video.link[1] > video.player[1];
     return [ok, { drawn: drawn.length, first, last, scrolled, video }];
   },
-  /** Owner (2026-11-18): sliding SAVE / SHARE out, its name field (a page element, not the canvas) showed above the
-   * tabs. Every field is cut off at the tabs' foot while its page slides. */
+  /** While a Patches page slides, its fields (page elements, not canvas) are cut off at the tabs'
+   * foot: the SAVE name field showed above the tabs. */
   async 'patches-fields-under-tabs'(errors: string[]) {
     const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     await openPatches(page);
-    await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.selectTab(1));
+    await page.evaluate(() => {
+      window.__bd_probe.scene.PatchesPanel.selectTab(1);
+    });
     const seen: { top: number; tabs: number; shownAbove: boolean }[] = [];
     for (let i = 0; i < 12; i++) {
       seen.push(
         await page.evaluate(() => {
           const pp = window.__bd_probe.scene.PatchesPanel,
-            a = window.__bd_probe.v1App,
-            pr = a.Metrics.PixelRatio;
-          const el = document.getElementById('patchTitle')!,
-            boundingClientRect = el.getBoundingClientRect(),
-            tabs = (pp.OffsetY + 60 * a.Unit) / pr,
+            v1App = window.__bd_probe.v1App,
+            pr = v1App.Metrics.PixelRatio;
+          const el = document.getElementById('patchTitle');
+          if (!el) throw new Error('no #patchTitle');
+          const boundingClientRect = el.getBoundingClientRect(),
+            tabs = (pp.OffsetY + 60 * v1App.Unit) / pr,
             cs = getComputedStyle(el);
           const clipped =
             cs.visibility === 'hidden' ||
@@ -150,16 +151,18 @@ export const patchesLayoutTests: Record<string, RegressionTest> = {
     }
     await page.close();
     return [
-      seen.some((s) => s.top < s.tabs) && !seen.some((s) => s.shownAbove),
-      seen.filter((s) => s.top < s.tabs).slice(0, 3),
+      seen.some((frame) => frame.top < frame.tabs) && !seen.some((frame) => frame.shownAbove),
+      seen.filter((frame) => frame.top < frame.tabs).slice(0, 3),
     ];
   },
-  // Owner (2026-11-17, CHG-0035): Patches' tabs slide their pages as Settings' do (the old lifts out, the new drops in).
+  // CHG-0035: Patches' tabs slide their pages as Settings' do (old lifts out, new drops in).
   async 'patches-tabs-slide'(errors: string[]) {
     const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     await openPatches(page);
     const dy = () =>
-      page.evaluate(() => [...window.__bd_probe.scene.PatchesPanel.pageDy] as number[]);
+      page.evaluate(() => [
+        ...(window.__bd_probe.scene.PatchesPanel as unknown as PatchesPanelInternals).pageDy,
+      ]);
     const before = await dy();
     await patchesClick(page, 'tab1', 150);
     const leaving = await dy();
@@ -178,34 +181,35 @@ export const patchesLayoutTests: Record<string, RegressionTest> = {
       { before, leaving, arriving, after },
     ];
   },
-  // Owner (2026-11-17, CHG-0035): OPEN and GALLERY show whole rows and a half (so more below shows); the first row is
-  // as far under the rule as each row under the one above; the last row is never cut off at the end.
+  // CHG-0035: OPEN and GALLERY show whole rows and a half; the first row sits under the rule as
+  // each row under the one above, and the last row is never cut off.
   async 'patch-lists-half-row'(errors: string[]) {
     const page = await open(browser, [], errors);
     await keepPresets(page);
     await openList(page);
     await page.waitForTimeout(800); // the OPEN page drops in (CHG-0035)
     const result = await page.evaluate(() => {
-      const pp = window.__bd_probe.scene.PatchesPanel,
+      const panel = window.__bd_probe.scene.PatchesPanel,
+        pp = panel as unknown as PatchesPanelInternals,
         unit = window.__bd_probe.v1App.Unit,
-        L = pp.openLayout(),
-        rows = (L.bottom - L.top) / pp.rowH;
-      pp.Tab = 2;
-      const G = pp.galleryWindow(),
-        Lg = pp.galleryLayout(),
-        grows = (G.bottom - G.top) / pp.rowH;
-      pp.Tab = 1;
-      const lengthValue = pp.Items.length;
-      // the first title under the rule as each title under the divider above it (divider: 28 units under a row's baseline)
+        open = pp.openLayout(),
+        rows = (open.bottom - open.top) / pp.rowH;
+      panel.Tab = 2;
+      const gallery = pp.galleryWindow(),
+        galleryLayout = pp.galleryLayout(),
+        grows = (gallery.bottom - gallery.top) / pp.rowH;
+      panel.Tab = 1;
+      const count = panel.Items.length;
+      // The first title sits under the rule as each title under its divider (28 units down).
       return {
         rows,
         grows,
-        firstGap: (pp.openRowY(0) + pp.OpenScroll - pp.rowGap - L.rule) / unit,
+        firstGap: (pp.openRowY(0) + panel.OpenScroll - pp.rowGap - open.rule) / unit,
         rowGap: (28 * unit - pp.rowGap) / unit,
-        galleryTop: (G.top - Lg.rule) / unit,
+        galleryTop: (gallery.top - galleryLayout.rule) / unit,
         end:
-          Math.max(0, lengthValue * pp.rowH + 10 * unit - (L.bottom - L.top)) - pp.openMaxScroll(),
-        n: lengthValue,
+          Math.max(0, count * pp.rowH + 10 * unit - (open.bottom - open.top)) - pp.openMaxScroll(),
+        n: count,
       };
     });
     await page.screenshot({ path: `${OUT}/patch-lists-half-row.png` });
@@ -220,12 +224,12 @@ export const patchesLayoutTests: Record<string, RegressionTest> = {
       result,
     ];
   },
-  // Owner (2026-11-17, CHG-0035): MAKE VIDEO is hidden (and off) until the video export gets its own round of work.
+  // CHG-0035: MAKE VIDEO is hidden (and off) until the video export gets its own round of work.
   async 'make-video-hidden'(errors: string[]) {
     const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     await openPatches(page);
     const result = await page.evaluate(() => {
-      const pp = window.__bd_probe.scene.PatchesPanel;
+      const pp = window.__bd_probe.scene.PatchesPanel as unknown as PatchesPanelInternals;
       return { video: !!pp.host.video, on: pp.videoOn, main: pp.mainAction().label };
     });
     await page.close();
