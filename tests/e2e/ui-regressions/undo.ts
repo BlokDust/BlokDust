@@ -2,9 +2,8 @@
 import { blk, browser, open, type RegressionTest } from './harness.ts';
 
 export const undoTests: Record<string, RegressionTest> = {
-  /** Owner (2026-11-11): deleting is undoable. Cmd/Ctrl+Z brings back a block deleted with Backspace, one dragged to
-   * the trash, and a whole selection deleted at once: same type, place, id and settings, still connected (the tone
-   * sounds again when its Power comes back). */
+  /** Cmd/Ctrl+Z brings back a block deleted with Backspace, dragged to the trash, or deleted with
+   * a selection: same type, place, id and settings, still connected (the tone sounds again). */
   async 'undo-delete'(errors: string[]) {
     const page = await open(
       browser,
@@ -21,12 +20,16 @@ export const undoTests: Record<string, RegressionTest> = {
         window.__bd_probe.state.patch.blocks
           .map((b) => JSON.stringify([b.id, b.type, b.x, b.y, b.params]))
           .sort(),
-      ) as Promise<string[]>;
+      );
     const engineIds = () =>
       page.evaluate(() =>
-        window.__bd_probe.state.blocks.map((b) => [b.id, b.type]),
-      ) as Promise<[number, string][]>;
-    const idOf = async (type: string) => (await engineIds()).find((q) => q[1] === type)![0];
+        window.__bd_probe.state.blocks.map((b): [number, string] => [b.id, b.type]),
+      );
+    const idOf = async (type: string) => {
+      const entry = (await engineIds()).find(([, blockType]) => blockType === type);
+      if (!entry) throw new Error(`no ${type} on the stage`);
+      return entry[0];
+    };
     const at = (id: number) =>
       page.evaluate((i) => window.__bd_probe.blockPoint(i), id) as Promise<[number, number]>;
     const level = async () => {
@@ -40,9 +43,10 @@ export const undoTests: Record<string, RegressionTest> = {
     };
     // A setting that must come back: the Filter's frequency.
     await page.evaluate(() => {
-      const pr = window.__bd_probe;
-      const id = pr.state.blocks.find((b) => b.type === 'fx.filter').id;
-      pr.scene.host.setParam(id, 'frequency', 1234);
+      const probe = window.__bd_probe;
+      const filter = probe.state.blocks.find((b) => b.type === 'fx.filter');
+      if (!filter) throw new Error('no filter');
+      probe.scene.host.setParam(filter.id, 'frequency', 1234);
     });
     const p0 = await patch(),
       sounding = await level();
@@ -55,12 +59,14 @@ export const undoTests: Record<string, RegressionTest> = {
     }
     await page.keyboard.press('Backspace');
     await page.waitForTimeout(300);
-    result.backspace = { n: (await patch()).length, level: await level() };
+    const backspace = { n: (await patch()).length, level: await level() };
+    result.backspace = backspace;
     await undo();
-    result.backspaceUndo = {
+    const backspaceUndo = {
       same: JSON.stringify(await patch()) === JSON.stringify(p0),
       level: await level(),
     };
+    result.backspaceUndo = backspaceUndo;
     // 2. Drag the Filter to the trash. Undo.
     {
       const [x, y] = await at(await idOf('fx.filter'));
@@ -93,19 +99,19 @@ export const undoTests: Record<string, RegressionTest> = {
     await page.close();
     const ok =
       sounding > 0.01 &&
-      (result.backspace as any).n === 3 &&
-      (result.backspace as any).level < 0.001 &&
-      (result.backspaceUndo as any).same &&
-      (result.backspaceUndo as any).level > 0.01 &&
+      backspace.n === 3 &&
+      backspace.level < 0.001 &&
+      backspaceUndo.same &&
+      backspaceUndo.level > 0.01 &&
       result.trash === 3 &&
-      result.trashUndo &&
+      result.trashUndo === true &&
       result.group === 2 &&
-      result.groupUndo &&
+      result.groupUndo === true &&
       result.extra === 4;
     return [ok, result];
   },
-  /** Owner (2026-11-12, CHG-0010): undo and redo for moving, duplicating (Cmd/Ctrl+D and Alt-drag) and deleting
-   * blocks. Cmd/Ctrl+Z undoes, Cmd/Ctrl+Shift+Z redoes; a new action clears what could be redone. */
+  /** CHG-0010: Cmd/Ctrl+Z undoes and Cmd/Ctrl+Shift+Z redoes moving, duplicating (Cmd/Ctrl+D,
+   * Alt-drag) and deleting; a new action clears what could be redone. */
   async 'undo-redo'(errors: string[]) {
     const page = await open(browser, [blk(1, 'ToneSource', -6, 2)], errors);
     const tones = () =>
@@ -114,16 +120,18 @@ export const undoTests: Record<string, RegressionTest> = {
           .filter((b) => b.type === 'source.tone')
           .map((b) => [b.x, b.y])
           .sort(),
-      ) as Promise<number[][]>;
+      );
     const firstId = () =>
-      page.evaluate(
-        () => window.__bd_probe.state.blocks.find((b) => b.type === 'source.tone').id,
-      ) as Promise<number>;
+      page.evaluate(() => {
+        const tone = window.__bd_probe.state.blocks.find((b) => b.type === 'source.tone');
+        if (!tone) throw new Error('no tone');
+        return tone.id;
+      });
     const at = (id: number) =>
       page.evaluate((i) => window.__bd_probe.blockPoint(i), id) as Promise<[number, number]>;
-    const key = async (k: string) => {
+    const key = async (keys: string) => {
       await page.mouse.move(640, 120);
-      await page.keyboard.press(k);
+      await page.keyboard.press(keys);
       await page.waitForTimeout(300);
     };
     const result: Record<string, unknown> = {};

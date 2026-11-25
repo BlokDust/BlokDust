@@ -2,11 +2,12 @@
 import { OUT, blk, browser, open, type RegressionTest, url } from './harness.ts';
 import { type Page } from 'playwright';
 import { openPlugin, plugPatch } from './pluginPage.ts';
+import type { CommandsMessage } from '../pageGlobals.ts';
+import type { V1BlockView } from './v1Views.ts';
 
 export const pluginKeysTests: Record<string, RegressionTest> = {
-  /** Plugin: with a Computer Keyboard in the patch, its note keys are BlokDust's while the editor has the keys (not
-   * passed on to the DAW, whose shortcuts would fire); without one, keys go on to the DAW (e.g. Logic's Musical
-   * Typing for a MIDI Input). */
+  /** Plugin: with a Computer Keyboard in the patch, its note keys are BlokDust's, not the DAW's;
+   * without one, keys go on to the DAW (e.g. Logic's Musical Typing for a MIDI Input). */
   async 'plugin-keys-capture'(errors: string[]) {
     const probe = (pg: Page) =>
       pg.evaluate(() => {
@@ -45,10 +46,8 @@ export const pluginKeysTests: Record<string, RegressionTest> = {
       { preventedWithKeyboard: withKeyboard, preventedWithout: without },
     ];
   },
-  /** Owner (2026-11-13, CHG-0013): holding a key in the standalone app made macOS's "no one took that key" sound over
-   * and over. The web view passes on every key the page doesn't cancel, and the page let key repeats through. Now a
-   * note key's repeats are the page's too, and in the standalone app (no DAW to pass keys to) every plain key outside
-   * a text field is; Cmd/Ctrl shortcuts still reach the menus. In a DAW, keys BlokDust doesn't use still reach it. */
+  /** CHG-0013: the page keeps note-key repeats, and in the standalone app every plain key outside a
+   * text field (no macOS beep); Cmd/Ctrl reach the menus, and in a DAW unused keys reach it. */
   async 'plugin-key-repeat-no-beep'(errors: string[]) {
     const press = (
       pg: Page,
@@ -63,17 +62,22 @@ export const pluginKeysTests: Record<string, RegressionTest> = {
       } = {},
     ) =>
       pg.evaluate(
-        ([c, k, m]) => {
+        ([keyCode, keyName, modifiers]) => {
           const event = new KeyboardEvent('keydown', {
-            code: c,
-            key: k,
+            code: keyCode,
+            key: keyName,
             bubbles: true,
             cancelable: true,
-            ...m,
+            ...modifiers,
           });
           document.body.dispatchEvent(event);
           document.body.dispatchEvent(
-            new KeyboardEvent('keyup', { code: c, key: k, bubbles: true, cancelable: true }),
+            new KeyboardEvent('keyup', {
+              code: keyCode,
+              key: keyName,
+              bubbles: true,
+              cancelable: true,
+            }),
           );
           return event.defaultPrevented;
         },
@@ -106,9 +110,8 @@ export const pluginKeysTests: Record<string, RegressionTest> = {
     const result = { dawRepeat, dawOther, appLetter, appRepeat, appArrow, appCmd };
     return [dawRepeat && !dawOther && appLetter && appRepeat && appArrow && !appCmd, result];
   },
-  /** Ableton: holding a computer key and clicking into the DAW left the note stuck (the web view never saw the key-up
-   * and, in a plugin window, no blur either). The editor tells the page when its window loses the keys (bd_keysLost)
-   * and the page ends every held note. */
+  /** A key held while clicking into the DAW left its note stuck (no key-up, no blur): the editor
+   * says when its window loses the keys (bd_keysLost) and the page ends every held note. */
   async 'plugin-keys-lost'(errors: string[]) {
     const { pg, close } = await openPlugin(
       plugPatch([
@@ -121,23 +124,24 @@ export const pluginKeysTests: Record<string, RegressionTest> = {
     await pg.waitForTimeout(300);
     await pg.keyboard.down('KeyZ');
     await pg.waitForTimeout(200);
-    await pg.evaluate(() => window.__fire('bd_keysLost', {}));
+    await pg.evaluate(() => {
+      window.__fire?.('bd_keysLost', {});
+    });
     await pg.waitForTimeout(200);
     const notes = await pg.evaluate(() =>
-      window.__sent
-        .filter((x) => x.id === 'bd_commands')
-        .flatMap((x) => x.v.commands)
-        .filter((c) => c.type === 4 || c.type === 5)
-        .map((c) => `${c.type === 4 ? 'on' : 'off'}:${c.param}`),
+      (window.__sent ?? [])
+        .filter((message) => message.id === 'bd_commands')
+        .flatMap((message) => (message.v as CommandsMessage).commands)
+        .filter((command) => command.type === 4 || command.type === 5)
+        .map((command) => `${command.type === 4 ? 'on' : 'off'}:${command.param ?? ''}`),
     );
     await pg.keyboard.up('KeyZ');
     await pg.waitForTimeout(100);
     await close();
     return [notes.length === 2 && notes[0] === 'on:48' && notes[1] === 'off:48', { notes }];
   },
-  /** CHG-0004 3.3 (owner): inside the plugin, Microphone shows as "Audio Input" and MIDI Controller as "MIDI Input"
-   * (menus, block names, panel titles); the MIDI Input has no Device option there (the DAW track picks it). The website
-   * keeps v1's names. The plugin is simulated with a fake JUCE backend that sends the patch, as the processor does. */
+  /** CHG-0004: the plugin names Microphone "Audio Input" and MIDI Controller "MIDI Input", with no
+   * Device option (the DAW track picks it); the website keeps v1's names. */
   async 'plugin-labels'(errors: string[]) {
     const patch = {
       format: 'blokdust.patch',
@@ -148,29 +152,29 @@ export const pluginKeysTests: Record<string, RegressionTest> = {
         { id: 'midi', type: 'input.midi-controller', x: 3, y: 0, params: {} },
       ],
     };
-    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-    await ctx.addInitScript((p) => {
-      const listeners: Record<string, ((x: unknown) => void)[]> = {};
+    const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    await context.addInitScript((processorPatch) => {
+      const listeners: Partial<Record<string, ((value: unknown) => void)[]>> = {};
       window.__JUCE__ = {
         backend: {
-          addEventListener: (id: string, fn: (x: unknown) => void) => {
-            (listeners[id] ??= []).push(fn);
+          addEventListener: (id: string, listener: (value: unknown) => void) => {
+            (listeners[id] ??= []).push(listener);
           },
           emitEvent: (id: string) => {
             if (id === 'bd_hello')
               setTimeout(() => {
                 listeners.bd_patch?.forEach((listener) => {
-                  listener({ patch: JSON.stringify(p) });
+                  listener({ patch: JSON.stringify(processorPatch) });
                 });
               }, 50);
           },
         },
       };
     }, patch);
-    const pg = await ctx.newPage();
+    const pg = await context.newPage();
     pg.on('pageerror', (error) => errors.push(error.message));
     await pg.goto(`${url}/index.html`);
-    await pg.waitForFunction(() => window.__bd_probe?.state.started, null, {
+    await pg.waitForFunction(() => (window as Partial<Window>).__bd_probe?.state.started, null, {
       timeout: 15000,
     });
     await pg.waitForTimeout(1500);
@@ -185,18 +189,21 @@ export const pluginKeysTests: Record<string, RegressionTest> = {
     const midi = (await pg.evaluate(() => window.__bd_probe.state.blocks)).find(
       (b) => b.type === 'input.midi-controller',
     );
-    const pt = await pg.evaluate((i) => window.__bd_probe.blockPoint(i), midi.id);
-    await pg.mouse.click(pt[0], pt[1]);
+    if (!midi) throw new Error('no MIDI Input on the stage');
+    const point = await pg.evaluate((i) => window.__bd_probe.blockPoint(i), midi.id);
+    if (!point) throw new Error('the MIDI Input is not on screen');
+    await pg.mouse.click(point[0], point[1]);
     await pg.waitForTimeout(1200);
     const panel = await pg.evaluate(() => {
       const optionsPanel = window.__bd_probe.scene.OptionsPanel;
       return {
-        title: optionsPanel.SelectedBlock?.OptionsForm?.name,
+        title: (optionsPanel.SelectedBlock as V1BlockView | undefined)?.OptionsForm?.name as
+          string | undefined,
         rows: optionsPanel.Options.map((x) => x.Name),
       };
     });
     await pg.screenshot({ path: `${OUT}/plugin-labels.png` });
-    await ctx.close();
+    await context.close();
     const web = await open(browser, [blk(1, 'Microphone', 0, 0)], errors);
     const webMenu = await web.evaluate(() =>
       window.__bd_probe.v1App.BlockCreator.MenuJson.categories.flatMap((category) =>

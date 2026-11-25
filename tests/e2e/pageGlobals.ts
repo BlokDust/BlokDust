@@ -11,6 +11,12 @@ import type {} from '../../web/src/app/editing/placing.ts';
 import type {} from '../../web/src/app/patchFiles/openPatch.ts';
 import type {} from '../../web/src/app/stageBlock/fillStage.ts';
 import type {} from '../../web/src/patch/site.ts';
+import type { Command } from '../../web/src/engine/wasmEngine.ts';
+
+/** The value of a bd_commands message the page sends the plugin's processor. */
+export interface CommandsMessage {
+  commands: Command[];
+}
 
 /** A fake Web MIDI input: tests call its handler as a device would. */
 export interface FakeMidiInput {
