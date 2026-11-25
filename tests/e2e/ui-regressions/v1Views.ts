@@ -18,7 +18,7 @@ export type V1BlockView = Omit<V1Block, 'Params' | 'OptionsForm'> & {
 /** MessagePanel's private message (v1 MessagePanel._Value): what the bar says. */
 export interface MessagePanelText {
   Open: boolean;
-  _Value?: { string?: string };
+  _Value?: { string?: string; buttonEvent?: () => void };
 }
 
 /** The tour's text (v1 Tutorial.Text, loaded from JSON). */
