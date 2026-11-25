@@ -13,10 +13,11 @@ const pages = [
   'downloads',
   'privacy',
 ];
-const features = pages.map((route) => ({
-  href: `/${route}/`,
-  label: guide.find((entry) => entry.data.route === route)!.data.title,
-}));
+const features = pages.map((route) => {
+  const page = guide.find((entry) => entry.data.route === route);
+  if (!page) throw new Error(`guide page missing: ${route}`);
+  return { href: `/${route}/`, label: page.data.title };
+});
 const current = (href: string) => (Astro.url.pathname === href ? 'page' : undefined);
 ---
 

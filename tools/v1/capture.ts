@@ -9,16 +9,31 @@ interface Fixture {
   viewport?: { width: number; height: number };
   settleMs?: number;
   hideLoading?: boolean;
-  composition: any;
+  composition: Record<string, unknown>;
   /** Pin Math.random after loading (v1 draws laser beams with a random width every frame). */
   pinRandom?: number;
 }
 
+interface CaptureResult {
+  name: string;
+  png: string;
+  fixture: string;
+  composition: Record<string, unknown>;
+  blocks: number;
+  viewport: { width: number; height: number };
+  dpr: number;
+  theme: number;
+  pinRandom?: number;
+  sha256: string;
+  stage: Awaited<ReturnType<typeof stageInfo>>;
+  errors: string[];
+}
+
 export function blockFixtures(): Fixture[] {
-  return Object.entries(V1_BLOCKS).flatMap(([cat, types]) =>
+  return Object.entries(V1_BLOCKS).flatMap(([category, types]) =>
     types.map((type) => ({
-      // Per-block references show the sprite only: v1's transient "loading" bubble (AnimationsLayer) is a state, not geometry.
-      name: `block-${cat}-${type}`,
+      // Per-block references show the sprite only: v1's "loading" bubble is a state, not geometry.
+      name: `block-${category}-${type}`,
       viewport: { width: 800, height: 600 },
       hideLoading: true,
       // v1 zoom only snaps to slots 0.25, 0.5, 1, 2, 4 (UI/ZoomButtons.ts).
@@ -33,8 +48,8 @@ export function blockFixtures(): Fixture[] {
 
 export async function capture(args: string[]) {
   const { chromium } = await import('playwright');
-  const opt = (k: string) => {
-    const i = args.indexOf(k);
+  const opt = (flag: string) => {
+    const i = args.indexOf(flag);
     return i >= 0 ? args[i + 1] : undefined;
   };
   const out = opt('--out') ?? 'tests/visual/reference/v1';
@@ -42,10 +57,10 @@ export async function capture(args: string[]) {
   const themes = themesArg === 'all' ? [...Array(13).keys()] : themesArg.split(',').map(Number);
   const dpr = Number(opt('--dpr') ?? 1);
   const only = opt('--only')?.split(',');
-  const files = args.filter((a, i) => a.endsWith('.json') && !args[i - 1]?.startsWith('--'));
+  const files = args.filter((arg, i) => arg.endsWith('.json') && !args[i - 1]?.startsWith('--'));
   let fixtures: Fixture[] = files.map((file) => ({
     name: basename(file, '.json'),
-    ...JSON.parse(readFileSync(file, 'utf8')),
+    ...(JSON.parse(readFileSync(file, 'utf8')) as Omit<Fixture, 'name'>),
   }));
   if (args.includes('--blocks')) fixtures.push(...blockFixtures());
   if (only) fixtures = fixtures.filter((fixture) => only.includes(fixture.name));
@@ -55,12 +70,12 @@ export async function capture(args: string[]) {
   const port = randomPort();
   const server = await serve(port);
   const browser = await chromium.launch();
-  const results: any[] = [];
+  const results: CaptureResult[] = [];
   const jobs = Math.max(1, Number(opt('--jobs') ?? 6));
   const queue = fixtures.flatMap((fx) => themes.map((theme) => ({ fx, theme })));
   const one = async ({ fx, theme }: { fx: Fixture; theme: number }) => {
     const viewport = fx.viewport ?? { width: 1280, height: 800 };
-    const s = await bootV1(browser, port, viewport, dpr);
+    const session = await bootV1(browser, port, viewport, dpr);
     try {
       const composition = {
         ZoomLevel: 1,
@@ -70,29 +85,29 @@ export async function capture(args: string[]) {
         ...fx.composition,
         ColorThemeNo: theme,
       };
-      const loaded = await loadComposition(s, composition);
-      await s.advance(fx.settleMs ?? 2500);
+      const loaded = await loadComposition(session, composition);
+      await session.advance(fx.settleMs ?? 2500);
       if (fx.hideLoading) {
-        await s.page.evaluate(() => {
-          (window as any).App.AnimationsLayer.ActiveBlocks = [];
+        await session.page.evaluate(() => {
+          if (window.App) window.App.AnimationsLayer.ActiveBlocks = [];
         });
-        await s.advance(100); // let a frame redraw without the overlay
+        await session.advance(100); // let a frame redraw without the overlay
       }
       if (fx.pinRandom !== undefined) {
-        await s.page.evaluate((r) => {
-          Math.random = () => r;
+        await session.page.evaluate((pinned) => {
+          Math.random = () => pinned;
         }, fx.pinRandom);
-        await s.advance(100);
+        await session.advance(100);
       }
-      await s.page.evaluate(() => {
-        (window as any).App.MainScene.IsPaused = true;
+      await session.page.evaluate(() => {
+        if (window.App) window.App.MainScene.IsPaused = true;
       });
-      const stage = await stageInfo(s);
+      const stage = await stageInfo(session);
       const name =
         (themes.length > 1 || theme !== 0 ? `${fx.name}.theme${theme}` : fx.name) +
         (dpr !== 1 ? `@${dpr}x` : '');
       const png = join(out, `${name}.png`);
-      const buf = await s.page.screenshot({ path: png });
+      const screenshot = await session.page.screenshot({ path: png });
       results.push({
         name,
         png,
@@ -103,22 +118,21 @@ export async function capture(args: string[]) {
         dpr,
         theme,
         pinRandom: fx.pinRandom,
-        sha256: createHash('sha256').update(buf).digest('hex'),
+        sha256: createHash('sha256').update(screenshot).digest('hex'),
         stage,
-        errors: s.errors,
+        errors: session.errors,
       });
-      console.error(
-        `captured ${png} (${loaded} blocks${s.errors.length ? `, ${s.errors.length} page errors` : ''})`,
-      );
+      const errorNote = session.errors.length ? `, ${session.errors.length} page errors` : '';
+      console.error(`captured ${png} (${loaded} blocks${errorNote})`);
     } finally {
-      await s.close();
+      await session.close();
     }
   };
   try {
-    // Each capture is an isolated browser context on virtual time, so captures can run concurrently.
+    // Each capture is its own browser context on virtual time, so captures can run concurrently.
     await Promise.all(
       Array.from({ length: Math.min(jobs, queue.length) }, async () => {
-        for (let t; (t = queue.shift());) await one(t);
+        for (let job; (job = queue.shift()); ) await one(job);
       }),
     );
   } finally {
@@ -127,10 +141,11 @@ export async function capture(args: string[]) {
   }
   const manifestPath = join(out, 'manifest.json');
   const prev = existsSync(manifestPath)
-    ? (JSON.parse(readFileSync(manifestPath, 'utf8')).results ?? [])
+    ? ((JSON.parse(readFileSync(manifestPath, 'utf8')) as { results?: CaptureResult[] }).results ??
+      [])
     : [];
   const merged = [
-    ...prev.filter((r: any) => !results.some((result) => result.name === r.name)),
+    ...prev.filter((old) => !results.some((result) => result.name === old.name)),
     ...results,
   ].sort((a, b) => a.name.localeCompare(b.name));
   writeFileSync(manifestPath, JSON.stringify({ v1Sha: V1_SHA, results: merged }, null, 2) + '\n');

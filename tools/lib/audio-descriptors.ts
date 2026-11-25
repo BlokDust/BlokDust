@@ -186,6 +186,16 @@ export interface Thresholds {
   sideDb: number;
 }
 
+/** tests/audio/thresholds.json: default limits plus per-fixture overrides, each with a reason. */
+export interface ThresholdsFile {
+  default: Thresholds;
+  fixtures?: Record<
+    string,
+    { limits?: Partial<Thresholds>; reason?: string; knownFailure?: string } | undefined
+  >;
+}
+
+
 const cents = (a: number, b: number) => 1200 * Math.log2(a / b);
 
 /** Distances between a v2 render and a v1 reference; `spread` (from v1's own run-to-run variation) widens each limit. */
