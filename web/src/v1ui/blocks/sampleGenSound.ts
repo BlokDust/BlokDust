@@ -8,8 +8,8 @@ export const SOUND_MAX = 999;
 /** mulberry32's increment. */
 const MULBERRY_STEP = 0x6d2b79f5;
 
-/** Run v1's SampleGen generator (it draws every choice from Math.random) on sound `sound`'s own random
- * numbers (mulberry32), so a number always makes the same wave. 0: as v1, unseeded. */
+/** Run v1's SampleGen generator (it draws every choice from Math.random) on `sound`'s own
+ * random numbers (mulberry32), so a number always makes the same wave. 0: as v1, unseeded. */
 export function withSound<T>(sound: number, run: () => T): T {
   if (!(sound > 0)) return run();
   let state = (Math.imul(sound, 0x9e3779b1) ^ 0x5bd1e995) >>> 0;
