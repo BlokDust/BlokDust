@@ -1,5 +1,5 @@
-// LFO targets (AUDIO-0003): what an LFO can move on the blocks connected to it, and the open panel's
-// sliders following the LFO while it moves them.
+// LFO targets (AUDIO-0003): what an LFO can move on the blocks connected to it, and the open
+// panel's sliders following the LFO while it moves them.
 import { App, sceneIfMade } from '../shim.ts';
 import { isSelector } from '../selectorOption.ts';
 import type { V1Block } from '../blocks/v1Block.ts';

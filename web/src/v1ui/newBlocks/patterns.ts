@@ -1,6 +1,6 @@
 // The Counter's step pattern (SIMULATION-0005) and a Prism's exits, as the engine computes them.
 
-/** The Counter's pattern (engine gateDecide): which of its steps let a hit through, from the first. */
+/** The Counter's pattern (engine gateDecide): which steps let a hit through, from the first. */
 export function counterPattern(steps: number, hits: number, rotate: number): boolean[] {
   const count = Math.max(1, Math.min(16, Math.round(steps))),
     hitCount = Math.max(0, Math.min(count, Math.round(hits))),

@@ -69,32 +69,32 @@ const drawLevelMeter: RowDraw = function (ctx, units, i, panel) {
   const x = panel.Margin,
     range = panel.Range,
     y = this.Position.y,
-    h = this.Size.height,
-    mid = y + h * 0.5;
+    height = this.Size.height,
+    mid = y + height * 0.5;
   const block = panel.SelectedBlock,
     [level, second] = monitorOf(block?.Id) ?? [-100, 0];
   const at = (decibels: number) => Math.max(0, Math.min(1, (decibels + 60) / 60)) * range;
   const colours = panel.SliderColours;
   drawDivider(ctx, this, units, i, panel);
-  panel.diagonalFill(x - units, y + units, range + 2 * units, h - 2 * units, 9);
+  panel.diagonalFill(x - units, y + units, range + 2 * units, height - 2 * units, 9);
   // LEVEL //
   App.FillColor(ctx, colours[i % colours.length]);
-  ctx.fillRect(x - units, y + h * 0.19, units + at(level), h * 0.4);
+  ctx.fillRect(x - units, y + height * 0.19, units + at(level), height * 0.4);
   if (block?.def.id === 'fx.compressor') {
     // GAIN REDUCTION (24 dB across the row) //
     const reduction = Math.max(0, Math.min(1, -second / 24)) * range;
     App.FillColor(ctx, colours[(i + 1) % colours.length]);
-    ctx.fillRect(x + range - reduction, y + h * 0.65, reduction, h * 0.16);
+    ctx.fillRect(x + range - reduction, y + height * 0.65, reduction, height * 0.16);
   } else if (second > 0) {
     // SOUND LASER: its beam is on (a bar under the level) //
     App.FillColor(ctx, colours[(i + 1) % colours.length]);
-    ctx.fillRect(x - units, y + h * 0.65, range + units, h * 0.16);
+    ctx.fillRect(x - units, y + height * 0.65, range + units, height * 0.16);
   }
   // THRESHOLD: v1 OptionSlider's line and grab, in the text colour //
   const thresholdX = x + Math.max(0, Math.min(range, this.Position.x));
   App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
-  ctx.fillRect(thresholdX - units, y, 2 * units, h);
-  drawGrab(ctx, thresholdX, mid, h * 0.2);
+  ctx.fillRect(thresholdX - units, y, 2 * units, height);
+  drawGrab(ctx, thresholdX, mid, height * 0.2);
   App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
   if (this.Selected) {
     // VALUE TOOLTIP (v1) //
@@ -128,13 +128,13 @@ const drawCounterPattern: RowDraw = function (ctx, units, i, panel) {
   const x = panel.Margin,
     range = panel.Range,
     y = this.Position.y,
-    h = this.Size.height,
-    mid = y + h * 0.5;
+    height = this.Size.height,
+    mid = y + height * 0.5;
   const block = panel.SelectedBlock,
     pattern = counterSteps(block?.Params ?? {}),
     [counted] = monitorOf(block?.Id) ?? [0, 0];
   const cell = range / 16,
-    size = Math.min(cell * 0.36, h * 0.3),
+    size = Math.min(cell * 0.36, height * 0.3),
     left = x + (range - cell * pattern.length) * 0.5,
     next = Math.round(counted) % pattern.length;
   const colours = panel.SliderColours;
@@ -220,8 +220,8 @@ const drawWavePicture: RowDraw = function (ctx, units, i, panel) {
   const x = panel.Margin,
     range = panel.Range,
     y = this.Position.y,
-    h = this.Size.height,
-    mid = y + h * 0.5;
+    height = this.Size.height,
+    mid = y + height * 0.5;
   const block = panel.SelectedBlock;
   const positionRow = panel.Options.find((option) => option.Setting === 'position');
   const table = Math.max(
@@ -239,7 +239,7 @@ const drawWavePicture: RowDraw = function (ctx, units, i, panel) {
     ctx.beginPath();
     ctx.moveTo(x, mid);
     picture.forEach((sample, j) => {
-      ctx.lineTo(x + (range / (picture.length - 1)) * j, mid - sample * h * 0.45);
+      ctx.lineTo(x + (range / (picture.length - 1)) * j, mid - sample * height * 0.45);
     });
     ctx.lineTo(x + range, mid);
     ctx.closePath();
@@ -315,7 +315,7 @@ const SNAP_ZONE = 0.05,
 function afterSliderSet(panel: V2OptionsPanel, option: PanelOption | undefined): void {
   const block = panel.SelectedBlock;
   if (!option || !block) return;
-  // A Counter's steps set by hand give way to the Euclidean pattern once Steps, Hits or Rotate moves.
+  // Steps set by hand give way to the Euclidean pattern once Steps, Hits or Rotate moves.
   if (
     block.def.id === 'power.counter' &&
     ['steps', 'hits', 'rotate'].includes(option.Setting) &&
@@ -355,9 +355,9 @@ function showSoundNumber(option: PanelOption): void {
 /** Teach the options panel the live rows (once, at start-up). */
 export function installLiveRows(panel: V2OptionsPanel): void {
   const sliderSet = panel.SliderSet.bind(panel);
-  panel.SliderSet = (n: number, mx: number) => {
-    sliderSet(n, mx);
-    afterSliderSet(panel, panel.Options[n] as PanelOption | undefined);
+  panel.SliderSet = (row: number, mx: number) => {
+    sliderSet(row, mx);
+    afterSliderSet(panel, panel.Options.at(row));
   };
   const mouseDown = panel.MouseDown.bind(panel);
   panel.MouseDown = (mx: number, my: number) => {

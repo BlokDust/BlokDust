@@ -8,7 +8,7 @@ import type { OptionSubHandle } from './ported/UI/Options/OptionSubHandle';
 import type { OptionButton } from './ported/UI/Options/OptionButton';
 import type { OptionSwitch } from './ported/UI/Options/OptionSwitch';
 
-// ---- a block's options form (v1 Block.OptionsForm: the JSON OptionsPanel.Populate builds rows from) ----
+// ---- a block's options form (v1 Block.OptionsForm: OptionsPanel.Populate builds its rows) ----
 export interface FormSwitch {
   name: string;
   setting: string;

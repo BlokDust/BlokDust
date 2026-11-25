@@ -1,5 +1,5 @@
-// The post-2.0 blocks (SCOPE-0005) in v1's blocks menu: their items, in the owner's order, and their
-// icons, drawn from the manifest geometry as v1's BlockSprites draws its own.
+// The post-2.0 blocks (SCOPE-0005) in v1's blocks menu: their items, in the owner's order, and
+// their icons, drawn from the manifest geometry as v1's BlockSprites draws its own.
 import { flatLayers } from '../../render/flatLayers.ts';
 import { BLOCKS, BLOCKS_BY_ID, type BlockDef } from '../../generated/blocks.gen.ts';
 import type { Point } from '../shim.ts';
@@ -51,7 +51,11 @@ export const MENU_ORDER: Partial<Record<string, string[]>> = {
 /** The menu id of a Label (scene.CreateBlockFromType hands it to the host like a block type). */
 export const LABEL_MENU_ID = 'Label';
 
-type MenuEntry = { name: string; id: string; description: string };
+interface MenuEntry {
+  name: string;
+  id: string;
+  description: string;
+}
 
 /** Add the new blocks to v1's menu JSON (once, before the header is populated). */
 export function installNewBlockMenu(): void {
@@ -73,7 +77,7 @@ export function installNewBlockMenu(): void {
       const def = BY_MENU_ID.get(item.id);
       if (def && !(App.IsPlugin && PLUGIN_LABELS[item.id])) item.description = def.description;
     }
-    // The most used blocks first (MENU_ORDER); Effects, and any block not listed, by the name shown.
+    // The most used first (MENU_ORDER); Effects, and blocks not listed, by the name shown.
     const order = MENU_ORDER[category.name] ?? [],
       rank = (id: string) => {
         const i = order.indexOf(id);

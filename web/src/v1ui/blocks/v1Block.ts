@@ -1,5 +1,5 @@
 // The v1 block the ported OptionsPanel and ToolTip use (Params, OptionsForm, SetParam, Position…),
-// backed by a v2 patch block. Forms are v1's own (ported/BlockForms.ts); SetParam goes to the engine.
+// backed by a v2 patch block. Forms are v1's own (ported/BlockForms.ts); SetParam goes to the app.
 import type { BlockDef } from '../../generated/blocks.gen.ts';
 import { App, PLUGIN_LABELS, Point, sceneIfMade } from '../shim.ts';
 import { FORMS } from '../ported/BlockForms';
@@ -91,7 +91,7 @@ export class V1Block {
       ...Object.fromEntries(def.params.map((param) => [param.key, param.default])),
       ...params,
     };
-    // v1's default impulse response (on files.blokdust.io) is gone; the engine's built-in one plays.
+    // v1's default impulse response (files.blokdust.io) is gone: the engine's built-in one plays.
     const irDefault = def.params.find((param) => param.key === 'track')?.default;
     if (def.id === 'fx.convolver' && this.Params.track === irDefault)
       Object.assign(this.Params, { trackName: 'BUILT-IN HALL', user: 'BlokDust' });
@@ -105,7 +105,7 @@ export class V1Block {
     const id = this.def.id;
     if (id === 'source.microphone' || id === 'source.audio-in') gainForm(this);
     if (id === 'source.sample-gen') soundForm(this);
-    if (id === 'input.midi-controller' && this.OptionsForm) extendMidiForm(this);
+    if (id === 'input.midi-controller' && this.currentForm()) extendMidiForm(this);
     const form = this.currentForm();
     // Silent Keys (CHG-0017): a switch beside Mono/Poly, off by default.
     if (form && this.def.params.some((param) => param.key === 'keysSetPitch')) {
@@ -121,7 +121,7 @@ export class V1Block {
     // Glide is mono-only (the engine starts each poly note without it): Poly hides it (CHG-0010).
     if (this.def.category === 'interaction' && form && this.Params.isPolyphonic)
       form.parameters = form.parameters.filter((param) => param.setting !== 'glide');
-    if (id === 'fx.filter') filterForm(this); // CHG-0010: types and a response graph (filterPanel.ts)
+    if (id === 'fx.filter') filterForm(this); // CHG-0010: types and a response graph
     if (SYNCED.has(id)) extendSyncForm(this);
     const label = App.IsPlugin && this.def.v1Type ? PLUGIN_LABELS[this.def.v1Type] : undefined;
     const finalForm = this.currentForm();
@@ -188,7 +188,7 @@ export class V1Block {
     this.RefreshOptionsPanel();
   }
 
-  /** v1 Block.Connections (the tour asks what a block is connected to): the engine's connections. */
+  /** v1 Block.Connections (the tour asks what a block connects to): the engine's connections. */
   get Connections(): { Count: number; ToArray(): V1Block[] } {
     const ids = new Set<number>(sceneIfMade()?.host.connectedIds(this.Id) ?? []);
     const list = App.Blocks.filter((block) => ids.has(block.Id));
@@ -210,7 +210,7 @@ export class V1Block {
       return;
     }
     if (key === 'sound') {
-      // SampleGen's SOUND (CHG-0035): the wave is made when the slider is let go (newBlocks/liveRows.ts)
+      // SampleGen's SOUND (CHG-0035): the wave is made when the slider is let go (liveRows.ts)
       const sound = Math.max(1, Math.min(SOUND_MAX, Math.round(number)));
       if (sound === this.Params.sound) return;
       this.Params.sound = sound;
@@ -284,7 +284,7 @@ export class V1Block {
   private setManifestParam(key: string, value: number | boolean): void {
     const param = this.def.params.find((entry) => entry.key === key);
     if (!param) return;
-    let native = typeof value === 'boolean' ? (value ? 1 : 0) : Number(value);
+    let native = typeof value === 'boolean' ? (value ? 1 : 0) : value;
     const transform = param.ui;
     if (transform.transform === 'SubtractFrom') native = transform.k - native;
     else if (transform.transform === 'Minus') native = native - transform.k;

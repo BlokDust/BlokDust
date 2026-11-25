@@ -68,7 +68,7 @@ function lfoTargetRow(block: V1Block): FormParameter {
 }
 
 const FORMS: Partial<Record<string, (block: V1Block) => FormParameter[]>> = {
-  // CHG-0031 (AUDIO-0004): the frame being played, which table, where in it, the Tone's Note and Fine.
+  // CHG-0031 (AUDIO-0004): the frame played, the table, where in it, the Tone's Note and Fine.
   'source.wavetable': (block) => [
     slider('Wave', 'wavePicture', 0, 0, 1),
     choice('Table', 'table', Number(block.Params.table), WAVETABLES),
@@ -80,7 +80,7 @@ const FORMS: Partial<Record<string, (block: V1Block) => FormParameter[]>> = {
     }),
     slider('Fine', 'fine', Number(block.Params.fine), -1, 1, { centered: true }),
   ],
-  // CHG-0014: a level meter with the threshold on it (v1's dB meter), then the compressor's settings.
+  // CHG-0014: a level meter with the threshold on it (v1's dB meter), then the settings.
   'fx.compressor': (block) => [
     slider('Level', 'compMeter', Number(block.Params.threshold), -60, 0, { display: dB }),
     slider('Ratio', 'ratio', Number(block.Params.ratio), 1, 20, {
@@ -213,7 +213,7 @@ const FORMS: Partial<Record<string, (block: V1Block) => FormParameter[]>> = {
     angleSlider(block),
     slider('Range', 'range', Number(block.Params.range), 50, 1200, { quantised: true }),
   ],
-  // SIMULATION-0009: Hits Cut Power: a particle cuts its power for a moment, a beam while it touches.
+  // SIMULATION-0009: Hits Cut Power: a particle cuts it for a moment, a beam while it touches.
   'power.power': (block) => [
     switches({ name: 'Hits Cut Power', setting: 'cutByHits', value: !!block.Params.cutByHits }),
   ],

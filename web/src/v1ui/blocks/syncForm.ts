@@ -191,7 +191,7 @@ export function extendSyncForm(block: V1Block): void {
   const free = new Set(synced ? FREE_ROWS[kind] : []);
   const kept = form.parameters.filter((param) => !free.has(param.setting));
   if (kind === 'emitter') {
-    // Offset (CHG-0014), a share of the interval: after Swing when synced, after Fire Rate when not.
+    // Offset (CHG-0014), a share of the interval: after Swing if synced, else after Fire Rate.
     const offset = percentSlider('Offset', 'offset', Number(params.offset ?? 0));
     if (synced) syncRows.push(offset);
     else kept.splice(kept.findIndex((param) => param.setting === 'rate') + 1, 0, offset);

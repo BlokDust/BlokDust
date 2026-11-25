@@ -146,7 +146,7 @@ export const CONVERT: Partial<
   inKey: { param: 'chromatic', to: (value) => (value ? 0 : 1) }, // the Touchpad's In Key switch
   arpDivisionIndex: { param: 'division', to: (value) => stepOf(ARP_STEPS, value).beats },
 };
-/** v1 SetParam for the settings above: the param and value to send, or null for an ordinary param. */
+/** v1 SetParam for the settings above: the param and value to send (null: an ordinary param). */
 export function convertSetting(
   key: string,
   value: number,
@@ -155,7 +155,7 @@ export function convertSetting(
   return converted
     ? {
         param: converted.param,
-        value: converted.to(Number(value)),
+        value: converted.to(value),
         refresh: CONVERT_REFRESH.has(key),
       }
     : null;

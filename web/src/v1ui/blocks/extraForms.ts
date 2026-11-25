@@ -4,6 +4,8 @@ import { App, sceneIfMade } from '../shim.ts';
 import type { FormParameter } from '../optionsTypes.ts';
 import type { V1Block } from './v1Block.ts';
 
+const deviceName = (block: V1Block) =>
+  typeof block.Params.device === 'string' ? block.Params.device : '';
 const offOn = (name: string, setting: string, value: boolean) => ({
   name,
   setting,
@@ -52,7 +54,7 @@ export function extendMidiForm(block: V1Block): void {
           const i = Math.round(value);
           return i === 0
             ? 'ALL'
-            : (devices[i - 1]?.name ?? (String(block.Params.device ?? '') || '—')).toUpperCase();
+            : (devices[i - 1]?.name ?? (deviceName(block) || '—')).toUpperCase();
         },
       },
     });
@@ -73,8 +75,8 @@ export function extendMidiForm(block: V1Block): void {
 
 /** −40 dB is off. */
 export const GAIN_DB_MIN = -40;
-/** Audio Input / Microphone: one Gain row in dB (off, up to +6 dB). The param is a ratio, 1 = unity:
- * the plugins' Audio Input is a true bypass. */
+/** Audio Input / Microphone: one Gain row in dB (off, up to +6 dB). The param is a ratio, 1 =
+ * unity: the plugins' Audio Input is a true bypass. */
 export function gainForm(block: V1Block): void {
   const gain = Number(block.Params.gain ?? 1);
   block.OptionsForm = {

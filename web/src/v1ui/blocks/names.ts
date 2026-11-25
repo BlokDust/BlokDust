@@ -43,7 +43,7 @@ export function v1BlockName(def: BlockDef): string {
 
 /** A sample length as m:ss (h:mm:ss from an hour; a sound under a second shows 0:01). */
 export function formatLength(seconds: number): string {
-  const value = Number(seconds) || 0,
+  const value = seconds || 0,
     total = value > 0 ? Math.max(1, Math.round(value)) : 0,
     hours = Math.floor(total / 3600),
     minutes = Math.floor(total / 60) % 60,
