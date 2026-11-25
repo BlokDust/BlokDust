@@ -1,9 +1,9 @@
 // Engine snapshots: what the stage draws, and the patch state they change.
+import { setMonitors, openGateIds } from '../../v1ui/newBlocks/monitors.ts';
 import { toPatch } from '../model/toPatch.ts';
 import { saveLocal } from '../../patch/share.ts';
 import { type Snapshot } from '../../audio/protocol.ts';
 import { activity } from '../../account/activity.ts';
-import { setMonitors, openGateIds } from '../../v1ui/newBlocks.ts';
 import { setLastSnapshot } from '../audio/keepAwake.ts';
 import { embedId, juce } from '../boot/page.ts';
 import { stage } from '../boot/pixi.ts';

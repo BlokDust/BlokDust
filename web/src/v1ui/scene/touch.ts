@@ -1,6 +1,6 @@
 // Wheel, pinch and extra fingers on v1's UI (not in v1, which took one pointer).
+import type { V1Block } from '../blocks/v1Block.ts';
 import { App, Dimensions, Point } from '../shim.ts';
-import type { V1Block } from '../blocks.ts';
 import { V1ScenePlayheads } from './playheads.ts';
 
 export abstract class V1SceneTouch extends V1ScenePlayheads {

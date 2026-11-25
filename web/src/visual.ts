@@ -1,5 +1,6 @@
 // Visual test harness (CHG-0001 0.10): render a v1 composition through the real v2 Stage, and
 // benchmark renderers.
+import { V1Block } from './v1ui/blocks/v1Block.ts';
 import { V1Scene } from './v1ui/scene/v1Scene.ts';
 import { Application } from 'pixi.js';
 import { engineModule } from './audio/engineNode.ts';
@@ -11,7 +12,6 @@ import { loadPatch } from './patch/loadPatch.ts';
 import { Stage, type BlockRenderer } from './stage/Stage.ts';
 import { gridToPx } from './stage/metrics.ts';
 import { loadV1Fonts } from './chrome/v1Chrome.ts';
-import { V1Block } from './v1ui/blocks.ts';
 
 interface FixtureInput {
   composition: V1Composition;

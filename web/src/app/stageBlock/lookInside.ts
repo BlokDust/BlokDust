@@ -1,10 +1,10 @@
 // Looking into a Stage block (CHG-0021, UI-0009).
+import { setMenuHidden } from '../../v1ui/newBlocks/menu.ts';
 import { endLabelEdit } from '../labels/labelEditing.ts';
 import { frameFor } from '../../stage/insideView.ts';
 import { gridToPx } from '../../stage/metrics.ts';
 import { BLOCKS_BY_ID } from '../../generated/blocks.gen.ts';
 import { frameBlocks } from '../../stage/frameBlocks.ts';
-import { setMenuHidden } from '../../v1ui/newBlocks.ts';
 import { starPos } from '../../stage/starPos.ts';
 import { addBlock } from '../blocks/addBlock.ts';
 import { embedId, juce } from '../boot/page.ts';

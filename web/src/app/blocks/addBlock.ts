@@ -1,10 +1,11 @@
 // Adding one block to the world on show.
+import { setTableModule } from '../../v1ui/newBlocks/liveRows.ts';
+import { SOUND_MAX } from '../../v1ui/blocks/sampleGenSound.ts';
+import { V1Block } from '../../v1ui/blocks/v1Block.ts';
 import { buildStage } from '../stageBlock/buildStage.ts';
-import { SOUND_MAX, V1Block } from '../../v1ui/blocks.ts';
 import { BLOCKS_BY_ID } from '../../generated/blocks.gen.ts';
 import { starPos } from '../../stage/starPos.ts';
 import { engineModule } from '../../audio/engineNode.ts';
-import { setTableModule } from '../../v1ui/newBlocks.ts';
 import { CommandType } from '../../engine/wasmEngine.ts';
 import { listen, needsInput } from '../audio/microphone.ts';
 import { syncTargets } from './lfoTargets.ts';

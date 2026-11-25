@@ -5,6 +5,7 @@ import menu from './ported/data/menu.json';
 import config from './ported/data/config.json';
 import { MAX_ASPECT } from '../stage/metrics.ts';
 import type { V1AppGlobal } from './appGlobal.ts';
+import type { V1Scene } from './scene/v1Scene.ts';
 
 /** v1 Device.mobile (not imported: the Device module imports this one). */
 const MOBILE = 0;
@@ -454,6 +455,8 @@ const appAtStart: V1AppAtStart = {
   Canvas: { Ctx: null as CanvasRenderingContext2D | null, Style: { cursor: 'default' } },
 };
 export const App = appAtStart as V1AppGlobal;
+/** The scene, or undefined before it is made (blocks can be loaded first). */
+export const sceneIfMade = (): V1Scene | undefined => (App as Partial<V1AppGlobal>).MainScene;
 
 /** Plugin-only block labels (CHG-0004 3.3): the track's audio and the DAW's MIDI. Same block
  * types underneath, so patches move between web and plugin unchanged; the website keeps v1's. */

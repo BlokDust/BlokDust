@@ -1,9 +1,9 @@
 // Blocks from v1's menus and panels: create, delete, set params, connections and LFO targets.
+import { LABEL_MENU_ID } from '../../v1ui/newBlocks/menu.ts';
 import { usage } from '../boot/sessionAnalytics.ts';
 import { count } from '../../analytics/client.ts';
 import { CommandType } from '../../engine/wasmEngine.ts';
 import { BLOCKS_BY_ID } from '../../generated/blocks.gen.ts';
-import { LABEL_MENU_ID } from '../../v1ui/newBlocks.ts';
 import { addBlock } from '../blocks/addBlock.ts';
 import { syncTargets } from '../blocks/lfoTargets.ts';
 import { deleteBlocks } from '../editing/deleteBlocks.ts';

@@ -6,8 +6,9 @@
 //  - While a bar is held its value shows above the row's top-right corner, as the Envelope's held handle does
 //    (adsrPanel.ts): "F# 35%", "D MINOR 7TH". A bar whose note just played is drawn in the text colour.
 //  - The bars show the pattern after the Key slider: bar n shows stored value (n − key) mod 12.
+import { KEYS } from './newBlocks/formRows.ts';
+import { monitorOf } from './newBlocks/monitors.ts';
 import { App } from './shim.ts';
-import { KEYS, monitorOf } from './newBlocks.ts';
 
 const LIT_MS = 250;
 

@@ -1,6 +1,6 @@
+import { withSound } from '../../v1ui/blocks/sampleGenSound.ts';
 import { SAMPLE_GEN } from '../../v1ui/ported/SampleGenData';
 import { noteToFrequency } from '../../v1ui/noteToFrequency.ts';
-import { withSound } from '../../v1ui/blocks.ts';
 import { BLOCKS_BY_ID } from '../../generated/blocks.gen.ts';
 import { Waveform } from '../../v1ui/ported/Core/Audio/Waveform';
 import { changed } from '../model/autosave.ts';

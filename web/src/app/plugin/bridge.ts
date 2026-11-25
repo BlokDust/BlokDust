@@ -1,9 +1,9 @@
 // Messages from the plugin's processor, and what the page tells it back.
+import type { V1Block } from '../../v1ui/blocks/v1Block.ts';
 import { appKey, setAppKey } from '../../account/appKey.ts';
 import * as account from '../../account/client.ts';
 import { CommandType } from '../../engine/wasmEngine.ts';
 import type { OptionHandle } from '../../v1ui/ported/UI/Options/OptionHandle';
-import type { V1Block } from '../../v1ui/blocks.ts';
 import { nativeAnswer, setNativeAnswer } from '../account/nativeSignIn.ts';
 import {
   refreshOwnership,

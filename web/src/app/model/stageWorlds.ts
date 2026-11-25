@@ -1,7 +1,7 @@
 // Stage blocks (CHG-0021, SCOPE-0006): what is inside each, and the one being looked into.
+import type { V1Block } from '../../v1ui/blocks/v1Block.ts';
 import type { Macro, PatchBlock } from '../../patch/loadPatch.ts';
 import type { Label } from '../../stage/labels.ts';
-import type { V1Block } from '../../v1ui/blocks.ts';
 import { connectionOrder, labels, model, type ModelBlock } from './patchModel.ts';
 import { currentView } from './view.ts';
 

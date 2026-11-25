@@ -2,19 +2,14 @@
 // them in v1's display-list order onto the stage's static Canvas2D layer, and routes pointer input in v1's order
 // (MainScene._PointerDown/_PointerUp/_PointerMove). Blocks, connections and audio stay in the engine (ARCHITECTURE-0002):
 // the panels talk to the app through SceneHost.
+import { drawPrismExits, hasLiveRows, installLiveRows } from '../newBlocks/liveRows.ts';
+import { followLfos } from '../newBlocks/lfo.ts';
+import { drawNewSprite, installNewBlockMenu } from '../newBlocks/menu.ts';
+import type { V1Block } from '../blocks/v1Block.ts';
 import type { Theme } from '../../generated/palettes.gen.ts';
 import { App, Point, TWEEN } from '../shim.ts';
-import type { V1Block } from '../blocks.ts';
 import { installFilterPanel } from '../filterPanel.ts';
 import { installSelectors } from '../selectorOption.ts';
-import {
-  drawNewSprite,
-  drawPrismExits,
-  followLfos,
-  hasLiveRows,
-  installLiveRows,
-  installNewBlockMenu,
-} from '../newBlocks.ts';
 import { installTouchpad } from '../touchpadPanel.ts';
 import { installWaveZoom } from '../waveZoom.ts';
 import { installAdsr } from '../adsrPanel.ts';

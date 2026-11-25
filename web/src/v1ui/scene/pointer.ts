@@ -1,7 +1,7 @@
 // Pointer input in v1 MainScene's order, the tooltip, and the sample panel's UPLOAD FILE.
+import type { V1Block } from '../blocks/v1Block.ts';
 import { drawUploadLink } from '../patches/icons.ts';
 import { App, Point } from '../shim.ts';
-import type { V1Block } from '../blocks.ts';
 import { V1SceneTouch } from './touch.ts';
 
 export abstract class V1ScenePointer extends V1SceneTouch {

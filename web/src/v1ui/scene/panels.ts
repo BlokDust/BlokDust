@@ -1,11 +1,12 @@
 // v1's panels as the scene owns them, and the scene state they share.
+import type { V1Block } from '../blocks/v1Block.ts';
 import { PatchesPanel } from '../patches/panel.ts';
 import { App, Point } from '../shim.ts';
-import type { V1Block } from '../blocks.ts';
 import { Metrics } from '../ported/Metrics';
 import { CreateNew } from '../ported/UI/CreateNew';
 import { Header } from '../ported/UI/Header';
 import { OptionsPanel } from '../ported/UI/OptionsPanel';
+import { optionsPanelView } from '../optionsTypes.ts';
 import { SettingsPanel } from '../ported/UI/SettingsPanel';
 import { SharePanel } from '../ported/UI/SharePanel';
 import { ToolTip } from '../ported/UI/ToolTip';
@@ -32,7 +33,7 @@ export abstract class V1ScenePanels {
   readonly ToolTip = new ToolTip();
   readonly ZoomButtons = new ZoomButtons();
   readonly TrashCan = new TrashCan();
-  readonly OptionsPanel = new OptionsPanel();
+  readonly OptionsPanel = optionsPanelView(new OptionsPanel());
   readonly Header = new Header();
   readonly CreateNew = new CreateNew();
   readonly SharePanel = new SharePanel();

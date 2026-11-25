@@ -1,9 +1,9 @@
 // The patch as the user sees it: autosaved, and what a share link encodes.
+import type { V1Block } from '../../v1ui/blocks/v1Block.ts';
 import { BLOCKS, type BlockDef } from '../../generated/blocks.gen.ts';
 import type { PatchSource } from '../../patch/loadPatch.ts';
 import type { SampleRef } from '../../patch/samples.ts';
 import type { Label } from '../../stage/labels.ts';
-import type { V1Block } from '../../v1ui/blocks.ts';
 
 export interface ModelBlock {
   uid: string;

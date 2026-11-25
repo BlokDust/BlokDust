@@ -1,6 +1,6 @@
 // Where each sampler is playing, drawn over its waveform.
+import type { V1Block } from '../blocks/v1Block.ts';
 import { App } from '../shim.ts';
-import type { V1Block } from '../blocks.ts';
 import { panelView } from '../waveZoom.ts';
 import { V1ScenePower } from './power.ts';
 
