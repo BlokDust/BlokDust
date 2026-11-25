@@ -2,12 +2,14 @@
 import { OUT, browser, maxChange, state, toCss, type RegressionTest, url } from './harness.ts';
 import { openPlugin, plugPatch } from './pluginPage.ts';
 import { waveBox } from './samplerPanel.ts';
+import type { V1BlockView } from './v1Views.ts';
+
+/** What a test reads from a message the page sent the processor. */
+type SentValue = Partial<Record<'id' | 'token', number>> & { on?: boolean; ref?: { id?: number } };
 
 export const pluginSamplesTests: Record<string, RegressionTest> = {
-  /** CHG-0004 3.6/3.7: in the plugin the processor owns samples (native engine). The page asks for them and shows
-   * the processor's reports (spinner while loading; waveform, region and name once loaded); file drops on the editor
-   * resolve to the sampler under the pointer or a new Sample there; YOUR FILE opens the native chooser; a Freesound
-   * pick goes to the processor. Simulated with a fake JUCE backend recording what the page sends. */
+  /** CHG-0004: the processor owns samples; the page shows its reports; drops go to the sampler
+   * under the pointer or a new Sample; YOUR FILE and Freesound picks go to the processor. */
   async 'plugin-samples'(errors: string[]) {
     const patch = {
       format: 'blokdust.patch',
@@ -15,10 +17,10 @@ export const pluginSamplesTests: Record<string, RegressionTest> = {
       seed: 1,
       blocks: [{ id: 's', type: 'source.sample', x: 0, y: 0, params: {} }],
     };
-    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-    await ctx.addInitScript((p) => {
-      const listeners: Record<string, ((x: unknown) => void)[]> = {};
-      const sent: { id: string; v: any }[] = [];
+    const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    await context.addInitScript((processorPatch) => {
+      const listeners: Partial<Record<string, ((value: unknown) => void)[]>> = {};
+      const sent: { id: string; v: unknown }[] = [];
       window.__sent = sent;
       window.__fire = (id: string, value: unknown) => {
         listeners[id]?.forEach((listener) => {
@@ -27,42 +29,41 @@ export const pluginSamplesTests: Record<string, RegressionTest> = {
       };
       window.__JUCE__ = {
         backend: {
-          addEventListener: (id: string, fn: (x: unknown) => void) => {
-            (listeners[id] ??= []).push(fn);
+          addEventListener: (id: string, listener: (value: unknown) => void) => {
+            (listeners[id] ??= []).push(listener);
           },
-          emitEvent: (id: string, v: unknown) => {
-            sent.push({ id, v });
+          emitEvent: (id: string, value: unknown) => {
+            sent.push({ id, v: value });
             if (id === 'bd_hello')
               setTimeout(() => {
-                listeners.bd_patch?.forEach((f) => {
-                  f({ patch: JSON.stringify(p) });
+                listeners.bd_patch?.forEach((listener) => {
+                  listener({ patch: JSON.stringify(processorPatch) });
                 });
               }, 50);
           },
         },
       };
     }, patch);
-    const pg = await ctx.newPage();
+    const pg = await context.newPage();
     pg.on('pageerror', (error) => errors.push(error.message));
     await pg.goto(`${url}/index.html`);
-    await pg.waitForFunction(() => window.__bd_probe?.state.started, null, {
+    await pg.waitForFunction(() => (window as Partial<Window>).__bd_probe?.state.started, null, {
       timeout: 15000,
     });
     await pg.waitForTimeout(800);
-    const sentIds = () => pg.evaluate(() => window.__sent.map((x) => x.id));
+    const sentIds = () => pg.evaluate(() => (window.__sent ?? []).map((message) => message.id));
     const hello = (await sentIds()).includes('bd_samplesHello');
     const id = (await state(pg)).blocks[0].id;
-    await pg.evaluate(
-      (i) => window.__fire('bd_sampleInfo', { id: i, loading: true, missing: false }),
-      id,
-    );
+    await pg.evaluate((i) => {
+      window.__fire?.('bd_sampleInfo', { id: i, loading: true, missing: false });
+    }, id);
     const spinning = await pg.evaluate(
       () => window.__bd_probe.scene.AnimationsLayer.ActiveBlocks.length,
     );
     const preview = Array.from({ length: 2000 }, (_, i) => Math.sin(i / 7) * Math.exp(-i / 800));
     await pg.evaluate(
-      ([i, pv]) =>
-        window.__fire('bd_sampleInfo', {
+      ([i, pv]) => {
+        window.__fire?.('bd_sampleInfo', {
           id: i,
           loading: false,
           missing: false,
@@ -80,31 +81,39 @@ export const pluginSamplesTests: Record<string, RegressionTest> = {
             loopStart: 1,
             loopEnd: 2,
           },
-        }),
+        });
+      },
       [id, preview] as const,
     );
     const shown = await pg.evaluate(() => {
       const probe = window.__bd_probe;
-      const v1Block = probe.v1App.Blocks[0];
+      const v1Block = probe.v1App.Blocks[0] as V1BlockView;
       return {
         spin: probe.scene.AnimationsLayer.ActiveBlocks.length,
         wave: v1Block.WaveForm.length,
         name: v1Block.Params.trackName,
         end: v1Block.Params.endPosition,
-        patchTrack: probe.state.patch.blocks[0].params.track,
-        ref: probe.state.patch.refs?.['file:kick.wav']?.path,
+        patchTrack: probe.state.patch.blocks[0].params?.track,
+        ref: (probe.state.patch.refs?.['file:kick.wav'] as { path?: string } | undefined)?.path,
       };
     });
     // Drop on the Sample, then on empty stage.
-    const [bx, by] = await pg.evaluate((i) => window.__bd_probe.blockPoint(i), id);
-    await pg.evaluate(([x, y]) => window.__fire('bd_dropAt', { x, y, token: 1 }), [
-      bx,
-      by,
-    ] as const);
-    await pg.evaluate(() => window.__fire('bd_dropAt', { x: 1000, y: 650, token: 2 }));
+    const samplePoint = await pg.evaluate((i) => window.__bd_probe.blockPoint(i), id);
+    if (!samplePoint) throw new Error('the Sample is not on screen');
+    await pg.evaluate(
+      ([x, y]) => {
+        window.__fire?.('bd_dropAt', { x, y, token: 1 });
+      },
+      [samplePoint[0], samplePoint[1]] as const,
+    );
+    await pg.evaluate(() => {
+      window.__fire?.('bd_dropAt', { x: 1000, y: 650, token: 2 });
+    });
     await pg.waitForTimeout(200);
     const drops = await pg.evaluate(() =>
-      window.__sent.filter((x) => x.id === 'bd_dropTarget').map((x) => x.v),
+      (window.__sent ?? [])
+        .filter((message) => message.id === 'bd_dropTarget')
+        .map((message) => message.v as SentValue),
     );
     const blocksAfter = (await state(pg)).blocks.length;
     // YOUR FILE and a Freesound pick go to the processor.
@@ -126,9 +135,14 @@ export const pluginSamplesTests: Record<string, RegressionTest> = {
         { trackName: 'BELL', user: 'U', permalink: '' },
       );
     }, id);
-    const last = await pg.evaluate(() => window.__sent.slice(-2));
+    const last = await pg.evaluate(() =>
+      (window.__sent ?? []).slice(-2).map((message) => ({
+        id: message.id,
+        v: message.v as SentValue,
+      })),
+    );
     await pg.screenshot({ path: `${OUT}/plugin-samples.png` });
-    await ctx.close();
+    await context.close();
     const ok =
       hello &&
       spinning === 1 &&
@@ -146,10 +160,10 @@ export const pluginSamplesTests: Record<string, RegressionTest> = {
       last[0]?.id === 'bd_pickFile' &&
       last[0]?.v.id === id &&
       last[1]?.id === 'bd_loadUrl' &&
-      last[1]?.v.ref.id === 9;
+      last[1]?.v.ref?.id === 9;
     return [ok, { hello, spinning, shown, drops, blocksAfter, last: last.map((x) => x.id) }];
   },
-  /** Plugin (Logic): the Convolver's panel waveform shows the spinning square while the processor loads its sound. */
+  /** Plugin: the Convolver's panel waveform shows the spinning square while the processor loads. */
   async 'plugin-convolver-spinner'(errors: string[]) {
     const { pg, close } = await openPlugin(
       plugPatch([{ id: 'c', type: 'fx.convolver', x: 0, y: 0 }]),
@@ -158,33 +172,33 @@ export const pluginSamplesTests: Record<string, RegressionTest> = {
     const id = (await state(pg)).blocks[0].id;
     const preview = Array.from({ length: 2000 }, (_, i) => Math.sin(i / 5) * Math.exp(-i / 500));
     await pg.evaluate(
-      ([i, pv]) =>
-        window.__fire('bd_sampleInfo', {
+      ([i, pv]) => {
+        window.__fire?.('bd_sampleInfo', {
           id: i,
           loading: false,
           missing: false,
           duration: 2,
           preview: pv,
           track: 'freesound:1',
-        }),
+        });
+      },
       [id, preview] as const,
     );
-    const [x, y] = await pg.evaluate((i) => window.__bd_probe.blockPoint(i), id);
-    await pg.mouse.click(x, y);
+    const point = await pg.evaluate((i) => window.__bd_probe.blockPoint(i), id);
+    if (!point) throw new Error('the Convolver is not on screen');
+    await pg.mouse.click(point[0], point[1]);
     await pg.waitForTimeout(1200);
-    await pg.evaluate(
-      (i) => window.__fire('bd_sampleInfo', { id: i, loading: true, missing: false }),
-      id,
-    );
+    await pg.evaluate((i) => {
+      window.__fire?.('bd_sampleInfo', { id: i, loading: true, missing: false });
+    }, id);
     await pg.waitForTimeout(200);
     const change = await maxChange(pg, await waveBox(pg), 300);
     await pg.screenshot({ path: `${OUT}/plugin-convolver-spinner.png` });
     await close();
     return [change > 40, { panelPixelChangeIn300ms: change }];
   },
-  /** Plugin (Logic): the Recorder's button records in the processor (the page has no audio there), and stopping
-   * hands the take over; SampleGen's generated sound goes to the processor (which saves it as a file), and a SampleGen
-   * whose sound is already a file is not generated again. */
+  /** Plugin: the Recorder records in the processor; SampleGen's sound goes to the processor as a
+   * file, and a SampleGen whose sound is already a file is not generated again. */
   async 'plugin-recorder-samplegen'(errors: string[]) {
     const { pg, close } = await openPlugin(
       plugPatch([
@@ -210,14 +224,17 @@ export const pluginSamplesTests: Record<string, RegressionTest> = {
     await pg.mouse.click(bx, by - 3 * grid);
     await pg.waitForTimeout(300);
     const sent = await pg.evaluate(() =>
-      window.__sent.map((x) => ({
-        id: x.id,
-        v: x.id === 'bd_sampleData' ? { id: x.v.id, n: x.v.data.length, sr: x.v.sampleRate } : x.v,
-      })),
+      (window.__sent ?? []).map((message) => {
+        if (message.id !== 'bd_sampleData') return { id: message.id, v: message.v as SentValue };
+        const data = message.v as { id: number; data: ArrayLike<number>; sampleRate: number };
+        return { id: message.id, v: { id: data.id, n: data.data.length, sr: data.sampleRate } };
+      }),
     );
     await close();
-    const rec = sent.filter((x) => x.id === 'bd_record').map((x) => x.v);
-    const gen = sent.filter((x) => x.id === 'bd_sampleData').map((x) => x.v);
+    const rec = sent.filter((x) => x.id === 'bd_record').map((x) => x.v as SentValue);
+    const gen = sent
+      .filter((x) => x.id === 'bd_sampleData')
+      .map((x) => x.v as { id: number; n: number; sr: number });
     const ok =
       rec.length === 2 &&
       rec[0].on === true &&
