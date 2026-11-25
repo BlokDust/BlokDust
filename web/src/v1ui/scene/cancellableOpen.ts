@@ -1,14 +1,17 @@
 // The options panel's open, made cancellable.
+import type { V1Block } from '../blocks/v1Block.ts';
+import type { V2OptionsPanel } from '../optionsTypes.ts';
 import { App, Point } from '../shim.ts';
 
-/** v1 OptionsPanel.Open, with the 400 ms wait before the panel pops open kept, so it can be called off:
- * `CancelOpen()` (a double click on a Stage block opens the Stage, not its panel; owner, 2026-11-14). */
-export function cancellableOpen(panel: any): void {
+/** v1 OptionsPanel.Open, keeping its 400 ms wait before the panel pops open so `CancelOpen()` can
+ * call it off (a double click on a Stage block opens the Stage, not its panel). */
+export function cancellableOpen(panel: V2OptionsPanel): void {
   let timer: ReturnType<typeof setTimeout> | undefined;
-  panel.Open = (block: any) => {
+  panel.Open = (block: V1Block) => {
     block.UpdateOptionsForm();
-    if (!block.OptionsForm) return;
-    if (panel.Scale == 1 && block !== panel.SelectedBlock) panel.Close();
+    const form = block.OptionsForm;
+    if (!form) return;
+    if (panel.Scale === 1 && block !== panel.SelectedBlock) panel.Close();
     panel.Opening = true;
     panel.SelectedBlock = block;
     App.MainScene.MainSceneDragger.Jump(

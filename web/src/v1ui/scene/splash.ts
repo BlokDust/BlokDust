@@ -1,78 +1,82 @@
 // v1's Splash: the start button and the intro, and the tour's first question.
-import { App, TWEEN } from '../shim.ts';
+import { App, type NullstoneEvent, TWEEN } from '../shim.ts';
 import { Splash } from '../ported/Splash';
 import { tourSkipped } from '../tutorial.ts';
 import { V1ScenePanels } from './panels.ts';
 
 export abstract class V1SceneSplash extends V1ScenePanels {
-  // ---- v1's Splash (owner, 2026-11-11), ported verbatim: the start button (v1 showed it on iOS; v2 everywhere, as a
-  // click must start the audio), then on START its intro (panels sliding to BLOKDUST) and the stage revealed. ----
+  // v1's Splash, ported verbatim: the start button (v1's iOS one, everywhere: a click starts the
+  // audio), then START's intro (panels sliding to BLOKDUST) revealing the stage.
   protected splash: Splash | null = null;
   /** Show the start button (web app only: not the plugin, embeds or the visual harness). */
   showSplash(): void {
-    const s = new Splash();
-    s.Init(this);
-    this.splash = s;
+    const startScreen = new Splash();
+    startScreen.Init(this);
+    this.splash = startScreen;
   }
-  /** START pressed: v1 Splash.StartButtonPressed (its audio unlock is v2's click). `done` once the stage shows. */
+  /** START pressed: v1 Splash.StartButtonPressed (its audio unlock is v2's click); `done` once the
+   * stage shows. */
   startSplash(done: () => void): void {
-    const s = this.splash;
-    if (!s) {
+    const startScreen = this.splash;
+    if (!startScreen) {
       done();
       return;
     }
     let finished = false;
-    this.splashDone = () => {
+    const finish = () => {
       if (finished) return;
       finished = true;
       done();
     };
-    s.AnimationFinished.on(() => {
+    this.splashDone = finish;
+    (startScreen.AnimationFinished as NullstoneEvent<unknown>).on(() => {
       if (finished) return;
-      s.TransitionOut();
-      this.splashDone!();
+      startScreen.TransitionOut();
+      finish();
     });
     const before = new Set(TWEEN.getAll());
-    s.StartButtonPressed();
+    startScreen.StartButtonPressed();
     this.splashTweens = TWEEN.getAll().filter((tween) => !before.has(tween));
     if (this.skipRequested) this.skipSplash();
   }
   protected splashDone: (() => void) | null = null;
   protected splashTweens: ReturnType<typeof TWEEN.getAll> = [];
   protected skipRequested = false;
-  /** A click or touch during the intro skips it (owner, PR #1 review 2026-11-12): its tweens stop, the splash is
-   * cleared and `done` runs now. Before the intro has begun (START pressed, engine still starting) it skips as soon
-   * as the intro starts. v1's pending timers find the splash finished and do nothing more. */
+  /** A press during the intro skips it: tweens stop, `done` runs now (v1's timers find it over);
+   * pressed before the intro begins (the engine still starting), it skips once it starts. */
   skipSplash(): void {
-    const s = this.splash;
-    if (!s || s.IsTransitionFinished) return;
+    const startScreen = this.splash;
+    if (!startScreen || startScreen.IsTransitionFinished) return;
     if (!this.splashDone) {
       this.skipRequested = true;
       return;
     }
     for (const tween of this.splashTweens) tween.stop();
     this.splashTweens = [];
-    s.IsAnimationFinished = true;
-    s.IsTransitionFinished = true;
+    startScreen.IsAnimationFinished = true;
+    startScreen.IsTransitionFinished = true;
     this.splashDone();
   }
-  /** v1 MainScene: on a first visit (no link opened), ask whether to take the tour (CHG-0035). Its welcome reads
-   * v1's "Welcome to BlokDust." even over the demo; taking the tour clears the stage as v1's did. */
+  /** v1 MainScene: a first visit (no link) asks about the tour (CHG-0035), welcoming with v1's
+   * "Welcome to BlokDust." even over the demo; taking it clears the stage as v1's did. */
   launchTour(): void {
     if (App.IsPlugin || tourSkipped()) return;
-    const text = (this.Tutorial as any).Text,
-      s2 = text.Splash2;
+    // the Tutorial's Text is this object (v1 Tutorial reads App.L10n.UI.Tutorial)
+    const text = App.L10n.UI.Tutorial,
+      secondSplash = text.Splash2;
     text.Splash2 = { ...text.Splash1 };
     const close = this.Tutorial.CloseSplash.bind(this.Tutorial);
     this.Tutorial.CloseSplash = () => {
-      text.Splash2 = s2;
+      text.Splash2 = secondSplash;
       this.Tutorial.CloseSplash = close;
       close();
     };
     this.Tutorial.CheckLaunch();
   }
-  /** v1 MainScene.Begin (Splash calls it on START: v1 faded its audio in there; v2's starts in the click). */
-  Begin(): void {}
+  /** v1 MainScene.Begin, which Splash calls on START (v1 faded its audio in). */
+  Begin(): void {
+    // v2's audio starts in the click
+  }
   /** True while the splash still covers the stage (input waits, as v1 MainScene._PointerDown). */
   get splashing(): boolean {
     return !!this.splash && !this.splash.IsAnimationFinished;

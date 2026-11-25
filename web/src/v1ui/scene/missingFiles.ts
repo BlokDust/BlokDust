@@ -2,39 +2,46 @@
 import { OptionSample } from '../ported/UI/Options/OptionSample';
 import type { V1Scene } from './v1Scene.ts';
 
-/** The track line of a sampler whose sound can't be found (main.ts markMissing). */
+/** The track line of a sampler whose sound is missing (app/samples/userSamples.ts markMissing). */
 const MISSING = 'MISSING · ';
-/**
- * Owner (2026-11-08, CHG-0005): a missing file is relinked by dropping a file on the block or with a button that opens
- * the file picker. While the selected sampler is missing, v1's LOAD NEW SAMPLE button reads LOCATE FILE and opens the
- * picker (host.loadSample: the browser's, or the plugin's native one, which keeps the region) instead of the sample
- * search. v1's option is ported verbatim, so its label is substituted while it draws.
- */
+
+type RowDraw = (this: OptionSample, ctx: CanvasRenderingContext2D, ...rest: unknown[]) => void;
+
+/** A missing file is relinked by dropping a file on the block or with LOCATE FILE (CHG-0005): v1's
+ * LOAD NEW SAMPLE, renamed while it draws, opening the file picker (host.loadSample) not search. */
 export function locateMissingFiles(scene: V1Scene): void {
-  const proto = OptionSample.prototype as any,
-    draw = proto.Draw;
-  proto.Draw = function (ctx: CanvasRenderingContext2D, ...rest: unknown[]) {
-    if (!String(this.Track ?? '').startsWith(MISSING)) return draw.call(this, ctx, ...rest);
-    ctx.fillText = function (t: string, x: number, y: number, w?: number) {
-      CanvasRenderingContext2D.prototype.fillText.call(
-        this,
-        t === 'LOAD NEW SAMPLE' ? 'LOCATE FILE' : t,
-        x,
-        y,
-        w,
-      );
+  const sampleRow = OptionSample.prototype,
+    // v1's own Draw, called below with each row as `this`
+    draw = Reflect.get(sampleRow, 'Draw') as RowDraw;
+  sampleRow.Draw = function (
+    this: OptionSample,
+    ctx: CanvasRenderingContext2D,
+    ...rest: unknown[]
+  ) {
+    const track = (this.Track as string | undefined) ?? '';
+    if (!track.startsWith(MISSING)) {
+      draw.call(this, ctx, ...rest);
+      return;
+    }
+    ctx.fillText = function (text: string, x: number, y: number, maxWidth?: number) {
+      const label = text === 'LOAD NEW SAMPLE' ? 'LOCATE FILE' : text;
+      CanvasRenderingContext2D.prototype.fillText.call(this, label, x, y, maxWidth);
     };
     try {
-      return draw.call(this, ctx, ...rest);
+      draw.call(this, ctx, ...rest);
     } finally {
-      delete (ctx as any).fillText;
+      // back to the prototype's fillText
+      Reflect.deleteProperty(ctx, 'fillText');
     }
   };
-  const search = scene.SoundcloudPanel as any,
+  // The picker is the browser's, or the plugin's native one, which keeps the region.
+  const search = scene.SoundcloudPanel,
     open = search.OpenPanel.bind(search);
   search.OpenPanel = () => {
-    const b = scene.OptionsPanel.SelectedBlock;
-    if (b && String(b.Params?.trackName ?? '').startsWith(MISSING)) scene.host.loadSample(b.Id);
+    const block = scene.OptionsPanel.SelectedBlock,
+      trackName = block?.Params.trackName;
+    if (block && typeof trackName === 'string' && trackName.startsWith(MISSING))
+      scene.host.loadSample(block.Id);
     else open();
   };
 }
