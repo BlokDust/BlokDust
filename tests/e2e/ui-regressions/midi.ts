@@ -40,10 +40,10 @@ export const midiTests: Record<string, RegressionTest> = {
     await page.waitForTimeout(1000);
     const names = () =>
       page.evaluate(() =>
-        window.__bd_probe.scene.OptionsPanel.Options.map((Option) =>
-          Option.Type === 'switches'
-            ? Option.Switches.map((Switche) => Switche.Name).join('+')
-            : Option.Name,
+        window.__bd_probe.scene.OptionsPanel.Options.map((row) =>
+          row.Type === 'switches'
+            ? (row.Switches ?? []).map((toggle) => toggle.Name).join('+')
+            : row.Name,
         ),
       );
     const before = await names();
@@ -145,12 +145,12 @@ export const midiTests: Record<string, RegressionTest> = {
         const optionsPanel = window.__bd_probe.scene.OptionsPanel,
           pr = window.__bd_probe.v1App.Metrics.PixelRatio,
           unit = window.__bd_probe.v1App.Unit;
-        const option = optionsPanel.Options.find((Option) => Option.Setting === 'deviceIndex');
+        const option = optionsPanel.Options.find((row) => row.Setting === 'deviceIndex');
         if (!option) throw new Error('no Device option');
         const y = (optionsPanel.Position.y + option.Position.y + option.Size.height / 2) / pr,
           device = (optionsPanel.SelectedBlock as V1BlockView).Params.device;
         return {
-          type: String(option.Type),
+          type: option.Type,
           device: typeof device === 'string' && device ? device : 'ALL',
           left: [(optionsPanel.Position.x + optionsPanel.Margin + 10 * unit) / pr, y],
           right: [

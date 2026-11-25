@@ -1,7 +1,7 @@
 // v1 objects the ported code leaves untyped, as the tests read them (casts in page code).
-import type { V1Block } from '../../../web/src/v1ui/blocks.ts';
+import type { V1Block } from '../../../web/src/v1ui/blocks/v1Block.ts';
 import type { Splash } from '../../../web/src/v1ui/ported/Splash.ts';
-import type { PatchesHost } from '../../../web/src/v1ui/patches.ts';
+import type { PatchesHost } from '../../../web/src/v1ui/patches/hosts.ts';
 import type { FreesoundSound } from '../../../web/src/patch/samples.ts';
 
 /** A v1 block's options form (v1 UpdateOptionsForm's result). */
@@ -51,7 +51,7 @@ interface Box {
   h: number;
 }
 
-/** PatchesPanel's private layout and host (web/src/v1ui/patches.ts), read by layout tests. */
+/** PatchesPanel's private layout and host (web/src/v1ui/patches/), read by layout tests. */
 export interface PatchesPanelInternals {
   host: PatchesHost;
   pageDy: number[];

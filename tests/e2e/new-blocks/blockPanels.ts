@@ -1,7 +1,6 @@
 // The Compressor's meter, the emitter's Offset row, the Power and Laser panels and the Pulse's
 // Delay (CHG-0014, CHG-0029), run by tests/e2e/new-blocks.ts.
 import type { Page } from 'playwright';
-import type { PrismOptionsPanel } from '../pageGlobals.ts';
 import {
   OUT,
   blk,
@@ -120,9 +119,7 @@ export const blockPanelTests: Tests = {
     await page.mouse.click(1100, 700);
     await page.waitForTimeout(500);
     await openPanel(page, 'e');
-    const guide = await page.evaluate(
-      () => (window.__bd_probe.scene.OptionsPanel as PrismOptionsPanel).PrismExits,
-    );
+    const guide = await page.evaluate(() => window.__bd_probe.scene.OptionsPanel.PrismExits);
     await page.screenshot({ path: `${OUT}/emitter-guide.png` });
     await page.close();
     const pass =

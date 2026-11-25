@@ -165,8 +165,8 @@ export const stagePlayTests: Tests = {
       const y =
         (optionsPanel.Position.y + openRow.Position.y + openRow.Size.height / 2) / pixelRatio;
       return {
-        rows: (optionsPanel.Options as OptionRow[]).map((each) => String(each.Type)),
-        type: String(openRow.Type),
+        rows: (optionsPanel.Options as OptionRow[]).map((each) => each.Type),
+        type: openRow.Type,
         text: openRow._Text,
         at: [
           (optionsPanel.Position.x + optionsPanel.Margin + optionsPanel.Range * 0.5) / pixelRatio,

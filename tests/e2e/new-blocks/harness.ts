@@ -84,7 +84,7 @@ export async function openPanel(page: Page, uid: string): Promise<void> {
 export const rows = (page: Page) =>
   page.evaluate(() =>
     (window.__bd_probe.scene.OptionsPanel.Options as OptionRow[]).map((row) => ({
-      type: String(row.Type),
+      type: row.Type,
       name: row.Name,
       setting: row.Setting,
       value: row.Value,

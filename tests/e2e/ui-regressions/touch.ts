@@ -293,7 +293,7 @@ export const touchTests: Record<string, RegressionTest> = {
       [2, r2.x0 + r2.w * 0.9, r2.y],
     ]);
     const sliders = await page.evaluate(() =>
-      window.__bd_probe.scene.OptionsPanel.Options.filter((Option) => Option.Type === 'slider').map(
+      window.__bd_probe.scene.OptionsPanel.Options.filter((row) => row.Type === 'slider').map(
         (option) => option.Position.x / window.__bd_probe.scene.OptionsPanel.Range,
       ),
     );

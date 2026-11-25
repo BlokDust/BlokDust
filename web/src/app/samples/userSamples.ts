@@ -52,9 +52,7 @@ export const SAMPLERS = new Set(['source.sample', 'source.granular', 'fx.convolv
 export function reverseSample(id: number, on: boolean): void {
   const b = model.get(id),
     v1Block = v1Blocks.get(id),
-    dur =
-      samples.get(id)?.duration ??
-      (v1Block?.PrimaryBuffer as AudioBuffer | null | undefined)?.duration;
+    dur = samples.get(id)?.duration ?? v1Block?.PrimaryBuffer?.duration;
   if (!b || !!b.params.reverse === on) return;
   const num = (key: string, fallback: number) => {
     const value = b.params[key];

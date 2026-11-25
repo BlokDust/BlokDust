@@ -63,7 +63,7 @@ export const noteTests: Tests = {
         (each) => each.Type === 'switches',
       );
       if (!row) throw new Error('the keyboard has no switches');
-      return row.Switches.map((each) => ({ name: each.Name, on: each.Selected }));
+      return (row.Switches ?? []).map((each) => ({ name: each.Name, on: each.Selected }));
     });
     await setParam(page, 'keysSetPitch', true);
     // Close the panel.

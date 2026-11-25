@@ -17,9 +17,9 @@ export const settingsTests: Record<string, RegressionTest> = {
     }
     await page.waitForTimeout(1200);
     const names = await page.evaluate(() =>
-      window.__bd_probe.scene.SettingsPanel.Options.filter(
-        (Option) => Option.Type !== 'hidden',
-      ).map((option) => option.Name),
+      window.__bd_probe.scene.SettingsPanel.Options.filter((row) => row.Type !== 'hidden').map(
+        (option) => option.Name,
+      ),
     );
     const tempo = () => page.evaluate(() => window.__bd_probe.scene.host.tempo());
     const before = await tempo();

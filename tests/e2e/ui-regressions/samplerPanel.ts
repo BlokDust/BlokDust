@@ -33,7 +33,7 @@ export const waveDrawn = (page: Page) =>
     const option = (
       optionsPanel.Options as (typeof optionsPanel.Options)[number][] | undefined
     )?.find((candidate) => candidate.Type.startsWith('wave'));
-    return option ? ((option.Waveform as number[] | undefined) ?? []).length : -2;
+    return option ? (option.Waveform ?? []).length : -2;
   });
 /** The open panel's wave option box in css px (for pixel checks). */
 export const waveBox = (page: Page) =>

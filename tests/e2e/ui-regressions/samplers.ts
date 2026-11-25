@@ -36,7 +36,7 @@ export const samplersTests: Record<string, RegressionTest> = {
     const result = await regionOf(page, id);
     const handles = await page.evaluate(() => {
       const option = window.__bd_probe.scene.OptionsPanel.Options.find(
-        (Option) => Option.Type === 'waveregion',
+        (row) => row.Type === 'waveregion',
       );
       return { mode: option?.Mode, handles: option?.Handles.length };
     });
@@ -129,7 +129,7 @@ export const samplersTests: Record<string, RegressionTest> = {
       await page.waitForTimeout(1000);
       const box = await page.evaluate(() => {
         const optionsPanel = window.__bd_probe.scene.OptionsPanel,
-          option = optionsPanel.Options.find((Option) => Option.Type === 'waveregion'),
+          option = optionsPanel.Options.find((row) => row.Type === 'waveregion'),
           pr = devicePixelRatio;
         if (!option) throw new Error('no waveregion option');
         return {
@@ -305,12 +305,12 @@ export const samplersTests: Record<string, RegressionTest> = {
     const slider = () =>
       page.evaluate(() => {
         const optionsPanel = window.__bd_probe.scene.OptionsPanel,
-          option = optionsPanel.Options.find((Option) => Option.Type === 'waveslider');
+          option = optionsPanel.Options.find((row) => row.Type === 'waveslider');
         return {
           max: option?.Max,
           value: option?.Value,
           spread: option?.Spread,
-          wave: option?.Waveform.length ?? 0,
+          wave: option?.Waveform?.length ?? 0,
           region: (optionsPanel.SelectedBlock as V1BlockView | undefined)?.Params.region,
         };
       });
@@ -318,7 +318,7 @@ export const samplersTests: Record<string, RegressionTest> = {
     // Drag the Spread slider's handle right by a quarter of its range (+1 s of the 0–4 range).
     const handle = await page.evaluate(() => {
       const optionsPanel = window.__bd_probe.scene.OptionsPanel,
-        option = optionsPanel.Options.find((Option) => Option.Name === 'Spread'),
+        option = optionsPanel.Options.find((row) => row.Name === 'Spread'),
         pr = devicePixelRatio;
       if (!option) throw new Error('no Spread option');
       return {

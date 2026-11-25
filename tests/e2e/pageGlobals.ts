@@ -12,10 +12,9 @@ import type {} from '../../web/src/app/patchFiles/openPatch.ts';
 import type {} from '../../web/src/app/stageBlock/fillStage.ts';
 import type {} from '../../web/src/patch/site.ts';
 import type { Command } from '../../web/src/engine/wasmEngine.ts';
-import type { AccountPage } from '../../web/src/v1ui/accountPage.ts';
-import type { PatchItem, PatchesHost } from '../../web/src/v1ui/patches.ts';
-import type { OptionsPanel } from '../../web/src/v1ui/ported/UI/OptionsPanel';
-import type { Option } from '../../web/src/v1ui/ported/UI/Options/Option';
+import type { AccountPage } from '../../web/src/v1ui/accountPage/accountPage.ts';
+import type { PatchItem, PatchesHost } from '../../web/src/v1ui/patches/hosts.ts';
+import type { PanelOption } from '../../web/src/v1ui/optionsTypes.ts';
 import type { SettingsPanel } from '../../web/src/v1ui/ported/UI/SettingsPanel';
 
 /** The value of a bd_commands message the page sends the plugin's processor. */
@@ -114,7 +113,7 @@ declare global {
   }
 }
 
-/** What release1Settings (web/src/v1ui/scene.ts) adds to v1's Settings panel at run time. */
+/** What release1Settings (web/src/v1ui/scene/settings/) adds to v1's Settings panel at run time. */
 export type AppSettingsPanel = SettingsPanel & {
   accountPage: AccountPage;
   /** An account control's centre in CSS px. */
@@ -124,11 +123,8 @@ export type AppSettingsPanel = SettingsPanel & {
   usageStatsSwitch(): { x: number; y: number; label: string } | null;
 };
 
-/** The Options panel with the Prism's exit lines drawn on it (web/src/v1ui/newBlockRows.ts). */
-export type PrismOptionsPanel = OptionsPanel & { PrismExits?: [number, number][] };
-
-/** What a live options row last drew, kept for tests (web/src/v1ui/newBlockRows.ts, noteBars.ts,
- * touchpadPanel.ts); each row kind fills its own fields. */
+/** What a live options row last drew, kept for tests (web/src/v1ui/newBlocks/liveRows.ts,
+ * noteBars.ts, touchpadPanel.ts); each row kind fills its own fields. */
 export interface RowShown {
   level?: number;
   reduction?: number;
@@ -156,13 +152,8 @@ export interface RowShown {
   rows?: number;
 }
 /** One of v1's options rows with what a live row drew; the Touchpad's row has its pads. */
-export type OptionRow = Omit<Option, 'DisplayConversion'> & {
-  /** The words a slider shows for a value (v1 leaves it untyped). */
-  DisplayConversion(value: number): unknown;
+export type OptionRow = PanelOption & {
   Shown?: RowShown;
-  Pads?: { x: number; y: number; w: number; h: number; note?: number }[];
-  /** The value a slider row last took from a modulator (the LFO's target). */
-  Followed?: number;
   /** An action button's words. */
   _Text?: string;
 };
@@ -176,7 +167,7 @@ export interface SelectedBlockView {
   Params: { user?: string; permalink?: string; trackName?: string };
 }
 
-/** The block whose options panel is open, as tests drive it (web/src/v1ui/blocks.ts V1Block). */
+/** The block whose options panel is open, as tests drive it (web/src/v1ui/blocks/v1Block.ts). */
 export interface OptionsBlock {
   Id: number;
   /** v1's SetParam: a slider's or switch's value. */
@@ -188,7 +179,7 @@ export interface OptionsBlock {
   RefreshOptionsPanel(): void;
   /** The note a Random Note or Chord last lit (web/src/v1ui/noteBars.ts). */
   __bdLit?: { note: number; until: number };
-  /** The LFO's targets (web/src/v1ui/newBlocks.ts). */
+  /** The LFO's targets (web/src/v1ui/newBlocks/lfo.ts). */
   LfoTargets?: { label: string }[];
 }
 

@@ -94,7 +94,7 @@ export const tourTests: Record<string, RegressionTest> = {
     const slider = await page.evaluate(() => {
       const optionsPanel = window.__bd_probe.scene.OptionsPanel,
         pr = window.__bd_probe.v1App.Metrics.PixelRatio,
-        index = optionsPanel.Options.findIndex((candidate) => String(candidate.Type) === 'slider');
+        index = optionsPanel.Options.findIndex((candidate) => candidate.Type === 'slider');
       const option = optionsPanel.Options[index];
       return [
         (optionsPanel.Position.x + optionsPanel.Margin + optionsPanel.Range * 0.3) / pr,

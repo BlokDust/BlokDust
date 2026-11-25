@@ -61,7 +61,7 @@ export const waveformTests: Record<string, RegressionTest> = {
           min: region.Min,
           max: region.Max,
           span: region.Max - region.Min,
-          wave: region.Waveform.length,
+          wave: region.Waveform?.length ?? 0,
           start: selectedBlock.Params.startPosition as number,
           end: selectedBlock.Params.endPosition as number,
           loopStart: selectedBlock.Params.loopStart as number,
@@ -219,8 +219,9 @@ export const waveformTests: Record<string, RegressionTest> = {
         const optionsPanel = window.__bd_probe.scene.OptionsPanel,
           region = optionsPanel.Options.find((x) => x.Type === 'waveregion');
         if (!region) throw new Error('no waveregion row');
-        const wave = region.Waveform,
-          peak = wave.indexOf(Math.max(...wave));
+        const wave = region.Waveform;
+        if (!wave) throw new Error('the waveregion row has no waveform');
+        const peak = wave.indexOf(Math.max(...wave));
         return {
           x: optionsPanel.Position.x + optionsPanel.Margin,
           y: optionsPanel.Position.y + region.Position.y + region.Size.height / 2,
@@ -314,8 +315,9 @@ export const waveformTests: Record<string, RegressionTest> = {
         const optionsPanel = window.__bd_probe.scene.OptionsPanel,
           region = optionsPanel.Options.find((x) => x.Type === 'waveregion');
         if (!region) throw new Error('no waveregion row');
-        const wave = region.Waveform,
-          peak = wave.indexOf(Math.max(...wave));
+        const wave = region.Waveform;
+        if (!wave) throw new Error('the waveregion row has no waveform');
+        const peak = wave.indexOf(Math.max(...wave));
         return {
           x: optionsPanel.Position.x + optionsPanel.Margin,
           y: optionsPanel.Position.y + region.Position.y + region.Size.height / 2,

@@ -67,8 +67,8 @@ export const lfoTests: Tests = {
         const row = (window.__bd_probe.scene.OptionsPanel.Options as OptionRow[]).find(
           (option) => option.Setting === 'lfoTarget',
         );
-        if (!row) throw new Error('the LFO has no Target row');
-        return String(row.DisplayConversion(row.Value));
+        if (!row?.DisplayConversion) throw new Error('the LFO has no Target row');
+        return row.DisplayConversion(row.Value);
       });
     const first = await target();
     const list = await panelPage.evaluate(() =>

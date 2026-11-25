@@ -13,7 +13,7 @@ import {
 } from './harness.ts';
 import { openPlugin, plugPatch } from './pluginPage.ts';
 import type { CommandsMessage } from '../pageGlobals.ts';
-import type { ParametricOption, V1BlockView } from './v1Views.ts';
+import type { V1BlockView } from './v1Views.ts';
 
 export const optionsTests: Record<string, RegressionTest> = {
   /** CHG-0004: Tempo Sync on Emitter, Pulse, Laser and Stereo Delay swaps their timing rows for
@@ -31,10 +31,10 @@ export const optionsTests: Record<string, RegressionTest> = {
     );
     const names = () =>
       page.evaluate(() =>
-        window.__bd_probe.scene.OptionsPanel.Options.map((Option) =>
-          Option.Type === 'switches'
-            ? Option.Switches.map((Switche) => Switche.Name).join('+')
-            : Option.Name,
+        window.__bd_probe.scene.OptionsPanel.Options.map((row) =>
+          row.Type === 'switches'
+            ? (row.Switches ?? []).map((toggle) => toggle.Name).join('+')
+            : row.Name,
         ),
       );
     const rows = async (type: string) => {
@@ -45,7 +45,7 @@ export const optionsTests: Record<string, RegressionTest> = {
       await page.waitForTimeout(1000);
       return names();
     };
-    const set = (param: string, value: unknown) =>
+    const set = (param: string, value: number | boolean) =>
       page.evaluate(
         ([key, val]) => {
           (window.__bd_probe.scene.OptionsPanel.SelectedBlock as V1BlockView).SetParam(key, val);
@@ -197,7 +197,7 @@ export const optionsTests: Record<string, RegressionTest> = {
         return {
           open: optionsPanel.Scale > 0,
           name: (optionsPanel.SelectedBlock as V1BlockView | undefined)?.OptionsForm?.name,
-          rows: optionsPanel.Options.map((Option) => Option.Name),
+          rows: optionsPanel.Options.map((row) => row.Name),
         };
       });
       await pg.evaluate(() => {
@@ -254,9 +254,9 @@ export const optionsTests: Record<string, RegressionTest> = {
         const params: Record<string, unknown> = {
           ...(optionsPanel.SelectedBlock as V1BlockView | undefined)?.Params,
         };
-        const curve = option as (typeof option & ParametricOption) | undefined;
+        const curve = option;
         return {
-          types: optionsPanel.Options.map((x) => String(x.Type)),
+          types: optionsPanel.Options.map((x) => x.Type),
           params,
           buttons: typeRow?.Buttons.map((b) => [
             (optionsPanel.Position.x + optionsPanel.Margin + b.Position.x + b.Size.width / 2) / pr,

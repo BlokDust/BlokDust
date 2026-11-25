@@ -15,7 +15,7 @@ import {
   bd,
   galleryItems,
 } from './harness.ts';
-import type { GalleryRow } from '../../../web/src/v1ui/patches.ts';
+import type { GalleryRow } from '../../../web/src/v1ui/patches/hosts.ts';
 
 export async function insertedPatches({
   alice,

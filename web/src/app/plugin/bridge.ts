@@ -1,5 +1,4 @@
 // Messages from the plugin's processor, and what the page tells it back.
-import type { V1Block } from '../../v1ui/blocks/v1Block.ts';
 import { appKey, setAppKey } from '../../account/appKey.ts';
 import * as account from '../../account/client.ts';
 import { CommandType } from '../../engine/wasmEngine.ts';
@@ -56,8 +55,7 @@ function userIsDraggingAnOption(): boolean {
 
 /** Dust moves (host automation, MIDI CC): the block takes the value; its open panel shows it. */
 function onParamValues(message: ParamValuesMessage): void {
-  const openBlock =
-    scene.OptionsPanel.Scale > 0 ? (scene.OptionsPanel.SelectedBlock as V1Block) : null;
+  const openBlock = scene.OptionsPanel.Scale > 0 ? scene.OptionsPanel.SelectedBlock : null;
   // Dust moves the outer world's blocks, even while a Stage is open.
   const blocks = inside ? inside.outer.model : model;
   const panelBlocks = inside ? inside.outer.v1Blocks : v1Blocks;

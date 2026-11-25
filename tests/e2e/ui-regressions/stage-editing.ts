@@ -17,7 +17,7 @@ import { drawnPoints, insidePolygon, selectionRing } from '../../../web/src/stag
 import type { GeometryLayer } from '../../../web/src/generated/blocks.gen.ts';
 import type { Metrics } from '../../../web/src/stage/metrics.ts';
 import type { Theme } from '../../../web/src/generated/palettes.gen.ts';
-import type { PatchItem } from '../../../web/src/v1ui/patches.ts';
+import type { PatchItem } from '../../../web/src/v1ui/patches/hosts.ts';
 
 export const stageEditingTests: Record<string, RegressionTest> = {
   /** CreateNew (+, then ✓) clears the stage (v1 MainScene.ResetScene) and closes: v1 checks its

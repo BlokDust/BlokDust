@@ -61,7 +61,7 @@ export const dustTests: Record<string, RegressionTest> = {
     // The first slider's track, right-clicked (css px from the panel's own geometry).
     const [sx, sy] = await pg.evaluate(() => {
       const optionsPanel = window.__bd_probe.scene.OptionsPanel,
-        sl = optionsPanel.Options.find((Option) => Option.Type === 'slider'),
+        sl = optionsPanel.Options.find((row) => row.Type === 'slider'),
         pr = devicePixelRatio;
       if (!sl) throw new Error('no slider in the panel');
       return [
@@ -127,7 +127,7 @@ export const dustTests: Record<string, RegressionTest> = {
     await pg.waitForTimeout(1200);
     const spots = await pg.evaluate(() => {
       const optionsPanel = window.__bd_probe.scene.OptionsPanel,
-        option = optionsPanel.Options.find((Option) => Option.Type === 'parametric'),
+        option = optionsPanel.Options.find((row) => row.Type === 'parametric'),
         pr = devicePixelRatio;
       if (!option) throw new Error('no filter graph in the panel');
       const hx = optionsPanel.Position.x + optionsPanel.Margin + option.Handles[1].Position.x,
@@ -194,12 +194,12 @@ export const dustTests: Record<string, RegressionTest> = {
     const panel = () =>
       pg.evaluate(() => {
         const optionsPanel = window.__bd_probe.scene.OptionsPanel;
-        return optionsPanel.Options.map((Option) =>
-          Option.Type === 'slider'
-            ? [Option.Setting, +Option.Value.toFixed(3)]
-            : Option.Type === 'parametric'
-              ? ['gain', +Option.Handles[1].YValue.toFixed(3)]
-              : [Option.Type],
+        return optionsPanel.Options.map((row) =>
+          row.Type === 'slider'
+            ? [row.Setting, +row.Value.toFixed(3)]
+            : row.Type === 'parametric'
+              ? ['gain', +row.Handles[1].YValue.toFixed(3)]
+              : [row.Type],
         );
       });
     const [bx, by] = await blockAt(pg, key);
@@ -226,7 +226,7 @@ export const dustTests: Record<string, RegressionTest> = {
       let i = 0;
       i < 3 &&
       !(await pg.evaluate(() =>
-        window.__bd_probe.scene.OptionsPanel.Options.some((Option) => Option.Type === 'parametric'),
+        window.__bd_probe.scene.OptionsPanel.Options.some((row) => row.Type === 'parametric'),
       ));
       i++
     ) {

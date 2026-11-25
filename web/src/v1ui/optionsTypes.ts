@@ -65,6 +65,10 @@ export interface PanelOption {
   Position: Point;
   Size: Size;
   Selected: boolean;
+  /** Sample rows: the region reversed (v1 Option.Mode). */
+  Mode: boolean;
+  /** Granular's grain spread around its position (v1 Option.Spread). */
+  Spread: number;
   HandleRoll: boolean[];
   SubHandleRoll: boolean[];
   /** Parametric, ADSR and wave region rows. */

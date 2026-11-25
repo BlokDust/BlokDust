@@ -12,7 +12,7 @@ import {
   state,
   type Tests,
 } from './harness.ts';
-import type { OptionsBlock, PrismOptionsPanel } from '../pageGlobals.ts';
+import type { OptionsBlock } from '../pageGlobals.ts';
 
 export const powerGateTests: Tests = {
   // CHG-0015 (SPEC-SIMULATION R2d): a Chance at 100% switches the Tone beside it on and holds it
@@ -99,9 +99,7 @@ export const powerGateTests: Tests = {
     const sounding = (await state(page)).rms > 0.001;
     await openPanel(page, 'pr');
     await page.waitForTimeout(300);
-    const exits = await page.evaluate(
-      () => (window.__bd_probe.scene.OptionsPanel as PrismOptionsPanel).PrismExits,
-    );
+    const exits = await page.evaluate(() => window.__bd_probe.scene.OptionsPanel.PrismExits);
     const names = (await rows(page)).map((row) => row.name);
     await page.screenshot({ path: `${OUT}/prism.png` });
     await page.close();
