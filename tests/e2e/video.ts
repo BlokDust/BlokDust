@@ -1,4 +1,4 @@
-// pnpm test:video [--only name,name] [--chromium]: video export (CHG-0022, SPEC-SHARING-VIDEO-EXPORT)
+// pnpm test:video [--only a,b] [--chromium]: video export (CHG-0022, SPEC-SHARING-VIDEO-EXPORT)
 // in Google Chrome (its H.264 + AAC encoders) unless --chromium; the MP4 is checked with ffprobe.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';

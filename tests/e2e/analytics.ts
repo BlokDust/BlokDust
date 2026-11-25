@@ -1,13 +1,5 @@
-// pnpm test:analytics — CHG-0026 acceptance (SPEC-SHARING-USAGE-ANALYTICS), black-box through the local Worker
-// (`wrangler dev`, local D1) and the real app in Chromium:
-//   R3  POST /api/events accepts only the listed events and values; bad batches are refused; size and count limits
-//   R5  the kill switch (ANALYTICS_RATE=0): the page is told 0 and the Worker records nothing
-//   R6  the Worker records shares itself; a client can't send a server-only event
-//   R7  the About tab's switch turns the website's events off, and they stay off after a reload
-//   R8  plugin events only with an install id, from a plugin surface
-//   R10 the dashboard: 404 unconfigured, 403 without a valid Access token, 200 with one (signed by a local stand-in
-//       for Access), and its data from a mock SQL API
-//   R11 the dashboard's CSP
+// pnpm test:analytics: CHG-0026 acceptance (SPEC-SHARING-USAGE-ANALYTICS R2–R11), black-box through
+// the local Worker (wrangler dev, local D1, a stand-in for Access and the SQL API) and Chromium.
 import { createServer, type Server } from 'node:http';
 import { generateKeyPairSync, createSign, randomUUID, type KeyObject } from 'node:crypto';
 import { chromium, type Page } from 'playwright';
@@ -21,13 +13,31 @@ function check(name: string, ok: boolean, detail?: unknown) {
     `${ok ? 'PASS' : 'FAIL'} ${name}${detail !== undefined ? ` ${JSON.stringify(detail).slice(0, 300)}` : ''}`,
   );
 }
+/** What POST /api/events answers. */
+interface EventsReply {
+  accepted?: number;
+  off?: boolean;
+}
+/** A batch the app sent to /api/events. */
+interface SentBatch {
+  events: { e: string }[];
+  surface?: string;
+  v?: unknown;
+  install?: unknown;
+}
+/** The dashboard's data endpoint's answer. */
+interface DashboardData {
+  configured?: boolean;
+  results?: { totals?: { rows?: unknown[] }; daws?: { rows?: { host?: string }[] } };
+}
 const post = async (base: string, body: unknown, raw?: string) => {
   const response = await fetch(`${base}/api/events`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: raw ?? JSON.stringify(body),
   });
-  return { status: response.status, json: (await response.json().catch(() => null)) as any };
+  const json = (await response.json().catch(() => null)) as EventsReply | null;
+  return { status: response.status, json };
 };
 const batch = (events: unknown[], extra: Record<string, unknown> = {}) => ({
   surface: 'web',
@@ -49,8 +59,8 @@ async function startMocks(): Promise<Mocks> {
   const kid = randomUUID(),
     sql: string[] = [];
   const server = createServer((req, res) => {
-    const u = new URL(req.url ?? '/', 'http://x');
-    if (u.pathname === '/cdn-cgi/access/certs') {
+    const requestUrl = new URL(req.url ?? '/', 'http://x');
+    if (requestUrl.pathname === '/cdn-cgi/access/certs') {
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(
         JSON.stringify({
@@ -59,9 +69,9 @@ async function startMocks(): Promise<Mocks> {
       );
       return;
     }
-    if (u.pathname === '/sql' && req.method === 'POST') {
+    if (requestUrl.pathname === '/sql' && req.method === 'POST') {
       let body = '';
-      req.on('data', (d) => (body += d));
+      req.on('data', (chunk) => (body += chunk));
       req.on('end', () => {
         sql.push(body);
         if (req.headers.authorization !== 'Bearer test-token') {
@@ -99,7 +109,7 @@ async function startMocks(): Promise<Mocks> {
     kid,
   };
 }
-const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url');
+const b64 = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64url');
 function jwt(mocks: Mocks, claims: Record<string, unknown>): string {
   const head = b64({ alg: 'RS256', kid: mocks.kid, typ: 'JWT' }),
     body = b64(claims);
@@ -125,7 +135,7 @@ async function main() {
   const mocks = await startMocks();
   const browser = await chromium.launch();
   try {
-    // ---- the default local Worker: analytics on, dashboard open locally (ADMIN_LOCAL=1, wrangler.jsonc) ----
+    // The default local Worker: analytics on, dashboard open (ADMIN_LOCAL=1, wrangler.jsonc).
     const localServer = await startLocal({
       name: 'analytics',
       vars: {
@@ -138,7 +148,7 @@ async function main() {
     const base = localServer.url;
 
     // R3: accepted and refused
-    let r = await post(
+    let reply = await post(
       base,
       batch([
         { e: 'session_start', s: { referrer: 'example.com' } },
@@ -148,33 +158,33 @@ async function main() {
     );
     check(
       'R3 known events are accepted, unknown dropped',
-      r.status === 200 && r.json?.accepted === 2,
-      r,
+      reply.status === 200 && reply.json?.accepted === 2,
+      reply,
     );
-    r = await post(base, batch([{ e: 'patch_shared', s: { kind: 'new' } }]));
+    reply = await post(base, batch([{ e: 'patch_shared', s: { kind: 'new' } }]));
     check(
       'R6 a client cannot send a server-only event',
-      r.status === 200 && r.json?.accepted === 0,
-      r,
+      reply.status === 200 && reply.json?.accepted === 0,
+      reply,
     );
-    r = await post(base, { ...batch([]), surface: 'desktop' });
-    check('R3 unknown surface → 400', r.status === 400, r);
-    r = await post(base, { ...batch([]), v: '<script>' });
-    check('R3 bad version → 400', r.status === 400, r);
-    r = await post(base, batch(Array.from({ length: 51 }, () => ({ e: 'keyboard_played' }))));
-    check('R3 more than 50 events → 400', r.status === 400, r);
-    r = await post(
+    reply = await post(base, { ...batch([]), surface: 'desktop' });
+    check('R3 unknown surface → 400', reply.status === 400, reply);
+    reply = await post(base, { ...batch([]), v: '<script>' });
+    check('R3 bad version → 400', reply.status === 400, reply);
+    reply = await post(base, batch(Array.from({ length: 51 }, () => ({ e: 'keyboard_played' }))));
+    check('R3 more than 50 events → 400', reply.status === 400, reply);
+    reply = await post(
       base,
       null,
       JSON.stringify(batch([{ e: 'keyboard_played', s: { pad: 'x'.repeat(9000) } }])),
     );
-    check('R3 a batch over 8 kB → 413', r.status === 413, r);
-    r = await post(base, null, '{not json');
-    check('R3 bad JSON → 400', r.status === 400, r);
+    check('R3 a batch over 8 kB → 413', reply.status === 413, reply);
+    reply = await post(base, null, '{not json');
+    check('R3 bad JSON → 400', reply.status === 400, reply);
     const get = await fetch(`${base}/api/events`);
     check('R3 GET → 405', get.status === 405, get.status);
     // R8
-    r = await post(
+    reply = await post(
       base,
       batch([
         {
@@ -183,8 +193,8 @@ async function main() {
         },
       ]),
     );
-    check('R8 plugin_active from the web is dropped', r.json?.accepted === 0, r);
-    r = await post(base, {
+    check('R8 plugin_active from the web is dropped', reply.json?.accepted === 0, reply);
+    reply = await post(base, {
       surface: 'vst3',
       v: '2.0.2',
       install: randomUUID(),
@@ -198,16 +208,16 @@ async function main() {
     });
     check(
       'R8 plugin_active from a plugin with an install id is accepted',
-      r.json?.accepted === 1,
-      r,
+      reply.json?.accepted === 1,
+      reply,
     );
-    r = await post(base, {
+    reply = await post(base, {
       surface: 'vst3',
       v: '2.0.2',
       install: 'not-an-id!',
       events: [{ e: 'plugin_active', s: { kind: 'fx' } }],
     });
-    check('R8 a malformed install id is not an install', r.json?.accepted === 0, r);
+    check('R8 a malformed install id is not an install', reply.json?.accepted === 0, reply);
 
     // R5: the page is told the rate
     const html = await (await fetch(`${base}/`)).text();
@@ -215,11 +225,13 @@ async function main() {
       'R5 the page carries the rate',
       html.includes('<meta name="blokdust-analytics" content="1">'),
     );
-    const cfg = await (await fetch(`${base}/api/config`)).json();
+    const cfg = (await (await fetch(`${base}/api/config`)).json()) as {
+      analytics?: { rate?: number };
+    };
     check('R5 /api/config carries the rate', cfg.analytics?.rate === 1, cfg.analytics);
 
-    // R6: the Worker's own events (shares, Freesound searches) never change the response: a search without a
-    // Freesound key still answers as before (and is recorded as freesound_error). Shares: `pnpm test:sharing`.
+    // R6: the Worker's own events never change a response: a search without a Freesound key answers
+    // as before (recorded as freesound_error). Shares: `pnpm test:sharing`.
     const fs = await fetch(`${base}/api/freesound/search?q=bell&max=10`);
     check(
       'R6 a recorded Freesound error answers as before',
@@ -243,26 +255,27 @@ async function main() {
       csp,
     );
     response = await fetch(`${base}/admin/analytics/data?days=7`);
-    const data = await response.json();
+    const data = (await response.json()) as DashboardData;
     check(
       'R10 dashboard data from the SQL API',
       data.configured === true &&
         data.results?.totals?.rows?.length === 2 &&
-        data.results?.daws?.rows?.[0]?.host === 'Ableton Live 12',
+        data.results.daws?.rows?.at(0)?.host === 'Ableton Live 12',
       data.results?.totals,
     );
     check(
       'R10 queries name only the dataset and the day range',
       mocks.sql.length > 0 &&
         mocks.sql.every(
-          (q) => q.includes('FROM blokdust_events_dev') && q.includes("INTERVAL '7' DAY"),
+          (query) =>
+            query.includes('FROM blokdust_events_dev') && query.includes("INTERVAL '7' DAY"),
         ),
       mocks.sql[0],
     );
     response = await fetch(`${base}/admin/analytics/data?days=7;DROP`);
     check(
       'R10 a bad day count falls back to 7',
-      response.status === 200 && mocks.sql.at(-1)!.includes("INTERVAL '7' DAY"),
+      response.status === 200 && (mocks.sql.at(-1) ?? '').includes("INTERVAL '7' DAY"),
     );
 
     // R11: client-sent text is shown as text in the browser
@@ -287,11 +300,11 @@ async function main() {
     // ---- R7 + R2: the app sends events, and the About switch turns them off ----
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
     await ctx.route('https://cdn.freesound.org/**', (rt) => rt.fulfill({ status: 404, body: '' }));
-    const sent: any[] = [];
+    const sent: SentBatch[] = [];
     ctx.on('request', (rq) => {
       if (rq.url().endsWith('/api/events') && rq.method() === 'POST') {
         try {
-          sent.push(JSON.parse(rq.postData() ?? '{}'));
+          sent.push(JSON.parse(rq.postData() ?? '{}') as SentBatch);
         } catch {
           /* */
         }
@@ -305,10 +318,10 @@ async function main() {
       timeout: 20000,
     });
     await eventsFrom(app);
-    const names = sent.flatMap((b) => b.events.map((value: any) => value.e));
+    const names = sent.flatMap((b) => b.events.map((event) => event.e));
     check(
       'R2 the app sends session_start, patch_opened and audio_started',
-      ['session_start', 'patch_opened', 'audio_started'].every((n) => names.includes(n)),
+      ['session_start', 'patch_opened', 'audio_started'].every((name) => names.includes(name)),
       names,
     );
     check(
@@ -330,9 +343,9 @@ async function main() {
     }
     await app.waitForTimeout(1200);
     const about = await app.evaluate(() => {
-      const m = window.__bd_probe.scene.SettingsPanel.MenuItems[2],
+      const aboutItem = window.__bd_probe.scene.SettingsPanel.MenuItems[2],
         pr = window.__bd_probe.v1App.Metrics.PixelRatio;
-      return [m.Position.x / pr, 30];
+      return [aboutItem.Position.x / pr, 30];
     });
     await app.waitForTimeout(1200);
     await app.mouse.move(about[0], about[1]);
@@ -379,11 +392,11 @@ async function main() {
       vars: { TURNSTILE_SECRET: '1x0000000000000000000000000000000AA', ANALYTICS_RATE: '0' },
     });
     servers.push(off);
-    r = await post(off.url, batch([{ e: 'session_start' }]));
+    reply = await post(off.url, batch([{ e: 'session_start' }]));
     check(
       'R5 kill switch: the Worker records nothing',
-      r.status === 200 && r.json?.accepted === 0 && r.json?.off === true,
-      r,
+      reply.status === 200 && reply.json?.accepted === 0 && reply.json.off === true,
+      reply,
     );
     check(
       'R5 kill switch: the page is told 0',
@@ -448,13 +461,13 @@ async function main() {
     JSON.stringify({
       checked: results.length,
       passed: results.length - failed.length,
-      failed: failed.map((f) => f.name),
+      failed: failed.map((failure) => failure.name),
     }),
   );
   if (failed.length) process.exit(1);
 }
 
-main().catch((e) => {
-  console.error(e);
+main().catch((error: unknown) => {
+  console.error(error);
   process.exit(1);
 });

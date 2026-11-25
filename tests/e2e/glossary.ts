@@ -43,8 +43,9 @@ try {
         styleAttributes: document.querySelectorAll('[style]').length,
         fits: document.documentElement.scrollWidth <= window.innerWidth,
         ids: Array.from(document.querySelectorAll('[id]'), (node) => node.id),
-        anchors: Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]'), (node) =>
-          node.getAttribute('href')!,
+        anchors: Array.from(
+          document.querySelectorAll<HTMLAnchorElement>('a[href]'),
+          (node) => node.getAttribute('href') ?? '',
         ),
         canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href'),
         description: document
@@ -52,13 +53,16 @@ try {
           ?.getAttribute('content')
           ?.trim(),
         og: Object.fromEntries(
-          Array.from(document.querySelectorAll('meta[property^="og:"]'), (node) => [
-            node.getAttribute('property'),
-            node.getAttribute('content'),
-          ]),
+          Array.from(
+            document.querySelectorAll('meta[property^="og:"]'),
+            (node): [string, string | null] => [
+              node.getAttribute('property') ?? '',
+              node.getAttribute('content'),
+            ],
+          ),
         ),
         pictures: Array.from(document.images, (img) => ({
-          src: img.getAttribute('src')!,
+          src: img.getAttribute('src') ?? '',
           alt: img.getAttribute('alt'),
           loaded: img.naturalWidth > 0,
         })),
@@ -78,7 +82,7 @@ try {
       descriptions.add(info.description);
       assert.equal(info.og['og:description'], info.description, path);
       assert(info.og['og:image'] && info.og['og:image:alt'], path);
-      const og = new URL(info.og['og:image']);
+      const og = new URL(info.og['og:image'] ?? '');
       assert.equal(og.origin, origin);
       images.add(og.pathname);
       for (const picture of info.pictures)
@@ -221,7 +225,7 @@ try {
       '0px',
     );
     assert.equal(
-      await page.locator('.intro').evaluate((p) => getComputedStyle(p).marginBlockEnd),
+      await page.locator('.intro').evaluate((intro) => getComputedStyle(intro).marginBlockEnd),
       '30px',
     );
     const relatedChip = page.getByRole('region', { name: 'Related' }).getByRole('link').first();
