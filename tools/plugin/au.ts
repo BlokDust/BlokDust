@@ -7,11 +7,20 @@ import { AU, FX_AU, PLUGINVAL, run } from './paths.ts';
 import { build } from './build.ts';
 import { expected, hostRender } from './hostRender.ts';
 
+/** One AU's results, in the order they are found. */
+interface AuReport {
+  plugin: string;
+  auval: string;
+  pluginval: string;
+  render: { ok: boolean; audioHash: string | undefined };
+}
+
 export function au(keep = false) {
   if (process.platform !== 'darwin') throw new Error('AU is macOS only');
   if (!existsSync(AU) || !existsSync(FX_AU)) build();
   const dir = join(homedir(), 'Library/Audio/Plug-Ins/Components');
-  // type/subtype/manufacturer = AU_MAIN_TYPE / PLUGIN_CODE / PLUGIN_MANUFACTURER_CODE (plugin/CMakeLists.txt)
+  // AU type, subtype, maker: AU_MAIN_TYPE, PLUGIN_CODE and PLUGIN_MANUFACTURER_CODE in
+  // plugin/CMakeLists.txt
   const plugins = [
     {
       src: AU,
@@ -28,42 +37,46 @@ export function au(keep = false) {
       fixture: 'tests/golden/fx-demo.json',
     },
   ];
-  for (const p of plugins)
-    if (existsSync(p.dest) && !keep)
-      throw new Error(`${p.dest} already exists; not touching an install this tool did not make`);
+  for (const unit of plugins)
+    if (existsSync(unit.dest) && !keep)
+      throw new Error(
+        `${unit.dest} already exists; not touching an install this tool did not make`,
+      );
   // macOS caches the AU list
   const refresh = () => run('killall', ['-9', 'AudioComponentRegistrar'], true);
-  const results: any[] = [];
+  const results: AuReport[] = [];
   try {
-    for (const p of plugins) {
-      rmSync(p.dest, { recursive: true, force: true });
-      cpSync(p.src, p.dest, { recursive: true });
+    for (const install of plugins) {
+      rmSync(install.dest, { recursive: true, force: true });
+      cpSync(install.src, install.dest, { recursive: true });
     }
     refresh();
-    for (const p of plugins) {
-      const r: any = { plugin: p.id };
-      const auval = run('auval', ['-v', ...p.auval], true);
-      r.auval = auval.stdout.includes('AU VALIDATION SUCCEEDED') ? 'pass' : 'fail';
-      if (r.auval !== 'pass') console.error(auval.stdout.split('\n').slice(-30).join('\n'));
+    for (const component of plugins) {
+      const auval = run('auval', ['-v', ...component.auval], true);
+      const auvalResult = auval.stdout.includes('AU VALIDATION SUCCEEDED') ? 'pass' : 'fail';
+      if (auvalResult !== 'pass') console.error(auval.stdout.split('\n').slice(-30).join('\n'));
       const pv = run(
         PLUGINVAL,
-        ['--strictness-level', '5', '--skip-gui-tests', '--validate', p.dest],
+        ['--strictness-level', '5', '--skip-gui-tests', '--validate', component.dest],
         true,
       );
-      r.pluginval = pv.status === 0 ? 'pass' : `fail (exit ${pv.status})`;
       if (pv.status !== 0)
         console.error(`${pv.stdout}${pv.stderr}`.split('\n').slice(-25).join('\n'));
-      // The installed AU in a JUCE host with its default patch (AU state is a property list): must equal native.
-      const got = hostRender(p.id, p.fixture, ['--no-state']);
-      r.render = {
-        ok: got.audioHash === expected(p.fixture).audioHash,
-        audioHash: got.audioHash ?? got.error,
-      };
-      results.push(r);
+      // The installed AU in a JUCE host with its default patch (a property list) must equal native.
+      const got = hostRender(component.id, component.fixture, ['--no-state']);
+      results.push({
+        plugin: component.id,
+        auval: auvalResult,
+        pluginval: pv.status === 0 ? 'pass' : `fail (exit ${pv.status})`,
+        render: {
+          ok: got.audioHash === expected(component.fixture).audioHash,
+          audioHash: got.audioHash ?? got.error,
+        },
+      });
     }
   } finally {
     if (!keep) {
-      for (const p of plugins) rmSync(p.dest, { recursive: true, force: true });
+      for (const installed of plugins) rmSync(installed.dest, { recursive: true, force: true });
       refresh();
     }
   }

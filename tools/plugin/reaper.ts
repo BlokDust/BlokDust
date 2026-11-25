@@ -65,41 +65,41 @@ export async function reaperMac() {
       fx: 'VST3i:BlokDust',
       mode: 'play',
       seconds: 6,
-      ok: (r: any) => r.loaded && r.peak > 0.001,
+      ok: (report: any) => report.loaded && report.peak > 0.001,
     },
     {
       name: 'MPE MIDI item plays',
       fx: 'VST3i:BlokDust',
       mode: 'mpe',
       seconds: 4,
-      ok: (r: any) => r.loaded && r.midiItem && r.peak > 0.001,
+      ok: (report: any) => report.loaded && report.midiItem && report.peak > 0.001,
     },
     {
       name: 'FX: tone generator through Audio In',
       fx: 'VST3:BlokDust FX',
       mode: 'fx',
       seconds: 4,
-      ok: (r: any) => r.loaded && r.peak > 0.001,
+      ok: (report: any) => report.loaded && report.peak > 0.001,
     },
     {
       name: 'project saved and reopened (state, Dust 1)',
       fx: 'VST3i:BlokDust',
       mode: 'state',
       seconds: 1,
-      ok: (r: any) =>
-        r.loaded &&
-        r.reopened?.fxCount === 1 &&
-        /BlokDust/.test(r.reopened.fx) &&
-        Math.abs(r.reopened.dust1 - 0.6) < 0.01,
+      ok: (report: any) =>
+        report.loaded &&
+        report.reopened?.fxCount === 1 &&
+        /BlokDust/.test(report.reopened.fx) &&
+        Math.abs(report.reopened.dust1 - 0.6) < 0.01,
     },
   ];
   const results: any[] = [];
-  for (const p of plans) {
+  for (const plan of plans) {
     const report = join(home, 'blokdust-reaper-report.json');
     rmSync(report, { force: true });
     writeFileSync(
       join(home, 'blokdust-reaper-plan.txt'),
-      `fx=${p.fx}\nseconds=${p.seconds}\nmode=${p.mode}\nquit=1\n`,
+      `fx=${plan.fx}\nseconds=${plan.seconds}\nmode=${plan.mode}\nquit=1\n`,
     );
     const child = spawn(app, ['-cfgfile', ini, '-newinst', '-new'], {
       env: { ...process.env, BLOKDUST_REAPER_HOME: home },
@@ -108,7 +108,7 @@ export async function reaperMac() {
     });
     // presses "Still evaluating" when the dialog shows
     spawn(click, ['90'], { stdio: 'ignore', detached: true }).unref();
-    const deadline = Date.now() + (p.seconds + 120) * 1000; // first launch scans plugins
+    const deadline = Date.now() + (plan.seconds + 120) * 1000; // first launch scans plugins
     while (Date.now() < deadline && !existsSync(report))
       await new Promise((resolve) => setTimeout(resolve, 500));
     await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -117,12 +117,12 @@ export async function reaperMac() {
     } catch {
       /* quit already */
     }
-    const r = existsSync(report)
+    const planReport = existsSync(report)
       ? JSON.parse(readFileSync(report, 'utf8'))
       : { error: 'no report (REAPER did not run the plan)' };
-    const ok = !r.error && p.ok(r);
-    results.push({ case: p.name, ok, ...r });
-    console.error(`${ok ? 'pass' : 'FAIL'} ${p.name} ${JSON.stringify(r)}`);
+    const ok = !planReport.error && plan.ok(planReport);
+    results.push({ case: plan.name, ok, ...planReport });
+    console.error(`${ok ? 'pass' : 'FAIL'} ${plan.name} ${JSON.stringify(planReport)}`);
   }
   console.log(JSON.stringify({ reaper: results[0]?.reaper, results }));
   if (results.some((result) => !result.ok)) process.exit(1);

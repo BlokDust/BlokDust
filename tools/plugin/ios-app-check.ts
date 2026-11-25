@@ -19,15 +19,15 @@ import { appLog, waitForLog } from './ios-log.ts';
 /** The sample fixture as a patch from another machine, its WAV in the App Group's Samples folder; and the native hash. */
 export function sampleRelinkFixture(group: string): { fixture: string; expected: string } {
   const fx = JSON.parse(readFileSync(SAMPLE_FIXTURE, 'utf8'));
-  for (const r of Object.values(fx.patch.refs) as {
+  for (const ref of Object.values(fx.patch.refs) as {
     provider: string;
     name: string;
     path: string;
   }[])
-    if (r.provider === 'file') {
+    if (ref.provider === 'file') {
       mkdirSync(resolve(group, 'BlokDust/Samples'), { recursive: true });
-      cpSync(resolve(r.path), resolve(group, 'BlokDust/Samples', r.name));
-      r.path = `/Volumes/Elsewhere/Samples/${r.name}`; // a path that exists on no iPad
+      cpSync(resolve(ref.path), resolve(group, 'BlokDust/Samples', ref.name));
+      ref.path = `/Volumes/Elsewhere/Samples/${ref.name}`; // a path that exists on no iPad
     }
   const fixture = resolve(OUT, 'sample-relink.json');
   writeFileSync(fixture, JSON.stringify(fx));
@@ -69,11 +69,11 @@ export function appCheck(udid: string, group: string) {
   const appStorePlist =
     plist.ITSAppUsesNonExemptEncryption === false &&
     [appexPlist, fxPlist].every(
-      (p) =>
-        p.CFBundleVersion === plist.CFBundleVersion &&
-        p.CFBundleShortVersionString === plist.CFBundleShortVersionString &&
+      (patch) =>
+        patch.CFBundleVersion === plist.CFBundleVersion &&
+        patch.CFBundleShortVersionString === plist.CFBundleShortVersionString &&
         new RegExp(`^${plist.CFBundleIdentifier.replace(/\./g, '\\.')}\\.[^.]+$`).test(
-          p.CFBundleIdentifier,
+          patch.CFBundleIdentifier,
         ),
     );
   const privacyManifest = [APP, APPEX, FX_APPEX].every((b) => {

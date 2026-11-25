@@ -140,7 +140,7 @@ export function packageMac(profile: string, appId: string, installerId: string, 
     console.log(JSON.stringify(result));
     process.exit(2);
   }
-  const n = run(
+  const notarised = run(
     'xcrun',
     [
       'notarytool',
@@ -158,9 +158,9 @@ export function packageMac(profile: string, appId: string, installerId: string, 
   );
   let sub: any = {};
   try {
-    sub = JSON.parse(n.stdout);
+    sub = JSON.parse(notarised.stdout);
   } catch {
-    sub = { status: 'error', message: `${n.stdout}${n.stderr}`.trim() };
+    sub = { status: 'error', message: `${notarised.stdout}${notarised.stderr}`.trim() };
   }
   result.notarization = { id: sub.id, status: sub.status, message: sub.message };
   if (sub.status !== 'Accepted') {
@@ -174,10 +174,10 @@ export function packageMac(profile: string, appId: string, installerId: string, 
   const st = run('xcrun', ['stapler', 'staple', pkg], true);
   if (st.status !== 0) throw new Error(`staple: ${st.stdout}${st.stderr}`);
   // What a user's Mac decides, asked the way it asks.
-  const g = run('spctl', ['--assess', '--type', 'install', '-vv', pkg], true);
+  const assessment = run('spctl', ['--assess', '--type', 'install', '-vv', pkg], true);
   result.gatekeeper = {
-    ok: `${g.stdout}${g.stderr}`.includes('accepted'),
-    source: /source=(.*)/.exec(`${g.stdout}${g.stderr}`)?.[1] ?? null,
+    ok: `${assessment.stdout}${assessment.stderr}`.includes('accepted'),
+    source: /source=(.*)/.exec(`${assessment.stdout}${assessment.stderr}`)?.[1] ?? null,
   };
   const sha = run('shasum', ['-a', '256', pkg], true).stdout.split(/\s+/)[0];
   writeFileSync(`${pkg}.sha256`, `${sha}  BlokDust-${VERSION}-Mac.pkg\n`);

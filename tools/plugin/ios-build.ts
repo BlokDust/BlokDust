@@ -18,7 +18,7 @@ export function iosBuild(): void {
   if (b.status !== 0) {
     const errors = `${b.stdout}\n${b.stderr}`
       .split('\n')
-      .filter((l) => /error:|BUILD FAILED/.test(l));
+      .filter((line) => /error:|BUILD FAILED/.test(line));
     throw new Error(`iPadOS build failed:\n${[...new Set(errors)].slice(0, 30).join('\n')}`);
   }
   if (!existsSync(APPEX)) throw new Error(`no AUv3 inside the app: ${APPEX}`);
@@ -69,11 +69,11 @@ export function simulator(): { udid: string; name: string } {
   const all = Object.entries(list.devices as Record<string, { udid: string; name: string }[]>)
     .filter(([rt]) => rt.includes('iOS'))
     .flatMap(([, ds]) => ds)
-    .filter((d) => d.name.startsWith('iPad'));
-  const d = all.find((x) => x.name.startsWith(want)) ?? all[0];
-  if (!d)
+    .filter((device) => device.name.startsWith('iPad'));
+  const chosen = all.find((x) => x.name.startsWith(want)) ?? all[0];
+  if (!chosen)
     throw new Error(
       'no iPad Simulator available (Xcode → Settings → Components: install an iOS runtime)',
     );
-  return d;
+  return chosen;
 }

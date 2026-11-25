@@ -3,8 +3,8 @@ import { run } from './ios-shared.ts';
 import { sleep } from './ios-paths.ts';
 
 export const logTime = (date: Date) => {
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())} ${p(date.getHours())}:${p(date.getMinutes())}:${p(date.getSeconds())}`;
+  const twoDigits = (value: number) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${twoDigits(date.getMonth() + 1)}-${twoDigits(date.getDate())} ${twoDigits(date.getHours())}:${twoDigits(date.getMinutes())}:${twoDigits(date.getSeconds())}`;
 };
 
 export const appLog = (udid: string, since: Date, subsystem = 'com.funputs.blokdust') =>

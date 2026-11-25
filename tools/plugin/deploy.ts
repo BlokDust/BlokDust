@@ -41,7 +41,7 @@ export function deploy(noBuild: boolean, force = false): void {
     if (result.status !== 0) throw new Error(`rsync failed for ${b}: ${result.stderr}`);
     shipped.push(dest + b.split('/').pop());
   }
-  const quoted = shipped.map((p) => `"$HOME/${p}"`).join(' ');
+  const quoted = shipped.map((path) => `"$HOME/${path}"`).join(' ');
   ssh(`xattr -dr com.apple.quarantine ${quoted} 2>/dev/null || true`);
   const verify = ssh(`for b in ${quoted}; do codesign -v "$b" || exit 1; done`);
   if (verify.status !== 0)

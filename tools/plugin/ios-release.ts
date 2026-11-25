@@ -30,7 +30,9 @@ function xcodeFailure(what: string, result: ReturnType<typeof spawnSync>): Error
   const out = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
   const errors = [
     ...new Set(
-      out.split('\n').filter((l) => /error:|BUILD FAILED|ARCHIVE FAILED|EXPORT FAILED/.test(l)),
+      out
+        .split('\n')
+        .filter((line) => /error:|BUILD FAILED|ARCHIVE FAILED|EXPORT FAILED/.test(line)),
     ),
   ]
     .slice(0, 20)
@@ -65,8 +67,8 @@ function apiKey(): string[] {
 /** UTC time as YYYYMMDD.HHMM: a valid CFBundleVersion that grows with every archive. */
 function defaultBuild(): string {
   const date = new Date(),
-    p = (n: number) => String(n).padStart(2, '0');
-  return `${date.getUTCFullYear()}${p(date.getUTCMonth() + 1)}${p(date.getUTCDate())}.${p(date.getUTCHours())}${p(date.getUTCMinutes())}`;
+    twoDigits = (value: number) => String(value).padStart(2, '0');
+  return `${date.getUTCFullYear()}${twoDigits(date.getUTCMonth() + 1)}${twoDigits(date.getUTCDate())}.${twoDigits(date.getUTCHours())}${twoDigits(date.getUTCMinutes())}`;
 }
 
 /** The bundles' dSYMs (crash-report symbols): CMake's targets write them beside their products,
@@ -105,7 +107,7 @@ function checkArchive(archive: string, version: string, build: string) {
   const checks = {
     extensions: !!plists.instrument && !!plists.fx,
     versions: Object.values(plists).every(
-      (p) => p?.CFBundleShortVersionString === version && p?.CFBundleVersion === build,
+      (entry) => entry?.CFBundleShortVersionString === version && entry?.CFBundleVersion === build,
     ),
     privacyManifests: Object.values(bundles).every((b) => existsSync(`${b}/PrivacyInfo.xcprivacy`)),
     encryptionDeclared: plists.app?.ITSAppUsesNonExemptEncryption === false,
@@ -114,14 +116,14 @@ function checkArchive(archive: string, version: string, build: string) {
     // Symbols for crash reports (App Store Connect warned "Upload Symbols Failed": preset plugin-ios-release makes them).
     // …and each one's UUIDs those of the binary it describes (this build's).
     dSYMs: Object.values(bundles).every((b) => {
-      const n = b.split('/').pop()!,
-        exe = `${b}/${n.replace(/\.(app|appex)$/, '')}`,
-        d = `${archive}/dSYMs/${n}.dSYM`;
-      return existsSync(d) && uuids(d) !== '' && uuids(d) === uuids(exe);
+      const bundleName = b.split('/').pop()!,
+        exe = `${b}/${bundleName.replace(/\.(app|appex)$/, '')}`,
+        dsym = `${archive}/dSYMs/${bundleName}.dSYM`;
+      return existsSync(dsym) && uuids(dsym) !== '' && uuids(dsym) === uuids(exe);
     }),
     // An extension's ID is the app's plus one part (App Store Connect: "Bad bundle identifier").
-    extensionIds: [plists.instrument, plists.fx].every((p) =>
-      /^com\.funputs\.blokdust\.[^.]+$/.test(p?.CFBundleIdentifier ?? ''),
+    extensionIds: [plists.instrument, plists.fx].every((plist) =>
+      /^com\.funputs\.blokdust\.[^.]+$/.test(plist?.CFBundleIdentifier ?? ''),
     ),
   };
   return { ok: Object.values(checks).every(Boolean), checks };

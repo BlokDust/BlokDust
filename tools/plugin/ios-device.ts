@@ -100,7 +100,7 @@ export function iosDevice(noBuild: boolean): void {
     env.BLOKDUST_WEBCREDENTIALS = ['BLOKDUST_PRODUCTION_PUBLIC_URL', 'BLOKDUST_STAGING_PUBLIC_URL']
       .map((k) => setting(k))
       .filter(Boolean)
-      .map((u) => new URL(u).hostname)
+      .map((address) => new URL(address).hostname)
       .join(';');
     // Once the App ID has Sign in with Apple and Associated Domains (the developer portal, or Xcode
     // signed in to the team): BLOKDUST_IOS_NATIVE_SIGN_IN=1 in local config builds them in.
@@ -137,7 +137,9 @@ export function iosDevice(noBuild: boolean): void {
     );
     if (b.status !== 0) {
       const out = `${b.stdout}\n${b.stderr}`;
-      const errors = [...new Set(out.split('\n').filter((l) => /error:|BUILD FAILED/.test(l)))]
+      const errors = [
+        ...new Set(out.split('\n').filter((line) => /error:|BUILD FAILED/.test(line))),
+      ]
         .slice(0, 20)
         .join('\n');
       const account =

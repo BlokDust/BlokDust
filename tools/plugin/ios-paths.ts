@@ -46,7 +46,7 @@ export const extensionLines = (log: string) => {
   );
   return log
     .split('\n')
-    .filter((l) => [...pids].some((p) => l.includes(`BlokDust[${p}:`)))
+    .filter((line) => [...pids].some((pid) => line.includes(`BlokDust[${pid}:`)))
     .join('\n');
 };
 

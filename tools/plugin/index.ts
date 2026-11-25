@@ -31,25 +31,25 @@ else if (cmd === 'reaper') await reaperMac();
 else if (cmd === 'deploy')
   deploy(process.argv.includes('--no-build'), process.argv.includes('--force'));
 else if (cmd === 'validate') {
-  const v = validate();
-  console.log(JSON.stringify(v));
-  if (v.vst3 !== 'pass') process.exit(1);
+  const validation = validate();
+  console.log(JSON.stringify(validation));
+  if (validation.vst3 !== 'pass') process.exit(1);
 } else if (cmd === 'test') test();
 else if (cmd === 'ios') iosCommand(process.argv.slice(3));
 else if (cmd === 'au') au(process.argv.includes('--keep'));
 else if (cmd === 'sign') {
-  const arg = (k: string, d: string | (() => string)) => {
+  const arg = (k: string, fallback: string | (() => string)) => {
     const i = process.argv.indexOf(k);
-    return i >= 0 ? process.argv[i + 1] : typeof d === 'function' ? d() : d;
+    return i >= 0 ? process.argv[i + 1] : typeof fallback === 'function' ? fallback() : fallback;
   };
   sign(
     arg('--profile', setting('BLOKDUST_NOTARY_PROFILE', 'blokdust')),
     arg('--identity', () => requiredSetting('BLOKDUST_SIGNING_IDENTITY')),
   );
 } else if (cmd === 'package') {
-  const arg = (k: string, d: string | (() => string)) => {
+  const arg = (k: string, fallback: string | (() => string)) => {
     const i = process.argv.indexOf(k);
-    return i >= 0 ? process.argv[i + 1] : typeof d === 'function' ? d() : d;
+    return i >= 0 ? process.argv[i + 1] : typeof fallback === 'function' ? fallback() : fallback;
   };
   packageMac(
     arg('--profile', setting('BLOKDUST_NOTARY_PROFILE', 'blokdust')),

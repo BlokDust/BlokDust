@@ -28,8 +28,8 @@ import { appCheck, sampleRelinkFixture } from './ios-app-check.ts';
 
 export function iosTest(noBuild: boolean): void {
   if (!noBuild) iosBuild();
-  for (const p of [APPEX, FX_APPEX, HOST_APP])
-    if (!existsSync(p)) throw new Error(`missing ${p}: run pnpm bd plugin ios build`);
+  for (const bundle of [APPEX, FX_APPEX, HOST_APP])
+    if (!existsSync(bundle)) throw new Error(`missing ${bundle}: run pnpm bd plugin ios build`);
   const sim = simulator();
   run('xcrun', ['simctl', 'boot', sim.udid], true); // already booted is fine
   must(run('xcrun', ['simctl', 'bootstatus', sim.udid, '-b'], true), 'Simulator boot');
@@ -57,11 +57,14 @@ export function iosTest(noBuild: boolean): void {
     job,
     JSON.stringify({
       component: COMPONENT,
-      fixtures: [...FIXTURES.map((f) => resolve(f)), { path: sampleCase.fixture, settleMs: 3000 }],
+      fixtures: [
+        ...FIXTURES.map((fixture) => resolve(fixture)),
+        { path: sampleCase.fixture, settleMs: 3000 },
+      ],
       out,
       editorSeconds: 15,
       smallView: SMALL_VIEW,
-      fx: { component: FX_COMPONENT, fixtures: FX_FIXTURES.map((f) => resolve(f)) },
+      fx: { component: FX_COMPONENT, fixtures: FX_FIXTURES.map((fixture) => resolve(fixture)) },
     }),
   );
   const started = new Date(Date.now() - 1000);
@@ -120,43 +123,43 @@ export function iosTest(noBuild: boolean): void {
     error?: string;
     stateRoundTrips?: boolean;
   }[];
-  const renders = all.slice(0, FIXTURES.length).map((r, i) => {
+  const renders = all.slice(0, FIXTURES.length).map((render, i) => {
     const expected = JSON.parse(
       readFileSync(FIXTURES[i].replace('tests/golden/', 'tests/golden/expected/'), 'utf8'),
     ).audioHash;
     return {
       fixture: FIXTURES[i],
-      audioHash: r.audioHash ?? null,
+      audioHash: render.audioHash ?? null,
       expected,
-      identical: r.audioHash === expected,
-      stateRoundTrips: !!r.stateRoundTrips,
-      error: r.error,
+      identical: render.audioHash === expected,
+      stateRoundTrips: !!render.stateRoundTrips,
+      error: render.error,
     };
   });
   const fxRenders = (
     (result.fxRenders ?? []) as { audioHash?: string; error?: string; stateRoundTrips?: boolean }[]
-  ).map((r, i) => {
+  ).map((render, i) => {
     const expected = JSON.parse(
       readFileSync(FX_FIXTURES[i].replace('tests/golden/', 'tests/golden/expected/'), 'utf8'),
     ).audioHash;
     return {
       fixture: FX_FIXTURES[i],
-      audioHash: r.audioHash ?? null,
+      audioHash: render.audioHash ?? null,
       expected,
-      identical: r.audioHash === expected,
-      stateRoundTrips: !!r.stateRoundTrips,
-      error: r.error,
+      identical: render.audioHash === expected,
+      stateRoundTrips: !!render.stateRoundTrips,
+      error: render.error,
     };
   });
   // The relinked sample: the plugin rewrites the ref's path to the file it found, so the state cannot round-trip as is.
-  const s = all[FIXTURES.length];
+  const sampleRender = all[FIXTURES.length];
   const sample = {
     fixture: SAMPLE_FIXTURE,
-    audioHash: s?.audioHash ?? null,
+    audioHash: sampleRender?.audioHash ?? null,
     expected: sampleCase.expected,
-    identical: s?.audioHash === sampleCase.expected,
+    identical: sampleRender?.audioHash === sampleCase.expected,
     relinked: log.includes('sample: relinked from Samples'),
-    error: s?.error,
+    error: sampleRender?.error,
   };
   // the editor shows the last state set
   const lastBlocks = JSON.parse(readFileSync(SAMPLE_FIXTURE, 'utf8')).patch.blocks.length;

@@ -53,8 +53,8 @@ export function signBundles(
       true,
     );
     if (result.status !== 0) throw new Error(`codesign ${b.path}: ${result.stderr}`);
-    const v = run('codesign', ['--verify', '--strict', '--deep', b.path], true);
-    if (v.status !== 0) throw new Error(`verify ${b.path}: ${v.stderr}`);
+    const verified = run('codesign', ['--verify', '--strict', '--deep', b.path], true);
+    if (verified.status !== 0) throw new Error(`verify ${b.path}: ${verified.stderr}`);
   }
   return bundles;
 }
@@ -85,7 +85,7 @@ export function sign(profile: string, identity: string) {
   const zip = resolve('build/plugin/dist/BlokDust-macOS.zip');
   rmSync(zip, { force: true });
   run('ditto', ['-c', '-k', '--keepParent', dist, zip], true);
-  const n = run(
+  const notarised = run(
     'xcrun',
     [
       'notarytool',
@@ -103,9 +103,9 @@ export function sign(profile: string, identity: string) {
   );
   let sub: any = {};
   try {
-    sub = JSON.parse(n.stdout);
+    sub = JSON.parse(notarised.stdout);
   } catch {
-    sub = { status: 'error', message: `${n.stdout}${n.stderr}`.trim() };
+    sub = { status: 'error', message: `${notarised.stdout}${notarised.stderr}`.trim() };
   }
   result.notarization = { id: sub.id, status: sub.status };
   if (sub.status !== 'Accepted') {
@@ -136,5 +136,5 @@ export function sign(profile: string, identity: string) {
   run('ditto', ['-c', '-k', '--keepParent', dist, zip], true); // re-zip with stapled tickets
   result.artifact = zip;
   console.log(JSON.stringify(result));
-  if ((result.gatekeeper as any[]).some((g) => !g.ok)) process.exit(1);
+  if ((result.gatekeeper as any[]).some((check) => !check.ok)) process.exit(1);
 }
