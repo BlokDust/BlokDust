@@ -1,10 +1,11 @@
-// The harness the post-2.0 block tests share (tests/e2e/new-blocks.ts and its groups here): the built app served, one
-// browser, and helpers to open a patch, its panels and its rows.
+// The post-2.0 block tests' harness: the built app served, one browser, and helpers to open a
+// patch, its panels and its rows.
 import { mkdirSync } from 'node:fs';
 import { chromium, type Browser, type Page } from 'playwright';
 import { serveDist } from '../serve.ts';
 import { encodePatch } from '../../../web/src/patch/share.ts';
 import type { Patch, PatchBlock } from '../../../web/src/patch/loadPatch.ts';
+import type { OptionRow, OptionsBlock, RowShown } from '../pageGlobals.ts';
 
 export type Tests = Record<string, (errors: string[]) => Promise<[boolean, unknown]>>;
 
@@ -15,6 +16,7 @@ export const browser = await chromium.launch({
   args: ['--autoplay-policy=no-user-gesture-required'],
 });
 
+/** A block of a v2 patch. */
 export const blk = (
   id: string,
   type: string,
@@ -22,27 +24,13 @@ export const blk = (
   y: number,
   params: Record<string, unknown> = {},
 ): PatchBlock => ({ id, type, x, y, params });
-/** A second of a 220 Hz sine as a 16-bit WAV file's bytes. */
-export const sineWav = () => {
-  const n = 44100,
-    b = Buffer.alloc(44 + n * 2);
-  b.write('RIFF', 0);
-  b.writeUInt32LE(36 + n * 2, 4);
-  b.write('WAVEfmt ', 8);
-  b.writeUInt32LE(16, 16);
-  b.writeUInt16LE(1, 20);
-  b.writeUInt16LE(1, 22);
-  b.writeUInt32LE(44100, 24);
-  b.writeUInt32LE(88200, 28);
-  b.writeUInt16LE(2, 32);
-  b.writeUInt16LE(16, 34);
-  b.write('data', 36);
-  b.writeUInt32LE(n * 2, 40);
-  for (let i = 0; i < n; i++)
-    b.writeInt16LE(Math.round(Math.sin((2 * Math.PI * 220 * i) / 44100) * 20000), 44 + i * 2);
-  return [...b];
-};
-export const state = (p: Page) => p.evaluate(() => (window as any).__bd_probe.state);
+export const state = (page: Page) => page.evaluate(() => window.__bd_probe.state);
+/** The saved params of the block with patch id `uid`. */
+export async function savedParams(page: Page, uid: string): Promise<Record<string, unknown>> {
+  const block = (await state(page)).patch.blocks.find((each) => each.id === uid);
+  if (!block) throw new Error(`no block ${uid} in the patch`);
+  return block.params ?? {};
+}
 /** Open the app on `blocks` (a v2 patch in a share link), press START and wait for the engine. */
 export async function open(
   b: Browser,
@@ -52,7 +40,7 @@ export async function open(
   viewport = { width: 1280, height: 800 },
 ): Promise<Page> {
   const page = await b.newPage({ viewport, deviceScaleFactor: 1 });
-  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('pageerror', (error) => errors.push(error.message));
   const token = await encodePatch({
     format: 'blokdust.patch',
     version: 2,
@@ -61,66 +49,87 @@ export async function open(
     ...extra,
   });
   await page.goto(`${url}/index.html?c=${token}`);
-  await page.waitForFunction(() => (window as any).__bd_probe);
+  await page.waitForFunction(() => window.__bd_probe);
   await page.click('#start');
-  await page.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 10);
-  await page.waitForTimeout(1200); // header tweens settle
+  await page.waitForFunction(() => window.__bd_probe.state.snapshots > 10);
+  // Header tweens settle.
+  await page.waitForTimeout(1200);
   return page;
 }
 /** The engine id of the block with patch id `uid`. */
-export const idOf = (p: Page, uid: string) =>
-  p.evaluate((u) => (window as any).__bd_probe.idOf(u) as number, uid);
+export async function idOf(page: Page, uid: string): Promise<number> {
+  const id = await page.evaluate((patchId) => window.__bd_probe.idOf(patchId), uid);
+  if (id === undefined) throw new Error(`no block ${uid} on the stage`);
+  return id;
+}
 /** Click a block (opens its options panel) and wait for the panel. */
-export async function openPanel(p: Page, uid: string): Promise<void> {
-  const id = await idOf(p, uid);
-  const at = (await p.evaluate((i) => (window as any).__bd_probe.blockPoint(i), id)) as
-    [number, number] | null;
+export async function openPanel(page: Page, uid: string): Promise<void> {
+  const id = await idOf(page, uid);
+  const at = await page.evaluate((blockId) => window.__bd_probe.blockPoint(blockId), id);
   if (!at) throw new Error(`no point on block ${uid}`);
-  await p.mouse.move(at[0], at[1]);
-  await p.mouse.click(at[0], at[1]);
-  await p.waitForFunction(
-    (i) => {
-      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel;
-      return (
-        optionsPanel.Scale === 1 && !optionsPanel.Opening && optionsPanel.SelectedBlock?.Id === i
-      );
+  await page.mouse.move(at[0], at[1]);
+  await page.mouse.click(at[0], at[1]);
+  await page.waitForFunction(
+    (blockId) => {
+      const optionsPanel = window.__bd_probe.scene.OptionsPanel;
+      const selected = optionsPanel.SelectedBlock as { Id: number } | null;
+      return optionsPanel.Scale === 1 && !optionsPanel.Opening && selected?.Id === blockId;
     },
     id,
     { timeout: 5000 },
   );
-  await p.waitForTimeout(500);
+  await page.waitForTimeout(500);
 }
 /** The open panel's rows: type, name and whatever a live row says it drew. */
-export const rows = (p: Page) =>
-  p.evaluate(() =>
-    ((window as any).__bd_probe.scene.OptionsPanel.Options as any[]).map((o) => ({
-      type: o.Type,
-      name: o.Name,
-      setting: o.Setting,
-      value: o.Value,
-      shown: o.Shown,
+export const rows = (page: Page) =>
+  page.evaluate(() =>
+    (window.__bd_probe.scene.OptionsPanel.Options as OptionRow[]).map((row) => ({
+      type: String(row.Type),
+      name: row.Name,
+      setting: row.Setting,
+      value: row.Value,
+      shown: row.Shown,
     })),
   );
-/** css px of a point `frac` of the way along the open panel's row `setting` (v1's slider range), at its middle. */
-export const rowPoint = (p: Page, setting: string, frac: number) =>
-  p.evaluate(
-    ([key, value]) => {
-      const optionsPanel = (window as any).__bd_probe.scene.OptionsPanel,
-        pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio,
-        r = (optionsPanel.Options as any[]).find((x) => x.Setting === key);
+/** What the open panel's first live row last drew. */
+export const liveShown = async (page: Page): Promise<RowShown | undefined> =>
+  (await rows(page)).find((row) => row.type === 'live')?.shown;
+/** Set a param of the block whose panel is open, as its slider or switch would. */
+export const setParam = (page: Page, key: string, value: number | boolean) =>
+  page.evaluate(
+    ([setting, to]) => {
+      (window.__bd_probe.scene.OptionsPanel.SelectedBlock as OptionsBlock).SetParam(setting, to);
+    },
+    [key, value] as const,
+  );
+/** css px of a point `frac` of the way along the open panel's row `setting` (v1's slider range),
+ * at its middle. */
+export const rowPoint = (page: Page, setting: string, frac: number) =>
+  page.evaluate(
+    ([key, value]): [number, number] => {
+      const optionsPanel = window.__bd_probe.scene.OptionsPanel,
+        pixelRatio = window.__bd_probe.v1App.Metrics.PixelRatio,
+        row = optionsPanel.Options.find((option) => option.Setting === key);
+      if (!row) throw new Error(`no row ${key}`);
       return [
-        (optionsPanel.Position.x + optionsPanel.Margin + optionsPanel.Range * value) / pr,
-        (optionsPanel.Position.y + r.Position.y + r.Size.height / 2) / pr,
-      ] as [number, number];
+        (optionsPanel.Position.x + optionsPanel.Margin + optionsPanel.Range * value) / pixelRatio,
+        (optionsPanel.Position.y + row.Position.y + row.Size.height / 2) / pixelRatio,
+      ];
     },
     [setting, frac] as const,
   );
 /** Menu item names of a header category. */
-export const menuItems = (p: Page, category: string) =>
-  p.evaluate(
-    (c) =>
-      ((window as any).__bd_probe.v1App.BlockCreator.MenuJson.categories as any[])
-        .find((x) => x.name === c)
-        ?.items.map((i: any) => i.name) as string[],
-    category,
-  );
+export const menuItems = (page: Page, category: string) =>
+  page.evaluate((name) => {
+    const menu = window.__bd_probe.v1App.BlockCreator.MenuJson as {
+      categories: { name: string; items: { name: string }[] }[];
+    };
+    return menu.categories.find((each) => each.name === name)?.items.map((item) => item.name) ?? [];
+  }, category);
+/** css px of the block with patch id `uid` on the stage. */
+export async function pointOf(page: Page, uid: string): Promise<[number, number]> {
+  const id = await idOf(page, uid);
+  const at = await page.evaluate((blockId) => window.__bd_probe.blockPoint(blockId), id);
+  if (!at) throw new Error(`no point on block ${uid}`);
+  return at;
+}
