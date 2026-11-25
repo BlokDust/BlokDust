@@ -65,3 +65,8 @@ export interface PatchesPanelInternals {
 export interface SceneFileButton {
   fileButtonRect(): Box & { label: string };
 }
+
+/** What Release 1 adds to v1's Settings panel for tests: each footer link's centre in CSS px. */
+export interface SettingsFooter {
+  footerLinks(): { label: string; x: number; y: number }[];
+}
