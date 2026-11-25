@@ -1,13 +1,11 @@
-// Regression tests for bugs found in review (each reproduced first: it failed on the build that had the bug).
-//   pnpm test:ui-regressions [--only name,name]
-// Real app, real pointer, real AudioWorklet. One check per bug, named after it; a failure prints what was seen.
+// One check per bug found in review, each failing first on the build that had it: real app, real
+// pointer, real AudioWorklet. Usage: pnpm test:ui-regressions [--only name,name]
 import { writeFileSync } from 'node:fs';
 import {
   OUT,
   blk,
   browser,
   comp,
-  maxOver,
   server,
   toCss,
   url,
@@ -91,21 +89,9 @@ Object.assign(
   tests,
   waveformTests({ browser, url, OUT, comp, blk, toCss, decayWav, openPlugin, plugPatch }),
 );
-Object.assign(tests, tourTests({ browser, url, OUT, toCss, maxOver }));
-Object.assign(
-  tests,
-  displayTests({
-    browser,
-    url,
-    OUT,
-    demo: comp([
-      blk(1, 'ToneSource', 0, 0),
-      blk(2, 'ParticleEmitter', -4, 0),
-      blk(3, 'Power', -4, 3),
-    ]),
-  }),
-);
-/** Bugs captured but not fixed yet: reported as KNOWN (not failing CI) with the reason; a pass says to remove it. */
+Object.assign(tests, tourTests);
+Object.assign(tests, displayTests);
+/** Bugs captured but not fixed yet: reported as KNOWN with the reason, not failing CI. */
 const KNOWN: Record<string, string> = {};
 
 try {

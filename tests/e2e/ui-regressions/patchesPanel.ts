@@ -2,12 +2,21 @@
 import { type Page } from 'playwright';
 import { readFileSync, readdirSync } from 'node:fs';
 
-/** The header's Share slot reads PATCHES and opens the Patches panel (CHG-0005); its control centres, in CSS px. */
-export const patchesAt = (page: Page, name: string) =>
-  page.evaluate((n) => window.__bd_probe.scene.PatchesPanel.centreOf(n), name) as Promise<
-    [number, number]
-  >;
-/** Opens Patches on SAVE (it remembers the last tab, owner 2026-11-10; `keep` leaves that to the test). */
+/** A preset file, as far as these tests read it. */
+interface PresetFile {
+  meta: { title: string };
+}
+
+/** A Patches panel control's centre in CSS px (PatchesPanel.centreOf). */
+export async function patchesAt(page: Page, name: string): Promise<[number, number]> {
+  const centre = await page.evaluate(
+    (control) => window.__bd_probe.scene.PatchesPanel.centreOf(control),
+    name,
+  );
+  if (!centre) throw new Error(`no Patches control ${name}`);
+  return centre;
+}
+/** Opens Patches on SAVE; it remembers the last tab, and `keep` leaves that to the test. */
 export async function openPatches(page: Page, keep = false): Promise<void> {
   if (!keep)
     await page.evaluate(() => {
@@ -28,25 +37,24 @@ export async function patchesClick(page: Page, name: string, wait = 700): Promis
   await page.mouse.click(x, y);
   await page.waitForTimeout(wait);
 }
-/** The OPEN tab. */
+/** The OPEN tab, after its page has dropped in (CHG-0035). */
 export async function openList(page: Page): Promise<void> {
   await openPatches(page);
   await patchesClick(page, 'tab1', 1100);
 }
-// the page drops in (CHG-0035)
-/** Owner review 3 (2026-11-16): the web OPEN lists only the user's own patches (the presets are @blokdust's in the
- * gallery). Tests of OPEN's rows use the presets as if this browser had saved them, in their file order. */
+/** The web OPEN lists only the user's own patches, so tests of its rows store the presets as if
+ * this browser had saved them, in their file order. */
 export async function keepPresets(page: Page): Promise<void> {
   const dir = 'web/src/patch/presets',
     list = readdirSync(dir)
-      .filter((f) => f.endsWith('.blokdust'))
+      .filter((file) => file.endsWith('.blokdust'))
       .sort()
-      .map((f) => JSON.parse(readFileSync(`${dir}/${f}`, 'utf8')));
-  await page.evaluate((l) => {
+      .map((file) => JSON.parse(readFileSync(`${dir}/${file}`, 'utf8')) as PresetFile);
+  await page.evaluate((presets) => {
     localStorage.setItem(
       'blokdust.myPatches',
       JSON.stringify(
-        l.map((patch, i) => ({
+        presets.map((patch, i) => ({
           title: patch.meta.title,
           saved: Date.UTC(2026, 10, 1) - i * 60_000,
           patch,
@@ -55,37 +63,35 @@ export async function keepPresets(page: Page): Promise<void> {
     );
   }, list);
 }
-/** OPEN or INSERT on the row named `name`, scrolled into view first (OPEN is one scrolling list, owner 2026-11-16). */
+/** OPEN or INSERT on the row named `name`, scrolled into view first (OPEN scrolls). */
 export async function rowButton(
   page: Page,
   kind: 'open' | 'ins',
   name: string,
   wait = 700,
 ): Promise<void> {
-  const i = await page.evaluate((n) => {
-    const pp = window.__bd_probe.scene.PatchesPanel,
-      i = pp.Items.findIndex((x) => x.name === n);
-    if (i >= 0) {
-      pp.OpenScroll = 0;
-      pp.scrollOpen(Math.max(0, i - 2) * 40 * window.__bd_probe.v1App.Unit);
+  const row = await page.evaluate((rowName) => {
+    const panel = window.__bd_probe.scene.PatchesPanel,
+      index = panel.Items.findIndex((item) => item.name === rowName);
+    if (index >= 0) {
+      panel.OpenScroll = 0;
+      panel.scrollOpen(Math.max(0, index - 2) * 40 * window.__bd_probe.v1App.Unit);
     }
-    return i;
+    return index;
   }, name);
-  if (i < 0) throw new Error(`no row ${name}`);
+  if (row < 0) throw new Error(`no row ${name}`);
   await page.waitForTimeout(150);
-  await patchesClick(page, `${kind}${i}`, wait);
+  await patchesClick(page, `${kind}${row}`, wait);
 }
-/** SAVE with no link yet (Patches › SAVE tab; it was CREATE SHARE LINK): waits for the link field. */
+/** SAVE with no link yet (Patches › SAVE tab): waits for the link field. */
 export async function makeLink(page: Page): Promise<string> {
   await openPatches(page);
   await patchesClick(page, 'share', 200);
   await page.waitForFunction(
     () => {
-      const input = document.getElementById('patchUrlText') as HTMLInputElement;
-      return (
-        input.value.length > 20 &&
-        getComputedStyle(document.getElementById('patchUrl')!).display !== 'none'
-      );
+      const input = document.getElementById('patchUrlText') as HTMLInputElement,
+        field = document.getElementById('patchUrl');
+      return input.value.length > 20 && !!field && getComputedStyle(field).display !== 'none';
     },
     null,
     { timeout: 20000 },

@@ -1,10 +1,11 @@
 // ui-regressions: The Recorder block.
 import { OUT, blk, browser, maxOver, open, toCss, type RegressionTest } from './harness.ts';
 import { waveDrawn } from './samplerPanel.ts';
+import type { MessagePanelText } from './v1Views.ts';
 
 export const recorderTests: Record<string, RegressionTest> = {
-  /** Owner (2026-11-18): v1's message bar said STARTED RECORDING and STOPPED RECORDING (v1 Recorder.StartRecording /
-   * StopRecording, one second each); v2 said nothing. */
+  /** v1's message bar says STARTED RECORDING and STOPPED RECORDING, one second each (v1
+   * Recorder.StartRecording / StopRecording); v2 said nothing. */
   async 'recorder-says-started-stopped'(errors) {
     const page = await open(
       browser,
@@ -16,8 +17,8 @@ export const recorderTests: Record<string, RegressionTest> = {
       grid = gy1 - by;
     const bar = () =>
       page.evaluate(() => {
-        const messagePanel = window.__bd_probe.scene.MessagePanel;
-        return messagePanel.Open ? String(messagePanel._Value?.string ?? '') : '';
+        const messagePanel = window.__bd_probe.scene.MessagePanel as unknown as MessagePanelText;
+        return messagePanel.Open ? (messagePanel._Value?.string ?? '') : '';
       });
     await page.mouse.click(bx, by - 3 * grid);
     await page.waitForTimeout(250);
@@ -32,8 +33,8 @@ export const recorderTests: Record<string, RegressionTest> = {
       { started, stopped },
     ];
   },
-  /** The Recorder's red record button (v1 RecorderPanel, beside the block) records the scene; the recording becomes
-   * the Recorder's sample: its waveform shows in the options panel and it plays when powered. */
+  /** The Recorder's red button (v1 RecorderPanel) records the scene into the Recorder's sample: its
+   * waveform shows in the options panel and it plays when powered. */
   async 'recorder-records'(errors) {
     const page = await open(
       browser,
@@ -43,7 +44,8 @@ export const recorderTests: Record<string, RegressionTest> = {
     const [bx, by] = await toCss(page, 6, 4),
       [, gy1] = await toCss(page, 6, 5),
       grid = gy1 - by;
-    const button: [number, number] = [bx, by - 3 * grid]; // v1 RecorderPanel: y − w/2 − h/2, w = h = 3 grid
+    // v1 RecorderPanel: y − w/2 − h/2, w = h = 3 grid
+    const button: [number, number] = [bx, by - 3 * grid];
     await page.mouse.click(...button);
     await page.waitForTimeout(1200);
     await page.screenshot({ path: `${OUT}/recorder-recording.png` });
@@ -56,8 +58,8 @@ export const recorderTests: Record<string, RegressionTest> = {
     await page.screenshot({ path: `${OUT}/recorder-recorded.png` });
     await page.mouse.click(1233, 480);
     await page.waitForTimeout(800); // close the panel (click empty stage)
-    // Silence the scene (Power → bin), then hold the Recorder: it plays what it recorded. (Opening the panel moved
-    // the stage, v1 Jump: positions are read again.)
+    // Silence the scene (Power → bin), then hold the Recorder: it plays what it recorded. The open
+    // panel moved the stage (v1 Jump), so positions are read again.
     const [px, py] = await toCss(page, -9, 0.2);
     await page.mouse.move(px, py);
     await page.mouse.down();
