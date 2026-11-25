@@ -1,13 +1,14 @@
-// v2's stand-in for v1's MainScene, for the UI layer only (CHG-0002 1.8–1.10): it owns the ported v1 panels, draws
-// them in v1's display-list order onto the stage's static Canvas2D layer, and routes pointer input in v1's order
-// (MainScene._PointerDown/_PointerUp/_PointerMove). Blocks, connections and audio stay in the engine (ARCHITECTURE-0002):
-// the panels talk to the app through SceneHost.
+// v1's MainScene for the UI only (CHG-0002 1.8–1.10): the ported panels, drawn and given input in
+// v1's order; blocks and audio stay in the engine (ARCHITECTURE-0002), reached through SceneHost.
 import { drawPrismExits, hasLiveRows, installLiveRows } from '../newBlocks/liveRows.ts';
 import { followLfos } from '../newBlocks/lfo.ts';
 import { drawNewSprite, installNewBlockMenu } from '../newBlocks/menu.ts';
 import type { V1Block } from '../blocks/v1Block.ts';
 import type { Theme } from '../../generated/palettes.gen.ts';
 import { App, Point, TWEEN } from '../shim.ts';
+import { pageElement } from '../pageElement.ts';
+import { appSettings } from './settings/settingsView.ts';
+import { canvasOf, hideMessageBar, shareSaving, zoomSlotsOf } from './v1Privates.ts';
 import { installFilterPanel } from '../filterPanel.ts';
 import { installSelectors } from '../selectorOption.ts';
 import { installTouchpad } from '../touchpadPanel.ts';
@@ -23,7 +24,8 @@ import { cancellableOpen } from './cancellableOpen.ts';
 import { V1ScenePointer } from './pointer.ts';
 
 export class V1Scene extends V1ScenePointer {
-  /** Bind to the stage canvas and sizes: on init and on every resize/theme change (v1 Metrics.Compute + Resize). */
+  /** Bind to the stage canvas and sizes, on init and every resize or theme change (v1
+   * Metrics.Compute, Resize). */
   sync(
     ctx: CanvasRenderingContext2D,
     theme: Theme,
@@ -43,8 +45,8 @@ export class V1Scene extends V1ScenePointer {
     App.ThemeManager.CurrentThemeNo = theme.index;
     App.ThemeManager.CurrentTheme = { Name: theme.name };
     App.ThemeManager.Themes = this.host.themes().map((theme) => ({ Name: theme.name }));
-    App.ThemeManager.LoadTheme = (n: number) => {
-      this.host.setTheme(n);
+    App.ThemeManager.LoadTheme = (themeNumber: number) => {
+      this.host.setTheme(themeNumber);
     };
     App.ZoomLevel = zoom;
     this.lastZoom = zoom;
@@ -52,8 +54,8 @@ export class V1Scene extends V1ScenePointer {
     App.DragOffset.y = drag.y;
     App.Blocks = blocks;
     App.CommandManager = {
-      ExecuteCommand: (c: unknown) => {
-        this.command(c);
+      ExecuteCommand: (command: unknown) => {
+        this.command(command);
       },
     };
     App.Audio.Master.volume.onMaster = (db: number) => {
@@ -69,10 +71,10 @@ export class V1Scene extends V1ScenePointer {
       'accountHandle',
       'gallerySearch',
     ])
-      document.getElementById(id)!.style.color = theme.colors[theme.roles.txt];
+      pageElement(id).style.color = theme.colors[theme.roles.txt];
     App.BlockSprites = {
-      DrawSprite: (dc: any, pos: Point, scaled: boolean, name: string) => {
-        this.drawSprite(dc.Ctx ?? dc, pos, scaled, name);
+      DrawSprite: (target: unknown, pos: Point, scaled: boolean, name: string) => {
+        this.drawSprite(canvasOf(target), pos, scaled, name);
       },
     };
     App.AnimationsLayer = this.AnimationsLayer;
@@ -84,7 +86,7 @@ export class V1Scene extends V1ScenePointer {
       installNewBlockMenu();
       App.Width = 0;
       App.Height = 0;
-      for (const o of [
+      for (const part of [
         this.ToolTip,
         this.AnimationsLayer,
         this.RecorderPanel,
@@ -102,14 +104,12 @@ export class V1Scene extends V1ScenePointer {
         this.PatchesPanel,
         this.MessagePanel,
       ])
-        o.Init(this);
+        part.Init(this);
       installTour(this.Tutorial, this.TutorialHotspots);
-      // v1's MessagePanel never sets _Alpha before its first fade-in tween; this tween library then
-      // gives NaN (nothing drawn). It starts hidden, at 0.
-      (this.MessagePanel as any)._Alpha = 0;
+      hideMessageBar(this.MessagePanel);
       relabelShareButton(this.Header);
-      // The header's Share slot opens Patches (CREATE SHARE LINK is in its SAVE tab, owner 2026-11-10).
-      (this.SharePanel as any).OpenPanel = () => {
+      // The header's Share slot opens Patches (CREATE SHARE LINK is in its SAVE tab).
+      this.SharePanel.OpenPanel = () => {
         this.PatchesPanel.OpenPanel();
       };
       release1Settings(this.SettingsPanel, this.host);
@@ -129,7 +129,7 @@ export class V1Scene extends V1ScenePointer {
     this.Metrics.Compute();
     this.Width = App.Width;
     this.Height = App.Height;
-    for (const o of [
+    for (const sized of [
       this.ZoomButtons,
       this.TrashCan,
       this.Tutorial,
@@ -141,7 +141,7 @@ export class V1Scene extends V1ScenePointer {
       this.SoundcloudPanel,
       this.PatchesPanel,
     ])
-      o.Resize?.();
+      sized.Resize();
     // v1 MainScene.Resize
     this.OptionsPanel.Close();
     this.Header.Populate(this.Header.MenuJson);
@@ -153,13 +153,13 @@ export class V1Scene extends V1ScenePointer {
   /** Advance tweens; true while anything animates (the stage then redraws every frame). */
   update(nowMs: number): boolean {
     const animating = TWEEN.update(nowMs);
-    // The open panel's block is loading (AnimationsLayer list): keep redrawing it so its loading square spins.
+    // The open panel's block is loading (AnimationsLayer): keep redrawing so its square spins.
     if (
       this.OptionsPanel.Scale > 0 &&
       this.AnimationsLayer.ActiveBlocks.includes(this.OptionsPanel.SelectedBlock)
     )
       this.OptionsPanel.Animating = true;
-    for (const o of [
+    for (const part of [
       this.ToolTip,
       this.AnimationsLayer,
       this.RecorderPanel,
@@ -175,8 +175,8 @@ export class V1Scene extends V1ScenePointer {
       this.PatchesPanel,
       this.MessagePanel,
     ]) {
-      o.LastVisualTick = nowMs;
-      o.Update?.();
+      part.LastVisualTick = nowMs;
+      part.Update();
     }
     checkTour(this.Tutorial, nowMs, this.OptionsPanel.Scale > 0);
     // The tour's markers pulse, and follow the menus and blocks they point at.
@@ -196,19 +196,19 @@ export class V1Scene extends V1ScenePointer {
       this.lastDrag = { x: point.x, y: point.y };
       this.host.setDrag({ x: point.x, y: point.y });
     }
-    // Spinners (AnimationsLayer: loading blocks, Share "saving…", sample search) animate every frame while shown.
+    // Spinners (loading blocks, Share "saving…", sample search) animate every frame while shown.
     const spinning =
       this.AnimationsLayer.ActiveBlocks.length > 0 ||
-      (this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).Animating) ||
-      !!(this.SharePanel as any)._Saving ||
+      (this.OptionsPanel.Scale === 1 && this.OptionsPanel.Animating) ||
+      shareSaving(this.SharePanel) ||
       (this.SoundcloudPanel.Open && !!this.OptionsPanel.SelectedBlock?.Searching) ||
       (this.PatchesPanel.Open && this.PatchesPanel.animating) ||
-      (this.SettingsPanel.Open && !!(this.SettingsPanel as any).accountPage?.animating);
-    // Playback lines move every frame while shown (and once more to clear them when playback stops).
+      (this.SettingsPanel.Open && !!appSettings(this.SettingsPanel).accountPage?.animating);
+    // Playback lines move every frame while shown (and once more to clear them when it stops).
     const playing = this.playheadsShown || !!this.playheadLines();
-    // Live rows (a Compressor's meter, …) follow the engine: the panel is redrawn every frame while one shows.
+    // Live rows (a Compressor's meter, …) follow the engine: redraw the panel while one shows.
     const live = followLfos(this.OptionsPanel) || hasLiveRows(this.OptionsPanel);
-    if (live) (this.OptionsPanel as any)._DrawReady = true;
+    if (live) this.OptionsPanel._DrawReady = true;
     const hint = this.hostHinting,
       hintGone = this.hintDrawn && !hint; // one more frame clears the hint
     this.hintDrawn = hint;
@@ -225,9 +225,9 @@ export class V1Scene extends V1ScenePointer {
     );
   }
 
-  /** v1 MainScene display list, from the ToolTip upward (blocks/lines/beams are drawn by the stage before this). */
+  /** v1 MainScene's display list from the ToolTip up (the stage drew blocks, lines and beams). */
   draw(): void {
-    for (const o of [
+    for (const part of [
       this.ToolTip,
       this.AnimationsLayer,
       ...(this.drawRecorderPanel ? [this.RecorderPanel] : []),
@@ -246,12 +246,12 @@ export class V1Scene extends V1ScenePointer {
       this.MessagePanel,
     ]) {
       // under the panel, over the stage
-      if (o === this.OptionsPanel) drawPrismExits(this.Ctx, this.OptionsPanel);
+      if (part === this.OptionsPanel) drawPrismExits(this.Ctx, this.OptionsPanel);
       this.Ctx.save();
-      o.Draw();
+      part.Draw();
       this.Ctx.restore();
-      if (o === this.OptionsPanel) this.drawPlayheads();
-      if (o === this.TrashCan) {
+      if (part === this.OptionsPanel) this.drawPlayheads();
+      if (part === this.TrashCan) {
         this.Ctx.save();
         this.drawPower();
         this.Ctx.restore();
@@ -273,12 +273,13 @@ export class V1Scene extends V1ScenePointer {
 
   /** v1 CommandManager commands the panels issue: SAVE / SAVE_AS go to the sharing backend
    * (CHG-0003); the Share panel then shows the id exactly as v1 showed a saved composition id. */
-  protected command(c: unknown): void {
+  protected command(command: unknown): void {
     // v1 StringValue lowercases
-    const name = ((c as { value?: string })?.value ?? String(c)).toLowerCase();
+    const named = command as { value?: string } | null | undefined;
+    const name = (named?.value ?? String(command)).toLowerCase();
     if (name === 'save' || name === 'saveas') {
       void this.host
-        .share(name === 'save' ? 'save' : 'saveAs', this.SharePanel.SessionTitle ?? '')
+        .share(name === 'save' ? 'save' : 'saveAs', this.SharePanel.SessionTitle)
         .then((id) => {
           this.SharePanel.ReturnLink(id);
         });
@@ -299,7 +300,7 @@ export class V1Scene extends V1ScenePointer {
     this.select(null);
     this.OptionsPanel.Close();
   }
-  /** v1 MainScene.ResetScene: delete all blocks, reset zoom and drag, close the options panel, reset the session. */
+  /** v1 MainScene.ResetScene: no blocks, zoom and drag reset, options closed, a new session. */
   ResetScene(): void {
     if (this.Tutorial.Open) this.Tutorial.ClosePanel(); // v1 MainScene.ResetScene
     this.Tutorial.WatchedBlocks = [];
@@ -313,7 +314,7 @@ export class V1Scene extends V1ScenePointer {
     this.select(null);
     App.DragOffset.x = 0;
     App.DragOffset.y = 0;
-    this.ZoomButtons.CurrentSlot = (this.ZoomButtons as any)._ZoomSlots.indexOf(1);
+    this.ZoomButtons.CurrentSlot = zoomSlotsOf(this.ZoomButtons).indexOf(1);
     this.MainSceneDragger.Destination = new Point(0, 0);
     App.ZoomLevel = 1;
     this.Metrics.UpdateGridScale();
@@ -324,7 +325,7 @@ export class V1Scene extends V1ScenePointer {
     this.PatchesPanel.setTitle(''); // a new scene gets a new title
   }
 
-  /** v1 BlockSprites (ported): menu icons and dragged items use v1's own sprite code, with its per-type offsets. */
+  /** v1 BlockSprites (ported): menu icons and dragged items use v1's sprite code and offsets. */
   protected readonly sprites = new BlockSprites();
   protected drawSprite(
     ctx: CanvasRenderingContext2D,

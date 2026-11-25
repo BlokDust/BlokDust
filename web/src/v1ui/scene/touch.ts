@@ -1,12 +1,8 @@
 // Wheel, pinch and extra fingers on v1's UI (not in v1, which took one pointer).
 import type { V1Block } from '../blocks/v1Block.ts';
 import { App, Dimensions, Point } from '../shim.ts';
-import type { ZoomButtons } from '../ported/UI/ZoomButtons';
+import { zoomSlotsOf } from './v1Privates.ts';
 import { V1ScenePlayheads } from './playheads.ts';
-
-/** v1's zoom levels (ZoomButtons keeps them private). */
-const zoomSlotsOf = (zoomButtons: ZoomButtons): number[] =>
-  (zoomButtons as unknown as { _ZoomSlots: number[] })._ZoomSlots;
 
 export abstract class V1SceneTouch extends V1ScenePlayheads {
   /** A mouse wheel on the UI: the Patches panel's lists scroll; else v1's zoom buttons take it. */
