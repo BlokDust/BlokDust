@@ -132,7 +132,7 @@ export async function capture(args: string[]) {
     // Each capture is its own browser context on virtual time, so captures can run concurrently.
     await Promise.all(
       Array.from({ length: Math.min(jobs, queue.length) }, async () => {
-        for (let job; (job = queue.shift()); ) await one(job);
+        for (let job; (job = queue.shift());) await one(job);
       }),
     );
   } finally {

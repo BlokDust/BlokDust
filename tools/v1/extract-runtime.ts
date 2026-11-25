@@ -127,7 +127,13 @@ export async function recordBlocks(
         },
       };
       try {
-        blockSprites.DrawSprite({ Ctx: ctx }, new Point(0, 0), scaled, name.toLowerCase(), starPosition);
+        blockSprites.DrawSprite(
+          { Ctx: ctx },
+          new Point(0, 0),
+          scaled,
+          name.toLowerCase(),
+          starPosition,
+        );
       } finally {
         App.FillColor = saved.fill;
         blockSprites.DrawMoveTo = saved.moveTo;

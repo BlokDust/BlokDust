@@ -206,102 +206,6 @@
   "plugin/tests/ios-host/main.mm": {
     "comment-block-lines": 3
   },
-  "server/src/activity.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 2
-  },
-  "server/src/admin.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 5
-  },
-  "server/src/analytics.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 8
-  },
-  "server/src/analyticsQueries.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 4
-  },
-  "server/src/auth/account.ts": {
-    "comment-block-lines": 2,
-    "comment-line-length": 10
-  },
-  "server/src/auth/appKeys.ts": {
-    "comment-block-lines": 2,
-    "comment-line-length": 10
-  },
-  "server/src/auth/apple.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 5
-  },
-  "server/src/auth/google.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 4
-  },
-  "server/src/auth/native.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 7
-  },
-  "server/src/auth/newAccounts.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 4
-  },
-  "server/src/auth/oauth.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 7
-  },
-  "server/src/auth/passkey.ts": {
-    "comment-block-lines": 2,
-    "comment-line-length": 9
-  },
-  "server/src/auth/session.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 8
-  },
-  "server/src/env.ts": {
-    "comment-line-length": 12
-  },
-  "server/src/events.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 4
-  },
-  "server/src/freesound.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 4
-  },
-  "server/src/gallery.ts": {
-    "comment-block-lines": 3,
-    "comment-line-length": 16
-  },
-  "server/src/http.ts": {
-    "comment-line-length": 2
-  },
-  "server/src/index.ts": {
-    "comment-block-lines": 2,
-    "comment-line-length": 17
-  },
-  "server/src/moderation.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 5
-  },
-  "server/src/pages.ts": {
-    "comment-line-length": 7
-  },
-  "server/src/patches.ts": {
-    "comment-line-length": 18
-  },
-  "server/src/stats.ts": {
-    "comment-line-length": 5
-  },
-  "server/src/support.ts": {
-    "comment-line-length": 2
-  },
-  "server/src/turnstile.ts": {
-    "comment-line-length": 1
-  },
-  "shared/support.ts": {
-    "comment-line-length": 5
-  },
   "tools/analytics/index.ts": {
     "comment-block-lines": 1,
     "comment-line-length": 3
@@ -377,25 +281,58 @@
     "comment-block-lines": 1,
     "comment-line-length": 5
   },
+  "tools/plugin/build.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 3
+  },
+  "tools/plugin/deploy.ts": {
+    "comment-line-length": 4
+  },
   "tools/plugin/index.ts": {
-    "comment-block-lines": 4,
-    "comment-line-length": 59
+    "comment-block-lines": 1,
+    "comment-line-length": 11
+  },
+  "tools/plugin/ios-app-check.ts": {
+    "comment-line-length": 6
+  },
+  "tools/plugin/ios-build.ts": {
+    "comment-line-length": 1
   },
   "tools/plugin/ios-device.ts": {
     "comment-block-lines": 1,
-    "comment-line-length": 11
+    "comment-line-length": 10
+  },
+  "tools/plugin/ios-log.ts": {
+    "comment-line-length": 1
+  },
+  "tools/plugin/ios-paths.ts": {
+    "comment-line-length": 4
   },
   "tools/plugin/ios-release.ts": {
     "comment-block-lines": 1,
-    "comment-line-length": 11
+    "comment-line-length": 10
+  },
+  "tools/plugin/ios-test.ts": {
+    "comment-line-length": 3
   },
   "tools/plugin/ios.ts": {
     "comment-block-lines": 1,
-    "comment-line-length": 32
+    "comment-line-length": 11
+  },
+  "tools/plugin/package.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "tools/plugin/reaper.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "tools/plugin/sign.ts": {
+    "comment-line-length": 2
   },
   "tools/plugin/web.ts": {
     "comment-block-lines": 1,
-    "comment-line-length": 4
+    "comment-line-length": 3
   },
   "tools/privacy/privacy.test.ts": {
     "comment-line-length": 1
@@ -432,24 +369,9 @@
     "comment-block-lines": 1,
     "comment-line-length": 14
   },
-  "tools/v1/audio.ts": {
-    "comment-block-lines": 2,
-    "comment-line-length": 13
-  },
-  "tools/v1/capture.ts": {
-    "comment-line-length": 2
-  },
-  "tools/v1/extract.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 6
-  },
   "tools/v1/index.ts": {
     "comment-block-lines": 1,
     "comment-line-length": 4
-  },
-  "tools/v1/lib.ts": {
-    "comment-block-lines": 1,
-    "comment-line-length": 10
   },
   "tools/v1/port-ui.ts": {
     "comment-block-lines": 1,
@@ -477,29 +399,5 @@
   },
   "web/index.html": {
     "comment-line-length": 1
-  },
-  "web/src/v1ui/accountPage.ts": {
-    "comment-block-lines": 4,
-    "comment-line-length": 58
-  },
-  "web/src/v1ui/blocks.ts": {
-    "comment-block-lines": 4,
-    "comment-line-length": 40
-  },
-  "web/src/v1ui/newBlockRows.ts": {
-    "comment-block-lines": 3,
-    "comment-line-length": 20
-  },
-  "web/src/v1ui/newBlocks.ts": {
-    "comment-block-lines": 3,
-    "comment-line-length": 35
-  },
-  "web/src/v1ui/patches.ts": {
-    "comment-block-lines": 15,
-    "comment-line-length": 143
-  },
-  "web/src/v1ui/scene.ts": {
-    "comment-block-lines": 17,
-    "comment-line-length": 132
   }
 }

@@ -270,7 +270,7 @@ console.error(
     results
       .map(
         (result) =>
-          `${result.status === 'pass' ? '✓' : result.status === 'skip' ? '–' : '✗'} [${result.job}] ${result.name}${result.seconds != null ? ` (${result.seconds}s)` : ''}${result.reason ? ` — ${result.reason}` : ''}`,
+          `${result.status === 'pass' ? '✓' : result.status === 'skip' ? '–' : '✗'} [${result.job}] ${result.name}${result.seconds !== undefined ? ` (${result.seconds}s)` : ''}${result.reason ? ` — ${result.reason}` : ''}`,
       )
       .join('\n'),
 );

@@ -9,6 +9,16 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
+/** A JSON line from the VM's log, or `fallback` (with a warning) when it is cut off or garbled. */
+function parsedOr(text: string, fallback: unknown, what: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error(`unreadable ${what} from the VM: ${String(error)}`);
+    return fallback;
+  }
+}
+
 const VM = 'tools/win-vm/vm.sh';
 const vm = (...args: string[]) => spawnSync(VM, args, { encoding: 'utf8', maxBuffer: 64 << 20 });
 const ps = (script: string, args = '') =>
@@ -45,10 +55,7 @@ function engine() {
     /100% tests passed out of (\d+)/.exec(log);
   const renders = [...log.matchAll(/^RENDER (\S+) (.*)$/gm)].map((match) => {
     const exp = JSON.parse(readFileSync(join('tests/golden/expected', `${match[1]}.json`), 'utf8'));
-    let got: any = {};
-    try {
-      got = JSON.parse(match[2]);
-    } catch {}
+    const got: any = parsedOr(match[2], {}, `RENDER ${match[1]}`);
     return {
       fixture: match[1],
       ok: got.audioHash === exp.audioHash && got.eventHash === exp.eventHash,
@@ -132,10 +139,11 @@ function packageWin() {
     fileVersions.every((fileVersion) => fileVersion.version.startsWith(version));
   // Installs where DAWs look, and uninstalls cleanly (silent, in the VM).
   const ic = ps('install-check.ps1', `-Installer "${remote}"`);
-  let install: any = null;
-  try {
-    install = JSON.parse(/INSTALL_RESULT (.*)$/m.exec(`${ic.stdout}${ic.stderr}`)?.[1] ?? 'null');
-  } catch {}
+  const install: any = parsedOr(
+    /INSTALL_RESULT (.*)$/m.exec(`${ic.stdout}${ic.stderr}`)?.[1] ?? 'null',
+    null,
+    'INSTALL_RESULT',
+  );
   const installOk =
     !!install &&
     install.installed.exit === 0 &&
@@ -155,16 +163,10 @@ function plugin() {
   const log = `${result.stdout}${result.stderr}`;
   writeFileSync('.cache/win-plugin.log', log);
   const reaper = /REAPER_RESULT (.*)$/m.exec(log)?.[1];
-  let reaperJson: any = null;
-  try {
-    reaperJson = reaper ? JSON.parse(reaper) : null;
-  } catch {}
+  const reaperJson: any = reaper ? parsedOr(reaper, null, 'REAPER result') : null;
   const hosts = [...log.matchAll(/^HOST (\S+) (\S+) (.*)$/gm)].map((match) => {
     const exp = JSON.parse(readFileSync(join('tests/golden/expected', `${match[2]}.json`), 'utf8'));
-    let got: any = {};
-    try {
-      got = JSON.parse(match[3]);
-    } catch {}
+    const got: any = parsedOr(match[3], {}, `HOST ${match[1]}`);
     return {
       case: match[1],
       ok: got.audioHash === exp.audioHash,
@@ -187,10 +189,11 @@ function plugin() {
       match[2] === '0' ? 'pass' : `fail (exit ${match[2]})`,
     ]),
   );
-  let standalone: any = null;
-  try {
-    standalone = JSON.parse(/STANDALONE_RESULT (.*)$/m.exec(log)?.[1] ?? 'null');
-  } catch {}
+  const standalone: any = parsedOr(
+    /STANDALONE_RESULT (.*)$/m.exec(log)?.[1] ?? 'null',
+    null,
+    'STANDALONE_RESULT',
+  );
   const tagged = (t: string) => {
     try {
       return JSON.parse(new RegExp(`${t} (.*)$`, 'm').exec(log)?.[1] ?? 'null');

@@ -204,9 +204,11 @@ export async function verify(args: string[]) {
   const failed = results.filter((result) => result.status !== 'pass');
   writeFileSync(join(outDir, 'summary.json'), JSON.stringify({ results }, null, 2) + '\n');
   for (const f of failed)
-    console.error(`${f.status}: ${f.name}${f.ratio != null ? ` ratio=${f.ratio}` : ''}`);
+    console.error(
+      `${f.status}: ${f.name}${typeof f.ratio === 'number' ? ` ratio=${f.ratio}` : ''}`,
+    );
   const worst = results
-    .filter((result) => result.ratio != null)
+    .filter((result) => typeof result.ratio === 'number')
     .sort((a, b) => b.ratio - a.ratio)[0];
   console.log(
     JSON.stringify({

@@ -5,7 +5,6 @@ import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 import type { Browser, Page } from 'playwright';
 
-
 export const V1_REPO = 'https://github.com/BlokDust/BlokDust.git';
 export const V1_SHA = 'c427998a3f88bb11cb8cb9c8061b2d6723fee67e';
 export const V1_DIR = '.cache/v1';
@@ -131,7 +130,10 @@ export async function bootV1(
         return offline;
       }
       FakeAudioContext.prototype = Offline.prototype;
-      Object.assign(window, { AudioContext: FakeAudioContext, webkitAudioContext: FakeAudioContext });
+      Object.assign(window, {
+        AudioContext: FakeAudioContext,
+        webkitAudioContext: FakeAudioContext,
+      });
     }, offline);
   }
   // v1's fonts came from files.blokdust.io (no longer ours): serve the identical web/public/fonts.
@@ -169,11 +171,7 @@ export async function bootV1(
     throw new Error(`timeout waiting for ${label}`);
   };
   await page.goto(`http://localhost:${port}/`, { waitUntil: 'load' });
-  await until(
-    () => !!(window.App?.MainScene && window.App.Blocks),
-    20000,
-    'App',
-  );
+  await until(() => !!(window.App?.MainScene && window.App.Blocks), 20000, 'App');
   await page.evaluate(() => {
     if (window.App) window.App.SkipTutorial = true;
   });

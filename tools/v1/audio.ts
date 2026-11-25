@@ -64,7 +64,10 @@ export function loadAudioFixtures(only?: string[]): AudioFixture[] {
     .sort()
     .map((file) => ({
       name: basename(file, '.json'),
-      ...(JSON.parse(readFileSync(join(AUDIO_FIXTURES, file), 'utf8')) as Omit<AudioFixture, 'name'>),
+      ...(JSON.parse(readFileSync(join(AUDIO_FIXTURES, file), 'utf8')) as Omit<
+        AudioFixture,
+        'name'
+      >),
     }))
     .filter((fixture) => !only || only.includes(fixture.name));
 }
@@ -244,7 +247,7 @@ export async function audio(args: string[]) {
   try {
     await Promise.all(
       Array.from({ length: Math.min(jobs, queue.length) }, async () => {
-        for (let fx; (fx = queue.shift()); ) await one(fx);
+        for (let fx; (fx = queue.shift());) await one(fx);
       }),
     );
   } finally {

@@ -7,7 +7,7 @@ import { resolve, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { inspect } from './rules.ts';
 
-test('R5: catches private data and reports only locations/categories', () => {
+void test('R5: catches private data and reports only locations/categories', () => {
   const host = ['test-device', 'tail', 'abcdef', 'ts', 'net'].join('.').replace('tail.', 'tail');
   const findings = inspect(
     'fixture',
@@ -24,7 +24,7 @@ test('R5: catches private data and reports only locations/categories', () => {
   );
 });
 
-test('R1–R4: dotenv stays outside checkout; environment wins; values are not shell code; missing settings name only', () => {
+void test('R1–R4: dotenv stays outside checkout; environment wins; values are not shell code; missing settings name only', () => {
   const dir = mkdtempSync(join(tmpdir(), 'bd-private-test-'));
   try {
     writeFileSync(
