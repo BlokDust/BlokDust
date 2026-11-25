@@ -1,17 +1,19 @@
 // ui-regressions: Share links: the field, its colour, copying and the phone layout.
 import { OUT, blk, browser, comp, open, toCss, txt, type RegressionTest, url } from './harness.ts';
-import { makeLink, openPatches, patchesClick } from './patchesPanel.ts';
+import { makeLink, openPatches, patchesAt, patchesClick } from './patchesPanel.ts';
+import type { MessagePanelText } from './v1Views.ts';
 
 export const shareTests: Record<string, RegressionTest> = {
-  /** Share text fields use the theme's text colour (v1 ThemeManager sets #shareUrl/#shareTitle colour); now the Patches
-   * panel's name and link fields. */
+  /** The Patches panel's name and link fields use the theme's text colour (v1 ThemeManager set
+   * #shareUrl and #shareTitle's). */
   async 'share-text-colour'(errors) {
     const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     await makeLink(page);
     const colours = await page.evaluate(() =>
-      ['patchTitleInput', 'patchUrlText'].map(
-        (id) => getComputedStyle(document.getElementById(id)!).color,
-      ),
+      ['patchTitleInput', 'patchUrlText'].map((id) => {
+        const field = document.getElementById(id);
+        return field ? getComputedStyle(field).color : null;
+      }),
     );
     await page.screenshot({ path: `${OUT}/share-text-colour.png` });
     await page.close();
@@ -20,8 +22,8 @@ export const shareTests: Record<string, RegressionTest> = {
       { want: txt, title: colours[0], url: colours[1] },
     ];
   },
-  /** The share link field: one line like the title field, scrollbars hidden (headless Chrome never draws them, so
-   * the style is checked too), and a click selects the whole link. */
+  /** The link field is one line like the title field, scrollbars hidden (the style is checked too:
+   * headless Chrome never draws them), and a click selects the whole link. */
   async 'share-url-field'(errors) {
     const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     await makeLink(page);
@@ -63,11 +65,8 @@ export const shareTests: Record<string, RegressionTest> = {
       sel[2] === true;
     return [pass, { ...el, selection: sel }];
   },
-  /** The plugin's CREATE SHARE LINK opens the patch on the site (`?c=p…&t=…&share=1`). Owner (2026-11-13, CHG-0013):
-   * it opened the Patches panel at once, whose title showed over the start screen, and after START the panel was
-   * still in the way, one more click from the link. Now the site makes the link as it loads (the user asked for it in
-   * the app) and the address bar shows it (here, with no backend, the self-contained link); the start screen is the
-   * start screen alone, START shows the scene, and Patches › SAVE has the link and the name. */
+  /** CHG-0013: the plugin's share link opens the site, which makes the link on load and shows it
+   * in the address bar; the start screen stands alone, and Patches › SAVE has link and name. */
   async 'share-from-plugin'(errors: string[]) {
     const { deflateRawSync } = await import('node:zlib');
     const patch = {
@@ -91,7 +90,7 @@ export const shareTests: Record<string, RegressionTest> = {
     await page.waitForTimeout(1500);
     const before = await page.evaluate(() => ({
       panel: window.__bd_probe.scene.PatchesPanel.Open,
-      link: !!window.__bd_probe.scene.host.links.current(),
+      link: !!window.__bd_probe.scene.host.links?.current(),
     }));
     await page.screenshot({ path: `${OUT}/share-from-plugin-start.png` });
     await page.mouse.click(640, 400);
@@ -101,7 +100,7 @@ export const shareTests: Record<string, RegressionTest> = {
     await page.waitForTimeout(1000);
     const result = await page.evaluate(() => {
       const pp = window.__bd_probe.scene.PatchesPanel,
-        link = window.__bd_probe.scene.host.links.current();
+        link = window.__bd_probe.scene.host.links?.current();
       return {
         open: pp.Open,
         title: pp.Title,
@@ -127,40 +126,38 @@ export const shareTests: Record<string, RegressionTest> = {
       result.state.save !== 'make';
     return [ok, { before, ...result, link: result.link?.slice(0, 60) }];
   },
-  /** Owner (2026-11-11): the web SAVE tab has SAVE · SAVE AS · DOWNLOAD PATCH, with no help lines (owner review 2,
-   * option A: SAVE the main button, SAVE AS and DOWNLOAD PATCH quiet below it, left and right); the
-   * link shows with "Share your creation with this unique URL:" and a click on it copies it. SAVE makes the link, then
-   * is off until the patch changes; a link this browser can't save over (here: no backend, a self-contained link)
-   * gets a new one. SAVE / SAVE AS on a stored link are checked by test:sharing. */
+  /** Web SAVE tab: SAVE, with SAVE AS and DOWNLOAD PATCH quiet below. SAVE makes the link (COPY
+   * LINK copies it) and is off until a change; a link it can't save over gets a new one. */
   async 'share-link-inline'(errors: string[]) {
-    const ctx = await browser.newContext({
+    const context = await browser.newContext({
       viewport: { width: 1280, height: 800 },
       deviceScaleFactor: 1,
       permissions: ['clipboard-read', 'clipboard-write'],
     });
-    const page = await ctx.newPage();
+    const page = await context.newPage();
     page.on('pageerror', (error) => errors.push(error.message));
     await page.addInitScript(() => {
       const seen: string[] = (window.__texts = []);
-      const drawText = CanvasRenderingContext2D.prototype.fillText;
-      CanvasRenderingContext2D.prototype.fillText = function (text: string, ...a: any[]) {
+      const proto = CanvasRenderingContext2D.prototype,
+        drawText = Object.getOwnPropertyDescriptor(proto, 'fillText')
+          ?.value as typeof proto.fillText;
+      proto.fillText = function (text: string, ...rest: [number, number, number?]) {
         seen.push(text);
-        return (drawText as any).call(this, text, ...a);
+        drawText.call(this, text, ...rest);
       };
     });
     await page.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
     await page.waitForFunction(() => window.__bd_probe);
     await page.click('#start');
     await page.waitForTimeout(2500);
-    const link = () => page.evaluate(() => window.__bd_probe.scene.host.links.current());
-    const state = () =>
-      page.evaluate(() => window.__bd_probe.scene.PatchesPanel.shareState());
+    const link = () => page.evaluate(() => window.__bd_probe.scene.host.links?.current() ?? null);
+    const state = () => page.evaluate(() => window.__bd_probe.scene.PatchesPanel.shareState());
     const texts = () =>
       page.evaluate(() => {
-        const t = window.__texts as string[];
-        const r = [...new Set(t)];
-        t.length = 0;
-        return r;
+        const texts = window.__texts ?? [];
+        const unique = [...new Set(texts)];
+        texts.length = 0;
+        return unique;
       });
     await texts();
     await openPatches(page);
@@ -171,7 +168,7 @@ export const shareTests: Record<string, RegressionTest> = {
           window.__bd_probe.scene.PatchesPanel.centreOf(name),
         ),
       ),
-      xs = at.map((c) => c[0]);
+      xs = at.map((centre) => centre?.[0] ?? NaN);
     await page.screenshot({ path: `${OUT}/save-tab.png` });
     await patchesClick(page, 'close', 900);
     const first = await makeLink(page);
@@ -183,10 +180,10 @@ export const shareTests: Record<string, RegressionTest> = {
     await page.waitForTimeout(300);
     const withLink = await texts();
     await page.evaluate(() => navigator.clipboard.writeText(''));
-    await patchesClick(page, 'copyLink', 300); // COPY LINK (owner, 2026-11-18): the message bar says so
+    await patchesClick(page, 'copyLink', 300); // COPY LINK: the message bar says so
     const copied = {
       line: await page.evaluate(() => {
-        const messagePanel = window.__bd_probe.scene.MessagePanel;
+        const messagePanel = window.__bd_probe.scene.MessagePanel as unknown as MessagePanelText;
         return messagePanel.Open && /link copied/i.test(messagePanel._Value?.string ?? '');
       }),
       clip: await page.evaluate(() => navigator.clipboard.readText()),
@@ -210,7 +207,7 @@ export const shareTests: Record<string, RegressionTest> = {
       { timeout: 20000 },
     );
     const second = await link();
-    await ctx.close();
+    await context.close();
     const gone = [
       'Save your changes to your link.',
       "Your latest changes aren't in this link yet:",
@@ -222,23 +219,26 @@ export const shareTests: Record<string, RegressionTest> = {
       labels.every((label) => before.includes(label)) &&
       xs[1] < xs[0] &&
       xs[0] < xs[2] &&
+      !!at[0] &&
+      !!at[1] &&
+      !!at[2] &&
       at[1][1] > at[0][1] + 50 &&
       at[2][1] === at[1][1] &&
-      !before.some((t) => /blokdust patch file|shareable link/i.test(t)) &&
+      !before.some((text) => /blokdust patch file|shareable link/i.test(text)) &&
       /[?&]c=/.test(first) &&
       fresh?.url === first &&
       !fresh.stale &&
       freshState.save === null &&
-      freshState.saveAs === false &&
+      !freshState.saveAs &&
       withLink.includes('Saved. Share your creation with this unique URL:') &&
       withLink.includes('COPY LINK') &&
       !withLink.includes('SAVE') &&
-      !withLink.some((t) => gone.includes(t)) &&
+      !withLink.some((text) => gone.includes(text)) &&
       copied.line &&
       copied.clip === first &&
-      stale?.stale === true &&
+      !!stale?.stale &&
       staleState.save === 'new' &&
-      staleState.saveAs === true &&
+      staleState.saveAs &&
       second?.url !== first &&
       !second?.stale;
     return [
@@ -257,7 +257,7 @@ export const shareTests: Record<string, RegressionTest> = {
       },
     ];
   },
-  // Owner (2026-11-17, CHG-0035): saving a link copies it at once (no second click on the link): LINK COPIED.
+  // CHG-0035: saving a link copies it at once, no second click: LINK COPIED.
   async 'save-copies-link'(errors: string[]) {
     const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: url });
@@ -267,49 +267,51 @@ export const shareTests: Record<string, RegressionTest> = {
         timeout: 5000,
       })
       .catch(() => {});
-    // The SAVE button goes once saved (owner, 2026-11-18): the message bar says SAVED · LINK COPIED.
+    // The SAVE button goes once saved; the message bar says SAVED · LINK COPIED.
     const result = await page.evaluate(async () => {
       const scene = window.__bd_probe.scene;
       return {
         clip: await navigator.clipboard.readText(),
         saved: scene.PatchesPanel.lastSaved,
-        bar: String(scene.MessagePanel._Value?.string ?? ''),
+        bar: (scene.MessagePanel as unknown as MessagePanelText)._Value?.string ?? '',
       };
     });
     await page.close();
-    return [result.clip === link && !!result.saved?.copied && /link copied/i.test(result.bar), { link, ...result }];
+    return [
+      result.clip === link && !!result.saved?.copied && /link copied/i.test(result.bar),
+      { link, ...result },
+    ];
   },
-  /** Owner (2026-11-18, option 3c): on a phone, COPY LINK and SHARE (the device's share sheet) under the link. */
+  /** On a phone, COPY LINK and SHARE (the device's share sheet) sit under the link. */
   async 'share-link-phone'(errors: string[]) {
-    const ctx = await browser.newContext({
+    const context = await browser.newContext({
       viewport: { width: 390, height: 844 },
       deviceScaleFactor: 1,
       isMobile: true,
       hasTouch: true,
     });
-    const page = await ctx.newPage();
+    const page = await context.newPage();
     page.on('pageerror', (error) => errors.push(error.message));
     await page.addInitScript(() => {
-      (navigator as any).share = async (d: unknown) => {
-        window.__shared = d;
+      navigator.share = (data?: ShareData) => {
+        window.__shared = data;
+        return Promise.resolve();
       };
     });
     await page.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
     await page.waitForFunction(() => window.__bd_probe);
     await page.click('#start');
     await page.waitForTimeout(1500);
-    await page.evaluate(() => window.__bd_probe.scene.PatchesPanel.OpenPanel(0));
+    await page.evaluate(() => {
+      window.__bd_probe.scene.PatchesPanel.OpenPanel(0);
+    });
     await page.waitForTimeout(1200);
-    const [sx, sy] = await page.evaluate(() =>
-      window.__bd_probe.scene.PatchesPanel.centreOf('share'),
-    );
+    const [sx, sy] = await patchesAt(page, 'share');
     await page.touchscreen.tap(sx, sy);
     await page
-      .waitForFunction(
-        () => !!window.__bd_probe.scene.PatchesPanel.centreOf('shareLink'),
-        null,
-        { timeout: 20000 },
-      )
+      .waitForFunction(() => !!window.__bd_probe.scene.PatchesPanel.centreOf('shareLink'), null, {
+        timeout: 20000,
+      })
       .catch(() => {});
     await page.waitForTimeout(400);
     const at = await page.evaluate(() => {
@@ -326,7 +328,7 @@ export const shareTests: Record<string, RegressionTest> = {
     }
     const shared = await page.evaluate(() => window.__shared ?? null);
     await page.screenshot({ path: `${OUT}/share-link-phone.png` });
-    await ctx.close();
+    await context.close();
     const ok =
       !!at.copy &&
       !!at.share &&

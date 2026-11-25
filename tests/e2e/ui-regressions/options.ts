@@ -40,7 +40,7 @@ export const optionsTests: Record<string, RegressionTest> = {
       );
     const rows = async (type: string) => {
       const id = (await state(page)).blocks.find((b) => b.type === type).id;
-      const pt = await page.evaluate((i) => window.__bd_probe.blockPoint(i), id);
+      const pt = await blockAt(page, id);
       await page.mouse.click(pt[0], pt[1]);
       await page.waitForTimeout(1000);
       return names();
@@ -178,7 +178,7 @@ export const optionsTests: Record<string, RegressionTest> = {
     const out: Record<string, unknown> = {};
     for (const type of ['source.audio-in', 'source.microphone']) {
       const id = (await state(pg)).blocks.find((b) => b.type === type).id;
-      const pt = await pg.evaluate((i) => window.__bd_probe.blockPoint(i), id);
+      const pt = await blockAt(pg, id);
       await pg.mouse.click(pt[0], pt[1]);
       await pg.waitForTimeout(1000);
       const panel = await pg.evaluate(() => {

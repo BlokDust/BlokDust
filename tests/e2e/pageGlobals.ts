@@ -71,7 +71,7 @@ declare global {
     __opts?: SavePickerOptions;
     __picked?: number[];
     __unclipped?: string[];
-    __shared?: unknown;
+    __shared?: ShareData;
     __seenBeforePatch?: number;
     __fakeMidi?: Map<string, FakeMidiInput>;
     __supportDrawing?: SupportDrawing;

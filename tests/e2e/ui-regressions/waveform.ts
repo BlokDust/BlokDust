@@ -349,7 +349,7 @@ export function waveformTests({
           }),
         [id, preview] as const,
       );
-      const [bx, by] = await pg.evaluate((i) => window.__bd_probe.blockPoint(i), id);
+      const [bx, by] = await blockAt(pg, id);
       await pg.mouse.click(bx, by);
       await pg.waitForTimeout(1200);
       const look = () =>
