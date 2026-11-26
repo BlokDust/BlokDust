@@ -26,7 +26,7 @@ Branches and releases: [docs/engineering/branches-and-releases.md](docs/engineer
 Read `~/.config/blokdust/LOCAL.md` if present before deployment, signing, notarization or tests on configured machines.
 Tools load `~/.config/blokdust/config.env` (environment overrides); see [local configuration](docs/engineering/local-configuration.md).
 Keep local values, hostnames, paths and machine-specific diagnostics out of committed artifacts and PR text.
-Run `pnpm bd privacy check` before committing and `pnpm bd privacy history` before publication.
+Run `pnpm bd privacy check` before committing and `pnpm bd privacy history` before pushing (only the branch's new commits; `--base <ref>` for stacked PRs).
 
 ## Commands
 - `pnpm check`: docs indexes + codegen up to date (run after editing docs or `blocks/`)

@@ -16,7 +16,7 @@ Keep local agents able to operate deployed services and test machines without pu
 - **R2.** Tools MUST parse dotenv without shell evaluation, prefer the process environment, reject a configuration directory inside the checkout, and name missing settings without printing values. Public builds and mock tests MUST work without private configuration.
 - **R3.** Signing, notarization and deployment MUST retain credentials in Keychain, SSH or existing external credential files. Private configuration MUST NOT be imported into the frontend.
 - **R4.** Remote Worker commands MUST generate account-specific Wrangler configuration outside the checkout, preserve absolute entrypoint/assets/migration paths, and save setup results outside tracked files. Local/mock Worker commands MUST use only test settings.
-- **R5.** Privacy checks MUST report locations and categories without matched values, scan reachable history before publication, and detect private hosts, personal paths, emails and signing identities. Raw machine reports MUST remain ignored. Public project credits and required notices remain intact.
+- **R5.** Privacy checks MUST report locations and categories without matched values, scan the commits a branch adds before it is pushed (history already on the public base was audited once, CHG-0044), and detect private hosts, personal paths, emails and signing identities. Raw machine reports MUST remain ignored. Public project credits and required notices remain intact.
 
 ## Scenarios
 - **S1.** A local agent reads the private notes and runs the existing deploy/sign/test commands using external settings (R1–R3).
@@ -27,8 +27,9 @@ Keep local agents able to operate deployed services and test machines without pu
 ## Verification
 `pnpm bd privacy selftest` tests loader isolation, environment precedence, dotenv injection resistance, missing settings,
 private remote-config permissions/paths and redacted leak detection. `pnpm bd privacy check` checks tracked files;
-`pnpm bd privacy history` checks all reachable Git objects and commit metadata. Existing sharing tests prove local
-Worker behavior. Deployment dry-run validates the generated config without publishing.
+`pnpm bd privacy history [--base <ref>]` checks the Git objects and commit metadata a branch adds to its base
+(`origin/main` unless named). Existing sharing tests prove local Worker behavior. Deployment dry-run validates the
+generated config without publishing.
 
 ## v1 reference
 Operational tooling only; no v1 product behavior changes.

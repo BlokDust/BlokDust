@@ -1,4 +1,4 @@
-// bd privacy: scan tracked source or all reachable history; never print private values.
+// bd privacy: scan tracked files, or the commits a branch adds to its base; never print values.
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { inspect, type Finding } from './rules.ts';
@@ -17,7 +17,10 @@ if (cmd === 'selftest') {
   process.exit(result.status ?? 1);
 }
 if (cmd !== 'check' && cmd !== 'history')
-  throw new Error('usage: pnpm bd privacy check | history | selftest');
+  throw new Error('usage: pnpm bd privacy check | history [--base <ref>] | selftest');
+// History already on the base (origin/main: public, audited at CHG-0044) is not scanned again.
+const baseAt = process.argv.indexOf('--base');
+const base = baseAt > 0 ? process.argv[baseAt + 1] : 'origin/main';
 const findings: Finding[] = [];
 let checked = 0;
 function scan(file: string, text: string) {
@@ -61,7 +64,10 @@ if (cmd === 'check') {
     if (existsSync(file) && statSync(file).isFile()) scan(file, readFileSync(file, 'utf8'));
   }
 } else {
-  for (const object of git('rev-list', '--objects', '--all').trim().split('\n')) {
+  if (!base || spawnSync('git', ['rev-parse', '--verify', '--quiet', `${base}^{commit}`]).status)
+    throw new Error(`bd privacy history: no base commit ${base} (fetch it, or pass --base <ref>)`);
+  const range = `${base}..HEAD`;
+  for (const object of git('rev-list', '--objects', range).trim().split('\n')) {
     const space = object.indexOf(' ');
     if (space < 0) continue;
     const sha = object.slice(0, space),
@@ -69,7 +75,7 @@ if (cmd === 'check') {
     if (git('cat-file', '-t', sha).trim() === 'blob')
       scan(`${sha.slice(0, 12)}:${file}`, git('cat-file', 'blob', sha));
   }
-  scan('commit-metadata', git('log', '--all', '--format=%an <%ae>%n%cn <%ce>%n%B'));
+  scan('commit-metadata', git('log', range, '--format=%an <%ae>%n%cn <%ce>%n%B'));
 }
 console.log(JSON.stringify({ checked, findings }));
 if (findings.length) process.exitCode = 1;

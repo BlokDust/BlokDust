@@ -105,3 +105,60 @@ void test('R1–R4: dotenv stays outside checkout; environment wins; values are 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+void test('R5: history scans only the commits HEAD adds to its base', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'bd-privacy-history-'));
+  const tool = resolve('tools/privacy/index.ts');
+  const git = (...args: string[]) =>
+    spawnSync('git', ['-C', dir, ...args], {
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        GIT_AUTHOR_NAME: 'Test',
+        GIT_AUTHOR_EMAIL: '1+test@users.noreply.github.com',
+        GIT_COMMITTER_NAME: 'Test',
+        GIT_COMMITTER_EMAIL: '1+test@users.noreply.github.com',
+      },
+    });
+  const email = ['person', 'personal.invalid'].join('@');
+  const history = (...args: string[]) => {
+    const result = spawnSync(process.execPath, [tool, 'history', ...args], {
+      cwd: dir,
+      encoding: 'utf8',
+    });
+    return {
+      status: result.status,
+      out: JSON.parse(result.stdout) as { findings: { file: string }[] },
+    };
+  };
+  try {
+    git('init', '-q', '-b', 'main');
+    writeFileSync(join(dir, 'old.txt'), `${email}\n`);
+    git('add', '.');
+    git('commit', '-qm', 'old');
+    git('branch', 'base');
+    writeFileSync(join(dir, 'clean.txt'), 'nothing private\n');
+    git('add', '.');
+    git('commit', '-qm', 'clean');
+    const clean = history('--base', 'base');
+    assert.equal(clean.status, 0);
+    assert.equal(clean.out.findings.length, 0);
+    writeFileSync(join(dir, 'new.txt'), `contact: ${email}\n`); // not old.txt's blob
+    git('add', '.');
+    git('commit', '-qm', 'new');
+    const leaked = history('--base', 'base');
+    assert.equal(leaked.status, 1);
+    assert.deepEqual(
+      leaked.out.findings.map((finding) => finding.file.split(':')[1]),
+      ['new.txt'],
+    );
+    assert(!JSON.stringify(leaked.out).includes(email));
+    const missing = spawnSync(process.execPath, [tool, 'history', '--base', 'no-such-ref'], {
+      cwd: dir,
+      encoding: 'utf8',
+    });
+    assert.notEqual(missing.status, 0);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

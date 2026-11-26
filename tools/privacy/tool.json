@@ -1,7 +1,7 @@
 {
   "name": "privacy",
-  "summary": "Check tracked files or all reachable history for private hosts, personal paths, emails, signing identities and credential patterns; report locations without matched values. Test external configuration and remote-config isolation.",
-  "usage": ["pnpm bd privacy check", "pnpm bd privacy history", "pnpm bd privacy selftest"],
+  "summary": "Check tracked files, or the commits a branch adds to its base (origin/main by default), for private hosts, personal paths, emails, signing identities and credential patterns; report locations without matched values. Test external configuration and remote-config isolation.",
+  "usage": ["pnpm bd privacy check", "pnpm bd privacy history [--base <ref>]", "pnpm bd privacy selftest"],
   "outputs": "JSON counts and finding locations; no private values. Selftest runs isolated configuration and leak-detection tests.",
   "deterministic": true
 }

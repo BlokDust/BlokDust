@@ -43,7 +43,8 @@ Tools fail with the missing variable's name when an operation needs an unconfigu
 Keep host settings out of frontend variables. Plugin API URLs use the public product URL, which is intentionally
 visible in the application. Signing certificates also identify their publisher in distributed binaries.
 
-Run `pnpm bd privacy check` before committing, and `pnpm bd privacy history` before publication. Checks report
+Run `pnpm bd privacy check` before committing, and `pnpm bd privacy history` before pushing (it scans only the
+commits the branch adds to `origin/main`; `--base <ref>` for a stacked branch). Checks report
 locations and categories without printing matched values. Gitignore is a second layer, not secret storage.
 Configure a GitHub noreply Git email for future commits. Public owner credits and required license notices remain.
 Performance tools write raw machine measurements under ignored `.cache/`; publish only deliberately anonymized summaries.
