@@ -1,6 +1,6 @@
 {
   "name": "lint",
-  "summary": "Every static check in one command (CHG-0045): tsc for web, server, tools/tests/shared and the glossary; Prettier; ESLint (typescript-eslint strict type-checked, no any); clang-format and clang-tidy (pinned LLVM in .cache, `setup`). ESLint and clang-tidy findings have baselines that may only shrink (`prune` lowers them). `--staged` checks what is staged (the pre-commit hook); `install` sets that hook (bd size + bd lint).",
+  "summary": "Every static check in one command (CHG-0045): tsc for web, server, tools/tests/shared and the glossary; Prettier; ESLint (typescript-eslint strict type-checked, no any); clang-format and clang-tidy (pinned LLVM in .cache, `setup`). ESLint and clang-tidy findings have baselines that may only shrink (`prune` lowers them). `--staged` checks what is staged (the pre-commit hook; a staged file with unstaged edits fails, since the linters read the working tree); a preset without its compile database (the plugin needs `web/dist`) is skipped and its baseline left alone; `install` sets that hook (bd size + bd lint).",
   "usage": [
     "pnpm bd lint",
     "pnpm bd lint --staged",
