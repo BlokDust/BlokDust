@@ -1,10 +1,11 @@
 // Release 1's changes to v1's Settings panel (CHG-0005), made around the ported code: the tabs,
-// About's words and links, DOWNLOAD, ACCOUNT, Tempo and TOUR, and FEEDBACK in Connect's tab.
+// About's words, links and guide, DOWNLOAD, ACCOUNT, Tempo and TOUR, and FEEDBACK in Connect's tab.
 import { AccountPage } from '../../accountPage/accountPage.ts';
 import { App } from '../../shim.ts';
 import type { SettingsPanel } from '../../ported/UI/SettingsPanel';
 import type { SceneHost } from '../sceneHost.ts';
 import { ABOUT, PHILLIPS, setRelease } from '../about.ts';
+import { drawAboutGuide, hitAboutGuide, installAboutGuide, pressAboutGuide } from './aboutGuide.ts';
 import {
   drawAboutFooter,
   hitAboutFooter,
@@ -49,7 +50,7 @@ export function release1Settings(settingsPanel: SettingsPanel, host: SceneHost):
     account,
     accountTab: withDownload ? 4 : 3,
     withDownload,
-    hover: { link: -1, stats: false, download: -1 },
+    hover: { link: -1, stats: false, download: -1, guide: false },
   };
   panel.accountPage = account;
   const populate = panel.Populate.bind(panel);
@@ -79,6 +80,7 @@ export function release1Settings(settingsPanel: SettingsPanel, host: SceneHost):
   installTempoAndTour(context);
   installAboutFooter(context);
   installAboutPeople(context);
+  installAboutGuide(context);
   wrapPointer(context);
   wrapDraw(context);
 }
@@ -92,6 +94,7 @@ function wrapPointer(context: SettingsContext): void {
     // Connect's retired social and guide targets
     for (let i = 7; i <= 14; i++) panel._RollOvers[i] = false;
     hitAboutFooter(context, point);
+    hitAboutGuide(context, point);
     context.hover.download = downloadAt(context, point.x, point.y);
     hitAccountTab(context, point);
     hitTempoAndTour(context, point);
@@ -102,7 +105,7 @@ function wrapPointer(context: SettingsContext): void {
     mouseDown(point);
     enterAccountTab(context, tabBefore);
     if (!panel.Open) return;
-    if (pressAboutFooter(context)) return;
+    if (pressAboutFooter(context) || pressAboutGuide(context)) return;
     if (context.hover.download >= 0) {
       const release = downloadButtons(panel)[context.hover.download].release;
       if (release) openDownload(release);
@@ -170,6 +173,7 @@ function drawSlidingPages(context: SettingsContext): void {
     // the plugins: tab 3 is the account (SHARING-0011)
     if (context.withDownload) drawDownloadPage(context);
     drawPeoplePhone(panel);
+    drawAboutGuide(context);
     const accountOffset = panel.MenuItems.at(context.accountTab)?.YOffset ?? -panel.DrawTo.Height;
     if (context.account && accountOffset > -panel.DrawTo.Height)
       context.account.draw(accountTop(context));

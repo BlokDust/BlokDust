@@ -21,8 +21,9 @@ export interface SettingsContext {
   accountTab: number;
   /** DOWNLOAD is a web tab: the plugins have none (they sign in with a code: SHARING-0011). */
   withDownload: boolean;
-  /** What the pointer is over: a footer link (-1: none), the stats switch, a download (-1). */
-  hover: { link: number; stats: boolean; download: number };
+  /** What the pointer is over: a footer link (-1: none), the stats switch, a download (-1), the
+   * guide button. */
+  hover: { link: number; stats: boolean; download: number; guide: boolean };
 }
 
 /** The y where tab `tab`'s page starts, following the tab as it slides (off screen: hidden). */

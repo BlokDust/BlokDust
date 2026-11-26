@@ -206,6 +206,7 @@ export const iosTests: Record<string, RegressionTest> = {
       const texts = window.__texts ?? [];
       return {
         github: texts.includes('View the code on GitHub'),
+        guide: texts.some((x) => x.includes('BlokDust 2 guide')), // CHG-0047
         twitter: texts.some((x) => x.startsWith('@')),
         blurb: texts.some((x) => x.includes('Luke')),
         opened: window.__opened ?? [],
@@ -217,6 +218,7 @@ export const iosTests: Record<string, RegressionTest> = {
       before.length === 1 &&
       after.length === 0 &&
       !result.github &&
+      !result.guide &&
       !result.twitter &&
       result.blurb &&
       result.opened.length === 0;
