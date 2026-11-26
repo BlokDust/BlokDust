@@ -242,8 +242,8 @@ export const shareLinkTests: SharingTests = {
     const saved = (await api('GET', `patches/${id}`)).json?.title ?? null;
     check(
       'share page: og:title is the patch title alone, og:description says what BlokDust is (SPEC-SHARING-BACKEND R9)',
-      meta('og:title') === (saved || 'BlokDust') &&
-        (meta('og:description') ?? '').startsWith('Connect blocks to make sounds'),
+      meta('og:title') === (saved || 'BlokDust 2') &&
+        (meta('og:description') ?? '').startsWith('Build instruments, create sounds'),
       { title: meta('og:title'), saved, description: meta('og:description') },
     );
     check('share page: oEmbed discovery link', html.includes('type="application/json+oembed"'));
@@ -293,6 +293,25 @@ export const shareLinkTests: SharingTests = {
       (await fetch(`${base}/oembed?url=${encodeURIComponent('https://example.com/?c=' + id)}`))
         .status === 404,
     );
+    // The app's own page (R9a): canonical `/` for `/` and `/index.html`, with the guide's
+    // cover as its card.
+    for (const path of ['/', '/index.html']) {
+      const home = await (await fetch(`${base}${path}`)).text();
+      const tag = (re: RegExp) => re.exec(home)?.[1] ?? null;
+      const canonical = tag(/<link rel="canonical" href="([^"]*)">/);
+      const image = tag(/<meta property="og:image" content="([^"]*)">/);
+      const title = tag(/<title>([^<]*)<\/title>/);
+      check(
+        `${path}: canonical is the site root, og:image the guide cover (SPEC-SHARING-BACKEND R9a)`,
+        !!canonical &&
+          new URL(canonical).pathname === '/' &&
+          !!image?.endsWith('/guide-media/guide.jpg') &&
+          home.includes('<meta name="twitter:card" content="summary_large_image">') &&
+          title === 'BlokDust 2 | Build instruments and self-playing music' &&
+          home.includes('<meta property="og:site_name" content="BlokDust 2">'),
+        { canonical, image, title },
+      );
+    }
     handoff.sharedId = id;
   },
 };

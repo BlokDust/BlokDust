@@ -1,5 +1,5 @@
 ---
-brand: BlokDust Guide
+brand: BlokDust 2 Guide
 blocksLabel: Blocks
 playLabel: Open BlokDust
 primaryLabel: Main navigation

@@ -22,8 +22,22 @@ try {
         return loc.pathname;
       }),
     );
-    for (const path of ['/about/', '/blocks/', '/guide/', '/guide/faq/', '/guide/get-started/'])
+    for (const path of [
+      '/',
+      '/about/',
+      '/blocks/',
+      '/guide/',
+      '/guide/faq/',
+      '/guide/get-started/',
+    ])
       assert(paths.has(path), path);
+    // `/` is the app (its tags come from the Worker, SPEC-SHARING-BACKEND R9a); without
+    // JavaScript it links to the guide.
+    paths.delete('/');
+    const home = await page.goto(url + '/');
+    assert.equal(home?.status(), 200);
+    for (const href of ['/guide/', '/blocks/', '/downloads/'])
+      assert(await page.locator(`a[href="${href}"]`).first().isVisible(), href);
     const links = new Set<string>();
     const titles = new Set<string>();
     const descriptions = new Set<string>();
@@ -100,6 +114,9 @@ try {
       }
       for (const href of info.anchors) {
         const link = new URL(href, origin + path);
+        // blokdust.com and guide.blokdust.com were taken over by spam: never link to them
+        // (owner, 2026-11-26).
+        assert(!/(^|\.)blokdust\.com$/.test(link.hostname), `${path} links to ${href}`);
         if (link.origin === origin) links.add(link.pathname + link.hash);
       }
     }

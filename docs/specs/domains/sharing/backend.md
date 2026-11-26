@@ -4,7 +4,7 @@ title: Sharing backend, embeds and sample references
 status: draft
 domain: sharing
 adrs: [SHARING-0001, SHARING-0002, SHARING-0004, DATA-0005, SCOPE-0003]
-updated: 2026-11-17
+updated: 2026-11-26
 ---
 # Sharing backend, embeds and sample references
 
@@ -49,11 +49,18 @@ never as audio (DATA-0005). The Worker is `server/`; the client is `web/src/patc
 - **R9.** `/` with `?c=<id>` and `/embed/<id>` MUST serve the app with Open Graph tags (title, description, url, a
   1200×630 PNG `og:image` saved with that revision), `twitter:card=player` with `twitter:player`, and an oEmbed
   discovery link. Every absolute URL comes from `PUBLIC_BASE_URL` (SHARING-0004).
-  - `og:title` is the patch title alone (`og:site_name` already says BlokDust); `og:description` says what BlokDust
-    is: "Connect blocks to make sounds, instruments and self-playing music. Free on the web and as a VST/AU plugin."
+  - `og:title` is the patch title alone (`og:site_name` already says BlokDust 2); `og:description` says what
+    BlokDust is: "Build instruments, create sounds and make self-playing musical worlds by connecting blocks.
+    Available on the web, standalone and as VST3, AU and AUv3 plugins."
   - The image is the share card the app draws when saving: the stage cropped around its blocks, with the title (and
     "— by <handle>" once accounts exist) bottom left and a dimmed "BLOKDUST" bottom right, in v1's Dosis and the
     theme's text colour. Untitled patches show the mark alone.
+- **R9a.** The site's name is **BlokDust 2** (`og:site_name`, oEmbed `provider_name`, page titles), to tell it apart from v1's
+  old domain. `/` and `/index.html` without a patch are titled "BlokDust 2 | Build instruments and self-playing
+  music" and MUST carry `<link rel="canonical">` to the site root, the R9
+  description, the guide's default card (`/guide-media/guide.jpg`, 1200×630) as `og:image` with
+  `twitter:card=summary_large_image`. Without JavaScript the page says what BlokDust is and links to the guide, Blocks
+  and Downloads, so search engines reach the guide from the home page (SPEC-SHARING-BLOKDUST-GLOSSARY R4).
 - **R10.** `/oembed?url=<share or embed URL>` MUST return oEmbed 1.0 `rich` JSON: an iframe to `/embed/<id>`, 640×400
   by default, scaled down to fit `maxwidth` and `maxheight`, plus the thumbnail. Other hosts and unknown ids return 404.
   Only `format=json` is supported (501 otherwise).
@@ -125,7 +132,7 @@ never as audio (DATA-0005). The Worker is `server/`; the client is `web/src/patc
 - **`pnpm test:sharing`** (`tests/e2e/sharing.ts`): local Worker, Cloudflare test Turnstile key, and Freesound plus
   siteverify mocks.
   - `api-guards`: R1, R3–R6 (incl. R5a).
-  - `share-and-load`: R2, R3, R4, R7, R9, R10, S1, S2.
+  - `share-and-load`: R2, R3, R4, R7, R9, R9a, R10, S1, S2.
   - `embed`: R10, R11, S3.
   - `samples`: R12–R15, S4.
   - `quick-save`: R18–R20 (and `pnpm test:ui-regressions` `quick-save-no-link-opens-save`, `quick-save-plugin-keys`).

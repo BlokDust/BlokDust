@@ -9,12 +9,24 @@ export const THUMB = { width: 1200, height: 630 } as const;
 /** Default embed size (v1's stage is landscape; 16:10 like the review viewport). */
 const EMBED = { width: 640, height: 400 } as const;
 
+/** The site's name: BlokDust 2, apart from v1's old domain (R9a). */
+const BRAND = 'BlokDust 2';
+/** The app's own page title (R9a). */
+const HOME_TITLE = `${BRAND} | Build instruments and self-playing music`;
 const displayTitle = (loaded: Loaded | null) =>
-  loaded?.title ? `${loaded.title} · BlokDust` : 'BlokDust';
-/** Link previews show og:site_name ("BlokDust"), so the card title is the patch's own (R9). */
-const cardTitle = (loaded: Loaded | null) => loaded?.title || 'BlokDust';
+  loaded?.title ? `${loaded.title} · ${BRAND}` : BRAND;
+/** Link previews show og:site_name (BRAND), so the card title is the patch's own (R9). */
+const cardTitle = (loaded: Loaded | null) => loaded?.title || BRAND;
+/** The guide's default card (glossary/src/content/site.md `defaultImage`), from the site build. */
+const HOME_IMAGE = {
+  src: '/guide-media/guide.jpg',
+  alt: 'A BlokDust patch with a laser splitting into three beams.',
+  width: 1200,
+  height: 630,
+} as const;
 const DESCRIPTION =
-  'Connect blocks to make sounds, instruments and self-playing music. Free on the web and as a VST/AU plugin.';
+  'Build instruments, create sounds and make self-playing musical worlds by connecting blocks. ' +
+  'Available on the web, standalone and as VST3, AU and AUv3 plugins.';
 
 function tags(
   env: Env,
@@ -29,7 +41,7 @@ function tags(
     ? `${base}/?c=${id}${loaded?.title ? `&t=${encodeURI(loaded.title)}` : ''}`
     : `${base}/`;
   const out: string[] = [
-    `<meta property="og:site_name" content="BlokDust">`,
+    `<meta property="og:site_name" content="${BRAND}">`,
     `<meta property="og:type" content="website">`,
     `<meta property="og:title" content="${escapeHtml(title)}">`,
     `<meta property="og:description" content="${escapeHtml(DESCRIPTION)}">`,
@@ -58,6 +70,19 @@ function tags(
       `<meta name="twitter:player:height" content="${EMBED.height}">`,
       `<link rel="alternate" type="application/json+oembed" href="${escapeHtml(`${base}/oembed?url=${encodeURIComponent(pageUrl)}&format=json`)}" title="${escapeHtml(title)}">`,
       `<link rel="canonical" href="${escapeHtml(pageUrl)}">`,
+    );
+  } else if (!id) {
+    // The app's own page (R9a): one canonical URL for `/`, `/index.html` and any unknown
+    // query, and the guide's cover picture as its card.
+    const img = `${base}${HOME_IMAGE.src}`;
+    out.push(
+      `<link rel="canonical" href="${escapeHtml(`${base}/`)}">`,
+      `<meta property="og:image" content="${escapeHtml(img)}">`,
+      `<meta property="og:image:width" content="${HOME_IMAGE.width}">`,
+      `<meta property="og:image:height" content="${HOME_IMAGE.height}">`,
+      `<meta property="og:image:alt" content="${escapeHtml(HOME_IMAGE.alt)}">`,
+      `<meta name="twitter:card" content="summary_large_image">`,
+      `<meta name="twitter:image" content="${escapeHtml(img)}">`,
     );
   } else {
     out.push(`<meta name="twitter:card" content="summary">`);
@@ -97,7 +122,7 @@ export async function page(
   const head = tags(env, req, id, loaded, !!embedId);
   // Embed pages sit one level down (/embed/<id>) and assets are relative: pin the base.
   const baseTag = embedId ? `<base href="${escapeHtml(basePath(env))}/">\n    ` : '';
-  const title = escapeHtml(embedId || loaded ? displayTitle(loaded) : 'BlokDust');
+  const title = escapeHtml(embedId || loaded ? displayTitle(loaded) : HOME_TITLE);
   const rewritten = new HTMLRewriter()
     .on('head', {
       element(tag) {
@@ -150,7 +175,7 @@ export async function oembed(env: Env, req: Request, url: URL): Promise<Response
   const body: Record<string, unknown> = {
     version: '1.0',
     type: 'rich',
-    provider_name: 'BlokDust',
+    provider_name: BRAND,
     provider_url: `${root}/`,
     title: displayTitle(loaded),
     width,
