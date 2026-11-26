@@ -1,11 +1,13 @@
 // Undo steps and the stacks that hold them.
 import { type Label } from '../../stage/labels.ts';
+import type { Macro } from '../../patch/loadPatch.ts';
 import { activity } from '../../account/activity.ts';
 import { addBlock } from '../blocks/addBlock.ts';
 import { type ModelBlock, countActivity, model } from '../model/patchModel.ts';
+import { innerSamples, macros } from '../model/stageWorlds.ts';
 import { samples, useBuffer } from '../samples/userSamples.ts';
 
-// A step adds, moves or deletes blocks (however many) and labels; params and words are not steps.
+// A step adds, moves, deletes or puts in a Stage blocks and labels; params and words are not.
 // Blocks are named by patch id, kept when they come back; a removed block is kept whole.
 export interface XY {
   x: number;
@@ -23,10 +25,20 @@ export interface LabelMove {
   to: XY;
 }
 
+/** A Stage block kept whole: the block, what is inside it and its samplers' audio. */
+export interface StageSnap {
+  snap: Snap;
+  macro: Macro;
+  audio: Map<string, AudioBuffer>;
+}
+
 export type UndoStep =
   | { kind: 'add'; uids: string[]; snaps?: Snap[]; labels?: string[]; labelSnaps?: Label[] }
   | { kind: 'remove'; snaps: Snap[]; labels?: Label[] }
-  | { kind: 'move'; moves: { uid: string; from: XY; to: XY }[]; labelMoves?: LabelMove[] };
+  | { kind: 'move'; moves: { uid: string; from: XY; to: XY }[]; labelMoves?: LabelMove[] }
+  /** Blocks and labels taken into a Stage (MAKE STAGE, Cmd/Ctrl+G, a drop onto one): what went
+   * in, kept whole; the Stage before (a drop onto one already there) and after. */
+  | { kind: 'stage'; gone: Snap[]; labels: Label[]; before: StageSnap | null; after: StageSnap };
 
 const MAX_UNDO_STEPS = 100;
 export const undoStack: UndoStep[] = [];
@@ -67,3 +79,15 @@ export function restore(snap: Snap): void {
   );
   if (snap.buf && snap.b.type !== 'source.sample-gen') useBuffer(id, snap.buf, 'keep');
 }
+
+/** Stage block `uid` as it is now, kept whole; null when it is not on this stage. */
+export const stageSnapOf = (uid: string): StageSnap | null => {
+  const snap = snapOf(uid);
+  return snap
+    ? {
+        snap,
+        macro: structuredClone(macros.get(uid) ?? { block: uid, blocks: [] }),
+        audio: new Map(innerSamples.get(uid)),
+      }
+    : null;
+};

@@ -207,6 +207,8 @@ export function init(): void {
             into,
             wasGroup ? [...selection] : [drag.id],
             wasGroup ? [...selectedLabels] : [],
+            drag.fresh ? undefined : dragFrom,
+            wasGroup ? labelDragFrom : undefined,
           );
           setDrag(null);
           stage.pressed = null;

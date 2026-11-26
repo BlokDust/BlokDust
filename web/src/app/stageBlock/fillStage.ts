@@ -3,7 +3,7 @@ import { type Label } from '../../stage/labels.ts';
 import { addBlock } from '../blocks/addBlock.ts';
 import { stage } from '../boot/pixi.ts';
 import { removeBlock } from '../editing/deleteBlocks.ts';
-import { redoStack, undoStack } from '../editing/undoSteps.ts';
+import { type Snap, type XY, pushUndo, stageSnapOf } from '../editing/undoSteps.ts';
 import { setSelection } from '../input/selection.ts';
 import { addLabels, labelsChanged } from '../labels/labels.ts';
 import {
@@ -42,8 +42,25 @@ export const audioOf = (ids: number[], uidOf: (b: ModelBlock) => string) =>
     }),
   );
 
+/** What is going into a Stage, kept whole for undo: blocks where they were before a drag
+ * (`from`), labels likewise. */
+const keptWhole = (
+  ids: number[],
+  labelIds: string[],
+  from?: Map<number, XY>,
+  labelFrom?: Map<string, XY>,
+): { gone: Snap[]; kept: Label[] } => ({
+  gone: ids.flatMap((id) => {
+    const b = model.get(id);
+    return b ? [{ b: { ...structuredClone(b), ...from?.get(id) }, buf: samples.get(id) }] : [];
+  }),
+  kept: labels
+    .filter((label) => labelIds.includes(label.id))
+    .map((label) => ({ ...label, ...labelFrom?.get(label.id) })),
+});
+
 /** Selected blocks become what is inside a new Stage block at (x, y): they leave this stage and
- * carry on in there, with their audio. Not undoable. */
+ * carry on in there, with their audio. One undo step (owner, 2026-11-26). */
 export function wrapInStage(
   ids: number[],
   x: number,
@@ -67,11 +84,10 @@ export function wrapInStage(
     ),
   }));
   const audio = audioOf(picked, (b) => b.uid);
+  const { gone, kept } = keptWhole(picked, labelIds);
   // selected labels go in too, where they were among the blocks
   const going = takeLabels(labelIds, -cx, -cy);
   for (const id of picked) removeBlock(id);
-  undoStack.length = 0;
-  redoStack.length = 0;
   const taken = new Set([...model.values()].map((b) => b.uid));
   let uid = `stage${nextId}`;
   for (let k = 2; taken.has(uid); k++) uid = `stage${nextId}_${k}`;
@@ -83,7 +99,10 @@ export function wrapInStage(
   });
   innerSamples.set(uid, audio);
   setSelection([]);
-  return addBlock('source.stage', x, y, {}, uid);
+  const stageId = addBlock('source.stage', x, y, {}, uid);
+  const after = stageSnapOf(uid);
+  if (after) pushUndo({ kind: 'stage', gone, labels: kept, before: null, after });
+  return stageId;
 }
 
 /** Labels `ids` leave this stage (for a Stage's inside), moved by (dx, dy). */
@@ -116,9 +135,15 @@ export function deleteLabels(ids: Iterable<string>): void {
   labelsChanged();
 }
 
-/** Blocks dropped onto Stage block `stageId` go inside it, right of what is there, keeping their
- * layout and connections. Its inner world starts again. Not undoable (as wrapping). */
-export function addToStage(stageId: number, ids: number[], labelIds: string[] = []): void {
+/** Blocks dropped onto Stage block `stageId` go inside it, right of what is there, with their
+ * connections; one undo step, which puts them back at `from` and `labelFrom` (the drag's start). */
+export function addToStage(
+  stageId: number,
+  ids: number[],
+  labelIds: string[] = [],
+  from?: Map<number, XY>,
+  labelFrom?: Map<string, XY>,
+): void {
   const stageBlock = model.get(stageId);
   const picked = ids.filter((id) => id !== stageId && model.has(id));
   if (stageBlock?.type !== 'source.stage' || !canGoInside(picked) || !picked.length) return;
@@ -163,6 +188,8 @@ export function addToStage(stageId: number, ids: number[], labelIds: string[] = 
     ...(innerSamples.get(stageBlock.uid) ?? []),
     ...audioOf(picked, (b) => renamed(b.uid)),
   ]);
+  const before = stageSnapOf(stageBlock.uid);
+  const { gone, kept } = keptWhole(picked, labelIds, from, labelFrom);
   const going = takeLabels(labelIds, ox, oy);
   for (const id of picked) removeBlock(id);
   const { uid, x, y, params } = stageBlock;
@@ -176,10 +203,10 @@ export function addToStage(stageId: number, ids: number[], labelIds: string[] = 
   });
   innerIds.delete(uid);
   innerSamples.set(uid, audio);
-  undoStack.length = 0;
-  redoStack.length = 0;
   setSelection([]);
   addBlock('source.stage', x, y, params, uid);
+  const after = stageSnapOf(uid);
+  if (after) pushUndo({ kind: 'stage', gone, labels: kept, before, after });
   stage.redraw();
 }
 
