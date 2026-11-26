@@ -19,7 +19,7 @@ export interface Env {
   PUBLIC_BASE_URL?: string;
   /** Path prefix the app is served under ("" or "/blokdust"). */
   BASE_PATH?: string;
-  /** A former base path ("/blokdust", SHARING-0006): pages 302 to the site root, API in place. */
+  /** A former base path ("/blokdust", SHARING-0006): pages 301 to the site root, API in place. */
   LEGACY_BASE_PATH?: string;
   /** The web build's place in the asset store: "" (root) or the base path (CHG-0005 task 10). */
   ASSET_BASE?: string;

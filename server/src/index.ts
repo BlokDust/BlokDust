@@ -60,8 +60,8 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
     return appSiteAssociation(env);
   const httpMethod = req.method;
   const canonical = (env.PUBLIC_BASE_URL ?? '').trim().replace(/\/+$/, '');
-  // A former base path (SHARING-0006): its pages 302 to the same page on the public site (a landing
-  // page can replace that later); its API answers in place.
+  // A former base path (SHARING-0006): its pages 301 to the same page on the public site, so
+  // search engines move them there; its API answers in place.
   const legacy = prefix(env.LEGACY_BASE_PATH);
   if (
     legacy &&
@@ -73,7 +73,7 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
     else if (httpMethod === 'GET' || httpMethod === 'HEAD')
       return Response.redirect(
         `${canonical || url.origin + base}${rest === '/index.html' ? '/' : rest}${url.search}`,
-        302,
+        301,
       );
     else return new Response('Not found', { status: 404 });
   }

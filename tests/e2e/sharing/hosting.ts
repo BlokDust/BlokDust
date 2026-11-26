@@ -93,7 +93,7 @@ export const hostingTests: SharingTests = {
     }
   },
 
-  /** SHARING-0006: the site is at a root; the old /blokdust sends pages there (302) and answers
+  /** SHARING-0006: the site is at a root; the old /blokdust sends pages there (301) and answers
    * the API in place, as other hosts do. Local: a second Worker; remote: the deployed host. */
   async 'legacy-path'() {
     if (based) return;
@@ -107,8 +107,8 @@ export const hostingTests: SharingTests = {
       if (url.pathname.replace(/\/+$/, '')) return;
       const page = await loc(`${url.origin}/blokdust/?c=A000000000&t=x`);
       check(
-        '/blokdust/ → 302 to the same page at the root',
-        page[0] === 302 && page[1] === `${url.origin}/?c=A000000000&t=x`,
+        '/blokdust/ → 301 to the same page at the root',
+        page[0] === 301 && page[1] === `${url.origin}/?c=A000000000&t=x`,
         page,
       );
       check(
@@ -138,13 +138,13 @@ export const hostingTests: SharingTests = {
         ].map((path) => loc(localServer.url + path)),
       );
       check(
-        'legacy pages → 302 to the same page on the public site',
-        page[0] === 302 &&
+        'legacy pages → 301 to the same page on the public site',
+        page[0] === 301 &&
           page[1] === `${pub}/?c=A000000000&t=x` &&
-          bare[0] === 302 &&
+          bare[0] === 301 &&
           bare[1] === `${pub}/` &&
           idx[1] === `${pub}/` &&
-          embed[0] === 302 &&
+          embed[0] === 301 &&
           embed[1] === `${pub}/embed/A000000000`,
         { page, bare, idx, embed },
       );
