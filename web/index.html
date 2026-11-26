@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <!-- maximum-scale=1: iOS Safari zoomed into a text field (under 16px) and never zoomed back (owner, 2026-11-18); people can still pinch-zoom on iOS. -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-    <title>BlokDust 2</title>
+    <title>BlokDust 2 | Build instruments and self-playing music</title>
     <link rel="icon" type="image/png" href="favicon.ico" />
     <style>
       html,
@@ -53,11 +53,40 @@
         cursor: pointer;
         background: rgb(10 10 10);
       }
+      /* Without JavaScript (and for crawlers reading the HTML): what BlokDust is, and links into the guide. */
+      #about {
+        position: fixed;
+        inset: 0;
+        z-index: 4;
+        padding: 24px 16px;
+        overflow: auto;
+        color: #fff4d6;
+        background: rgb(10 10 10);
+      }
+      #about a {
+        color: inherit;
+      }
     </style>
   </head>
   <body>
     <div id="stage"></div>
     <div id="start" role="button" aria-label="Start"></div>
+    <noscript>
+      <div id="about">
+        <h1>BlokDust 2</h1>
+        <p>
+          Build instruments, create sounds and make self-playing musical worlds by connecting
+          blocks. Available on the web, standalone and as VST3, AU and AUv3 plugins.
+        </p>
+        <p>BlokDust needs JavaScript to play.</p>
+        <ul>
+          <li><a href="/guide/">BlokDust Guide</a></li>
+          <li><a href="/guide/get-started/">Get Started</a></li>
+          <li><a href="/blocks/">Blocks</a></li>
+          <li><a href="/downloads/">Downloads</a></li>
+        </ul>
+      </div>
+    </noscript>
     <script type="module" src="/src/app/main.ts"></script>
   </body>
 </html>
