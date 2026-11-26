@@ -45,11 +45,6 @@ const steps: Step[] = [
   },
   { job: 'visual', name: 'block manifests vs v1 pixels', cmd: 'node tools/bd.ts v1 verify' },
   {
-    job: 'checks',
-    name: 'lint: tsc, Prettier, ESLint, clang-format, clang-tidy, comments (CHG-0045)',
-    cmd: 'node tools/bd.ts lint setup && node tools/bd.ts lint',
-  },
-  {
     job: 'web',
     name: 'MPE parser (web) ≡ shared MIDI streams (PLUGIN-0004)',
     cmd: 'node tests/mpe/run.ts',
@@ -60,6 +55,12 @@ const steps: Step[] = [
     cmd: 'pnpm site:build',
     when: () => existsSync('.cache/emsdk/emsdk_env.sh'),
     skipReason: 'emsdk not installed (pnpm bd wasm setup)',
+  },
+  // After the web build: the plugin's compile database (for clang-tidy) needs web/dist.
+  {
+    job: 'checks',
+    name: 'lint: tsc, Prettier, ESLint, clang-format, clang-tidy, comments (CHG-0045)',
+    cmd: 'node tools/bd.ts lint setup && node tools/bd.ts lint',
   },
   {
     job: 'web',

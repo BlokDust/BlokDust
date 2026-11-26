@@ -89,3 +89,23 @@ TEST_CASE(
       transposed = true;
   CHECK(transposed);
 }
+
+TEST_CASE("PATCH-V2 R3b: a seed that is not a number loads as the default seed, never throws") {
+  for (const auto& seed : {nlohmann::json(nullptr), nlohmann::json("x"), nlohmann::json::array()}) {
+    const nlohmann::json patch = {{"format", "blokdust.patch"},
+                                  {"version", 2},
+                                  {"seed", seed},
+                                  {"blocks", nlohmann::json::array()}};
+    patch::Loaded loaded;
+    std::string err;
+    REQUIRE_NOTHROW(patch::load(patch, loaded, err));
+    CHECK(loaded.seed == 1);
+    CHECK(loaded.warnings.size() == 1);
+  }
+  // A number keeps loading as it always has (golden hashes depend on it).
+  patch::Loaded loaded;
+  std::string err;
+  REQUIRE(patch::load({{"seed", 7}, {"blocks", nlohmann::json::array()}}, loaded, err));
+  CHECK(loaded.seed == 7);
+  CHECK(loaded.warnings.empty());
+}

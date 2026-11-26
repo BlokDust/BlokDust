@@ -89,15 +89,26 @@ function parseFindings(output: string): Finding[] {
   return findings;
 }
 
-export async function collectClangTidyFindings(selection: FileSelection): Promise<Finding[]> {
+/** A clang-tidy run: its findings, and whether a file could be checked at all. */
+export interface TidyRun {
+  findings: Finding[];
+  /** Presets skipped for want of a compile database: their files' baselines are left alone. */
+  skipped: string[];
+  checked: (file: string) => boolean;
+}
+
+export async function collectClangTidyFindings(selection: FileSelection): Promise<TidyRun> {
   const sdkArgs = macSdkArgs();
   const jobs: { unit: string; buildDir: string }[] = [];
+  const unchecked: RegExp[] = [];
+  const skipped: string[] = [];
   for (const database of COMPILE_DATABASES) {
     const compiled = compiledFiles(database).filter((file) => database.owns.test(file));
     if (compiled.length === 0) {
-      console.error(
-        `clang-tidy: no ${database.buildDir} compile database; skipping ${database.preset}`,
-      );
+      const why = database.needs && !existsSync(database.needs) ? ` (needs ${database.needs})` : '';
+      console.error(`clang-tidy: no ${database.buildDir} compile database${why}; skipping`);
+      unchecked.push(database.owns);
+      skipped.push(database.preset);
       continue;
     }
     for (const unit of unitsToAnalyse(selection, compiled))
@@ -115,7 +126,10 @@ export async function collectClangTidyFindings(selection: FileSelection): Promis
   for (const finding of outputs.flatMap(parseFindings)) {
     unique.set(`${finding.file}:${finding.line}:${finding.rule}:${finding.message}`, finding);
   }
-  return [...unique.values()].sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
+  const findings = [...unique.values()].sort(
+    (a, b) => a.file.localeCompare(b.file) || a.line - b.line,
+  );
+  return { findings, skipped, checked: (file) => !unchecked.some((owns) => owns.test(file)) };
 }
 
 export const clangTidy: LintCheck = {
@@ -126,10 +140,10 @@ export const clangTidy: LintCheck = {
       console.error(`clang-tidy ${LLVM_TOOLS_VERSION} is missing: run \`pnpm bd lint setup\`.`);
       return 'fail';
     }
-    const findings = await collectClangTidyFindings(selection);
+    const { findings, checked } = await collectClangTidyFindings(selection);
     const compileErrors = findings.filter((finding) => finding.rule === 'clang-diagnostic-error');
     const baseline = readBaseline(CLANG_TIDY_BASELINE);
-    const checkedFiles = selection.stagedOnly ? [] : Object.keys(baseline);
+    const checkedFiles = selection.stagedOnly ? [] : Object.keys(baseline).filter(checked);
     const { overAllowance, stale } = compareWithBaseline(findings, baseline, checkedFiles);
     reportFindings([...compileErrors, ...overAllowance]);
     if (stale.length > 0) {

@@ -106,6 +106,7 @@ export function malformedState(): string {
   const patch = fixture.patch;
   patch.blocks.push(42, { id: 'far', type: 'source.sample', x: 400, y: 400, params: 'junk' });
   patch.plugin = 'junk';
+  patch.seed = null;
   patch.macros = 'junk';
   patch.automation = ['junk'];
   const out = resolve('.cache/plugin-malformed-state.json');

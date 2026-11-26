@@ -12,7 +12,7 @@ import { CLANG_TIDY_BASELINE, clangTidy, collectClangTidyFindings } from './clan
 import { comments } from './comments.ts';
 import { clangFormat, setUpLlvmTools } from './cxx.ts';
 import { eslint, prettier, typecheck } from './typescript.ts';
-import { selectFiles } from './files.ts';
+import { partlyStaged, selectFiles } from './files.ts';
 
 const args = process.argv.slice(2);
 const firstArg = args[0] ?? '';
@@ -28,6 +28,14 @@ const ESLINT_TS_CONFIG_FLAG = ['--flag', 'unstable_native_nodejs_ts_config'];
 
 async function runChecks(): Promise<void> {
   const selection = selectFiles(args.includes('--staged'));
+  const partial = partlyStaged(selection);
+  if (partial.length > 0) {
+    // Checking the working copy would judge code other than what is committed.
+    console.error('bd lint --staged: these files have unstaged changes; stage them or stash them');
+    console.error('first (git stash push --keep-index):');
+    for (const file of partial) console.error(`  ${file}`);
+    process.exit(1);
+  }
   const onlyNames = valueAfter('--only')?.split(',');
   const checks = onlyNames
     ? ALL_CHECKS.filter((check) => onlyNames.includes(check.name))
@@ -52,16 +60,21 @@ async function updateBaselines(mode: 'record' | 'prune'): Promise<boolean> {
   const eslintFlag = mode === 'record' ? '--suppress-all' : '--prune-suppressions';
   const eslintOk = runCommand(ESLINT, [...ESLINT_TS_CONFIG_FLAG, eslintFlag, '.']);
   const everything = selectFiles(false);
-  const tidyFindings = await collectClangTidyFindings(everything);
+  const tidy = await collectClangTidyFindings(everything);
   const commentFindings = collectCommentFindings(everything.files);
+  let tidyOk = true;
   if (mode === 'record') {
-    recordBaseline(CLANG_TIDY_BASELINE, tidyFindings);
+    // A skipped preset would drop its files' entries: record only from a complete run.
+    if (tidy.skipped.length > 0) {
+      console.error(`clang-tidy baseline not recorded: ${tidy.skipped.join(', ')} not checked`);
+      tidyOk = false;
+    } else recordBaseline(CLANG_TIDY_BASELINE, tidy.findings);
     recordBaseline(COMMENTS_BASELINE, commentFindings);
   } else {
-    pruneBaseline(CLANG_TIDY_BASELINE, tidyFindings, everything.files);
+    pruneBaseline(CLANG_TIDY_BASELINE, tidy.findings, everything.files.filter(tidy.checked));
     pruneBaseline(COMMENTS_BASELINE, commentFindings, everything.files);
   }
-  return eslintOk;
+  return eslintOk && tidyOk;
 }
 
 switch (subcommand) {

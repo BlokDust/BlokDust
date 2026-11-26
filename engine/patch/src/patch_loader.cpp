@@ -107,7 +107,11 @@ bool load(const nlohmann::json& patch, Loaded& out, std::string& err) {
     err = "unsupported patch version";
     return false;
   }
-  out.seed = patch.value("seed", std::uint64_t{1});
+  out.seed = 1;
+  if (patch.contains("seed") && patch["seed"].is_number())
+    out.seed = patch["seed"].get<std::uint64_t>();
+  else if (patch.contains("seed"))
+    out.warnings.emplace_back("seed is not a number: the default is used");  // R3b
   // The patch's tempo (SIMULATION-0003; the plugin then follows the host's). Only when set, so
   // older patches keep exactly their command list.
   if (patch.contains("tempo") && patch["tempo"].is_number())
