@@ -281,11 +281,11 @@ void Engine::setPitch(int slot, int v, double glide) noexcept BLOKDUST_NONBLOCKI
   }
 }
 
-void Engine::applyPitch(Block& block, Voice& vo) noexcept BLOKDUST_NONBLOCKING {
+void Engine::applyPitch(Block& block, Voice& voice) noexcept BLOKDUST_NONBLOCKING {
   if (block.type == BlockType::SourceTone)
-    vo.osc.setFrequency(vo.pitch, *wavetables_);
+    voice.osc.setFrequency(voice.pitch, *wavetables_);
   else if (block.type == BlockType::SourceWavetable)
-    vo.tosc.setFrequency(vo.pitch, *tables_, sampleRate_);
+    voice.tosc.setFrequency(voice.pitch, *tables_, sampleRate_);
 }
 
 /// After the topology or a controller changes: voice count follows the connected controllers'

@@ -30,8 +30,8 @@ function hull(points: Pt[]): Pt[] {
     ...new Map(points.map((point) => [`${point[0]},${point[1]}`, point])).values(),
   ].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   if (sorted.length < 3) return sorted;
-  const cross = (pt: Pt, a: Pt, b: Pt) =>
-    (a[0] - pt[0]) * (b[1] - pt[1]) - (a[1] - pt[1]) * (b[0] - pt[0]);
+  const cross = (origin: Pt, a: Pt, b: Pt) =>
+    (a[0] - origin[0]) * (b[1] - origin[1]) - (a[1] - origin[1]) * (b[0] - origin[0]);
   // Pops the chain's last point while it makes a clockwise (or straight) turn towards `pt`.
   const extend = (chain: Pt[], pt: Pt) => {
     while (chain.length >= 2 && cross(chain[chain.length - 2], chain[chain.length - 1], pt) <= 0)

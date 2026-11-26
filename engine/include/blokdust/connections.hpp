@@ -16,7 +16,8 @@ class ConnectionGraph {
   using Row = std::bitset<kMaxBlocks>;
 
   /// R1–R3: are blocks a and b connected given their kinds, positions and the effect's catchment?
-  static bool shouldConnect(const Block& block, const Block& b) noexcept;
+  // NOLINTNEXTLINE(readability-identifier-length): either block can be the source or effect
+  static bool shouldConnect(const Block& a, const Block& b) noexcept;
 
   void clear() noexcept;
   /// Recompute every pair (reference implementation; O(n²)).

@@ -24,8 +24,8 @@ const area = (polygon: Pt[]) => {
   return a / 2;
 };
 const ccw = (polygon: Pt[]): Pt[] => (area(polygon) < 0 ? polygon.slice().reverse() : polygon);
-const cross = (pt: Pt, a: Pt, b: Pt) =>
-  (a[0] - pt[0]) * (b[1] - pt[1]) - (a[1] - pt[1]) * (b[0] - pt[0]);
+const cross = (origin: Pt, a: Pt, b: Pt) =>
+  (a[0] - origin[0]) * (b[1] - origin[1]) - (a[1] - origin[1]) * (b[0] - origin[0]);
 
 function inside(pt: Pt, poly: Pt[]): boolean {
   let isInside = false;

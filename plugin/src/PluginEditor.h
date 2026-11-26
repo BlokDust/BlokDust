@@ -33,7 +33,7 @@ class BlokDustEditor : public juce::AudioProcessorEditor,
   /// dialog or a drop).
   void sendAccount();
   void sendValues(const juce::var& keys);
-  void sendPatchFile(const juce::File& f, const juce::String& mode, int req);
+  void sendPatchFile(const juce::File& file, const juce::String& mode, int req);
   void sendPatchText(const juce::String& text, const juce::String& name, const juce::String& file,
                      const juce::String& mode, int req);
   // Audio files dropped from Finder/Explorer or the DAW (CHG-0004 3.7): the page says which block

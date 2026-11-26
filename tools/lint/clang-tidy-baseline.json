@@ -1,6 +1,6 @@
 {
   "engine/include/blokdust/connections.hpp": {
-    "readability-identifier-length": 11
+    "readability-identifier-length": 10
   },
   "engine/include/blokdust/dmath.hpp": {
     "readability-identifier-length": 12,
@@ -42,7 +42,7 @@
     "readability-identifier-length": 22
   },
   "engine/src/connections.cpp": {
-    "readability-identifier-length": 11
+    "readability-identifier-length": 10
   },
   "engine/src/convolver.cpp": {
     "readability-identifier-length": 21
@@ -198,13 +198,13 @@
     "readability-identifier-length": 44
   },
   "plugin/src/PluginEditor.h": {
-    "readability-identifier-length": 2
+    "readability-identifier-length": 1
   },
   "plugin/src/PluginProcessor.cpp": {
     "readability-identifier-length": 64
   },
   "plugin/src/PluginProcessor.h": {
-    "readability-identifier-length": 8
+    "readability-identifier-length": 6
   },
   "plugin/src/Samples.cpp": {
     "readability-identifier-length": 7,

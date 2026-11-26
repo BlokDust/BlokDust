@@ -1253,20 +1253,6 @@ juce::File writeWav(const juce::File& dir, const juce::String& stem,
 }
 }  // namespace
 
-void BlokDustProcessor::captureRecording(const float* left, const float* right, int n) noexcept {
-  int s1 = 0, n1 = 0, s2 = 0, n2 = 0;
-  recFifo_.prepareToWrite(n, s1, n1, s2, n2);
-  if (n1 > 0) {
-    recFifoBuf_.copyFrom(0, s1, left, n1);
-    recFifoBuf_.copyFrom(1, s1, right, n1);
-  }
-  if (n2 > 0) {
-    recFifoBuf_.copyFrom(0, s2, left + n1, n2);
-    recFifoBuf_.copyFrom(1, s2, right + n1, n2);
-  }
-  recFifo_.finishedWrite(n1 + n2);  // a full FIFO drops the rest (the drain is late by > 4 s)
-}
-
 void BlokDustProcessor::drainRecording() {
   int s1 = 0, n1 = 0, s2 = 0, n2 = 0;
   recFifo_.prepareToRead(recFifo_.getNumReady(), s1, n1, s2, n2);

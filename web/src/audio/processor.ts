@@ -55,19 +55,22 @@ class BlokdustProcessor extends AudioWorkletProcessor {
         // 'record'
         if (message.on) this.recorded = [];
         else if (this.recorded) {
-          const total = this.recorded.reduce((a, chunk) => a + chunk[0].length, 0),
-            samples = new Float32Array(total),
-            rightSamples = new Float32Array(total);
+          const total = this.recorded.reduce(
+            (totalFrames, chunk) => totalFrames + chunk[0].length,
+            0,
+          );
+          const leftSamples = new Float32Array(total);
+          const rightSamples = new Float32Array(total);
           let at = 0;
           for (const [a, b] of this.recorded) {
-            samples.set(a, at);
+            leftSamples.set(a, at);
             rightSamples.set(b, at);
             at += a.length;
           }
           this.recorded = null;
           this.port.postMessage(
-            { type: 'recording', left: samples, right: rightSamples, sampleRate },
-            [samples.buffer, rightSamples.buffer],
+            { type: 'recording', left: leftSamples, right: rightSamples, sampleRate },
+            [leftSamples.buffer, rightSamples.buffer],
           );
         }
       }

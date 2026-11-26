@@ -297,7 +297,20 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   juce::AudioBuffer<float> idleBuf_, dryBuf_;  // preallocated in prepareToPlay
   // Recorder: the audio thread writes the output into a FIFO; a message-thread timer drains it
   // while recording.
-  void captureRecording(const float* l, const float* r, int n) noexcept;
+  // NOLINTNEXTLINE(readability-identifier-length): l and r are the stereo channels
+  void captureRecording(const float* l, const float* r, int n) noexcept {
+    int s1 = 0, n1 = 0, s2 = 0, n2 = 0;
+    recFifo_.prepareToWrite(n, s1, n1, s2, n2);
+    if (n1 > 0) {
+      recFifoBuf_.copyFrom(0, s1, l, n1);
+      recFifoBuf_.copyFrom(1, s1, r, n1);
+    }
+    if (n2 > 0) {
+      recFifoBuf_.copyFrom(0, s2, l + n1, n2);
+      recFifoBuf_.copyFrom(1, s2, r + n1, n2);
+    }
+    recFifo_.finishedWrite(n1 + n2);  // a full FIFO drops the rest (the drain is late by > 4 s)
+  }
   void drainRecording();
   struct Drain : juce::Timer {
     std::function<void()> f;
