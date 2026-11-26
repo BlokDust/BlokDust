@@ -25,7 +25,8 @@ We will let notes into a Stage (SPEC-SIMULATION-POWER-AND-PARTICLES R13a):
   (a keyboard without keys: Mono/Poly, Octave, Glide; poly by default so chords stay chords). Each plays what it
   touches with its own settings; the outer controller adds its octave.
 - **Make Stage.** While blocks are selected, a MAKE STAGE button puts them inside a new Stage block where they were,
-  as Cmd/Ctrl+G does; the new Stage is then selected. It sits beside the selection's top: on its right, or its left
+  as Cmd/Ctrl+G does; the new Stage is then selected. It is one undo step, as is a drop onto a Stage: Cmd/Ctrl+Z
+  takes the blocks and labels back out where they were, and the history before it stays (owner, 2026-11-26). It sits beside the selection's top: on its right, or its left
   when there is no room on the right. Only with every block selected and some out of view (or no place beside the
   selection on screen) does it sit at the stage's top right, under the SIGNED IN AS line; it never covers the corner
   text. It looks like the plugin's Dust menu (right-click a slider): a one-item menu, 13 px Dosis, the row lit in a

@@ -39,8 +39,8 @@ drawn by `Stage.selected`):
 - Further fingers (UI-0006) still move only the block they hold.
 - Tests: ui-regressions `multi-select`, `insert-touch` (an Insert is not selected).
 - Undo (owner, 2026-11-11): Cmd/Ctrl+Z brings back what was deleted (one block or a whole selection, by key or on the
-  trash; a trashed block returns where its drag began, with its settings and sound), or takes out the last Insert,
-  most recent first (up to 100 steps; loading or clearing a patch empties it). Test: `undo-delete`.
+  trash; a trashed block returns where its drag began, with its settings and sound), takes out the last Insert, or
+  takes blocks back out of a Stage they were put in (UI-0012), most recent first (up to 100 steps; loading or clearing a patch empties it). Tests: `undo-delete`, `undo-make-stage`.
 
 ## Alternatives considered
 - **Selected blocks at 50% alpha** (v1's pressed look): reads as "being dragged" and is used for exactly that.

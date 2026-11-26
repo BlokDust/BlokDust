@@ -1,5 +1,6 @@
 // ui-regressions: Undo and redo.
-import { blk, browser, open, type RegressionTest } from './harness.ts';
+import { blk, browser, open, url, type RegressionTest } from './harness.ts';
+import { encodePatch } from '../../../web/src/patch/share.ts';
 
 export const undoTests: Record<string, RegressionTest> = {
   /** Cmd/Ctrl+Z brings back a block deleted with Backspace, dragged to the trash, or deleted with
@@ -222,5 +223,159 @@ export const undoTests: Record<string, RegressionTest> = {
       result.delRedo === 1 &&
       result.redoCleared === true;
     return [ok, result];
+  },
+  /** Owner bug (2026-11-26): MAKE STAGE and a drop onto a Stage are one undo step each (blocks,
+   * sound and labels back out); the history before them stays; redo takes them in again. */
+  async 'undo-make-stage'(errors: string[]) {
+    const page = await browser.newPage({
+      viewport: { width: 1280, height: 800 },
+      deviceScaleFactor: 1,
+    });
+    page.on('pageerror', (error) => errors.push(error.message));
+    const token = await encodePatch({
+      format: 'blokdust.patch',
+      version: 2,
+      seed: 1,
+      blocks: [
+        { id: 't', type: 'source.tone', x: -3, y: 3, params: {} },
+        { id: 'p', type: 'power.power', x: -6, y: 3, params: {} },
+        { id: 'f', type: 'fx.filter', x: 8, y: -4, params: { frequency: 1234 } },
+      ],
+      labels: [{ id: 'l1', text: 'MINE', x: -4, y: 6 }],
+    });
+    await page.goto(`${url}/index.html?c=${token}`);
+    await page.waitForFunction(() => window.__bd_probe);
+    await page.click('#start');
+    await page.waitForFunction(() => window.__bd_probe.state.snapshots > 10);
+    await page.waitForTimeout(1200);
+    const scene = () =>
+      page.evaluate(() => {
+        const patch = window.__bd_probe.state.patch;
+        return JSON.stringify({
+          blocks: patch.blocks
+            .map((b) => JSON.stringify([b.id, b.type, b.x, b.y, b.params]))
+            .sort(),
+          labels: (patch.labels ?? []).map((label) => [label.id, label.text, label.x, label.y]),
+          macros: (patch.macros ?? []).map((macro) => ({
+            blocks: macro.blocks.map((b) => [b.id, b.type, b.params]).sort(),
+            labels: (macro.labels ?? []).map((label) => label.text),
+          })),
+        });
+      });
+    const at = async (uid: string) => {
+      const point = await page.evaluate((patchId) => {
+        const id = window.__bd_probe.idOf(patchId);
+        return id === undefined ? null : window.__bd_probe.blockPoint(id);
+      }, uid);
+      if (!point) throw new Error(`no block ${uid}`);
+      return point;
+    };
+    const level = async () => {
+      await page.waitForTimeout(1200);
+      return page.evaluate(() => window.__bd_probe.state.rms);
+    };
+    const key = async (keys: string) => {
+      await page.mouse.move(640, 120);
+      await page.keyboard.press(keys);
+      await page.waitForTimeout(400);
+    };
+    const result: Record<string, unknown> = {};
+    // A step before: drag the Filter 3 cells right.
+    const start = await scene();
+    {
+      const [x, y] = await at('f'),
+        [x0] = await page.evaluate(() => window.__bd_probe.toCss(8, -4)),
+        [x1] = await page.evaluate(() => window.__bd_probe.toCss(11, -4));
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      await page.mouse.move(x + x1 - x0, y, { steps: 10 });
+      await page.mouse.up();
+      await page.waitForTimeout(300);
+    }
+    const moved = await scene();
+    result.movedFilter = moved !== start;
+    const sounding = await level();
+    // Shift+click the Tone, the Power and the label; MAKE STAGE.
+    await page.keyboard.down('Shift');
+    for (const uid of ['t', 'p']) {
+      const [x, y] = await at(uid);
+      await page.mouse.click(x, y);
+      await page.waitForTimeout(150);
+    }
+    const label = (await page.evaluate(() => window.__bd_probe.labels))[0];
+    await page.mouse.click(label.cx, label.cy);
+    await page.keyboard.up('Shift');
+    await page.waitForTimeout(200);
+    const btn = await page.evaluate(() => window.__bd_probe.makeStage);
+    if (btn) await page.mouse.click(btn.x, btn.y);
+    await page.waitForTimeout(600);
+    const staged = await scene();
+    const stagedParsed = JSON.parse(staged) as {
+      blocks: string[];
+      labels: unknown[];
+      macros: { blocks: unknown[]; labels: string[] }[];
+    };
+    result.staged = {
+      outer: stagedParsed.blocks.length,
+      labels: stagedParsed.labels.length,
+      inner: stagedParsed.macros[0]?.blocks.length,
+      innerLabels: stagedParsed.macros[0]?.labels,
+    };
+    // Undo: out of the Stage, as before, and sounding again.
+    await key('ControlOrMeta+z');
+    result.undoStage = (await scene()) === moved;
+    result.undoLevel = await level();
+    // Undo again: the Filter's move (the history before MAKE STAGE is kept).
+    await key('ControlOrMeta+z');
+    result.undoMove = (await scene()) === start;
+    // Redo both: the Stage again, with the same inside.
+    await key('ControlOrMeta+Shift+z');
+    result.redoMove = (await scene()) === moved;
+    await key('ControlOrMeta+Shift+z');
+    result.redoStage = (await scene()) === staged;
+    // Drag the Filter onto the Stage: it goes in; undo puts it back where it was, the Stage as it
+    // was; redo takes it in again.
+    {
+      const [x, y] = await at('f');
+      const stagePoint = await page.evaluate(() => {
+        const stageBlock = window.__bd_probe.state.blocks.find((b) => b.type === 'source.stage');
+        return stageBlock ? window.__bd_probe.blockPoint(stageBlock.id) : null;
+      });
+      if (!stagePoint) throw new Error('no Stage');
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      await page.mouse.move(stagePoint[0], stagePoint[1], { steps: 14 });
+      await page.mouse.up();
+      await page.waitForTimeout(600);
+    }
+    const dropped = await scene();
+    const droppedParsed = JSON.parse(dropped) as {
+      blocks: string[];
+      macros: { blocks: unknown[] }[];
+    };
+    result.dropped = {
+      outer: droppedParsed.blocks.length,
+      inner: droppedParsed.macros[0]?.blocks.length,
+    };
+    await key('ControlOrMeta+z');
+    result.undoDrop = (await scene()) === staged;
+    await key('ControlOrMeta+Shift+z');
+    result.redoDrop = (await scene()) === dropped;
+    await page.close();
+    const ok =
+      result.movedFilter === true &&
+      sounding > 0.01 &&
+      !!btn &&
+      JSON.stringify(result.staged) ===
+        JSON.stringify({ outer: 2, labels: 0, inner: 2, innerLabels: ['MINE'] }) &&
+      result.undoStage === true &&
+      (result.undoLevel as number) > 0.01 &&
+      result.undoMove === true &&
+      result.redoMove === true &&
+      result.redoStage === true &&
+      JSON.stringify(result.dropped) === JSON.stringify({ outer: 1, inner: 3 }) &&
+      result.undoDrop === true &&
+      result.redoDrop === true;
+    return [ok, { sounding, ...result }];
   },
 };

@@ -6,14 +6,19 @@ import { stage } from '../boot/pixi.ts';
 import { moveBlock, removeBlock } from './deleteBlocks.ts';
 import {
   type LabelMove,
+  type StageSnap,
+  type UndoStep,
   type XY,
   idOfUid,
   pushUndo,
   redoStack,
   restore,
   snapOf,
+  stageSnapOf,
   undoStack,
 } from './undoSteps.ts';
+import { innerIds, innerSamples, macros } from '../model/stageWorlds.ts';
+import { scene } from '../scene/scene.ts';
 import { setSelection } from '../input/selection.ts';
 import { addLabels, labelsChanged } from '../labels/labels.ts';
 import { labels, model, selectedLabels } from '../model/patchModel.ts';
@@ -105,6 +110,48 @@ export const labelMovesSince = (from: Map<string, XY>): LabelMove[] =>
       : [];
   });
 
+/** Stage block `uid` out (its inside forgotten), then `put` in its place when given. */
+function swapStage(uid: string, put: StageSnap | null): void {
+  const id = idOfUid(uid);
+  if (id !== undefined) {
+    scene.OptionsPanel.Close();
+    removeBlock(id);
+  }
+  macros.delete(uid);
+  innerIds.delete(uid);
+  innerSamples.delete(uid);
+  if (!put) return;
+  macros.set(uid, structuredClone(put.macro));
+  innerSamples.set(uid, new Map(put.audio));
+  restore(put.snap);
+}
+
+/** Undo a Stage step: the Stage as it was before, and what went in back out where it was. */
+function undoStage(step: Extract<UndoStep, { kind: 'stage' }>): void {
+  const uid = step.after.snap.b.uid,
+    // as it is now (moved, or changed inside, since), for redo
+    now = stageSnapOf(uid) ?? step.after;
+  swapStage(uid, step.before);
+  for (const snap of step.gone) restore(snap);
+  putBackLabels(step.labels);
+  redoStack.push({ ...step, after: now });
+}
+
+/** Redo a Stage step: what went in goes in again (as it is now), and the Stage is as it was. */
+function redoStage(step: Extract<UndoStep, { kind: 'stage' }>): void {
+  const uid = step.after.snap.b.uid;
+  const gone = step.gone.flatMap((snap) => {
+    const now = snapOf(snap.b.uid);
+    return now ? [now] : [];
+  });
+  const labelsNow = labelSnapsOf(step.labels.map((label) => label.id));
+  const before = step.before ? stageSnapOf(uid) : null;
+  removeUids(step.gone.map((snap) => snap.b.uid));
+  takeOutLabels(step.labels.map((label) => label.id));
+  swapStage(uid, step.after);
+  undoStack.push({ ...step, gone, labels: labelsNow, before });
+}
+
 /** Undo the last step; false when there is none. */
 export function undo(): boolean {
   const step = undoStack.pop();
@@ -123,6 +170,8 @@ export function undo(): boolean {
     for (const snap of step.snaps) restore(snap);
     putBackLabels(step.labels ?? []);
     redoStack.push(step);
+  } else if (step.kind === 'stage') {
+    undoStage(step);
   } else {
     moveUids(step.moves, false);
     moveLabelSteps(step.labelMoves ?? [], false);
@@ -151,6 +200,8 @@ export function redo(): boolean {
     removeUids(step.snaps.map((snap) => snap.b.uid));
     takeOutLabels(ids);
     undoStack.push({ kind: 'remove', snaps, labels: labelsNow });
+  } else if (step.kind === 'stage') {
+    redoStage(step);
   } else {
     moveUids(step.moves, true);
     moveLabelSteps(step.labelMoves ?? [], true);

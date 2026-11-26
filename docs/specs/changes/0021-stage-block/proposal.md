@@ -33,7 +33,8 @@ Condense a patch into one source block, enter it to edit, and hear both levels r
 ## As built (2026-11-14)
 - Panel: Volume, OPEN STAGE, LOAD PATCH (a `.blokdust` file; share links not yet). No patch-name row.
 - Make a stage from a selection: drag Stage out of the Source menu while blocks are selected, or Cmd/Ctrl+G. The
-  selected blocks move inside and carry on. Not undoable.
+  selected blocks move inside and carry on. Cmd/Ctrl+Z takes them back out where they were, with their settings,
+  sound and labels; the history before it stays (owner, 2026-11-26; test: ui-regressions `undo-make-stage`).
 - In: OPEN STAGE or a double click on the block. Out: ×, Esc, or a press outside the window.
 - Tests: the browser tests live in `tests/e2e/new-blocks.ts` (`stage`, `stage-from-selection`), not in ui-regressions.
   The `stage-nested` golden pins two Stages (one held by a Power, one struck by particles); "same as flattened" is an
@@ -46,7 +47,8 @@ Condense a patch into one source block, enter it to edit, and hear both levels r
 - Largest change in the set: engine world nesting, patch format, selection → stage, and the window UI. Do it last.
 
 ## Owner review 1 (2026-11-14)
-- Blocks dragged onto a Stage block go inside it (it is ringed while they would), to the right of what is there, with their connections. Not undoable.
+- Blocks dragged onto a Stage block go inside it (it is ringed while they would), to the right of what is there, with their connections. One undo step: undo puts them back where the drag began and
+  the Stage as it was.
 
 ## Owner review 2 (2026-11-14)
 - MAKE STAGE button while blocks are selected (UI-0012). Everything selected goes in: samplers keep their audio, the

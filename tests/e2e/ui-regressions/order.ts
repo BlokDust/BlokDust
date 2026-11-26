@@ -78,6 +78,7 @@ export const ORDER = [
   'splash-skip',
   'undo-delete',
   'undo-redo',
+  'undo-make-stage',
   'patch-view',
   'power-switch',
   'power-off-label-centred',
