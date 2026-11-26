@@ -13,21 +13,21 @@ superseded_by:
 ## Context
 SHARING-0005 put Release 1 at funputs.com/blokdust. On 2026-11-12, before anything was deployed there, the owner
 chose blokdust.funputs.com instead. A subdomain keeps a standalone creative application apart from the Funputs
-commercial product range. funputs.com/blokdust should still lead to the app: a redirect for now, perhaps a short
-landing page about the project later. funputs.com is a Cloudflare zone in the same account, a Custom Domain of the
+commercial product range. funputs.com/blokdust should still lead to the app; no landing page is planned there
+(owner, 2026-11-26). funputs.com is a Cloudflare zone in the same account, a Custom Domain of the
 `funputs-site` Worker. blokdust.funputs.com has no DNS record yet.
 
 ## Decision
 We will serve the production Worker `blokdust` at the root of **blokdust.funputs.com**, a Custom Domain created by
 the production deploy (`BASE_PATH` "", `PUBLIC_BASE_URL` `https://blokdust.funputs.com`, the build served from the
 asset store's root). A Worker route `funputs.com/blokdust*` sends that path to the same Worker. There, and on any host
-under `LEGACY_BASE_PATH` `/blokdust`, pages answer with a **302** to the same page at the root of the public site.
-The redirect is temporary so that a landing page can replace it later without browsers having cached it. The API
+under `LEGACY_BASE_PATH` `/blokdust`, pages answer with a **301** to the same page at the root of the public site.
+The redirect is permanent, so search engines move those pages and their links to blokdust.funputs.com. The API
 under `/blokdust/api/…` keeps answering in place. Staging uses the same layout at the root of its workers.dev host.
 
 ## Consequences
-- No change to `funputs-site` or its domains. A landing page later means removing the route and adding the page to
-  `funputs-site` (or keeping the route and serving the page from this Worker).
+- No change to `funputs-site` or its domains. Browsers and search engines remember a 301, so serving anything else
+  at funputs.com/blokdust later would reach people slowly.
 - New in Cloudflare (owner, 2026-11-12): the Custom Domain blokdust.funputs.com (its DNS record and certificate are
   managed by Cloudflare) and the route `funputs.com/blokdust*`. Both are created by the first production deploy after
   the merge. Before that deploy, `bd server setup --env production` adds blokdust.funputs.com to the production
