@@ -17,6 +17,13 @@ export const SOURCE_LINK = {
   label: 'View the code on GitHub',
   url: 'https://github.com/BlokDust/BlokDust',
 };
+/** About's link to the guide (CHG-0047), in v1's Connect words and button: never the old
+ * guide.blokdust.com, which now serves spam. */
+export const GUIDE = {
+  line: 'Visit the BlokDust 2 guide for information, tutorials & more.',
+  label: 'BlokDust 2 Guide',
+  url: 'https://blokdust.funputs.com/guide/',
+};
 /** The published installers (`pnpm bd release publish` writes them; null before a release). */
 export type Release = {
   file: string;

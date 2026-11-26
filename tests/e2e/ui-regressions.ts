@@ -23,6 +23,7 @@ import { menusTests } from './ui-regressions/menus.ts';
 import { supportTests } from './ui-regressions/support.ts';
 import { settingsTests } from './ui-regressions/settings.ts';
 import { settingsLayoutTests } from './ui-regressions/settings-layout.ts';
+import { aboutGuideTests } from './ui-regressions/about-guide.ts';
 import { patchesOpenTests } from './ui-regressions/patches-open.ts';
 import { patchesSaveTests } from './ui-regressions/patches-save.ts';
 import { patchesLayoutTests } from './ui-regressions/patches-layout.ts';
@@ -57,6 +58,7 @@ const byName: Record<string, RegressionTest> = {
   ...supportTests,
   ...settingsTests,
   ...settingsLayoutTests,
+  ...aboutGuideTests,
   ...patchesOpenTests,
   ...patchesSaveTests,
   ...patchesLayoutTests,

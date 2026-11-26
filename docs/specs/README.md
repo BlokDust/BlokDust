@@ -72,3 +72,4 @@
 | [CHG-0044](changes/0044-publish-blokdust-2-in-the-original-repository/proposal.md) | Publish BlokDust 2 in the original repository | **done** | SPEC-PROCESS-PRIVATE-OPERATIONAL-CONFIGURATION |
 | [CHG-0045](changes/0045-linting-formatting-and-code-structure/proposal.md) | Linting, formatting and code structure | **in-progress** | SPEC-PATCH-FORMAT-V2 |
 | [CHG-0046](changes/0046-search-home-page-in-the-sitemap-canonical-and/proposal.md) | Search: home page in the sitemap, canonical and crawlable links | **proposed** | SPEC-SHARING-BLOKDUST-GLOSSARY, SPEC-SHARING-BACKEND |
+| [CHG-0047](changes/0047-about-links-to-the-blokdust-2-guide/proposal.md) | About links to the BlokDust 2 guide | **proposed** | SPEC-SHARING-BLOKDUST-GLOSSARY |

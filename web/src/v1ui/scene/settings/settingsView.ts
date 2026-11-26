@@ -79,6 +79,15 @@ export interface AppSettingsPanel {
   usageStatsSwitch?: () => { x: number; y: number; label: string } | null;
   /** Tests: each footer link's centre in CSS px. */
   footerLinks?: () => { label: string; x: number; y: number }[];
+  /** Tests: ABOUT's guide button in CSS px, its line's baseline and link (null: not shown). */
+  guideButton?: () => {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    lineY: number;
+    url: string;
+  } | null;
   /** Tests: ABOUT's people on a phone (CSS px). */
   peoplePhone?: () => { icon: number[]; text: number[]; url: string }[] | null;
   /** Tests: the TOUR button's centre in CSS px (null: no row). */

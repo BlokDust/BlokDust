@@ -83,6 +83,14 @@ export interface SettingsFooter {
   downloadButtons(): { key: string; x: number; y: number; url: string | null }[];
   setRelease(release: { version: string | null; macos: ReleaseFile; windows: ReleaseFile }): void;
   peoplePhone(): { icon: number[]; text: number[]; url: string }[] | null;
+  guideButton(): {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    lineY: number;
+    url: string;
+  } | null;
 }
 
 /** v1's DisplayObject canvas the Settings panel draws on (untyped in ported code). */

@@ -62,6 +62,15 @@ function peopleRows(panel: AppSettingsPanel): PersonRow[] {
   });
 }
 
+/** The y under ABOUT's people: a phone's last row, or v1's website line (130 units below the page
+ * top for the blurbs, then 56 for the line the websites take). Follows the tab as it slides. */
+export function peopleBottom(panel: AppSettingsPanel): number {
+  const unit = App.Unit;
+  if (!App.SettingsPhone) return tabPageTop(panel, ABOUT_TAB, unit) + 190 * unit;
+  const last = peopleRows(panel).at(-1);
+  return last ? Math.max(last.base, last.urlY + 4 * unit) : tabPageTop(panel, ABOUT_TAB, unit);
+}
+
 export function installAboutPeople(context: SettingsContext): void {
   const panel = context.panel;
   panel.peoplePhone = () => {
