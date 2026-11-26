@@ -1,6 +1,12 @@
-import { SUPPORT, diagnosticText, type Diagnostic, type DiagnosticKind } from '../../../shared/support.ts';
+import {
+  SUPPORT,
+  diagnosticText,
+  type Diagnostic,
+  type DiagnosticKind,
+} from '../../../shared/support.ts';
 
-/** UI-thread only; no engine timing, filesystem access, persistent logs or arbitrary object serialisation. */
+/** UI-thread only; no engine timing, filesystem access, persistent logs or arbitrary object
+ * serialisation. */
 export class Diagnostics {
   private events: Diagnostic[] = [];
   onError?: (event: Diagnostic) => void;
@@ -10,16 +16,34 @@ export class Diagnostics {
     this.onError?.(event);
   }
   recent(): Diagnostic[] {
-    this.events = this.events.filter(e => e.at >= Date.now() - SUPPORT.windowMs);
-    return this.events.map(e => ({ ...e }));
+    this.events = this.events.filter((value) => value.at >= Date.now() - SUPPORT.windowMs);
+    return this.events.map((value) => ({ ...value }));
   }
   install(): void {
-    window.addEventListener('error', e => { if (e instanceof ErrorEvent) this.add('error', e.message); });
-    window.addEventListener('unhandledrejection', e => this.add('unhandledrejection', e.reason instanceof Error ? e.reason.message : e.reason));
+    window.addEventListener('error', (errorEvent) => {
+      if (errorEvent instanceof ErrorEvent) this.add('error', errorEvent.message);
+    });
+    window.addEventListener('unhandledrejection', (event) => {
+      this.add(
+        'unhandledrejection',
+        event.reason instanceof Error ? event.reason.message : event.reason,
+      );
+    });
     const original = console.error.bind(console);
     console.error = (...args: unknown[]) => {
       original(...args);
-      this.add('console', args.map(a => a instanceof Error ? diagnosticText(a.message) : typeof a === 'string' ? diagnosticText(a) : '[non-text diagnostic]').join(' '));
+      this.add(
+        'console',
+        args
+          .map((a) =>
+            a instanceof Error
+              ? diagnosticText(a.message)
+              : typeof a === 'string'
+                ? diagnosticText(a)
+                : '[non-text diagnostic]',
+          )
+          .join(' '),
+      );
     };
   }
 }

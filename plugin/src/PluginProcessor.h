@@ -1,15 +1,16 @@
 #pragma once
 #include <bitset>
-// BlokDust plugin processor (PLUGIN-0001): hosts the portable engine; state = patch v2 JSON (SPEC-PATCH-FORMAT-V2).
+// BlokDust plugin processor (PLUGIN-0001): hosts the portable engine; state = patch v2 JSON
+// (SPEC-PATCH-FORMAT-V2).
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <nlohmann/json.hpp>
 
 #include <atomic>
 #include <functional>
 #include <map>
+#include <memory>
 #include <set>
 #include <tuple>
-#include <memory>
 
 #include "Samples.h"
 #include "SnapshotBuffer.h"
@@ -20,17 +21,27 @@
 
 namespace blokdust::plugin {
 
-/// A Dust slot as the host sees it (PLUGIN-0003): "Dust 3", or "Dust 3 · Filter · Gain" once assigned, where hosts
-/// show parameter names (CHG-0004 3.9).
+/// A Dust slot as the host sees it (PLUGIN-0003): "Dust 3", or "Dust 3 · Filter · Gain" once
+/// assigned, where hosts show parameter names (CHG-0004 3.9).
 class DustParameter : public juce::AudioParameterFloat {
  public:
-  DustParameter(int slot) : juce::AudioParameterFloat(juce::ParameterID{"dust" + juce::String(slot), 1}, "Dust " + juce::String(slot),
-                                                       juce::NormalisableRange<float>(0.0f, 1.0f), 0.0f), slot_(slot) {}
+  DustParameter(int slot)
+      : juce::AudioParameterFloat(juce::ParameterID{"dust" + juce::String(slot), 1},
+                                  "Dust " + juce::String(slot),
+                                  juce::NormalisableRange<float>(0.0f, 1.0f), 0.0f),
+        slot_(slot) {}
   juce::String getName(int maxLength) const override {
     const juce::ScopedLock l(lock_);
-    return (target_.isEmpty() ? "Dust " + juce::String(slot_) : "Dust " + juce::String(slot_) + " " + juce::String(juce::CharPointer_UTF8("\xc2\xb7")) + " " + target_).substring(0, maxLength);
+    return (target_.isEmpty()
+                ? "Dust " + juce::String(slot_)
+                : "Dust " + juce::String(slot_) + " " +
+                      juce::String(juce::CharPointer_UTF8("\xc2\xb7")) + " " + target_)
+        .substring(0, maxLength);
   }
-  void setTarget(const juce::String& t) { const juce::ScopedLock l(lock_); target_ = t; }
+  void setTarget(const juce::String& t) {
+    const juce::ScopedLock l(lock_);
+    target_ = t;
+  }
 
  private:
   int slot_;
@@ -48,12 +59,14 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
   void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
   using AudioProcessor::processBlock;
-  /// Bypassed by the host (Logic's power button): the world keeps running (the stage still connects blocks, and
-  /// coming back sounds as if it had never stopped); the output is silence (instrument) or the dry input (FX).
+  /// Bypassed by the host (Logic's power button): the world keeps running (the stage still connects
+  /// blocks, and coming back sounds as if it had never stopped); the output is silence (instrument)
+  /// or the dry input (FX).
   void processBlockBypassed(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
   using AudioProcessor::processBlockBypassed;
-  /// Message thread (the editor's timer): when the host has stopped calling processBlock (a disabled plugin), run the
-  /// world for the time that passed, silently, so the stage still moves and connects. No-op while audio runs.
+  /// Message thread (the editor's timer): when the host has stopped calling processBlock (a
+  /// disabled plugin), run the world for the time that passed, silently, so the stage still moves
+  /// and connects. No-op while audio runs.
   void idleTick() noexcept;
   std::uint64_t snapshotSeq() const noexcept { return snapshotSeq_; }
 
@@ -76,8 +89,9 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   void setCurrentProgram(int) override {}
   const juce::String getProgramName(int) override { return {}; }
   void changeProgramName(int, const juce::String&) override {}
-  /// World power (owner, 2026-11-16, CHG-0025): 0 off and 1 on (the page's switch), 2 host: on while the DAW plays,
-  /// off while it is stopped. The page's own power commands are ignored in host mode; it is saved with the project.
+  /// World power (owner, 2026-11-16, CHG-0025): 0 off and 1 on (the page's switch), 2 host: on
+  /// while the DAW plays, off while it is stopped. The page's own power commands are ignored in
+  /// host mode; it is saved with the project.
   void setPowerMode(int mode) noexcept;
   int powerMode() const noexcept { return powerMode_.load(); }
   bool hostIsPlaying() const noexcept { return hostPlayingUi_.load(); }
@@ -88,69 +102,102 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   /// Current patch as JSON text (what the editor loads, and what the host saves).
   /// The patch as the host saves it, Dust moves included (message thread).
   std::string patchJson();
-  /// A block param that Dust (host automation, MIDI CC) moved: the editor shows it (owner, Ableton, 2026-11-12).
-  struct ParamUpdate { BlockId id; std::string param; double value; };
-  /// Message thread: write what Dust moved since last time into the patch, and queue it for the editor.
+  /// A block param that Dust (host automation, MIDI CC) moved: the editor shows it (owner, Ableton,
+  /// 2026-11-12).
+  struct ParamUpdate {
+    BlockId id;
+    std::string param;
+    double value;
+  };
+  /// Message thread: write what Dust moved since last time into the patch, and queue it for the
+  /// editor.
   void flushDust();
   /// Message thread: the Dust moves the editor has not shown yet (flushDust first).
   std::vector<ParamUpdate> takeParamUpdates() { return std::exchange(paramUpdates_, {}); }
-  /// Message thread: Toggles the engine switched (particle and laser hits) since the last snapshot go into the patch,
-  /// so the host's project, a saved file and a share link keep them as they are, as v1's Toggle did; and they are
-  /// queued for the editor like Dust moves (CHG-0013).
+  /// Message thread: Toggles the engine switched (particle and laser hits) since the last snapshot
+  /// go into the patch, so the host's project, a saved file and a share link keep them as they are,
+  /// as v1's Toggle did; and they are queued for the editor like Dust moves (CHG-0013).
   void syncToggles(const Snapshot& s);
   /// Engine id → patch block id (message thread).
   const std::map<BlockId, std::string>& blockIds() const noexcept { return idToKey_; }
-  /// Apply UI commands ([{type,id,blockType,x,y,param,value}]) to the engine and the patch model. A command with
-  /// `stage` goes to that Stage block's inner world (CHG-0038); the page then keeps the patch's macros (setMacros).
+  /// Apply UI commands ([{type,id,blockType,x,y,param,value}]) to the engine and the patch model. A
+  /// command with `stage` goes to that Stage block's inner world (CHG-0038); the page then keeps
+  /// the patch's macros (setMacros).
   void applyUiCommands(const nlohmann::json& commands);
-  /// The world snapshots come from: Stage block `stage`'s inner world (made if it has none), or 0 for the outer one.
+  /// The world snapshots come from: Stage block `stage`'s inner world (made if it has none), or 0
+  /// for the outer one.
   void setStageView(BlockId stage);
-  /// What is inside each Stage block, from the page (CHG-0038): kept in the patch (the sounds the processor loaded
-  /// kept), and samplers inside that have no audio yet get it.
+  /// What is inside each Stage block, from the page (CHG-0038): kept in the patch (the sounds the
+  /// processor loaded kept), and samplers inside that have no audio yet get it.
   void setMacros(const nlohmann::json& macros);
-  /// The engine ids of each Stage's inner blocks, by the Stage's patch id and theirs (the editor's `innerIds`).
+  /// The engine ids of each Stage's inner blocks, by the Stage's patch id and theirs (the editor's
+  /// `innerIds`).
   nlohmann::json innerIds() const;
-  /// Message thread. End the Computer Keyboard notes the page is holding (its window lost the keys, or it closed).
+  /// Message thread. End the Computer Keyboard notes the page is holding (its window lost the keys,
+  /// or it closed).
   void releasePageKeys();
   SnapshotBuffer& snapshots() noexcept { return snapshots_; }
-  /// Dust assignment from the editor (right-click a slider, PLUGIN-0003): slot 1..8 maps `param` of block `id`;
-  /// slot 0 clears that block/param. Updates the patch's "automation" list (saved with the host project).
+  /// Dust assignment from the editor (right-click a slider, PLUGIN-0003): slot 1..8 maps `param` of
+  /// block `id`; slot 0 clears that block/param. Updates the patch's "automation" list (saved with
+  /// the host project).
   void setAutomation(int slot, BlockId id, const std::string& param);
-  /// R4a: the order the connected pairs connected in ([[patch id, patch id]...], oldest first), from the editor, which
-  /// reads it from the engine. Saved in the patch as "connectionOrder" so a reopened project keeps its effect order.
-  void setConnectionOrder(const nlohmann::json& order) { if (order.is_array()) patch_["connectionOrder"] = order; }
-  /// The editor's view (zoom, offset; owner 2026-11-12): saved with the patch, so a reopened project shows it.
-  void setView(const nlohmann::json& view) { if (view.is_object() && view.contains("zoom")) patch_["view"] = view; }
+  /// R4a: the order the connected pairs connected in ([[patch id, patch id]...], oldest first),
+  /// from the editor, which reads it from the engine. Saved in the patch as "connectionOrder" so a
+  /// reopened project keeps its effect order.
+  void setConnectionOrder(const nlohmann::json& order) {
+    if (order.is_array())
+      patch_["connectionOrder"] = order;
+  }
+  /// The editor's view (zoom, offset; owner 2026-11-12): saved with the patch, so a reopened
+  /// project shows it.
+  void setView(const nlohmann::json& view) {
+    if (view.is_object() && view.contains("zoom"))
+      patch_["view"] = view;
+  }
   /// Labels (CHG-0020): text on the stage, kept with the patch; the engine never reads them.
-  void setLabels(const nlohmann::json& labels) { if (labels.is_array() && !labels.empty()) patch_["labels"] = labels; else patch_.erase("labels"); }
-  /// MIDI learn (CHG-0004 3.9): the next CC received drives Dust `slot` (saved in its automation entry as "cc").
+  void setLabels(const nlohmann::json& labels) {
+    if (labels.is_array() && !labels.empty())
+      patch_["labels"] = labels;
+    else
+      patch_.erase("labels");
+  }
+  /// MIDI learn (CHG-0004 3.9): the next CC received drives Dust `slot` (saved in its automation
+  /// entry as "cc").
   void learnCc(int slot) noexcept { learnSlot_.store(slot); }
   std::function<void(int slot, int cc)> onCcLearned;  // set by the editor (message thread)
 
-  // ---- samples (CHG-0004 3.6/3.7): loaded natively, saved as references in the patch (DATA-0005) ----
-  /// "Your file" in the sample panel: a native file chooser (a real path is what the DAW project keeps).
-  /// `stage`: the block is inside that Stage block (CHG-0038); 0: the outer world. So for the calls below.
+  // ---- samples (CHG-0004 3.6/3.7): loaded natively, saved as references in the patch (DATA-0005)
+  // ----
+  /// "Your file" in the sample panel: a native file chooser (a real path is what the DAW project
+  /// keeps). `stage`: the block is inside that Stage block (CHG-0038); 0: the outer world. So for
+  /// the calls below.
   void pickFile(BlockId id, BlockId stage = 0);
   /// A file by path (drag and drop onto the editor, or tests).
   void loadFile(BlockId id, const juce::File& file, BlockId stage = 0);
-  /// Patches panel (CHG-0005): Open replaces the scene with `part` ({blocks, refs, tempo?}); Insert adds its blocks.
-  /// The engine is rebuilt from the merged patch; samples already loaded stay, new ones load; the editor reloads.
+  /// Patches panel (CHG-0005): Open replaces the scene with `part` ({blocks, refs, tempo?}); Insert
+  /// adds its blocks. The engine is rebuilt from the merged patch; samples already loaded stay, new
+  /// ones load; the editor reloads.
   void applyPatch(const nlohmann::json& part, bool open);
-  /// A Freesound sound picked in the panel: `ref` as the web keeps it; `display` = {trackName, user, permalink}.
-  void loadFreesound(BlockId id, const nlohmann::json& ref, const nlohmann::json& display, double maxSeconds, BlockId stage = 0);
+  /// A Freesound sound picked in the panel: `ref` as the web keeps it; `display` = {trackName,
+  /// user, permalink}.
+  void loadFreesound(BlockId id, const nlohmann::json& ref, const nlohmann::json& display,
+                     double maxSeconds, BlockId stage = 0);
   /// What the UI shows for every sampler: [{id, track, duration, preview, missing, loading}].
   nlohmann::json sampleInfos() const;
   std::function<void(const nlohmann::json&)> onSampleInfo;  // set by the editor (message thread)
-  /// Recorder (owner, Logic): record the plugin's output; stopping writes it to ~/Music/BlokDust/Recordings and loads
-  /// it into block `id` as its file (the project references it like any user file, DATA-0005).
+  /// Recorder (owner, Logic): record the plugin's output; stopping writes it to
+  /// ~/Music/BlokDust/Recordings and loads it into block `id` as its file (the project references
+  /// it like any user file, DATA-0005).
   void setRecording(BlockId id, bool on, BlockId stage = 0);
   bool isRecording() const noexcept { return recording_.load(); }
-  /// SampleGen: the editor generates (v1's generator) and hands over the audio; saved to ~/Music/BlokDust/SampleGen
-  /// and loaded as the block's file, so a reopened project plays it without the editor.
-  void useGenerated(BlockId id, const std::vector<float>& mono, double sampleRate, BlockId stage = 0);
+  /// SampleGen: the editor generates (v1's generator) and hands over the audio; saved to
+  /// ~/Music/BlokDust/SampleGen and loaded as the block's file, so a reopened project plays it
+  /// without the editor.
+  void useGenerated(BlockId id, const std::vector<float>& mono, double sampleRate,
+                    BlockId stage = 0);
   /// Recorder's download button in a DAW: show the block's file in Finder / Explorer.
-  /// The Recorder's download: the take is already a file, so show it (Finder / Explorer). iPad: export a copy through
-  /// the document picker (CHG-0025 task 6), as there is no Finder.
+  /// The Recorder's download: the take is already a file, so show it (Finder / Explorer). iPad:
+  /// export a copy through the document picker (CHG-0025 task 6), as there is no Finder.
   void revealSample(BlockId id, BlockId stage = 0);
 
   static constexpr int kDustSlots = 8;  // PLUGIN-0003
@@ -158,39 +205,62 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
  private:
   static BusesProperties buses();
   void rebuildEngine();
-  void useSample(const std::string& key, std::shared_ptr<LoadedSample> s, bool fresh, const nlohmann::json& display);
+  void useSample(const std::string& key, const std::shared_ptr<LoadedSample>& s, bool fresh,
+                 const nlohmann::json& display);
   void attachSamples();
   void restoreSamples();
   void markMissing(const std::string& key);
   nlohmann::json sampleInfo(const std::string& key) const;
-  std::string keyOf(BlockId id) const { const auto it = idToKey_.find(id); return it == idToKey_.end() ? std::string{} : it->second; }
-  /// A sampler's key: its patch id, or "<Stage's patch id>/<its patch id>" inside a Stage (CHG-0038).
+  std::string keyOf(BlockId id) const {
+    const auto it = idToKey_.find(id);
+    return it == idToKey_.end() ? std::string{} : it->second;
+  }
+  /// A sampler's key: its patch id, or "<Stage's patch id>/<its patch id>" inside a Stage
+  /// (CHG-0038).
   std::string keyOf(BlockId stage, BlockId id) const;
   /// Where a key's block is: its world and engine id there (world null: none now).
-  struct Where { Engine* world = nullptr; BlockId id = kInvalidBlock; BlockId stage = 0; };
+  struct Where {
+    Engine* world = nullptr;
+    BlockId id = kInvalidBlock;
+    BlockId stage = 0;
+  };
   Where locate(const std::string& key) const;
   void loadFileKey(const std::string& key, const juce::File& file);
-  void loadFreesoundKey(const std::string& key, const nlohmann::json& ref, const nlohmann::json& display, double maxSeconds);
+  void loadFreesoundKey(const std::string& key, const nlohmann::json& ref,
+                        const nlohmann::json& display, double maxSeconds);
   void restoreSample(const std::string& key, const nlohmann::json& block);
   /// Sampler blocks inside the patch's Stage blocks: (key, block JSON).
   std::vector<std::pair<std::string, const nlohmann::json*>> innerSamplers() const;
   EngineConfig childConfig() const;
-  /// What each sample key was last attached to (world, engine id, audio): attachSamples attaches only what changed.
+  /// What each sample key was last attached to (world, engine id, audio): attachSamples attaches
+  /// only what changed.
   std::map<std::string, std::tuple<Engine*, BlockId, const LoadedSample*>> attachedTo_;
-  BlockId idOf(const std::string& key) const { for (const auto& [id, k] : idToKey_) if (k == key) return id; return kInvalidBlock; }
+  BlockId idOf(const std::string& key) const {
+    for (const auto& [id, k] : idToKey_)
+      if (k == key)
+        return id;
+    return kInvalidBlock;
+  }
   nlohmann::json* blockJson(const std::string& key);
   void rebuildDust();
   void publishSnapshot() noexcept;
   void applyAutomation() noexcept;
   void render(juce::AudioBuffer<float>& buffer, int from, int to) noexcept;
 
-  struct DustSlot { bool active = false; BlockId block = kInvalidBlock; BlockType type{}; std::uint8_t param = 0; float last = -1.0f; int cc = -1; };
-  void handleAsyncUpdate() override;                // commits a learned CC into the patch (message thread)
+  struct DustSlot {
+    bool active = false;
+    BlockId block = kInvalidBlock;
+    BlockType type{};
+    std::uint8_t param = 0;
+    float last = -1.0f;
+    int cc = -1;
+  };
+  void handleAsyncUpdate() override;  // commits a learned CC into the patch (message thread)
   void applyDust(std::size_t slot, float v) noexcept;
   std::atomic<int> learnSlot_{0}, learnedSlot_{0}, learnedCc_{-1};
   std::array<DustSlot, kDustSlots> dust_{};
-  // Dust → editor/patch (owner, 2026-11-12): the audio thread stores each slot's latest mapped value and marks it;
-  // flushDust (message thread) takes them. Lock-free.
+  // Dust → editor/patch (owner, 2026-11-12): the audio thread stores each slot's latest mapped
+  // value and marks it; flushDust (message thread) takes them. Lock-free.
   std::array<std::atomic<double>, kDustSlots> dustValue_{};
   std::array<std::atomic<bool>, kDustSlots> dustMoved_{};
   std::vector<ParamUpdate> paramUpdates_;
@@ -200,20 +270,23 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   nlohmann::json patch_;
   std::map<BlockId, std::string> idToKey_;  // engine id → patch block id
   std::unique_ptr<Engine> engine_;          // swapped only while processing is suspended
-  StageWorlds stages_;                      // its Stage blocks' inner worlds (CHG-0021, CHG-0038), replaced with it
-  std::uint64_t seed_ = 1;                  // the patch's seed (inner worlds made later use it too)
-  std::atomic<BlockId> view_{0};            // the Stage whose world snapshots show (0: the outer world)
-  MidiRouter midiRouter_;                   // host MIDI → MIDI Input blocks (MPE, PLUGIN-0004)
-  double lastBpm_ = 0.0;                    // host tempo last sent to the engine
-  bool hostPlaying_ = false;                // the host transport was playing at the last block (audio thread)
+  StageWorlds stages_;      // its Stage blocks' inner worlds (CHG-0021, CHG-0038), replaced with it
+  std::uint64_t seed_ = 1;  // the patch's seed (inner worlds made later use it too)
+  std::atomic<BlockId> view_{0};  // the Stage whose world snapshots show (0: the outer world)
+  MidiRouter midiRouter_;         // host MIDI → MIDI Input blocks (MPE, PLUGIN-0004)
+  double lastBpm_ = 0.0;          // host tempo last sent to the engine
+  bool hostPlaying_ = false;      // the host transport was playing at the last block (audio thread)
   std::atomic<int> powerMode_{1};           // setPowerMode
   std::atomic<bool> hostPlayingUi_{false};  // hostPlaying_, for the editor
-  std::atomic<bool> powerResync_{false};    // host mode was chosen: apply the transport's power at the next block
-  int hostPower_ = -1;                      // the power host mode last applied (audio thread); -1: not in host mode
+  std::atomic<bool> powerResync_{
+      false};           // host mode was chosen: apply the transport's power at the next block
+  int hostPower_ = -1;  // the power host mode last applied (audio thread); -1: not in host mode
   SampleLoader loader_;
-  std::map<std::string, std::shared_ptr<LoadedSample>> samples_;  // by patch block id; kept alive while attached
+  std::map<std::string, std::shared_ptr<LoadedSample>>
+      samples_;  // by patch block id; kept alive while attached
   std::set<std::string> missing_, loading_;
-  std::map<std::string, int> loadGen_;      // latest load request per block: an older one finishing late is ignored
+  std::map<std::string, int>
+      loadGen_;  // latest load request per block: an older one finishing late is ignored
   std::unique_ptr<juce::FileChooser> chooser_;
   double sampleRate_ = 0.0;
   int samplesSinceSnapshot_ = 0, samplesPerSnapshot_ = 735;  // a UI snapshot each 1/60 s of audio
@@ -222,10 +295,27 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   std::atomic<double> lastProcessMs_{0.0};  // when processBlock last ran (ms counter); 0 = never
   double lastIdleMs_ = 0.0;
   juce::AudioBuffer<float> idleBuf_, dryBuf_;  // preallocated in prepareToPlay
-  // Recorder: the audio thread writes the output into a FIFO; a message-thread timer drains it while recording.
-  void captureRecording(const float* l, const float* r, int n) noexcept;
+  // Recorder: the audio thread writes the output into a FIFO; a message-thread timer drains it
+  // while recording.
+  // NOLINTNEXTLINE(readability-identifier-length): l and r are the stereo channels
+  void captureRecording(const float* l, const float* r, int n) noexcept {
+    int s1 = 0, n1 = 0, s2 = 0, n2 = 0;
+    recFifo_.prepareToWrite(n, s1, n1, s2, n2);
+    if (n1 > 0) {
+      recFifoBuf_.copyFrom(0, s1, l, n1);
+      recFifoBuf_.copyFrom(1, s1, r, n1);
+    }
+    if (n2 > 0) {
+      recFifoBuf_.copyFrom(0, s2, l + n1, n2);
+      recFifoBuf_.copyFrom(1, s2, r + n1, n2);
+    }
+    recFifo_.finishedWrite(n1 + n2);  // a full FIFO drops the rest (the drain is late by > 4 s)
+  }
   void drainRecording();
-  struct Drain : juce::Timer { std::function<void()> f; void timerCallback() override { f(); } };
+  struct Drain : juce::Timer {
+    std::function<void()> f;
+    void timerCallback() override { f(); }
+  };
   std::atomic<bool> recording_{false};
   BlockId recordingBlock_ = kInvalidBlock, recordingStage_ = 0;
   juce::AbstractFifo recFifo_{1};

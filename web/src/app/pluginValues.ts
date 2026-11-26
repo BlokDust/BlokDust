@@ -1,13 +1,7 @@
-// Values the plugin keeps outside the patch, asked for by name: the page sends bd_get ({keys}), the plugin answers
-// bd_values ({name: value}) with the names it knows. Asked when the page starts and again each time it comes back into
-// focus, as another BlokDust or the DAW may have changed them. A new value: a field in PluginValues here and one line
-// in BlokDustEditor::sendValues (plugin/src/EditorSend.cpp).
+// Values the plugin keeps outside the patch: bd_get ({keys}) asked at start and on focus return,
+// answered by bd_values. A new value: a field here and a line in EditorSend.cpp.
 import { onFocusReturn } from './focus.ts';
-
-export interface Bridge {
-  emitEvent(id: string, payload: unknown): void;
-  addEventListener<T>(id: string, fn: (payload: T) => void): unknown;
-}
+import type { JuceBackend } from './plugin/juceBackend.ts';
 
 export interface PluginValues {
   /** Settings › About's switch: this install's choice (SPEC-SHARING-USAGE-ANALYTICS R7). */
@@ -15,18 +9,28 @@ export interface PluginValues {
 }
 
 export interface PluginValuesClient {
-  /** Call `fn` with the value whenever the plugin sends it. */
-  follow<K extends keyof PluginValues>(key: K, fn: (value: PluginValues[K]) => void): void;
+  /** Call `listener` with the value whenever the plugin sends it. */
+  follow: <Key extends keyof PluginValues>(
+    key: Key,
+    listener: (value: PluginValues[Key]) => void,
+  ) => void;
   /** Ask for every followed value now (the page asks again by itself on each focus return). */
-  ask(): void;
+  ask: () => void;
 }
 
-export function pluginValues(juce: Bridge): PluginValuesClient {
+export function pluginValues(plugin: JuceBackend): PluginValuesClient {
   const followers = new Map<string, (value: unknown) => void>();
-  juce.addEventListener('bd_values', (values: Record<string, unknown>) => {
+  plugin.addEventListener('bd_values', (values: Partial<Record<string, unknown>> | null) => {
     for (const [key, value] of Object.entries(values ?? {})) followers.get(key)?.(value);
   });
-  const ask = () => { if (followers.size) juce.emitEvent('bd_get', { keys: [...followers.keys()] }); };
+  const ask = () => {
+    if (followers.size) plugin.emitEvent('bd_get', { keys: [...followers.keys()] });
+  };
   onFocusReturn(ask);
-  return { follow: (key, fn) => { followers.set(key, fn as (value: unknown) => void); }, ask };
+  return {
+    follow: (key, listener) => {
+      followers.set(key, listener as (value: unknown) => void);
+    },
+    ask,
+  };
 }

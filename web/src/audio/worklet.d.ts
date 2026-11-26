@@ -4,4 +4,7 @@ declare class AudioWorkletProcessor {
   readonly port: MessagePort;
   constructor(options?: AudioWorkletNodeOptions);
 }
-declare function registerProcessor(name: string, ctor: new (options: AudioWorkletNodeOptions) => AudioWorkletProcessor): void;
+declare function registerProcessor(
+  name: string,
+  ctor: new (options: AudioWorkletNodeOptions) => AudioWorkletProcessor,
+): void;

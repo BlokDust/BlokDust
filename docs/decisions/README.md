@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**72 decisions** · proposed: 18 · accepted: 48 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
+**73 decisions** · proposed: 18 · accepted: 49 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -61,6 +61,7 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [PROCESS-0003](process/PROCESS-0003-domain-organised-adrs-and-specs-with-generated.md) | Domain-organised ADRs and specs with generated indexes | **accepted** | 2026-11-05 | docs, adr, specs |
 | [PROCESS-0004](process/PROCESS-0004-every-change-is-self-verified-unit-golden-audio.md) | Every change is self-verified: unit, golden-audio, visual and black-box tests | **accepted** | 2026-11-05 | testing, agents |
 | [PROCESS-0005](process/PROCESS-0005-keep-personal-configuration-outside-checkouts.md) | Keep personal configuration outside checkouts | **accepted** | 2026-11-11 |  |
+| [PROCESS-0006](process/PROCESS-0006-static-checks-with-baselines-that-only-shrink.md) | Static checks with baselines that only shrink | **accepted** | 2026-11-25 |  |
 
 ## [scope](scope/README.md)
 

@@ -6,8 +6,13 @@ namespace blokdust {
 
 class Pcg32 {
  public:
-  explicit Pcg32(std::uint64_t seed = 0x853c49e6748fea9bULL, std::uint64_t seq = 0xda3e39cb94b95bdbULL) noexcept {
-    state_ = 0; inc_ = (seq << 1u) | 1u; next(); state_ += seed; next();
+  explicit Pcg32(std::uint64_t seed = 0x853c49e6748fea9bULL,
+                 std::uint64_t seq = 0xda3e39cb94b95bdbULL) noexcept {
+    state_ = 0;
+    inc_ = (seq << 1u) | 1u;
+    next();
+    state_ += seed;
+    next();
   }
   std::uint32_t next() noexcept {
     const std::uint64_t old = state_;

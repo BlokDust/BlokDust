@@ -7,6 +7,7 @@ interface Props {
 }
 const { href, title, image, accent } = Astro.props;
 ---
+
 <a class:list={['guide-tile', accent]} href={href}>
   <img {...image} alt="" decoding="async" />
   <span class="tile-title">{title}</span>

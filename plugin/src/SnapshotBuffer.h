@@ -1,6 +1,6 @@
 #pragma once
-// Lock-free triple buffer: the audio thread publishes UI snapshots, the message thread reads the newest one.
-// Neither side ever blocks or allocates.
+// Lock-free triple buffer: the audio thread publishes UI snapshots, the message thread reads the
+// newest one. Neither side ever blocks or allocates.
 #include <array>
 #include <atomic>
 #include <cstdint>
@@ -11,7 +11,7 @@ namespace blokdust::plugin {
 
 struct Snapshot {
   std::uint64_t seq = 0;
-  std::uint32_t view = 0;                    // the world it shows: a Stage block's inner world, or 0 (CHG-0038)
+  std::uint32_t view = 0;  // the world it shows: a Stage block's inner world, or 0 (CHG-0038)
   int particleCount = 0;
   std::array<float, kMaxParticles * 3> particles{};
   int pairCount = 0;
@@ -20,11 +20,11 @@ struct Snapshot {
   std::array<std::uint32_t, kMaxBlocks> powered{};
   int beamCount = 0;
   std::array<float, kMaxBeams * 4> beams{};  // a laser through Prisms casts several (CHG-0015)
-  int playheadCount = 0;                     // sampler playheads [blockId, seconds]* (the open panel's playback lines)
+  int playheadCount = 0;  // sampler playheads [blockId, seconds]* (the open panel's playback lines)
   std::array<float, 64 * 2> playheads{};
-  int monitorCount = 0;                      // live panel readouts [blockId, v0, v1, v2, v3]* (Engine::monitors)
+  int monitorCount = 0;  // live panel readouts [blockId, v0, v1, v2, v3]* (Engine::monitors)
   std::array<float, 64 * 5> monitors{};
-  int toggleCount = 0;                       // every Toggle and whether it is on: hits flip them (CHG-0013)
+  int toggleCount = 0;  // every Toggle and whether it is on: hits flip them (CHG-0013)
   std::array<std::uint32_t, kMaxBlocks> toggles{};
   std::array<std::uint8_t, kMaxBlocks> toggleOn{};
 };
@@ -37,9 +37,11 @@ class SnapshotBuffer {
     const int prev = middle_.exchange(write_ | kDirty, std::memory_order_acq_rel);
     write_ = prev & kIndex;
   }
-  /// Reader (message thread): newest published snapshot, or nullptr if nothing new since the last call.
+  /// Reader (message thread): newest published snapshot, or nullptr if nothing new since the last
+  /// call.
   const Snapshot* read() noexcept {
-    if (!(middle_.load(std::memory_order_acquire) & kDirty)) return nullptr;
+    if (!(middle_.load(std::memory_order_acquire) & kDirty))
+      return nullptr;
     const int prev = middle_.exchange(read_, std::memory_order_acq_rel);
     read_ = prev & kIndex;
     return &bufs_[static_cast<std::size_t>(read_)];

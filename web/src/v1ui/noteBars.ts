@@ -1,210 +1,403 @@
-// Note bars and the range slider (UI-0016, CHG-0040): Random Note's weights and Chord's chord per note, a row of 12
-// vertical bars, C to B; and Random Note's Range, one slider with two handles, by semitone. Not in v1; drawn only from
-// v1 OptionSlider's pieces: the hatched track (diagonalFill), the slider colour, the 2-unit line and the 45° grab
-// diamond with its palette 8 half, the divider, the name on the left. No circles, no gradients.
-//  - Only black-key notes have the hatched track; white-key notes have none (owner, 2026-11-19).
-//  - While a bar is held its value shows above the row's top-right corner, as the Envelope's held handle does
-//    (adsrPanel.ts): "F# 35%", "D MINOR 7TH". A bar whose note just played is drawn in the text colour.
-//  - The bars show the pattern after the Key slider: bar n shows stored value (n − key) mod 12.
+// Note bars and the range slider (UI-0016, CHG-0040): Random Note's weights and Chord's chords,
+// 12 bars C to B, and Random Note's two-handled Range; drawn only from v1 OptionSlider's pieces.
 import { App } from './shim.ts';
-import { KEYS, monitorOf } from './newBlocks.ts';
+import type { V1Block } from './blocks/v1Block.ts';
+import type { PanelOption, V2OptionsPanel } from './optionsTypes.ts';
+import { KEYS } from './newBlocks/formRows.ts';
+import { drawGrab } from './newBlocks/liveRows.ts';
+import { monitorOf } from './newBlocks/monitors.ts';
 
+/** A bar whose note was just picked lights this long. */
 const LIT_MS = 250;
 
 /** Chord qualities, bottom to top (SPEC-SIMULATION-POWER-AND-PARTICLES R10f). */
-export const CHORD_QUALITIES = ['NONE', 'SUS2', 'MINOR', 'MAJOR', 'SUS4', 'MINOR 7TH', '7TH', 'MAJOR 7TH'];
+export const CHORD_QUALITIES = [
+  'NONE',
+  'SUS2',
+  'MINOR',
+  'MAJOR',
+  'SUS4',
+  'MINOR 7TH',
+  '7TH',
+  'MAJOR 7TH',
+];
 const CHORD_SHORT = ['–', 'SUS2', 'MIN', 'MAJ', 'SUS4', 'MIN7', '7', 'MAJ7'];
-/** Defaults (owner, 2026-11-19): C Maj, C# Maj7, D m7, Eb Maj, E m, F Maj7, F# Maj7, G 7, Ab Maj7, A m7, Bb Maj, B m. */
+/** Defaults: C Maj, C# Maj7, D m7, Eb Maj, E m, F Maj7, F# Maj7, G 7, Ab Maj7, A m7, Bb Maj, B
+ * m. */
 export const CHORD_DEFAULTS = [3, 7, 5, 3, 2, 7, 7, 6, 7, 5, 3, 2];
 /** Random Note's default weights: C major. */
 export const WEIGHT_DEFAULTS = [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1];
+/** Only black-key notes have the hatched track. */
 const BLACK = new Set([1, 3, 6, 8, 10]);
 /** Range ends in MIDI notes (C1…B7). */
-export const RANGE_MIN = 24, RANGE_MAX = 107;
-export const noteName = (midi: number) => `${KEYS[((midi % 12) + 12) % 12]}${Math.floor(midi / 12) - 1}`;
+export const RANGE_MIN = 24,
+  RANGE_MAX = 107;
+export const noteName = (midi: number) =>
+  `${KEYS[((midi % 12) + 12) % 12]}${Math.floor(midi / 12) - 1}`;
 
 type Kind = 'weights' | 'chords';
-const kindOf = (block: any): Kind | null => block?.def?.id === 'fx.random-note' ? 'weights' : block?.def?.id === 'fx.chord' ? 'chords' : null;
-const prefix = (k: Kind) => (k === 'weights' ? 'w' : 'q');
-const keyOf = (block: any) => ((Math.round(Number(block?.Params?.key ?? 0)) % 12) + 12) % 12;
-/** Stored value k of a block (before Key). */
-function stored(block: any, k: Kind, i: number): number {
-  const v = block?.Params?.[`${prefix(k)}${i}`];
-  return v === undefined ? (k === 'weights' ? WEIGHT_DEFAULTS[i] : CHORD_DEFAULTS[i]) : Number(v);
+const kindOf = (block: V1Block | null | undefined): Kind | null =>
+  block?.def.id === 'fx.random-note' ? 'weights' : block?.def.id === 'fx.chord' ? 'chords' : null;
+const prefix = (kind: Kind) => (kind === 'weights' ? 'w' : 'q');
+const keyOf = (block: V1Block) => ((Math.round(Number(block.Params.key ?? 0)) % 12) + 12) % 12;
+/** Stored value `i` of a block (before Key). */
+function stored(block: V1Block, kind: Kind, i: number): number {
+  const value = block.Params[`${prefix(kind)}${i}`];
+  return value === undefined
+    ? kind === 'weights'
+      ? WEIGHT_DEFAULTS[i]
+      : CHORD_DEFAULTS[i]
+    : Number(value);
 }
-/** What bar `n` (C = 0) shows: the stored value at (n − key) mod 12. */
-export function barValue(block: any, n: number): number {
-  const k = kindOf(block);
-  return k ? stored(block, k, (n - keyOf(block) + 12) % 12) : 0;
+/** What bar `n` (C = 0) shows: the stored value at (n − key) mod 12 (the bars follow the Key). */
+export function barValue(block: V1Block | null, bar: number): number {
+  const kind = kindOf(block);
+  return block && kind ? stored(block, kind, (bar - keyOf(block) + 12) % 12) : 0;
 }
-function setBar(block: any, n: number, value: number): void {
-  const k = kindOf(block);
-  if (!k) return;
-  const i = (n - keyOf(block) + 12) % 12, key = `${prefix(k)}${i}`;
+function setBar(block: V1Block, bar: number, value: number): void {
+  const kind = kindOf(block);
+  if (!kind) return;
+  const key = `${prefix(kind)}${(bar - keyOf(block) + 12) % 12}`;
   block.Params[key] = value;
   App.MainScene.setParam(block, key, value);
 }
-const barText = (k: Kind, n: number, v: number) => `${KEYS[n]}  ${k === 'weights' ? `${Math.round(v * 100)}%` : CHORD_QUALITIES[v]}`;
+const barText = (kind: Kind, bar: number, value: number) =>
+  `${KEYS[bar]}  ${kind === 'weights' ? `${Math.round(value * 100)}%` : CHORD_QUALITIES[value]}`;
 
 /** The bars' geometry inside the row, in panel px. */
-function layout(panel: any, row: any, units: number) {
-  const x = panel.Margin, w = panel.Range, y = row.Position.y, h = row.Size.height;
-  const cell = w / 12, gap = 3 * units, top = y + h * 0.1, labels = 2 * Math.round(units * 10) + 8 * units;
-  return { x, w, y, h, cell, gap, bw: cell - gap, top, bottom: y + h - labels - 4 * units, labelY: y + h - labels };
+function layout(panel: V2OptionsPanel, row: PanelOption, units: number) {
+  const x = panel.Margin,
+    range = panel.Range,
+    y = row.Position.y,
+    height = row.Size.height;
+  const cell = range / 12,
+    gap = 3 * units,
+    labels = 2 * Math.round(units * 10) + 8 * units;
+  return {
+    x,
+    w: range,
+    y,
+    h: height,
+    cell,
+    gap,
+    barWidth: cell - gap,
+    top: y + height * 0.1,
+    bottom: y + height - labels - 4 * units,
+    labelY: y + height - labels,
+  };
 }
+type BarsLayout = ReturnType<typeof layout>;
+
+/** What the bars row last drew (tests read it; presses hit-test from it). */
+interface BarsShown {
+  values: number[];
+  key: number;
+  held: number;
+  cells: number[];
+  cell: number;
+  top: number;
+  bottom: number;
+}
+/** What the range row last drew. */
+interface RangeShown {
+  low: number;
+  high: number;
+  lowX: number;
+  highX: number;
+  held: 'low' | 'high' | null;
+}
+const isBarsShown = (shown: unknown): shown is BarsShown =>
+  typeof shown === 'object' && shown !== null && 'cells' in shown && 'bottom' in shown;
+const isRangeShown = (shown: unknown): shown is RangeShown =>
+  typeof shown === 'object' && shown !== null && 'lowX' in shown;
 
 let held: { n: number } | null = null;
 
-/** The row (a LIVE_ROWS draw: `this` is the row). */
-export function drawNoteBars(this: any, ctx: CanvasRenderingContext2D, units: number, i: number, panel: any): void {
-  const block = panel.SelectedBlock, k = kindOf(block);
-  if (!k) return;
-  const L = layout(panel, this, units), colours = panel.SliderColours, col = colours[i % colours.length];
-  // LIGHT-UP: the engine counts its picks (monitor [note, count]); a new one lights its bar for a moment.
-  const m = monitorOf(block.Id);
-  if (m && m[1] !== block.__bdSeen) { if (block.__bdSeen !== undefined) block.__bdLit = { note: Math.round(m[0]), until: performance.now() + LIT_MS }; block.__bdSeen = m[1]; }
-  const txt = App.Palette[App.ThemeManager.Txt], lit = block.__bdLit as { note: number; until: number } | undefined;
-  const steps = CHORD_QUALITIES.length - 1, dataType = Math.round(units * 10);
+/** A new pick (the engine counts them: monitor [note, count]) lights its bar for a moment. */
+function lightPicks(block: V1Block): { note: number; until: number } | undefined {
+  const monitor = monitorOf(block.Id);
+  if (monitor && monitor[1] !== block.__bdSeen) {
+    if (block.__bdSeen !== undefined)
+      block.__bdLit = { note: Math.round(monitor[0]), until: performance.now() + LIT_MS };
+    block.__bdSeen = monitor[1];
+  }
+  return block.__bdLit;
+}
+/** Bar `n`: v1's hatched track (black keys only), the bar, its line and grab, then its labels. */
+function drawBar(
+  ctx: CanvasRenderingContext2D,
+  panel: V2OptionsPanel,
+  bars: BarsLayout,
+  bar: number,
+  fraction: number,
+  colour: string,
+  units: number,
+): void {
+  const barX = bars.x + bars.cell * bar + bars.gap * 0.5,
+    barHeight = bars.bottom - bars.top;
+  if (BLACK.has(bar)) panel.diagonalFill(barX, bars.top, bars.barWidth, barHeight, 9);
+  App.FillColor(ctx, colour);
+  const barY = bars.bottom - fraction * barHeight;
+  if (fraction > 0) ctx.fillRect(barX, barY, bars.barWidth, bars.bottom - barY);
+  // LINE + GRAB (v1 OptionSlider, turned upright) //
+  App.FillColor(ctx, colour);
+  ctx.fillRect(barX, barY - units, bars.barWidth, 2 * units);
+  drawGrab(ctx, barX + bars.barWidth * 0.5, barY, Math.min(bars.barWidth * 0.3, 6 * units));
+}
+
+/** The bars row (a live row: `this` is the row). While a bar is held its value shows above the
+ * row's top-right corner, as the Envelope's held handle does; a just-played note's bar lights. */
+export function drawNoteBars(
+  this: PanelOption,
+  ctx: CanvasRenderingContext2D,
+  units: number,
+  i: number,
+  panel: V2OptionsPanel,
+): void {
+  const block = panel.SelectedBlock,
+    kind = kindOf(block);
+  if (!block || !kind) return;
+  const bars = layout(panel, this, units),
+    colours = panel.SliderColours,
+    colour = colours[i % colours.length];
+  const lit = lightPicks(block),
+    txt = App.Palette[App.ThemeManager.Txt];
+  const steps = CHORD_QUALITIES.length - 1,
+    dataType = Math.round(units * 10);
   // DIVIDER (v1 OptionSlider) //
   ctx.globalAlpha = 1;
   App.StrokeColor(ctx, App.Palette[1]);
-  if (i !== panel.Options.length - 1) { ctx.beginPath(); ctx.moveTo(L.x - units, L.y + L.h); ctx.lineTo(L.x + L.w + units, L.y + L.h); ctx.stroke(); }
+  if (i !== panel.Options.length - 1) {
+    ctx.beginPath();
+    ctx.moveTo(bars.x - units, bars.y + bars.h);
+    ctx.lineTo(bars.x + bars.w + units, bars.y + bars.h);
+    ctx.stroke();
+  }
   const shown: number[] = [];
-  for (let n = 0; n < 12; n++) {
-    const bx = L.x + L.cell * n + L.gap * 0.5, bh = L.bottom - L.top, v = barValue(block, n), f = k === 'weights' ? v : v / steps;
-    shown.push(v);
-    // TRACK: black keys v1's hatching, white keys empty (owner, 2026-11-19) //
-    if (BLACK.has(n)) panel.diagonalFill(bx, L.top, L.bw, bh, 9);
-    // BAR //
-    const on = !!lit && lit.note === n && lit.until > performance.now();
-    App.FillColor(ctx, on ? txt : col);
-    const by = L.bottom - f * bh;
-    if (f > 0) ctx.fillRect(bx, by, L.bw, L.bottom - by);
-    // LINE + GRAB (v1 OptionSlider, turned upright) //
-    App.FillColor(ctx, on ? txt : col);
-    ctx.fillRect(bx, by - units, L.bw, 2 * units);
-    const d = Math.min(L.bw * 0.3, 6 * units), cx = bx + L.bw * 0.5;
-    ctx.beginPath(); ctx.moveTo(cx - d, by); ctx.lineTo(cx, by - d); ctx.lineTo(cx + d, by); ctx.lineTo(cx, by + d); ctx.closePath(); ctx.fill();
-    App.FillColor(ctx, App.Palette[8]);
-    ctx.beginPath(); ctx.moveTo(cx - d, by); ctx.lineTo(cx, by - d); ctx.lineTo(cx + d * 0.5, by - d * 0.5); ctx.lineTo(cx - d * 0.5, by + d * 0.5); ctx.closePath(); ctx.fill();
+  for (let bar = 0; bar < 12; bar++) {
+    const value = barValue(block, bar);
+    shown.push(value);
+    const on = !!lit && lit.note === bar && lit.until > performance.now();
+    drawBar(
+      ctx,
+      panel,
+      bars,
+      bar,
+      kind === 'weights' ? value : value / steps,
+      on ? txt : colour,
+      units,
+    );
     // LABELS: the note, and under a Chord's bar its chord //
+    const cx = bars.x + bars.cell * bar + bars.gap * 0.5 + bars.barWidth * 0.5;
     App.FillColor(ctx, txt);
     ctx.textAlign = 'center';
     ctx.font = App.Metrics.TxtMid;
-    ctx.globalAlpha = held && held.n !== n ? 0.5 : 1;
-    ctx.fillText(KEYS[n], cx, L.labelY + dataType);
-    if (k === 'chords') { ctx.font = `400 ${Math.round(units * 8)}px Dosis`; ctx.fillText(CHORD_SHORT[v], cx, L.labelY + 2 * dataType + 4 * units); }
+    ctx.globalAlpha = held && held.n !== bar ? 0.5 : 1;
+    ctx.fillText(KEYS[bar], cx, bars.labelY + dataType);
+    if (kind === 'chords') {
+      ctx.font = `400 ${Math.round(units * 8)}px Dosis`;
+      ctx.fillText(CHORD_SHORT[value], cx, bars.labelY + 2 * dataType + 4 * units);
+    }
     ctx.globalAlpha = 1;
   }
   // NAME //
   App.FillColor(ctx, txt);
   ctx.font = App.Metrics.TxtMid;
   ctx.textAlign = 'right';
-  ctx.fillText(this.Name.toUpperCase(), panel.Margin - 15 * units, (L.top + L.bottom) * 0.5 + dataType * 0.4);
-  // READOUT: the held bar, above the row's top-right corner (as the Envelope's) //
+  const nameY = (bars.top + bars.bottom) * 0.5 + dataType * 0.4;
+  ctx.fillText(this.Name.toUpperCase(), panel.Margin - 15 * units, nameY);
+  // READOUT: the held bar, above the row's top-right corner //
   if (held) {
     ctx.textAlign = 'right';
-    ctx.fillText(barText(k, held.n, shown[held.n]), L.x + L.w + units, L.top - 12 * units);
+    const readoutX = bars.x + bars.w + units;
+    ctx.fillText(barText(kind, held.n, shown[held.n]), readoutX, bars.top - 12 * units);
   }
-  this.Shown = { values: shown, key: keyOf(block), held: held?.n ?? -1, cells: shown.map((_, n) => L.x + L.cell * (n + 0.5)), cell: L.cell, top: L.top, bottom: L.bottom };  // tests
+  const barsShown: BarsShown = {
+    values: shown,
+    key: keyOf(block),
+    held: held?.n ?? -1,
+    cells: shown.map((_, bar) => bars.x + bars.cell * (bar + 0.5)),
+    cell: bars.cell,
+    top: bars.top,
+    bottom: bars.bottom,
+  };
+  this.Shown = barsShown;
 }
 
 /** Random Note's Range: v1's slider track with two handles (by semitone). */
 let rangeHeld: 'low' | 'high' | null = null;
-export const rangeOf = (block: any): [number, number] => [Number(block?.Params?.low ?? 60), Number(block?.Params?.high ?? 71)];
-export function drawRange(this: any, ctx: CanvasRenderingContext2D, units: number, i: number, panel: any): void {
-  const block = panel.SelectedBlock, x = panel.Margin, w = panel.Range, y = this.Position.y, h = this.Size.height, mid = y + h * 0.5;
-  const [lo, hi] = rangeOf(block), at = (m: number) => x + ((m - RANGE_MIN) / (RANGE_MAX - RANGE_MIN)) * w;
-  const colours = panel.SliderColours, col = colours[i % colours.length], dataType = Math.round(units * 10);
+export const rangeOf = (block: V1Block | null): [number, number] => [
+  Number(block?.Params.low ?? 60),
+  Number(block?.Params.high ?? 71),
+];
+export function drawRange(
+  this: PanelOption,
+  ctx: CanvasRenderingContext2D,
+  units: number,
+  i: number,
+  panel: V2OptionsPanel,
+): void {
+  const block = panel.SelectedBlock,
+    x = panel.Margin,
+    range = panel.Range,
+    y = this.Position.y,
+    height = this.Size.height,
+    mid = y + height * 0.5;
+  const [low, high] = rangeOf(block),
+    at = (midi: number) => x + ((midi - RANGE_MIN) / (RANGE_MAX - RANGE_MIN)) * range;
+  const colours = panel.SliderColours,
+    colour = colours[i % colours.length],
+    dataType = Math.round(units * 10);
   ctx.globalAlpha = 1;
   App.StrokeColor(ctx, App.Palette[1]);
-  if (i !== panel.Options.length - 1) { ctx.beginPath(); ctx.moveTo(x - units, y + h); ctx.lineTo(x + w + units, y + h); ctx.stroke(); }
-  panel.diagonalFill(x - units, y + units, w + 2 * units, h - 2 * units, 9);
-  App.FillColor(ctx, col);
-  ctx.fillRect(at(lo), y, Math.max(0, at(hi) - at(lo)), h);
-  const d = h * 0.2;
-  for (const m of [lo, hi]) {
-    const tx = at(m);
-    App.FillColor(ctx, col);
-    ctx.fillRect(tx - units, y, 2 * units, h);
-    ctx.beginPath(); ctx.moveTo(tx - d, mid); ctx.lineTo(tx, mid - d); ctx.lineTo(tx + d, mid); ctx.lineTo(tx, mid + d); ctx.closePath(); ctx.fill();
-    App.FillColor(ctx, App.Palette[8]);
-    ctx.beginPath(); ctx.moveTo(tx - d, mid); ctx.lineTo(tx, mid - d); ctx.lineTo(tx + d * 0.5, mid - d * 0.5); ctx.lineTo(tx - d * 0.5, mid + d * 0.5); ctx.closePath(); ctx.fill();
+  if (i !== panel.Options.length - 1) {
+    ctx.beginPath();
+    ctx.moveTo(x - units, y + height);
+    ctx.lineTo(x + range + units, y + height);
+    ctx.stroke();
+  }
+  panel.diagonalFill(x - units, y + units, range + 2 * units, height - 2 * units, 9);
+  App.FillColor(ctx, colour);
+  ctx.fillRect(at(low), y, Math.max(0, at(high) - at(low)), height);
+  for (const midi of [low, high]) {
+    const handleX = at(midi);
+    App.FillColor(ctx, colour);
+    ctx.fillRect(handleX - units, y, 2 * units, height);
+    drawGrab(ctx, handleX, mid, height * 0.2);
   }
   App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
   // VALUE TOOLTIP while held (v1 OptionSlider: right of the handle, in the slider type) //
   if (rangeHeld) {
-    ctx.textAlign = 'left'; ctx.font = App.Metrics.TxtSlider;
-    ctx.fillText(`${noteName(lo)} – ${noteName(hi)}`, at(hi) + 25 * units, mid + Math.round(units * 33) * 0.35);
+    ctx.textAlign = 'left';
+    ctx.font = App.Metrics.TxtSlider;
+    const tooltipY = mid + Math.round(units * 33) * 0.35;
+    ctx.fillText(`${noteName(low)} – ${noteName(high)}`, at(high) + 25 * units, tooltipY);
   }
   ctx.font = App.Metrics.TxtMid;
   ctx.textAlign = 'right';
   ctx.fillText(this.Name.toUpperCase(), x - 15 * units, mid + dataType * 0.4);
-  this.Shown = { low: lo, high: hi, lowX: at(lo), highX: at(hi), held: rangeHeld };  // tests
+  const rangeShown: RangeShown = {
+    low,
+    high,
+    lowX: at(low),
+    highX: at(high),
+    held: rangeHeld,
+  };
+  this.Shown = rangeShown;
 }
 
-// ---- pointer: a press on a bar sets it to the pointer's height and the drag follows; one bar per press ----
-function rowAt(panel: any, setting: string, my: number): any {
-  const row = (panel.Options as any[] | undefined)?.find(o => o.Setting === setting);
+// ---- pointer: a press on a bar sets it to the pointer's height and the drag follows ----
+/** The row with `setting` under device y `my`, once it has been drawn. */
+function rowAt(panel: V2OptionsPanel, setting: string, my: number): PanelOption | null {
+  const row = panel.Options.find((option) => option.Setting === setting);
   if (!row?.Shown) return null;
   const y = panel.Position.y + row.Position.y;
   return my >= y && my <= y + row.Size.height ? row : null;
 }
-function setFromY(panel: any, row: any, n: number, my: number): void {
-  const block = panel.SelectedBlock, k = kindOf(block)!, s = row.Shown;
-  let f = Math.max(0, Math.min(1, (panel.Position.y + s.bottom - my) / (s.bottom - s.top)));
-  if (k === 'chords') f = Math.round(f * (CHORD_QUALITIES.length - 1));
-  else f = Math.round(f * 100) / 100;
-  if (f !== barValue(block, n)) setBar(block, n, f);
+function setFromY(panel: V2OptionsPanel, row: PanelOption, bar: number, my: number): void {
+  const block = panel.SelectedBlock,
+    kind = kindOf(block),
+    shown = row.Shown;
+  if (!block || !kind || !isBarsShown(shown)) return;
+  let fraction = Math.max(
+    0,
+    Math.min(1, (panel.Position.y + shown.bottom - my) / (shown.bottom - shown.top)),
+  );
+  if (kind === 'chords') fraction = Math.round(fraction * (CHORD_QUALITIES.length - 1));
+  else fraction = Math.round(fraction * 100) / 100;
+  if (fraction !== barValue(block, bar)) setBar(block, bar, fraction);
   panel._DrawReady = true;
 }
 let rangeGrab: { from: number } | null = null;
-function setRangeFromX(panel: any, row: any, mx: number): void {
-  const block = panel.SelectedBlock, x = panel.Position.x + panel.Margin;
-  const m = Math.round(RANGE_MIN + Math.max(0, Math.min(1, (mx - x) / panel.Range)) * (RANGE_MAX - RANGE_MIN));
-  let [lo, hi] = rangeOf(block);
-  if (!rangeHeld) {  // handles met: the first move's direction picks one
-    if (m === rangeGrab?.from) return;
-    rangeHeld = m < lo ? 'low' : 'high';
+const midiAt = (panel: V2OptionsPanel, localX: number) =>
+  Math.round(
+    RANGE_MIN +
+      Math.max(0, Math.min(1, (localX - panel.Margin) / panel.Range)) * (RANGE_MAX - RANGE_MIN),
+  );
+function setRangeFromX(panel: V2OptionsPanel, mx: number): void {
+  const block = panel.SelectedBlock;
+  if (!block) return;
+  const midi = midiAt(panel, mx - panel.Position.x);
+  let [low, high] = rangeOf(block);
+  if (!rangeHeld) {
+    // handles met: the first move's direction picks one
+    if (midi === rangeGrab?.from) return;
+    rangeHeld = midi < low ? 'low' : 'high';
   }
-  if (rangeHeld === 'low') lo = Math.min(m, hi); else hi = Math.max(m, lo);
+  if (rangeHeld === 'low') low = Math.min(midi, high);
+  else high = Math.max(midi, low);
   const was = rangeOf(block);
-  for (const [key, v, w] of [['low', lo, was[0]], ['high', hi, was[1]]] as const) if (w !== v) { block.Params[key] = v; App.MainScene.setParam(block, key, v); }
-  void row;
+  for (const [key, value, before] of [
+    ['low', low, was[0]],
+    ['high', high, was[1]],
+  ] as const)
+    if (before !== value) {
+      block.Params[key] = value;
+      App.MainScene.setParam(block, key, value);
+    }
   panel._DrawReady = true;
+}
+/** Which handle a press on the range takes: the nearer; where they meet, the side it is on (or,
+ * on them, none until the first move picks one). */
+function grabRange(shown: RangeShown, localX: number): 'low' | 'high' | null {
+  if (shown.low !== shown.high)
+    return Math.abs(localX - shown.lowX) <= Math.abs(localX - shown.highX) ? 'low' : 'high';
+  if (localX < shown.lowX - 2 * App.Unit) return 'low';
+  return localX > shown.highX + 2 * App.Unit ? 'high' : null;
+}
+/** A press on the bars or the range: true when it took it. */
+function pressRows(panel: V2OptionsPanel, mx: number, my: number): boolean {
+  const bars = rowAt(panel, 'noteBars', my),
+    barsShown = bars?.Shown;
+  if (bars && isBarsShown(barsShown)) {
+    const bar = barsShown.cells.findIndex(
+      (cx) => Math.abs(mx - (panel.Position.x + cx)) <= barsShown.cell / 2,
+    );
+    if (bar >= 0) {
+      held = { n: bar };
+      panel.Hover = true;
+      setFromY(panel, bars, bar, my);
+      return true;
+    }
+  }
+  const range = rowAt(panel, 'noteRange', my),
+    rangeShown = range?.Shown;
+  if (!range || !isRangeShown(rangeShown)) return false;
+  const localX = mx - panel.Position.x;
+  rangeGrab = { from: midiAt(panel, localX) };
+  rangeHeld = grabRange(rangeShown, localX);
+  panel.Hover = true;
+  if (rangeHeld) setRangeFromX(panel, mx);
+  panel._DrawReady = true;
+  return true;
 }
 
 /** Teach the options panel the note bars and the range slider (once, at start-up). */
-export function installNoteBars(panel: any): void {
+export function installNoteBars(panel: V2OptionsPanel): void {
   const down = panel.MouseDown.bind(panel);
   panel.MouseDown = (mx: number, my: number) => {
-    const block = panel.SelectedBlock;
-    if (kindOf(block) && panel.Scale === 1) {
-      const bars = rowAt(panel, 'noteBars', my);
-      if (bars) {
-        const n = (bars.Shown.cells as number[]).findIndex(cx => Math.abs(mx - (panel.Position.x + cx)) <= bars.Shown.cell / 2);
-        if (n >= 0) { held = { n }; panel.Hover = true; setFromY(panel, bars, n, my); return; }
-      }
-      const range = rowAt(panel, 'noteRange', my);
-      if (range) {
-        const s = range.Shown, px = mx - panel.Position.x;
-        rangeGrab = { from: Math.round(RANGE_MIN + Math.max(0, Math.min(1, (px - panel.Margin) / panel.Range)) * (RANGE_MAX - RANGE_MIN)) };
-        rangeHeld = s.low === s.high ? (px < s.lowX - 2 * App.Unit ? 'low' : px > s.highX + 2 * App.Unit ? 'high' : null)
-          : Math.abs(px - s.lowX) <= Math.abs(px - s.highX) ? 'low' : 'high';
-        panel.Hover = true;
-        if (rangeHeld) setRangeFromX(panel, range, mx);
-        panel._DrawReady = true;
-        return;
-      }
-    }
+    if (kindOf(panel.SelectedBlock) && panel.Scale === 1 && pressRows(panel, mx, my)) return;
     down(mx, my);
   };
   const move = panel.MouseMove.bind(panel);
   panel.MouseMove = (mx: number, my: number) => {
-    if (held) { const row = (panel.Options as any[]).find(o => o.Setting === 'noteBars'); if (row) setFromY(panel, row, held.n, my); return; }
-    if (rangeGrab) { const row = (panel.Options as any[]).find(o => o.Setting === 'noteRange'); if (row) setRangeFromX(panel, row, mx); return; }
+    if (held) {
+      const row = panel.Options.find((option) => option.Setting === 'noteBars');
+      if (row) setFromY(panel, row, held.n, my);
+      return;
+    }
+    if (rangeGrab) {
+      setRangeFromX(panel, mx);
+      return;
+    }
     move(mx, my);
   };
   const up = panel.MouseUp.bind(panel);
-  panel.MouseUp = (...a: unknown[]) => { held = null; rangeHeld = null; rangeGrab = null; panel._DrawReady = true; return up(...a); };
+  panel.MouseUp = () => {
+    held = null;
+    rangeHeld = null;
+    rangeGrab = null;
+    panel._DrawReady = true;
+    up();
+  };
 }

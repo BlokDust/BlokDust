@@ -1,9 +1,26 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>BlokDust 2 · visual harness</title>
-    <style>html, body { margin: 0; -webkit-font-smoothing: antialiased; /* v1 styles.css: also governs canvas text on macOS */ height: 100%; overflow: hidden; } #stage, #stage canvas { position: absolute; inset: 0; }</style>
+    <style>
+      html,
+      body {
+        margin: 0;
+        -webkit-font-smoothing: antialiased; /* v1 styles.css: also governs canvas text on macOS */
+        height: 100%;
+        overflow: hidden;
+      }
+      #stage,
+      #stage canvas {
+        position: absolute;
+        inset: 0;
+      }
+    </style>
   </head>
-  <body><div id="stage"></div><script type="module" src="/src/visual.ts"></script></body>
+  <body>
+    <div id="stage"></div>
+    <script type="module" src="/src/visual.ts"></script>
+  </body>
 </html>

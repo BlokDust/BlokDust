@@ -1,0 +1,7 @@
+{
+  "name": "comments",
+  "summary": "Descriptive names over comments (owner, CHG-0045): a comment block may have at most two lines, each at most 100 characters. Lines that only cite spec, ADR or change IDs (SIMULATION-0001, SPEC-X R5) and tool directives are always allowed. Findings in tools/comments/baseline.json may only shrink. bd lint and the pre-commit hook run it.",
+  "usage": ["pnpm bd comments check [--staged]", "pnpm bd comments list [files…]", "pnpm bd comments baseline", "pnpm bd comments prune"],
+  "outputs": "JSON {findings, overBaseline, stale} on stdout; findings as file:line: message [rule] on stderr; exit 1 when a file has more than its baseline",
+  "deterministic": true
+}

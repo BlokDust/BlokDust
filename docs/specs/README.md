@@ -70,3 +70,4 @@
 | [CHG-0042](changes/0042-owner-tweaks-keys-never-aim-synced-to-host-short/proposal.md) | Owner tweaks: keys never aim, SYNCED TO HOST, short menu, clean block edges | **proposed** | SPEC-CONNECTIONS-PROXIMITY, SPEC-VISUAL-V1-PARITY |
 | [CHG-0043](changes/0043-blokdust-glossary/proposal.md) | BlokDust glossary | **proposed** | SPEC-SHARING-BLOKDUST-GLOSSARY |
 | [CHG-0044](changes/0044-publish-blokdust-2-in-the-original-repository/proposal.md) | Publish BlokDust 2 in the original repository | **done** | SPEC-PROCESS-PRIVATE-OPERATIONAL-CONFIGURATION |
+| [CHG-0045](changes/0045-linting-formatting-and-code-structure/proposal.md) | Linting, formatting and code structure | **in-progress** | SPEC-PATCH-FORMAT-V2 |

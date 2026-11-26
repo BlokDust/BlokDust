@@ -1,102 +1,414 @@
 <title>BlokDust Block Generator</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dosis:wght@400;500;600;700&display=swap">
+<meta name="claude:viewport-fit-sides" content="cover" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Dosis:wght@400;500;600;700&display=swap"
+/>
 <style>
-/* Layout: the page IS the BlokDust stage. Every colour comes from the selected v1 theme (set by script). */
-:root {
-  --bg: rgba(26,31,33,1);      /* theme colour 0: stage */
-  --panel: rgba(40,45,51,1);   /* theme colour 1 */
-  --well: rgba(19,28,28,1);    /* theme colour 2 */
-  --txt: rgba(255,244,214,1);  /* theme txt role */
-  --accent: rgba(83,235,201,1);/* theme colour 3 */
-  --display: "Dosis", "Arial Narrow", Arial, Helvetica, sans-serif;
-  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  color-scheme: dark;
-}
-html, body { background: var(--bg); color: var(--txt); }
-body {
-  font-family: var(--display); font-size: 15px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 20px 48px;
-  transition: background .25s, color .25s;
-}
-.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 28px; }
-header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: baseline; justify-content: space-between; }
-h1 { margin: 0; font-weight: 600; font-size: 22px; letter-spacing: .18em; text-transform: uppercase; }
-h2 { margin: 0 0 12px; font-weight: 600; font-size: 13px; letter-spacing: .2em; text-transform: uppercase; opacity: .75; }
-.theme-pick { display: flex; align-items: center; gap: 8px; letter-spacing: .12em; text-transform: uppercase; font-size: 13px; }
-select, input[type=text] {
-  font: inherit; color: var(--txt); background: var(--panel); border: 1px solid color-mix(in srgb, var(--txt) 25%, transparent);
-  padding: 7px 10px; border-radius: 0; letter-spacing: .08em;
-}
-button {
-  font: inherit; font-weight: 600; font-size: 13px; letter-spacing: .16em; text-transform: uppercase;
-  color: var(--txt); background: transparent; border: 1.5px solid var(--txt); padding: 9px 14px; cursor: pointer;
-}
-button:hover { background: color-mix(in srgb, var(--txt) 14%, transparent); }
-button:focus-visible, select:focus-visible, input:focus-visible, .tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-button.primary { background: var(--txt); color: var(--bg); }
-button.primary:hover { opacity: .88; }
-button.small { padding: 5px 9px; font-size: 11px; }
-.editor { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
-@media (max-width: 820px) { .editor { grid-template-columns: minmax(0, 1fr); } }
-.canvas-box { background: var(--well); position: relative; aspect-ratio: 1 / 1; max-width: 100%; }
-.canvas-box canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
-.layer .pick { background: none; border: 1px solid transparent; padding: 4px 6px; font-size: 13px; letter-spacing: .1em; font-weight: 500; }
-.layer .pick.on { border-color: var(--txt); font-weight: 700; }
-.controls { display: grid; gap: 18px; min-width: 0; }
-.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.layers { display: grid; gap: 6px; }
-.layer { display: flex; align-items: center; gap: 10px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
-.swatch { width: 28px; height: 28px; border: 1.5px solid color-mix(in srgb, var(--txt) 40%, transparent); padding: 0; cursor: pointer; }
-.hint { font-size: 13px; opacity: .7; letter-spacing: .04em; margin: 0; line-height: 1.45; }
-.similar { display: grid; gap: 6px; font-size: 14px; letter-spacing: .06em; }
-.similar .bar { height: 4px; background: color-mix(in srgb, var(--txt) 15%, transparent); }
-.similar .bar span { display: block; height: 100%; background: var(--txt); }
-.similar .warn { color: var(--accent); font-weight: 600; }
-pre {
-  margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.5; background: var(--well); padding: 12px;
-  overflow: auto; max-height: 260px; white-space: pre;
-}
-.lineup { display: grid; gap: 18px; }
-.cat { display: grid; gap: 8px; }
-.cat-name { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; opacity: .6; }
-.tiles { display: flex; flex-wrap: wrap; gap: 6px; }
-.tile { display: grid; justify-items: center; gap: 2px; width: 92px; padding: 6px 2px 8px; background: transparent; border: 1px solid transparent; }
-.tile.new { border-color: var(--txt); }
-.tile.close { border-color: color-mix(in srgb, var(--accent) 80%, transparent); border-style: dashed; }
-.tile canvas { width: 88px; height: 70px; }
-button.tile { cursor: pointer; font: inherit; color: inherit; letter-spacing: normal; text-transform: none; font-weight: 400; }
-button.tile:hover { background: color-mix(in srgb, var(--txt) 10%, transparent); }
-button.tile.loaded { background: color-mix(in srgb, var(--txt) 16%, transparent); }
-.todo { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px 24px; }
-.todo-item { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 2px 10px; align-items: start; padding: 6px 0; border-top: 1px solid color-mix(in srgb, var(--txt) 18%, transparent); }
-.todo-item .mark { width: 16px; height: 16px; border: 1.5px solid var(--txt); margin-top: 2px; display: grid; place-items: center; font-size: 12px; font-weight: 700; }
-.todo-item.done .mark { background: var(--txt); color: var(--bg); }
-.todo-item b { font-weight: 600; letter-spacing: .1em; text-transform: uppercase; font-size: 13px; }
-.todo-item small { grid-column: 2; font-size: 13px; opacity: .7; letter-spacing: .03em; }
-.todo-item .state { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; opacity: .8; margin-left: 6px; }
-.tile span { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; text-align: center; line-height: 1.2; opacity: .85; }
-.themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
-.theme-tile { padding: 0; border: 2px solid transparent; cursor: pointer; display: grid; text-align: left; background: none; letter-spacing: normal; text-transform: none; }
-.theme-tile.on { border-color: var(--txt); }
-.theme-tile canvas { width: 100%; height: 84px; display: block; }
-.theme-tile span { font-size: 10px; letter-spacing: .14em; padding: 4px 6px; font-weight: 600; }
-.saved { display: grid; gap: 6px; }
-.saved-item { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; border-top: 1px solid color-mix(in srgb, var(--txt) 20%, transparent); padding-top: 6px; }
-.saved-item b { font-weight: 600; letter-spacing: .1em; text-transform: uppercase; font-size: 13px; }
-.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--txt); color: var(--bg); padding: 10px 16px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none; }
-.toast.show { opacity: 1; }
-textarea.fallback { width: 100%; height: 120px; font-family: var(--mono); font-size: 12px; background: var(--well); color: var(--txt); }
-@media (prefers-reduced-motion: reduce) { body, .toast { transition: none; } }
+  /* Layout: the page IS the BlokDust stage. Every colour comes from the selected v1 theme (set by script). */
+  :root {
+    --bg: rgba(26, 31, 33, 1); /* theme colour 0: stage */
+    --panel: rgba(40, 45, 51, 1); /* theme colour 1 */
+    --well: rgba(19, 28, 28, 1); /* theme colour 2 */
+    --txt: rgba(255, 244, 214, 1); /* theme txt role */
+    --accent: rgba(83, 235, 201, 1); /* theme colour 3 */
+    --display: 'Dosis', 'Arial Narrow', Arial, Helvetica, sans-serif;
+    --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    color-scheme: dark;
+  }
+  html,
+  body {
+    background: var(--bg);
+    color: var(--txt);
+  }
+  body {
+    font-family: var(--display);
+    font-size: 15px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 20px 48px;
+    transition:
+      background 0.25s,
+      color 0.25s;
+  }
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: grid;
+    gap: 28px;
+  }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  h1 {
+    margin: 0;
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  h2 {
+    margin: 0 0 12px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.75;
+  }
+  .theme-pick {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 13px;
+  }
+  select,
+  input[type='text'] {
+    font: inherit;
+    color: var(--txt);
+    background: var(--panel);
+    border: 1px solid color-mix(in srgb, var(--txt) 25%, transparent);
+    padding: 7px 10px;
+    border-radius: 0;
+    letter-spacing: 0.08em;
+  }
+  button {
+    font: inherit;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--txt);
+    background: transparent;
+    border: 1.5px solid var(--txt);
+    padding: 9px 14px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: color-mix(in srgb, var(--txt) 14%, transparent);
+  }
+  button:focus-visible,
+  select:focus-visible,
+  input:focus-visible,
+  .tile:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  button.primary {
+    background: var(--txt);
+    color: var(--bg);
+  }
+  button.primary:hover {
+    opacity: 0.88;
+  }
+  button.small {
+    padding: 5px 9px;
+    font-size: 11px;
+  }
+  .editor {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 820px) {
+    .editor {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  .canvas-box {
+    background: var(--well);
+    position: relative;
+    aspect-ratio: 1 / 1;
+    max-width: 100%;
+  }
+  .canvas-box canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    touch-action: none;
+    cursor: crosshair;
+  }
+  .layer .pick {
+    background: none;
+    border: 1px solid transparent;
+    padding: 4px 6px;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    font-weight: 500;
+  }
+  .layer .pick.on {
+    border-color: var(--txt);
+    font-weight: 700;
+  }
+  .controls {
+    display: grid;
+    gap: 18px;
+    min-width: 0;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .layers {
+    display: grid;
+    gap: 6px;
+  }
+  .layer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .swatch {
+    width: 28px;
+    height: 28px;
+    border: 1.5px solid color-mix(in srgb, var(--txt) 40%, transparent);
+    padding: 0;
+    cursor: pointer;
+  }
+  .hint {
+    font-size: 13px;
+    opacity: 0.7;
+    letter-spacing: 0.04em;
+    margin: 0;
+    line-height: 1.45;
+  }
+  .similar {
+    display: grid;
+    gap: 6px;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+  }
+  .similar .bar {
+    height: 4px;
+    background: color-mix(in srgb, var(--txt) 15%, transparent);
+  }
+  .similar .bar span {
+    display: block;
+    height: 100%;
+    background: var(--txt);
+  }
+  .similar .warn {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  pre {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.5;
+    background: var(--well);
+    padding: 12px;
+    overflow: auto;
+    max-height: 260px;
+    white-space: pre;
+  }
+  .lineup {
+    display: grid;
+    gap: 18px;
+  }
+  .cat {
+    display: grid;
+    gap: 8px;
+  }
+  .cat-name {
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+  .tiles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tile {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    width: 92px;
+    padding: 6px 2px 8px;
+    background: transparent;
+    border: 1px solid transparent;
+  }
+  .tile.new {
+    border-color: var(--txt);
+  }
+  .tile.close {
+    border-color: color-mix(in srgb, var(--accent) 80%, transparent);
+    border-style: dashed;
+  }
+  .tile canvas {
+    width: 88px;
+    height: 70px;
+  }
+  button.tile {
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    letter-spacing: normal;
+    text-transform: none;
+    font-weight: 400;
+  }
+  button.tile:hover {
+    background: color-mix(in srgb, var(--txt) 10%, transparent);
+  }
+  button.tile.loaded {
+    background: color-mix(in srgb, var(--txt) 16%, transparent);
+  }
+  .todo {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 6px 24px;
+  }
+  .todo-item {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 2px 10px;
+    align-items: start;
+    padding: 6px 0;
+    border-top: 1px solid color-mix(in srgb, var(--txt) 18%, transparent);
+  }
+  .todo-item .mark {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--txt);
+    margin-top: 2px;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .todo-item.done .mark {
+    background: var(--txt);
+    color: var(--bg);
+  }
+  .todo-item b {
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 13px;
+  }
+  .todo-item small {
+    grid-column: 2;
+    font-size: 13px;
+    opacity: 0.7;
+    letter-spacing: 0.03em;
+  }
+  .todo-item .state {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-left: 6px;
+  }
+  .tile span {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.2;
+    opacity: 0.85;
+  }
+  .themes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+    gap: 8px;
+  }
+  .theme-tile {
+    padding: 0;
+    border: 2px solid transparent;
+    cursor: pointer;
+    display: grid;
+    text-align: left;
+    background: none;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+  .theme-tile.on {
+    border-color: var(--txt);
+  }
+  .theme-tile canvas {
+    width: 100%;
+    height: 84px;
+    display: block;
+  }
+  .theme-tile span {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    padding: 4px 6px;
+    font-weight: 600;
+  }
+  .saved {
+    display: grid;
+    gap: 6px;
+  }
+  .saved-item {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid color-mix(in srgb, var(--txt) 20%, transparent);
+    padding-top: 6px;
+  }
+  .saved-item b {
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 13px;
+  }
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    background: var(--txt);
+    color: var(--bg);
+    padding: 10px 16px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+  }
+  textarea.fallback {
+    width: 100%;
+    height: 120px;
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--well);
+    color: var(--txt);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body,
+    .toast {
+      transition: none;
+    }
+  }
 </style>
 
 <div class="wrap">
   <header>
     <h1>Block Generator</h1>
-    <label class="theme-pick" for="theme">Theme
+    <label class="theme-pick" for="theme"
+      >Theme
       <button class="small" id="themePrev" aria-label="Previous theme">‹</button>
       <select id="theme"></select>
       <button class="small" id="themeNext" aria-label="Next theme">›</button>
@@ -107,20 +419,49 @@ textarea.fallback { width: 100%; height: 120px; font-family: var(--mono); font-s
     <div class="canvas-box"><canvas id="big" aria-label="New block, large"></canvas></div>
     <div class="controls">
       <div class="row">
-        <label for="name" class="hint" style="opacity:1;letter-spacing:.14em;text-transform:uppercase">Name</label>
-        <input type="text" id="name" list="planned" value="" placeholder="Block name" style="flex:1;min-width:0">
+        <label
+          for="name"
+          class="hint"
+          style="opacity: 1; letter-spacing: 0.14em; text-transform: uppercase"
+          >Name</label
+        >
+        <input
+          type="text"
+          id="name"
+          list="planned"
+          value=""
+          placeholder="Block name"
+          style="flex: 1; min-width: 0"
+        />
         <datalist id="planned">
-          <option>Laser Gate</option><option>Compressor</option><option>LFO</option><option>Mirror</option>
-          <option>Counter</option><option>Chance</option><option>Stage</option><option>Touch Keys</option>
-          <option>Grid</option><option>Label</option><option>Chord</option><option>Arpeggiator</option>
-          <option>Random Note</option><option>XY Pad</option>
+          <option>Laser Gate</option>
+          <option>Compressor</option>
+          <option>LFO</option>
+          <option>Mirror</option>
+          <option>Counter</option>
+          <option>Chance</option>
+          <option>Stage</option>
+          <option>Touch Keys</option>
+          <option>Grid</option>
+          <option>Label</option>
+          <option>Chord</option>
+          <option>Arpeggiator</option>
+          <option>Random Note</option>
+          <option>XY Pad</option>
         </datalist>
       </div>
       <div class="row">
-        <label for="size" class="hint" style="opacity:1;letter-spacing:.14em;text-transform:uppercase">Size</label>
+        <label
+          for="size"
+          class="hint"
+          style="opacity: 1; letter-spacing: 0.14em; text-transform: uppercase"
+          >Size</label
+        >
         <select id="size">
-          <option value="any">Any</option><option value="small">Small</option>
-          <option value="medium">Medium</option><option value="large">Large</option>
+          <option value="any">Any</option>
+          <option value="small">Small</option>
+          <option value="medium">Medium</option>
+          <option value="large">Large</option>
         </select>
       </div>
       <div class="row">
@@ -136,13 +477,25 @@ textarea.fallback { width: 100%; height: 120px; font-family: var(--mono); font-s
       <div>
         <h2>Layers</h2>
         <div class="layers" id="layers"></div>
-        <div class="row" style="margin-top:8px"><button class="small" id="addFacet">Add facet</button><button class="small" id="delPoint">Delete corner</button></div>
-        <div class="row" style="margin-top:8px"><button class="small" id="rStars">Random stars</button><button class="small" id="noStars">Remove stars</button></div>
-        <p class="hint" style="margin-top:8px">Edit the selected layer on the big canvas: drag a corner to move it, click an edge to add a corner, double-click a corner (or select it and press Delete) to remove it. Click inside a layer to select it. Dashed edges are not at 0°, 45° or 90°, which v1 blocks never use. Click a swatch to step through palette 3–14 (Random colours only uses the 8 block colours, 3–10; Void's dark body is 14). Random stars scatters Void-style pixels inside the body.</p>
+        <div class="row" style="margin-top: 8px">
+          <button class="small" id="addFacet">Add facet</button
+          ><button class="small" id="delPoint">Delete corner</button>
+        </div>
+        <div class="row" style="margin-top: 8px">
+          <button class="small" id="rStars">Random stars</button
+          ><button class="small" id="noStars">Remove stars</button>
+        </div>
+        <p class="hint" style="margin-top: 8px">
+          Edit the selected layer on the big canvas: drag a corner to move it, click an edge to add
+          a corner, double-click a corner (or select it and press Delete) to remove it. Click inside
+          a layer to select it. Dashed edges are not at 0°, 45° or 90°, which v1 blocks never use.
+          Click a swatch to step through palette 3–14 (Random colours only uses the 8 block colours,
+          3–10; Void's dark body is 14). Random stars scatters Void-style pixels inside the body.
+        </p>
       </div>
       <div>
         <h2>Closest existing blocks</h2>
-        <div class="similar" id="themeCheck" style="margin-bottom:10px"></div>
+        <div class="similar" id="themeCheck" style="margin-bottom: 10px"></div>
         <div class="similar" id="similar"></div>
       </div>
     </div>
@@ -150,13 +503,19 @@ textarea.fallback { width: 100%; height: 120px; font-family: var(--mono); font-s
 
   <section>
     <h2>On the stage, beside every block</h2>
-    <p class="hint" style="margin-bottom:12px">Real size (15 px per grid cell, v1's stage scale). Dashed: the most similar shapes. Click any block to load it into the editor and start from its shape (Undo takes you back).</p>
+    <p class="hint" style="margin-bottom: 12px">
+      Real size (15 px per grid cell, v1's stage scale). Dashed: the most similar shapes. Click any
+      block to load it into the editor and start from its shape (Undo takes you back).
+    </p>
     <div class="lineup" id="lineup"></div>
   </section>
 
   <section>
     <h2>Blocks to design</h2>
-    <p class="hint" style="margin-bottom:10px">Ticked: designed and agreed. "Saved here" means you have a design for it in this browser's Saved list; paste it into the chat to agree it.</p>
+    <p class="hint" style="margin-bottom: 10px">
+      Ticked: designed and agreed. "Saved here" means you have a design for it in this browser's
+      Saved list; paste it into the chat to agree it.
+    </p>
     <div class="todo" id="todo"></div>
   </section>
 
@@ -166,14 +525,17 @@ textarea.fallback { width: 100%; height: 120px; font-family: var(--mono); font-s
   </section>
 
   <section class="editor">
-    <div style="min-width:0">
+    <div style="min-width: 0">
       <h2>Code</h2>
       <pre id="code"></pre>
     </div>
-    <div style="min-width:0">
+    <div style="min-width: 0">
       <h2>Saved</h2>
       <div class="saved" id="saved"></div>
-      <div class="row" style="margin-top:10px"><button id="copyAll" class="small">Copy all saved</button><button id="clearSaved" class="small">Clear list</button></div>
+      <div class="row" style="margin-top: 10px">
+        <button id="copyAll" class="small">Copy all saved</button
+        ><button id="clearSaved" class="small">Clear list</button>
+      </div>
       <div id="fallbackBox"></div>
     </div>
   </section>
@@ -182,487 +544,1049 @@ textarea.fallback { width: 100%; height: 120px; font-family: var(--mono); font-s
 
 <script src="https://cdn.jsdelivr.net/npm/polygon-clipping@0.15.7/dist/polygon-clipping.umd.min.js"></script>
 <script>
-const DATA = __DATA__;
-const UPG = 14.999999999999998;
-const COLS = [3,4,5,6,7,8,9,10];
-const $ = id => document.getElementById(id);
-const rnd = n => Math.floor(Math.random() * n);
-const pick = a => a[rnd(a.length)];
-const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-
-let themeIx = 0;
-try { const t = +localStorage.getItem('bg.theme'); if (t >= 0 && t < DATA.themes.length) themeIx = t; } catch (e) {}
-const theme = () => DATA.themes[themeIx];
-
-// ---------- geometry ----------
-const area = P => { let a = 0; for (let i = 0; i < P.length; i++) { const [x1,y1] = P[i], [x2,y2] = P[(i+1)%P.length]; a += x1*y2 - x2*y1; } return a / 2; };
-const clean = P => {
-  let out = [];
-  for (const p of P) { const q = [Math.round(p[0]*1e6)/1e6, Math.round(p[1]*1e6)/1e6]; const l = out[out.length-1]; if (!l || l[0] !== q[0] || l[1] !== q[1]) out.push(q); }
-  if (out.length > 1 && out[0][0] === out[out.length-1][0] && out[0][1] === out[out.length-1][1]) out.pop();
-  // drop collinear points
-  let changed = true;
-  while (changed && out.length > 3) {
-    changed = false;
-    for (let i = 0; i < out.length; i++) {
-      const a = out[(i-1+out.length)%out.length], b = out[i], c = out[(i+1)%out.length];
-      if (Math.abs((b[0]-a[0])*(c[1]-a[1]) - (b[1]-a[1])*(c[0]-a[0])) < 1e-9) { out.splice(i,1); changed = true; break; }
+  const DATA = __DATA__;
+  const UPG = 14.999999999999998;
+  const COLS = [3, 4, 5, 6, 7, 8, 9, 10];
+  const $ = (id) => document.getElementById(id);
+  const rnd = (n) => Math.floor(Math.random() * n);
+  const pick = (a) => a[rnd(a.length)];
+  const shuffle = (a) => {
+    a = a.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = rnd(i + 1);
+      [a[i], a[j]] = [a[j], a[i]];
     }
-  }
-  return out;
-};
-const bbox = P => { let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; for (const [x,y] of P) { x0=Math.min(x0,x); y0=Math.min(y0,y); x1=Math.max(x1,x); y1=Math.max(y1,y); } return {x0,y0,x1,y1}; };
+    return a;
+  };
 
-// Base shape: a grid box with 45° chamfered corners (the v1 vocabulary: every edge is 0°, 45° or 90°).
-const SIZES = { any: [2,3,4], small: [1,2], medium: [2,3], large: [3,4] };
-function randomShape() {
-  const sizes = SIZES[$('size').value] || SIZES.any, minA = $('size').value === 'small' ? 1 : 2.5;
-  for (let tries = 0; tries < 500; tries++) {
-    const w = pick(sizes), h = pick(sizes);
-    const x0 = -Math.floor(w/2), y0 = -Math.floor(h/2), x1 = x0 + w, y1 = y0 + h;
-    const m = Math.min(w, h);
-    const c = [0,0,0,0].map(() => Math.random() < 0.55 ? 1 + rnd(m) : 0); // tl, tr, br, bl
-    if (c[0]+c[1] > w || c[3]+c[2] > w || c[0]+c[3] > h || c[1]+c[2] > h) continue;
-    const P = clean([
-      [x0, y0 + c[0]], [x0 + c[0], y0], [x1 - c[1], y0], [x1, y0 + c[1]],
-      [x1, y1 - c[2]], [x1 - c[2], y1], [x0 + c[3], y1], [x0, y1 - c[3]],
-    ]);
-    const A = Math.abs(area(P));
-    if (P.length < 3 || A < minA) continue;
-    if (P.length === 4 && c.every(v => v === 0) && Math.random() < 0.7) continue; // plain rectangles are rare in v1
-    return P;
-  }
-  return [[-1,-1],[1,-1],[1,1],[-1,1]];
-}
-
-function clip(P, a, b, c) { // keep a*x + b*y <= c (Sutherland–Hodgman, one edge)
-  const out = [], inside = p => a*p[0] + b*p[1] <= c + 1e-9;
-  for (let i = 0; i < P.length; i++) {
-    const cur = P[i], prev = P[(i-1+P.length)%P.length];
-    const ci = inside(cur), pi = inside(prev);
-    if (ci !== pi) {
-      const d1 = a*prev[0] + b*prev[1] - c, d2 = a*cur[0] + b*cur[1] - c, t = d1 / (d1 - d2);
-      out.push([prev[0] + t*(cur[0]-prev[0]), prev[1] + t*(cur[1]-prev[1])]);
-    }
-    if (ci) out.push(cur);
-  }
-  return clean(out);
-}
-const LINES = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]];
-function randomFacet(base) {
-  const A = Math.abs(area(base));
-  for (let tries = 0; tries < 400; tries++) {
-    let P = base;
-    const cuts = Math.random() < 0.45 ? 2 : 1;
-    for (let k = 0; k < cuts; k++) {
-      const [a, b] = pick(LINES);
-      const vals = P.map(p => a*p[0] + b*p[1]);
-      const lo = Math.ceil(Math.min(...vals) + 1e-9), hi = Math.floor(Math.max(...vals) - 1e-9);
-      if (hi < lo) { P = []; break; }
-      P = clip(P, a, b, lo + rnd(hi - lo + 1));
-      if (P.length < 3) break;
-    }
-    if (P.length < 3) continue;
-    if (!P.every(([x,y]) => Number.isInteger(x) && Number.isInteger(y))) continue;
-    const a2 = Math.abs(area(P));
-    if (a2 < 0.5 || a2 > A - 0.5) continue;
-    return P;
-  }
-  return null;
-}
-function randomFacets(base) {
-  const n = Math.random() < 0.3 ? 2 : 1, out = [];
-  for (let i = 0; i < n; i++) { const f = randomFacet(base); if (f) out.push(f); }
-  return out;
-}
-function randomColours(n) { return shuffle(COLS).slice(0, n); }
-
-// ---------- state ----------
-let state = null; const history = [];
-function commit(next) { if (state) history.push(JSON.stringify(state)); if (history.length > 100) history.shift(); state = next; render(); }
-function newAll() { const base = randomShape(), facets = randomFacets(base); return { base, facets, colours: randomColours(1 + facets.length) }; }
-function fitColours(s) { const used = new Set(), out = []; for (let i = 0; i < 1 + s.facets.length; i++) { let c = s.colours[i]; if (c == null || used.has(c)) c = COLS.find(x => !used.has(x)); used.add(c); out.push(c); } s.colours = out; return s; }
-const polyLayers = s => [s.base, ...s.facets].map((points, i) => ({ palette: s.colours[i], points }));
-// Void-style star pixels: kept in v1 units (1 grid cell = 15 units), exported as kind "pixel" layers like Void's.
-const layersOf = s => [...polyLayers(s), ...(s.stars || [])];
-const PAL_ALL = [3,4,5,6,7,8,9,10,11,12,13,14];
-const STAR = { x: 4, y: -3 }; // a fixed spot for Void's per-instance random star
-const isPix = l => l.units === 'unit';
-const gridPts = l => isPix(l) ? l.points.map(([x, y]) => [(x + (l.anchor === 'randomStar' ? STAR.x : 0)) / UPG, (y + (l.anchor === 'randomStar' ? STAR.y : 0)) / UPG]) : l.points;
-function randomStars(base, palette) {
-  const out = [], n = 4 + rnd(4), taken = new Set();
-  for (let tries = 0; tries < 400 && out.length < n; tries++) {
-    const big = out.length === 0, sz = big ? 1 : 0.5;
-    const b = bbox(base), ux = Math.round((b.x0 + Math.random() * (b.x1 - b.x0)) * UPG * 2) / 2, uy = Math.round((b.y0 + Math.random() * (b.y1 - b.y0)) * UPG * 2) / 2;
-    const corners = [[ux, uy], [ux + sz, uy], [ux + sz, uy + sz], [ux, uy + sz]];
-    // keep stars clear of the edges so they read as inside the block
-    if (!corners.every(([x, y]) => inside(base, [x / UPG, y / UPG]) && base.every((a, i) => segDist([x / UPG, y / UPG], a, base[(i+1) % base.length]) > 0.2))) continue;
-    const k = Math.round(ux / 3) + ',' + Math.round(uy / 3); if (taken.has(k)) continue; taken.add(k);
-    out.push({ palette, kind: 'pixel', units: 'unit', points: corners });
-  }
-  return out;
-}
-const starPalette = s => (s.stars && s.stars[0] ? s.stars[0].palette : 8);
-const withStars = (s, base) => (s.stars && s.stars.length ? randomStars(base, starPalette(s)) : []);
-
-// ---------- drawing ----------
-function setupCanvas(cv, cssW, cssH) {
-  const dpr = window.devicePixelRatio || 1;
-  cv.width = Math.round(cssW * dpr); cv.height = Math.round(cssH * dpr);
-  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); return ctx;
-}
-function drawLayers(ctx, layers, colors, cx, cy, s) {
-  for (const l of layers) {
-    ctx.beginPath();
-    gridPts(l).forEach(([x, y], i) => i ? ctx.lineTo(cx + x*s, cy + y*s) : ctx.moveTo(cx + x*s, cy + y*s));
-    ctx.closePath(); ctx.fillStyle = colors[l.palette]; ctx.fill();
-  }
-}
-function centreOf(layers) { const ls = layers.filter(l => !isPix(l)); const b = bbox((ls.length ? ls : layers).flatMap(gridPts)); return [(b.x0 + b.x1)/2, (b.y0 + b.y1)/2]; }
-
-function drawBig() {
-  const cv = $('big'), r = cv.getBoundingClientRect(), W = r.width, H = r.height;
-  const ctx = setupCanvas(cv, W, H), t = theme();
-  ctx.fillStyle = t.colors[2]; ctx.fillRect(0, 0, W, H);
-  const s = W / 10, cx = W/2, cy = H/2;
-  ctx.fillStyle = t.colors[t.txt]; ctx.globalAlpha = .28;
-  for (let x = -5; x <= 5; x++) for (let y = -5; y <= 5; y++) { ctx.beginPath(); ctx.arc(cx + x*s, cy + y*s, x === 0 && y === 0 ? 3 : 1.5, 0, 7); ctx.fill(); }
-  ctx.globalAlpha = 1;
-  drawLayers(ctx, layersOf(state), t.colors, cx, cy, s);
-  // edit overlay for the selected layer
-  const P = layerPts(sel), txt = t.colors[t.txt];
-  ctx.lineWidth = 2;
-  P.forEach((p, i) => {
-    const q = P[(i+1) % P.length], dx = q[0]-p[0], dy = q[1]-p[1];
-    const ok = dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy);
-    ctx.setLineDash(ok ? [] : [6, 5]); ctx.strokeStyle = ok ? txt : t.colors[3];
-    ctx.globalAlpha = ok ? .55 : 1;
-    ctx.beginPath(); ctx.moveTo(cx + p[0]*s, cy + p[1]*s); ctx.lineTo(cx + q[0]*s, cy + q[1]*s); ctx.stroke();
-  });
-  ctx.setLineDash([]); ctx.globalAlpha = 1;
-  P.forEach(([x, y], i) => {
-    const X = cx + x*s, Y = cy + y*s, r = i === selPt ? 7 : 5;
-    ctx.fillStyle = i === selPt ? txt : t.colors[2]; ctx.strokeStyle = txt; ctx.lineWidth = 2;
-    ctx.fillRect(X - r, Y - r, 2*r, 2*r); ctx.strokeRect(X - r, Y - r, 2*r, 2*r);
-  });
-}
-
-// ---------- manual editing on the big canvas ----------
-let sel = 0, selPt = -1, drag = null;
-const layerPts = i => i === 0 ? state.base : state.facets[i-1];
-const setLayerPts = (i, P) => { if (i === 0) state.base = P; else state.facets[i-1] = P; };
-function bigMetrics() { const r = $('big').getBoundingClientRect(); return { r, s: r.width / 10, cx: r.width / 2, cy: r.height / 2 }; }
-function toGrid(e) { const { r, s, cx, cy } = bigMetrics(); return [(e.clientX - r.left - cx) / s, (e.clientY - r.top - cy) / s]; }
-function segDist(p, a, b) {
-  const dx = b[0]-a[0], dy = b[1]-a[1], L = dx*dx + dy*dy;
-  const t = L ? Math.max(0, Math.min(1, ((p[0]-a[0])*dx + (p[1]-a[1])*dy) / L)) : 0;
-  return Math.hypot(p[0] - (a[0] + t*dx), p[1] - (a[1] + t*dy));
-}
-function inside(P, [x, y]) {
-  let c = false;
-  for (let i = 0, j = P.length - 1; i < P.length; j = i++) {
-    const [xi, yi] = P[i], [xj, yj] = P[j];
-    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c;
-  }
-  return c;
-}
-function hit(g) {
-  const { s } = bigMetrics(), P = layerPts(sel);
-  let bi = -1, bd = 1e9;
-  P.forEach((p, i) => { const d = Math.hypot(p[0]-g[0], p[1]-g[1]); if (d < bd) { bd = d; bi = i; } });
-  if (bd * s < 18) return { type: 'pt', i: bi };
-  let ei = -1, ed = 1e9;
-  P.forEach((p, i) => { const d = segDist(g, p, P[(i+1) % P.length]); if (d < ed) { ed = d; ei = i; } });
-  if (ed * s < 12) return { type: 'edge', i: ei };
-  return null;
-}
-const snap = g => [Math.max(-5, Math.min(5, Math.round(g[0]))), Math.max(-5, Math.min(5, Math.round(g[1])))];
-function deleteCorner(i) {
-  const P = layerPts(sel);
-  if (i < 0 || i >= P.length) return toast('Select a corner first');
-  if (P.length <= 3) return toast('A layer needs at least 3 corners');
-  history.push(JSON.stringify(state));
-  P.splice(i, 1); selPt = -1; render();
-}
-const big = $('big');
-big.addEventListener('pointerdown', e => {
-  const g = toGrid(e), h = hit(g);
-  if (h && h.type === 'pt') {
-    history.push(JSON.stringify(state)); selPt = h.i; drag = { i: h.i, moved: false };
-  } else if (h && h.type === 'edge') {
-    const P = layerPts(sel), q = snap(g);
-    if (P.some(p => p[0] === q[0] && p[1] === q[1])) return;
-    history.push(JSON.stringify(state));
-    P.splice(h.i + 1, 0, q); selPt = h.i + 1; drag = { i: selPt, moved: true };
-  } else {
-    // select the topmost layer under the pointer
-    const ls = polyLayers(state); let found = -1;
-    for (let i = ls.length - 1; i >= 0; i--) if (inside(ls[i].points, g)) { found = i; break; }
-    if (found >= 0) sel = found;
-    selPt = -1; render(); return;
-  }
-  big.setPointerCapture(e.pointerId); drawBig();
-});
-big.addEventListener('pointermove', e => {
-  if (!drag) { const h = hit(toGrid(e)); big.style.cursor = h ? (h.type === 'pt' ? 'grab' : 'copy') : 'crosshair'; return; }
-  const P = layerPts(sel), q = snap(toGrid(e)), p = P[drag.i];
-  if (p[0] !== q[0] || p[1] !== q[1]) { P[drag.i] = q; drag.moved = true; drawBig(); }
-});
-const endDrag = () => {
-  if (!drag) return;
-  if (!drag.moved) history.pop(); // a plain click on a corner only selects it
-  const P = layerPts(sel), n = P.length, cleaned = clean(P);
-  if (cleaned.length >= 3) { setLayerPts(sel, cleaned); if (cleaned.length !== n) selPt = -1; }
-  drag = null; render();
-};
-big.addEventListener('pointerup', endDrag);
-big.addEventListener('pointercancel', endDrag);
-big.addEventListener('dblclick', e => { const h = hit(toGrid(e)); if (h && h.type === 'pt') deleteCorner(h.i); });
-document.addEventListener('keydown', e => {
-  if ((e.key === 'Delete' || e.key === 'Backspace') && selPt >= 0 && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName)) { e.preventDefault(); deleteCorner(selPt); }
-});
-function drawTile(cv, layers, w, h, s, bgIx = 0, colors = theme().colors) {
-  const ctx = setupCanvas(cv, w, h);
-  ctx.fillStyle = colors[bgIx]; ctx.fillRect(0, 0, w, h);
-  const [mx, my] = centreOf(layers);
-  drawLayers(ctx, layers, colors, w/2 - mx*s, h/2 - my*s, s);
-}
-
-// ---------- similarity: overlap of filled area after aligning centres ----------
-function mask(layers) {
-  const R = 12, N = 9 * R, cv = document.createElement('canvas'); cv.width = cv.height = N;
-  const ctx = cv.getContext('2d'); const [mx, my] = centreOf(layers);
-  ctx.fillStyle = '#000';
-  for (const l of layers) { ctx.beginPath(); gridPts(l).forEach(([x,y], i) => { const X = N/2 + (x - mx)*R, Y = N/2 + (y - my)*R; i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }); ctx.closePath(); ctx.fill(); }
-  const d = ctx.getImageData(0, 0, N, N).data, m = new Uint8Array(N*N);
-  for (let i = 0; i < m.length; i++) m[i] = d[i*4+3] > 127 ? 1 : 0;
-  return m;
-}
-const ALL = [...DATA.designed, ...DATA.blocks];
-const masks = new Map(); ALL.forEach(b => masks.set(b.id, mask(b.layers)));
-function iou(a, b) { let i = 0, u = 0; for (let k = 0; k < a.length; k++) { i += a[k] & b[k]; u += a[k] | b[k]; } return u ? i / u : 0; }
-// Outline match counts mirror images too, since a rotated or flipped copy reads as the same block.
-function score(newLayers, b) {
-  const m = mask(newLayers);
-  const flip = mask(newLayers.map(l => ({ points: gridPts(l).map(([x,y]) => [-x, y]) })));
-  return Math.max(iou(m, masks.get(b.id)), iou(flip, masks.get(b.id)));
-}
-
-// ---------- render ----------
-function applyTheme() {
-  const t = theme(), r = document.documentElement.style;
-  r.setProperty('--bg', t.colors[0]); r.setProperty('--panel', t.colors[1]); r.setProperty('--well', t.colors[2]);
-  r.setProperty('--txt', t.colors[t.txt]); r.setProperty('--accent', t.colors[3]);
-  const [R,G,B] = t.colors[0].match(/[\d.]+/g).map(Number);
-  document.documentElement.style.colorScheme = (0.299*R + 0.587*G + 0.114*B) > 140 ? 'light' : 'dark';
-  $('theme').value = themeIx;
-}
-const sigOf = s => JSON.stringify(layersOf(s).map(l => l.points));
-function hull(pts) {
-  const P = [...new Map(pts.map(p => [p.join(','), p])).values()].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-  if (P.length < 3) return P;
-  const cross = (o, a, b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
-  const lo = [], up = [];
-  for (const p of P) { while (lo.length >= 2 && cross(lo[lo.length-2], lo[lo.length-1], p) <= 0) lo.pop(); lo.push(p); }
-  for (const p of P.slice().reverse()) { while (up.length >= 2 && cross(up[up.length-2], up[up.length-1], p) <= 0) up.pop(); up.push(p); }
-  return lo.slice(0, -1).concat(up.slice(0, -1));
-}
-const onOrIn = (P, p) => inside(P, p) || P.some((a, i) => segDist(p, a, P[(i+1) % P.length]) < 1e-9);
-// Outline (used for hits and connections): a loaded block keeps its own until its layers change;
-// otherwise the body, or the convex hull when facets stick out past the body.
-function outlineOf(s) {
-  if (s.src && s.src.sig === sigOf(s)) return s.src.outline;
-  if (s.facets.every(f => f.every(p => onOrIn(s.base, p)))) return s.base;
-  // Otherwise the exact union of all layers (a convex hull would claim empty corners as hit area).
+  let themeIx = 0;
   try {
-    const u = polygonClipping.union(...polyLayers(s).map(l => [l.points]));
-    if (u.length === 1) { const ring = clean(u[0][0]); if (ring.length >= 3) return area(ring) < 0 ? ring.reverse() : ring; }
+    const t = +localStorage.getItem('bg.theme');
+    if (t >= 0 && t < DATA.themes.length) themeIx = t;
   } catch (e) {}
-  return hull(polyLayers(s).flatMap(l => l.points));
-}
-function geometryJSON(s) {
-  const layers = layersOf(s), [mx, my] = centreOf(layers);
-  const r2 = v => Math.round(v * 2) / 2 || 0;
-  return { units: 'grid', unitsPerGrid: UPG, layers, outline: outlineOf(s), menuOffset: [r2(-mx), r2(-my)] };
-}
-function loadBlock(b, setName) {
-  const all = JSON.parse(JSON.stringify(b.layers)), layers = all.filter(l => !isPix(l));
-  const s = { base: layers[0].points, facets: layers.slice(1).map(l => l.points), colours: layers.map(l => l.palette), stars: all.filter(isPix) };
-  s.src = { id: b.id, outline: JSON.parse(JSON.stringify(b.outline || outlineOf(s))), sig: sigOf(s) };
-  if (setName) $('name').value = b.name;
-  sel = 0; selPt = -1; commit(s);
-  toast(`Loaded ${b.name}`);
-  window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-}
-function codeText(name, s) { return JSON.stringify({ name, geometry: geometryJSON(s) }, null, 2).replace(/\[\s+(-?[\d.]+),\s+(-?[\d.]+)\s+\]/g, '[$1, $2]'); }
+  const theme = () => DATA.themes[themeIx];
 
-function render() {
-  applyTheme();
-  if (sel > state.facets.length) { sel = 0; selPt = -1; }
-  if (selPt >= layerPts(sel).length) selPt = -1;
-  const t = theme(), layers = layersOf(state);
-  drawBig();
-  // layers
-  const L = $('layers'); L.innerHTML = '';
-  polyLayers(state).forEach((l, i) => {
-    const row = document.createElement('div'); row.className = 'layer';
-    const sw = document.createElement('button'); sw.className = 'swatch'; sw.style.background = t.colors[l.palette];
-    sw.setAttribute('aria-label', `Change colour of layer ${i+1}`);
-    sw.onclick = () => { const s = JSON.parse(JSON.stringify(state)); s.colours[i] = PAL_ALL[(PAL_ALL.indexOf(s.colours[i]) + 1) % PAL_ALL.length]; commit(s); };
-    const pk = document.createElement('button'); pk.className = 'pick' + (i === sel ? ' on' : '');
-    pk.textContent = `${i === 0 ? 'Body' : 'Facet ' + i} · palette ${l.palette} · ${l.points.length} corners`;
-    pk.setAttribute('aria-pressed', i === sel); pk.onclick = () => { sel = i; selPt = -1; render(); };
-    row.append(sw, pk);
-    if (i > 0) {
-      const rm = document.createElement('button'); rm.className = 'small'; rm.textContent = 'Remove';
-      rm.onclick = () => { const s = JSON.parse(JSON.stringify(state)); s.facets.splice(i - 1, 1); s.colours.splice(i, 1); sel = 0; selPt = -1; commit(s); };
-      row.append(rm);
+  // ---------- geometry ----------
+  const area = (P) => {
+    let a = 0;
+    for (let i = 0; i < P.length; i++) {
+      const [x1, y1] = P[i],
+        [x2, y2] = P[(i + 1) % P.length];
+      a += x1 * y2 - x2 * y1;
     }
-    L.append(row);
-  });
-  if (state.stars && state.stars.length) {
-    const row = document.createElement('div'); row.className = 'layer';
-    const sw = document.createElement('button'); sw.className = 'swatch'; sw.style.background = t.colors[starPalette(state)];
-    sw.setAttribute('aria-label', 'Change colour of the stars');
-    sw.onclick = () => { const s = JSON.parse(JSON.stringify(state)), p = PAL_ALL[(PAL_ALL.indexOf(starPalette(s)) + 1) % PAL_ALL.length]; s.stars.forEach(l => l.palette = p); commit(s); };
-    row.append(sw, Object.assign(document.createElement('span'), { textContent: `Stars · palette ${starPalette(state)} · ${state.stars.length} pixels`, style: 'padding:4px 6px' }));
-    L.append(row);
-  }
-  // theme check: a layer that vanishes into the stage or merges with another layer in some theme
-  const TC = $('themeCheck'), warns = [], pl = polyLayers(state);
-  pl.forEach((l, i) => {
-    const nm = i === 0 ? 'Body' : 'Facet ' + i;
-    const bgT = DATA.themes.filter(th => th.colors[l.palette] === th.colors[0]).map(th => th.name);
-    if (bgT.length) warns.push(`${nm} (palette ${l.palette}) is the stage colour in ${bgT.join(', ')}`);
-    pl.forEach((m, j) => { if (j <= i) return; const same = DATA.themes.filter(th => th.colors[l.palette] === th.colors[m.palette]).map(th => th.name);
-      if (same.length) warns.push(`${nm} and ${j === 0 ? 'Body' : 'Facet ' + j} are the same colour in ${same.join(', ')}`); });
-  });
-  TC.innerHTML = warns.length ? warns.map(w => `<div class="warn">⚠ ${w}</div>`).join('') : '<div class="hint">Every layer stays visible and distinct in all 13 themes.</div>';
-  TC.querySelectorAll('.warn').forEach(el => { el.style.fontSize = '13px'; });
-  // similarity
-  const ranked = ALL.filter(b => b.id !== state.src?.id).map(b => ({ b, s: score(layers, b) })).sort((a, b) => b.s - a.s);
-  const close = new Set(ranked.slice(0, 3).filter(r => r.s >= 0.6).map(r => r.b.id));
-  const S = $('similar'); S.innerHTML = '';
-  ranked.slice(0, 3).forEach(({ b, s }) => {
-    const pct = Math.round(s * 100), div = document.createElement('div');
-    div.innerHTML = `<div class="row" style="justify-content:space-between"><span>${b.name}</span><span class="${pct >= 80 ? 'warn' : ''}">${pct}% same shape${pct >= 80 ? ' · too close' : ''}</span></div><div class="bar"><span style="width:${pct}%"></span></div>`;
-    S.append(div);
-  });
-  // line-up
-  const name = $('name').value.trim() || 'New block';
-  const cats = [['new', 'Editing now'], ['designed', 'Designed (agreed)'], ['saved', 'Saved in this browser'], ['source', 'Sources'], ['effect', 'Effects'], ['power', 'Power'], ['interaction', 'Interaction']];
-  const LU = $('lineup'); LU.innerHTML = '';
-  for (const [cat, label] of cats) {
-    const items = cat === 'new' ? [{ id: 'new', name, layers }]
-      : cat === 'designed' ? DATA.designed
-      : cat === 'saved' ? saved.map((it, i) => ({ id: 'saved.' + i, name: it.name, layers: layersOf(it.state), outline: outlineOf(it.state), mine: true }))
-      : DATA.blocks.filter(b => b.category === cat);
-    if (!items.length) continue;
-    const box = document.createElement('div'); box.className = 'cat';
-    box.innerHTML = `<div class="cat-name">${label}</div>`;
-    const tiles = document.createElement('div'); tiles.className = 'tiles';
-    for (const b of items) {
-      const isNew = b.id === 'new';
-      const tile = document.createElement(isNew ? 'div' : 'button');
-      tile.className = 'tile' + (isNew ? ' new' : '') + (close.has(b.id) ? ' close' : '') + (state.src?.id === b.id ? ' loaded' : '');
-      if (!isNew) { tile.setAttribute('aria-label', `Load ${b.name} into the editor`); tile.onclick = () => loadBlock(b, cat === 'designed' || cat === 'saved'); }
-      const cv = document.createElement('canvas'); tile.append(cv, Object.assign(document.createElement('span'), { textContent: b.name }));
-      tiles.append(tile); drawTile(cv, b.layers, 88, 70, 15);
+    return a / 2;
+  };
+  const clean = (P) => {
+    let out = [];
+    for (const p of P) {
+      const q = [Math.round(p[0] * 1e6) / 1e6, Math.round(p[1] * 1e6) / 1e6];
+      const l = out[out.length - 1];
+      if (!l || l[0] !== q[0] || l[1] !== q[1]) out.push(q);
     }
-    box.append(tiles); LU.append(box);
+    if (
+      out.length > 1 &&
+      out[0][0] === out[out.length - 1][0] &&
+      out[0][1] === out[out.length - 1][1]
+    )
+      out.pop();
+    // drop collinear points
+    let changed = true;
+    while (changed && out.length > 3) {
+      changed = false;
+      for (let i = 0; i < out.length; i++) {
+        const a = out[(i - 1 + out.length) % out.length],
+          b = out[i],
+          c = out[(i + 1) % out.length];
+        if (Math.abs((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])) < 1e-9) {
+          out.splice(i, 1);
+          changed = true;
+          break;
+        }
+      }
+    }
+    return out;
+  };
+  const bbox = (P) => {
+    let x0 = 1e9,
+      y0 = 1e9,
+      x1 = -1e9,
+      y1 = -1e9;
+    for (const [x, y] of P) {
+      x0 = Math.min(x0, x);
+      y0 = Math.min(y0, y);
+      x1 = Math.max(x1, x);
+      y1 = Math.max(y1, y);
+    }
+    return { x0, y0, x1, y1 };
+  };
+
+  // Base shape: a grid box with 45° chamfered corners (the v1 vocabulary: every edge is 0°, 45° or 90°).
+  const SIZES = { any: [2, 3, 4], small: [1, 2], medium: [2, 3], large: [3, 4] };
+  function randomShape() {
+    const sizes = SIZES[$('size').value] || SIZES.any,
+      minA = $('size').value === 'small' ? 1 : 2.5;
+    for (let tries = 0; tries < 500; tries++) {
+      const w = pick(sizes),
+        h = pick(sizes);
+      const x0 = -Math.floor(w / 2),
+        y0 = -Math.floor(h / 2),
+        x1 = x0 + w,
+        y1 = y0 + h;
+      const m = Math.min(w, h);
+      const c = [0, 0, 0, 0].map(() => (Math.random() < 0.55 ? 1 + rnd(m) : 0)); // tl, tr, br, bl
+      if (c[0] + c[1] > w || c[3] + c[2] > w || c[0] + c[3] > h || c[1] + c[2] > h) continue;
+      const P = clean([
+        [x0, y0 + c[0]],
+        [x0 + c[0], y0],
+        [x1 - c[1], y0],
+        [x1, y0 + c[1]],
+        [x1, y1 - c[2]],
+        [x1 - c[2], y1],
+        [x0 + c[3], y1],
+        [x0, y1 - c[3]],
+      ]);
+      const A = Math.abs(area(P));
+      if (P.length < 3 || A < minA) continue;
+      if (P.length === 4 && c.every((v) => v === 0) && Math.random() < 0.7) continue; // plain rectangles are rare in v1
+      return P;
+    }
+    return [
+      [-1, -1],
+      [1, -1],
+      [1, 1],
+      [-1, 1],
+    ];
   }
-  // themes strip: new block between Tone and Laser for scale
-  const TH = $('themes'); TH.innerHTML = '';
-  const tone = DATA.blocks.find(b => b.id === 'source.tone'), laser = DATA.blocks.find(b => b.id === 'power.laser');
-  DATA.themes.forEach((th, i) => {
-    const btn = document.createElement('button'); btn.className = 'theme-tile' + (i === themeIx ? ' on' : '');
-    btn.setAttribute('aria-label', `Use theme ${th.name}`);
-    const cv = document.createElement('canvas'), lab = document.createElement('span');
-    lab.textContent = th.name; lab.style.background = th.colors[0]; lab.style.color = th.colors[th.txt];
-    btn.append(cv, lab); btn.onclick = () => setTheme(i); TH.append(btn);
-    requestAnimationFrame(() => {
-      const w = cv.getBoundingClientRect().width || 118, h = 84, ctx = setupCanvas(cv, w, h);
-      ctx.fillStyle = th.colors[0]; ctx.fillRect(0, 0, w, h);
-      const put = (ls, x) => { const [mx, my] = centreOf(ls); drawLayers(ctx, ls, th.colors, x - mx*12, h/2 - my*12, 12); };
-      put(tone.layers, w*0.2); put(layers, w*0.5); put(laser.layers, w*0.8);
+
+  function clip(P, a, b, c) {
+    // keep a*x + b*y <= c (Sutherland–Hodgman, one edge)
+    const out = [],
+      inside = (p) => a * p[0] + b * p[1] <= c + 1e-9;
+    for (let i = 0; i < P.length; i++) {
+      const cur = P[i],
+        prev = P[(i - 1 + P.length) % P.length];
+      const ci = inside(cur),
+        pi = inside(prev);
+      if (ci !== pi) {
+        const d1 = a * prev[0] + b * prev[1] - c,
+          d2 = a * cur[0] + b * cur[1] - c,
+          t = d1 / (d1 - d2);
+        out.push([prev[0] + t * (cur[0] - prev[0]), prev[1] + t * (cur[1] - prev[1])]);
+      }
+      if (ci) out.push(cur);
+    }
+    return clean(out);
+  }
+  const LINES = [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+    [1, 1],
+    [-1, -1],
+    [1, -1],
+    [-1, 1],
+  ];
+  function randomFacet(base) {
+    const A = Math.abs(area(base));
+    for (let tries = 0; tries < 400; tries++) {
+      let P = base;
+      const cuts = Math.random() < 0.45 ? 2 : 1;
+      for (let k = 0; k < cuts; k++) {
+        const [a, b] = pick(LINES);
+        const vals = P.map((p) => a * p[0] + b * p[1]);
+        const lo = Math.ceil(Math.min(...vals) + 1e-9),
+          hi = Math.floor(Math.max(...vals) - 1e-9);
+        if (hi < lo) {
+          P = [];
+          break;
+        }
+        P = clip(P, a, b, lo + rnd(hi - lo + 1));
+        if (P.length < 3) break;
+      }
+      if (P.length < 3) continue;
+      if (!P.every(([x, y]) => Number.isInteger(x) && Number.isInteger(y))) continue;
+      const a2 = Math.abs(area(P));
+      if (a2 < 0.5 || a2 > A - 0.5) continue;
+      return P;
+    }
+    return null;
+  }
+  function randomFacets(base) {
+    const n = Math.random() < 0.3 ? 2 : 1,
+      out = [];
+    for (let i = 0; i < n; i++) {
+      const f = randomFacet(base);
+      if (f) out.push(f);
+    }
+    return out;
+  }
+  function randomColours(n) {
+    return shuffle(COLS).slice(0, n);
+  }
+
+  // ---------- state ----------
+  let state = null;
+  const history = [];
+  function commit(next) {
+    if (state) history.push(JSON.stringify(state));
+    if (history.length > 100) history.shift();
+    state = next;
+    render();
+  }
+  function newAll() {
+    const base = randomShape(),
+      facets = randomFacets(base);
+    return { base, facets, colours: randomColours(1 + facets.length) };
+  }
+  function fitColours(s) {
+    const used = new Set(),
+      out = [];
+    for (let i = 0; i < 1 + s.facets.length; i++) {
+      let c = s.colours[i];
+      if (c == null || used.has(c)) c = COLS.find((x) => !used.has(x));
+      used.add(c);
+      out.push(c);
+    }
+    s.colours = out;
+    return s;
+  }
+  const polyLayers = (s) =>
+    [s.base, ...s.facets].map((points, i) => ({ palette: s.colours[i], points }));
+  // Void-style star pixels: kept in v1 units (1 grid cell = 15 units), exported as kind "pixel" layers like Void's.
+  const layersOf = (s) => [...polyLayers(s), ...(s.stars || [])];
+  const PAL_ALL = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+  const STAR = { x: 4, y: -3 }; // a fixed spot for Void's per-instance random star
+  const isPix = (l) => l.units === 'unit';
+  const gridPts = (l) =>
+    isPix(l)
+      ? l.points.map(([x, y]) => [
+          (x + (l.anchor === 'randomStar' ? STAR.x : 0)) / UPG,
+          (y + (l.anchor === 'randomStar' ? STAR.y : 0)) / UPG,
+        ])
+      : l.points;
+  function randomStars(base, palette) {
+    const out = [],
+      n = 4 + rnd(4),
+      taken = new Set();
+    for (let tries = 0; tries < 400 && out.length < n; tries++) {
+      const big = out.length === 0,
+        sz = big ? 1 : 0.5;
+      const b = bbox(base),
+        ux = Math.round((b.x0 + Math.random() * (b.x1 - b.x0)) * UPG * 2) / 2,
+        uy = Math.round((b.y0 + Math.random() * (b.y1 - b.y0)) * UPG * 2) / 2;
+      const corners = [
+        [ux, uy],
+        [ux + sz, uy],
+        [ux + sz, uy + sz],
+        [ux, uy + sz],
+      ];
+      // keep stars clear of the edges so they read as inside the block
+      if (
+        !corners.every(
+          ([x, y]) =>
+            inside(base, [x / UPG, y / UPG]) &&
+            base.every((a, i) => segDist([x / UPG, y / UPG], a, base[(i + 1) % base.length]) > 0.2),
+        )
+      )
+        continue;
+      const k = Math.round(ux / 3) + ',' + Math.round(uy / 3);
+      if (taken.has(k)) continue;
+      taken.add(k);
+      out.push({ palette, kind: 'pixel', units: 'unit', points: corners });
+    }
+    return out;
+  }
+  const starPalette = (s) => (s.stars && s.stars[0] ? s.stars[0].palette : 8);
+  const withStars = (s, base) =>
+    s.stars && s.stars.length ? randomStars(base, starPalette(s)) : [];
+
+  // ---------- drawing ----------
+  function setupCanvas(cv, cssW, cssH) {
+    const dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(cssW * dpr);
+    cv.height = Math.round(cssH * dpr);
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return ctx;
+  }
+  function drawLayers(ctx, layers, colors, cx, cy, s) {
+    for (const l of layers) {
+      ctx.beginPath();
+      gridPts(l).forEach(([x, y], i) =>
+        i ? ctx.lineTo(cx + x * s, cy + y * s) : ctx.moveTo(cx + x * s, cy + y * s),
+      );
+      ctx.closePath();
+      ctx.fillStyle = colors[l.palette];
+      ctx.fill();
+    }
+  }
+  function centreOf(layers) {
+    const ls = layers.filter((l) => !isPix(l));
+    const b = bbox((ls.length ? ls : layers).flatMap(gridPts));
+    return [(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2];
+  }
+
+  function drawBig() {
+    const cv = $('big'),
+      r = cv.getBoundingClientRect(),
+      W = r.width,
+      H = r.height;
+    const ctx = setupCanvas(cv, W, H),
+      t = theme();
+    ctx.fillStyle = t.colors[2];
+    ctx.fillRect(0, 0, W, H);
+    const s = W / 10,
+      cx = W / 2,
+      cy = H / 2;
+    ctx.fillStyle = t.colors[t.txt];
+    ctx.globalAlpha = 0.28;
+    for (let x = -5; x <= 5; x++)
+      for (let y = -5; y <= 5; y++) {
+        ctx.beginPath();
+        ctx.arc(cx + x * s, cy + y * s, x === 0 && y === 0 ? 3 : 1.5, 0, 7);
+        ctx.fill();
+      }
+    ctx.globalAlpha = 1;
+    drawLayers(ctx, layersOf(state), t.colors, cx, cy, s);
+    // edit overlay for the selected layer
+    const P = layerPts(sel),
+      txt = t.colors[t.txt];
+    ctx.lineWidth = 2;
+    P.forEach((p, i) => {
+      const q = P[(i + 1) % P.length],
+        dx = q[0] - p[0],
+        dy = q[1] - p[1];
+      const ok = dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy);
+      ctx.setLineDash(ok ? [] : [6, 5]);
+      ctx.strokeStyle = ok ? txt : t.colors[3];
+      ctx.globalAlpha = ok ? 0.55 : 1;
+      ctx.beginPath();
+      ctx.moveTo(cx + p[0] * s, cy + p[1] * s);
+      ctx.lineTo(cx + q[0] * s, cy + q[1] * s);
+      ctx.stroke();
     });
-  });
-  $('code').textContent = codeText(name, state);
-  renderSaved();
-  renderTodo();
-}
-function renderTodo() {
-  const T = $('todo'); T.innerHTML = '';
-  const savedNames = new Set(saved.map(s => s.name.toLowerCase())), done = new Set(DATA.designed.map(d => d.name.toLowerCase()));
-  for (const [nm, cat, what] of DATA.todo) {
-    const k = nm.toLowerCase(), isDone = done.has(k), isSaved = !isDone && savedNames.has(k);
-    const it = document.createElement('div'); it.className = 'todo-item' + (isDone ? ' done' : '');
-    it.innerHTML = `<span class="mark" aria-hidden="true">${isDone ? '✓' : ''}</span><div><b></b><span class="state"></span></div><small></small>`;
-    it.querySelector('b').textContent = nm;
-    it.querySelector('.state').textContent = isDone ? 'Designed' : isSaved ? 'Saved here' : cat;
-    it.querySelector('small').textContent = isDone || isSaved ? `${cat} · ${what}` : what;
-    T.append(it);
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    P.forEach(([x, y], i) => {
+      const X = cx + x * s,
+        Y = cy + y * s,
+        r = i === selPt ? 7 : 5;
+      ctx.fillStyle = i === selPt ? txt : t.colors[2];
+      ctx.strokeStyle = txt;
+      ctx.lineWidth = 2;
+      ctx.fillRect(X - r, Y - r, 2 * r, 2 * r);
+      ctx.strokeRect(X - r, Y - r, 2 * r, 2 * r);
+    });
   }
-}
 
-// ---------- saved list + clipboard ----------
-let saved = []; try { saved = JSON.parse(localStorage.getItem('bg.saved') || '[]'); } catch (e) {}
-const persist = () => { try { localStorage.setItem('bg.saved', JSON.stringify(saved)); } catch (e) {} };
-function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('show'), 1800); }
-function copy(text, msg) {
-  const fb = () => { $('fallbackBox').innerHTML = ''; const ta = document.createElement('textarea'); ta.className = 'fallback'; ta.value = text; $('fallbackBox').append(ta); ta.focus(); ta.select(); toast('Select all and copy'); };
-  try { navigator.clipboard.writeText(text).then(() => toast(msg), fb); } catch (e) { fb(); }
-}
-function renderSaved() {
-  const box = $('saved'); box.innerHTML = '';
-  if (!saved.length) { box.innerHTML = '<p class="hint">Nothing saved yet. Save keeps a design here and copies its code.</p>'; return; }
-  saved.forEach((it, i) => {
-    const row = document.createElement('div'); row.className = 'saved-item';
-    const cv = document.createElement('canvas'); cv.style.width = '60px'; cv.style.height = '46px';
-    const left = document.createElement('div'); left.className = 'row'; left.append(cv, Object.assign(document.createElement('b'), { textContent: it.name }));
-    const right = document.createElement('div'); right.className = 'row';
-    const mk = (label, fn) => { const b = document.createElement('button'); b.className = 'small'; b.textContent = label; b.onclick = fn; return b; };
-    right.append(
-      mk('Edit', () => { $('name').value = it.name; commit(fitColours(JSON.parse(JSON.stringify(it.state)))); }),
-      mk('Copy', () => copy(codeText(it.name, it.state), `Copied ${it.name}`)),
-      mk('Remove', () => { saved.splice(i, 1); persist(); render(); }));
-    row.append(left, right); box.append(row);
-    drawTile(cv, layersOf(it.state), 60, 46, 10);
+  // ---------- manual editing on the big canvas ----------
+  let sel = 0,
+    selPt = -1,
+    drag = null;
+  const layerPts = (i) => (i === 0 ? state.base : state.facets[i - 1]);
+  const setLayerPts = (i, P) => {
+    if (i === 0) state.base = P;
+    else state.facets[i - 1] = P;
+  };
+  function bigMetrics() {
+    const r = $('big').getBoundingClientRect();
+    return { r, s: r.width / 10, cx: r.width / 2, cy: r.height / 2 };
+  }
+  function toGrid(e) {
+    const { r, s, cx, cy } = bigMetrics();
+    return [(e.clientX - r.left - cx) / s, (e.clientY - r.top - cy) / s];
+  }
+  function segDist(p, a, b) {
+    const dx = b[0] - a[0],
+      dy = b[1] - a[1],
+      L = dx * dx + dy * dy;
+    const t = L ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L)) : 0;
+    return Math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy));
+  }
+  function inside(P, [x, y]) {
+    let c = false;
+    for (let i = 0, j = P.length - 1; i < P.length; j = i++) {
+      const [xi, yi] = P[i],
+        [xj, yj] = P[j];
+      if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
+    }
+    return c;
+  }
+  function hit(g) {
+    const { s } = bigMetrics(),
+      P = layerPts(sel);
+    let bi = -1,
+      bd = 1e9;
+    P.forEach((p, i) => {
+      const d = Math.hypot(p[0] - g[0], p[1] - g[1]);
+      if (d < bd) {
+        bd = d;
+        bi = i;
+      }
+    });
+    if (bd * s < 18) return { type: 'pt', i: bi };
+    let ei = -1,
+      ed = 1e9;
+    P.forEach((p, i) => {
+      const d = segDist(g, p, P[(i + 1) % P.length]);
+      if (d < ed) {
+        ed = d;
+        ei = i;
+      }
+    });
+    if (ed * s < 12) return { type: 'edge', i: ei };
+    return null;
+  }
+  const snap = (g) => [
+    Math.max(-5, Math.min(5, Math.round(g[0]))),
+    Math.max(-5, Math.min(5, Math.round(g[1]))),
+  ];
+  function deleteCorner(i) {
+    const P = layerPts(sel);
+    if (i < 0 || i >= P.length) return toast('Select a corner first');
+    if (P.length <= 3) return toast('A layer needs at least 3 corners');
+    history.push(JSON.stringify(state));
+    P.splice(i, 1);
+    selPt = -1;
+    render();
+  }
+  const big = $('big');
+  big.addEventListener('pointerdown', (e) => {
+    const g = toGrid(e),
+      h = hit(g);
+    if (h && h.type === 'pt') {
+      history.push(JSON.stringify(state));
+      selPt = h.i;
+      drag = { i: h.i, moved: false };
+    } else if (h && h.type === 'edge') {
+      const P = layerPts(sel),
+        q = snap(g);
+      if (P.some((p) => p[0] === q[0] && p[1] === q[1])) return;
+      history.push(JSON.stringify(state));
+      P.splice(h.i + 1, 0, q);
+      selPt = h.i + 1;
+      drag = { i: selPt, moved: true };
+    } else {
+      // select the topmost layer under the pointer
+      const ls = polyLayers(state);
+      let found = -1;
+      for (let i = ls.length - 1; i >= 0; i--)
+        if (inside(ls[i].points, g)) {
+          found = i;
+          break;
+        }
+      if (found >= 0) sel = found;
+      selPt = -1;
+      render();
+      return;
+    }
+    big.setPointerCapture(e.pointerId);
+    drawBig();
   });
-}
+  big.addEventListener('pointermove', (e) => {
+    if (!drag) {
+      const h = hit(toGrid(e));
+      big.style.cursor = h ? (h.type === 'pt' ? 'grab' : 'copy') : 'crosshair';
+      return;
+    }
+    const P = layerPts(sel),
+      q = snap(toGrid(e)),
+      p = P[drag.i];
+    if (p[0] !== q[0] || p[1] !== q[1]) {
+      P[drag.i] = q;
+      drag.moved = true;
+      drawBig();
+    }
+  });
+  const endDrag = () => {
+    if (!drag) return;
+    if (!drag.moved) history.pop(); // a plain click on a corner only selects it
+    const P = layerPts(sel),
+      n = P.length,
+      cleaned = clean(P);
+    if (cleaned.length >= 3) {
+      setLayerPts(sel, cleaned);
+      if (cleaned.length !== n) selPt = -1;
+    }
+    drag = null;
+    render();
+  };
+  big.addEventListener('pointerup', endDrag);
+  big.addEventListener('pointercancel', endDrag);
+  big.addEventListener('dblclick', (e) => {
+    const h = hit(toGrid(e));
+    if (h && h.type === 'pt') deleteCorner(h.i);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (
+      (e.key === 'Delete' || e.key === 'Backspace') &&
+      selPt >= 0 &&
+      !/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName)
+    ) {
+      e.preventDefault();
+      deleteCorner(selPt);
+    }
+  });
+  function drawTile(cv, layers, w, h, s, bgIx = 0, colors = theme().colors) {
+    const ctx = setupCanvas(cv, w, h);
+    ctx.fillStyle = colors[bgIx];
+    ctx.fillRect(0, 0, w, h);
+    const [mx, my] = centreOf(layers);
+    drawLayers(ctx, layers, colors, w / 2 - mx * s, h / 2 - my * s, s);
+  }
 
-// ---------- wiring ----------
-DATA.themes.forEach((t, i) => $('theme').append(new Option(t.name, i)));
-function setTheme(i) { themeIx = (i + DATA.themes.length) % DATA.themes.length; try { localStorage.setItem('bg.theme', themeIx); } catch (e) {} render(); }
-$('theme').onchange = e => setTheme(+e.target.value);
-$('themePrev').onclick = e => { e.preventDefault(); setTheme(themeIx - 1); };
-$('themeNext').onclick = e => { e.preventDefault(); setTheme(themeIx + 1); };
-$('rShape').onclick = () => { const base = randomShape(), facets = randomFacets(base); commit(fitColours({ base, facets, colours: state.colours.slice(), stars: withStars(state, base) })); };
-$('rFill').onclick = () => { commit(fitColours({ base: state.base, facets: randomFacets(state.base), colours: state.colours.slice(), stars: state.stars || [] })); };
-$('rStars').onclick = () => { const st = randomStars(state.base, starPalette(state)); if (!st.length) return toast('The body is too small for stars'); commit({ ...state, stars: st }); };
-$('noStars').onclick = () => commit({ ...state, stars: [] });
-$('rColour').onclick = () => commit({ ...state, colours: randomColours(1 + state.facets.length) });
-$('rAll').onclick = () => { sel = 0; selPt = -1; commit(newAll()); };
-$('addFacet').onclick = () => {
-  const f = randomFacet(state.base);
-  if (!f) return toast('No room for a facet in this shape');
-  const s = JSON.parse(JSON.stringify(state)); s.facets.push(f); sel = s.facets.length; selPt = -1; commit(fitColours(s));
-};
-$('delPoint').onclick = () => deleteCorner(selPt);
-$('undo').onclick = () => { if (!history.length) return toast('Nothing to undo'); state = JSON.parse(history.pop()); render(); };
-$('name').oninput = () => { $('code').textContent = codeText($('name').value.trim() || 'New block', state); const n = document.querySelector('.tile.new span'); if (n) n.textContent = $('name').value; };
-$('save').onclick = () => {
-  const name = $('name').value.trim() || 'New block';
-  const ix = saved.findIndex(s => s.name.toLowerCase() === name.toLowerCase());
-  const item = { name, state: JSON.parse(JSON.stringify(state)) };
-  if (ix >= 0) saved[ix] = item; else saved.push(item);
-  persist(); render(); copy(codeText(name, state), `Saved and copied ${name}`);
-};
-$('copyAll').onclick = () => { if (!saved.length) return toast('Nothing saved yet'); copy('[\n' + saved.map(s => codeText(s.name, s.state)).join(',\n') + '\n]', `Copied ${saved.length} blocks`); };
-$('clearSaved').onclick = e => { const b = e.target; if (b.dataset.armed) { saved = []; persist(); renderSaved(); b.textContent = 'Clear list'; delete b.dataset.armed; } else { b.dataset.armed = 1; b.textContent = 'Tap again to clear'; setTimeout(() => { b.textContent = 'Clear list'; delete b.dataset.armed; }, 2500); } };
-let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+  // ---------- similarity: overlap of filled area after aligning centres ----------
+  function mask(layers) {
+    const R = 12,
+      N = 9 * R,
+      cv = document.createElement('canvas');
+    cv.width = cv.height = N;
+    const ctx = cv.getContext('2d');
+    const [mx, my] = centreOf(layers);
+    ctx.fillStyle = '#000';
+    for (const l of layers) {
+      ctx.beginPath();
+      gridPts(l).forEach(([x, y], i) => {
+        const X = N / 2 + (x - mx) * R,
+          Y = N / 2 + (y - my) * R;
+        i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y);
+      });
+      ctx.closePath();
+      ctx.fill();
+    }
+    const d = ctx.getImageData(0, 0, N, N).data,
+      m = new Uint8Array(N * N);
+    for (let i = 0; i < m.length; i++) m[i] = d[i * 4 + 3] > 127 ? 1 : 0;
+    return m;
+  }
+  const ALL = [...DATA.designed, ...DATA.blocks];
+  const masks = new Map();
+  ALL.forEach((b) => masks.set(b.id, mask(b.layers)));
+  function iou(a, b) {
+    let i = 0,
+      u = 0;
+    for (let k = 0; k < a.length; k++) {
+      i += a[k] & b[k];
+      u += a[k] | b[k];
+    }
+    return u ? i / u : 0;
+  }
+  // Outline match counts mirror images too, since a rotated or flipped copy reads as the same block.
+  function score(newLayers, b) {
+    const m = mask(newLayers);
+    const flip = mask(newLayers.map((l) => ({ points: gridPts(l).map(([x, y]) => [-x, y]) })));
+    return Math.max(iou(m, masks.get(b.id)), iou(flip, masks.get(b.id)));
+  }
 
-state = newAll();
-document.fonts?.ready?.then(() => render());
-render();
+  // ---------- render ----------
+  function applyTheme() {
+    const t = theme(),
+      r = document.documentElement.style;
+    r.setProperty('--bg', t.colors[0]);
+    r.setProperty('--panel', t.colors[1]);
+    r.setProperty('--well', t.colors[2]);
+    r.setProperty('--txt', t.colors[t.txt]);
+    r.setProperty('--accent', t.colors[3]);
+    const [R, G, B] = t.colors[0].match(/[\d.]+/g).map(Number);
+    document.documentElement.style.colorScheme =
+      0.299 * R + 0.587 * G + 0.114 * B > 140 ? 'light' : 'dark';
+    $('theme').value = themeIx;
+  }
+  const sigOf = (s) => JSON.stringify(layersOf(s).map((l) => l.points));
+  function hull(pts) {
+    const P = [...new Map(pts.map((p) => [p.join(','), p])).values()].sort(
+      (a, b) => a[0] - b[0] || a[1] - b[1],
+    );
+    if (P.length < 3) return P;
+    const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lo = [],
+      up = [];
+    for (const p of P) {
+      while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop();
+      lo.push(p);
+    }
+    for (const p of P.slice().reverse()) {
+      while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop();
+      up.push(p);
+    }
+    return lo.slice(0, -1).concat(up.slice(0, -1));
+  }
+  const onOrIn = (P, p) =>
+    inside(P, p) || P.some((a, i) => segDist(p, a, P[(i + 1) % P.length]) < 1e-9);
+  // Outline (used for hits and connections): a loaded block keeps its own until its layers change;
+  // otherwise the body, or the convex hull when facets stick out past the body.
+  function outlineOf(s) {
+    if (s.src && s.src.sig === sigOf(s)) return s.src.outline;
+    if (s.facets.every((f) => f.every((p) => onOrIn(s.base, p)))) return s.base;
+    // Otherwise the exact union of all layers (a convex hull would claim empty corners as hit area).
+    try {
+      const u = polygonClipping.union(...polyLayers(s).map((l) => [l.points]));
+      if (u.length === 1) {
+        const ring = clean(u[0][0]);
+        if (ring.length >= 3) return area(ring) < 0 ? ring.reverse() : ring;
+      }
+    } catch (e) {}
+    return hull(polyLayers(s).flatMap((l) => l.points));
+  }
+  function geometryJSON(s) {
+    const layers = layersOf(s),
+      [mx, my] = centreOf(layers);
+    const r2 = (v) => Math.round(v * 2) / 2 || 0;
+    return {
+      units: 'grid',
+      unitsPerGrid: UPG,
+      layers,
+      outline: outlineOf(s),
+      menuOffset: [r2(-mx), r2(-my)],
+    };
+  }
+  function loadBlock(b, setName) {
+    const all = JSON.parse(JSON.stringify(b.layers)),
+      layers = all.filter((l) => !isPix(l));
+    const s = {
+      base: layers[0].points,
+      facets: layers.slice(1).map((l) => l.points),
+      colours: layers.map((l) => l.palette),
+      stars: all.filter(isPix),
+    };
+    s.src = {
+      id: b.id,
+      outline: JSON.parse(JSON.stringify(b.outline || outlineOf(s))),
+      sig: sigOf(s),
+    };
+    if (setName) $('name').value = b.name;
+    sel = 0;
+    selPt = -1;
+    commit(s);
+    toast(`Loaded ${b.name}`);
+    window.scrollTo({
+      top: 0,
+      behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    });
+  }
+  function codeText(name, s) {
+    return JSON.stringify({ name, geometry: geometryJSON(s) }, null, 2).replace(
+      /\[\s+(-?[\d.]+),\s+(-?[\d.]+)\s+\]/g,
+      '[$1, $2]',
+    );
+  }
+
+  function render() {
+    applyTheme();
+    if (sel > state.facets.length) {
+      sel = 0;
+      selPt = -1;
+    }
+    if (selPt >= layerPts(sel).length) selPt = -1;
+    const t = theme(),
+      layers = layersOf(state);
+    drawBig();
+    // layers
+    const L = $('layers');
+    L.innerHTML = '';
+    polyLayers(state).forEach((l, i) => {
+      const row = document.createElement('div');
+      row.className = 'layer';
+      const sw = document.createElement('button');
+      sw.className = 'swatch';
+      sw.style.background = t.colors[l.palette];
+      sw.setAttribute('aria-label', `Change colour of layer ${i + 1}`);
+      sw.onclick = () => {
+        const s = JSON.parse(JSON.stringify(state));
+        s.colours[i] = PAL_ALL[(PAL_ALL.indexOf(s.colours[i]) + 1) % PAL_ALL.length];
+        commit(s);
+      };
+      const pk = document.createElement('button');
+      pk.className = 'pick' + (i === sel ? ' on' : '');
+      pk.textContent = `${i === 0 ? 'Body' : 'Facet ' + i} · palette ${l.palette} · ${l.points.length} corners`;
+      pk.setAttribute('aria-pressed', i === sel);
+      pk.onclick = () => {
+        sel = i;
+        selPt = -1;
+        render();
+      };
+      row.append(sw, pk);
+      if (i > 0) {
+        const rm = document.createElement('button');
+        rm.className = 'small';
+        rm.textContent = 'Remove';
+        rm.onclick = () => {
+          const s = JSON.parse(JSON.stringify(state));
+          s.facets.splice(i - 1, 1);
+          s.colours.splice(i, 1);
+          sel = 0;
+          selPt = -1;
+          commit(s);
+        };
+        row.append(rm);
+      }
+      L.append(row);
+    });
+    if (state.stars && state.stars.length) {
+      const row = document.createElement('div');
+      row.className = 'layer';
+      const sw = document.createElement('button');
+      sw.className = 'swatch';
+      sw.style.background = t.colors[starPalette(state)];
+      sw.setAttribute('aria-label', 'Change colour of the stars');
+      sw.onclick = () => {
+        const s = JSON.parse(JSON.stringify(state)),
+          p = PAL_ALL[(PAL_ALL.indexOf(starPalette(s)) + 1) % PAL_ALL.length];
+        s.stars.forEach((l) => (l.palette = p));
+        commit(s);
+      };
+      row.append(
+        sw,
+        Object.assign(document.createElement('span'), {
+          textContent: `Stars · palette ${starPalette(state)} · ${state.stars.length} pixels`,
+          style: 'padding:4px 6px',
+        }),
+      );
+      L.append(row);
+    }
+    // theme check: a layer that vanishes into the stage or merges with another layer in some theme
+    const TC = $('themeCheck'),
+      warns = [],
+      pl = polyLayers(state);
+    pl.forEach((l, i) => {
+      const nm = i === 0 ? 'Body' : 'Facet ' + i;
+      const bgT = DATA.themes
+        .filter((th) => th.colors[l.palette] === th.colors[0])
+        .map((th) => th.name);
+      if (bgT.length)
+        warns.push(`${nm} (palette ${l.palette}) is the stage colour in ${bgT.join(', ')}`);
+      pl.forEach((m, j) => {
+        if (j <= i) return;
+        const same = DATA.themes
+          .filter((th) => th.colors[l.palette] === th.colors[m.palette])
+          .map((th) => th.name);
+        if (same.length)
+          warns.push(
+            `${nm} and ${j === 0 ? 'Body' : 'Facet ' + j} are the same colour in ${same.join(', ')}`,
+          );
+      });
+    });
+    TC.innerHTML = warns.length
+      ? warns.map((w) => `<div class="warn">⚠ ${w}</div>`).join('')
+      : '<div class="hint">Every layer stays visible and distinct in all 13 themes.</div>';
+    TC.querySelectorAll('.warn').forEach((el) => {
+      el.style.fontSize = '13px';
+    });
+    // similarity
+    const ranked = ALL.filter((b) => b.id !== state.src?.id)
+      .map((b) => ({ b, s: score(layers, b) }))
+      .sort((a, b) => b.s - a.s);
+    const close = new Set(
+      ranked
+        .slice(0, 3)
+        .filter((r) => r.s >= 0.6)
+        .map((r) => r.b.id),
+    );
+    const S = $('similar');
+    S.innerHTML = '';
+    ranked.slice(0, 3).forEach(({ b, s }) => {
+      const pct = Math.round(s * 100),
+        div = document.createElement('div');
+      div.innerHTML = `<div class="row" style="justify-content:space-between"><span>${b.name}</span><span class="${pct >= 80 ? 'warn' : ''}">${pct}% same shape${pct >= 80 ? ' · too close' : ''}</span></div><div class="bar"><span style="width:${pct}%"></span></div>`;
+      S.append(div);
+    });
+    // line-up
+    const name = $('name').value.trim() || 'New block';
+    const cats = [
+      ['new', 'Editing now'],
+      ['designed', 'Designed (agreed)'],
+      ['saved', 'Saved in this browser'],
+      ['source', 'Sources'],
+      ['effect', 'Effects'],
+      ['power', 'Power'],
+      ['interaction', 'Interaction'],
+    ];
+    const LU = $('lineup');
+    LU.innerHTML = '';
+    for (const [cat, label] of cats) {
+      const items =
+        cat === 'new'
+          ? [{ id: 'new', name, layers }]
+          : cat === 'designed'
+            ? DATA.designed
+            : cat === 'saved'
+              ? saved.map((it, i) => ({
+                  id: 'saved.' + i,
+                  name: it.name,
+                  layers: layersOf(it.state),
+                  outline: outlineOf(it.state),
+                  mine: true,
+                }))
+              : DATA.blocks.filter((b) => b.category === cat);
+      if (!items.length) continue;
+      const box = document.createElement('div');
+      box.className = 'cat';
+      box.innerHTML = `<div class="cat-name">${label}</div>`;
+      const tiles = document.createElement('div');
+      tiles.className = 'tiles';
+      for (const b of items) {
+        const isNew = b.id === 'new';
+        const tile = document.createElement(isNew ? 'div' : 'button');
+        tile.className =
+          'tile' +
+          (isNew ? ' new' : '') +
+          (close.has(b.id) ? ' close' : '') +
+          (state.src?.id === b.id ? ' loaded' : '');
+        if (!isNew) {
+          tile.setAttribute('aria-label', `Load ${b.name} into the editor`);
+          tile.onclick = () => loadBlock(b, cat === 'designed' || cat === 'saved');
+        }
+        const cv = document.createElement('canvas');
+        tile.append(cv, Object.assign(document.createElement('span'), { textContent: b.name }));
+        tiles.append(tile);
+        drawTile(cv, b.layers, 88, 70, 15);
+      }
+      box.append(tiles);
+      LU.append(box);
+    }
+    // themes strip: new block between Tone and Laser for scale
+    const TH = $('themes');
+    TH.innerHTML = '';
+    const tone = DATA.blocks.find((b) => b.id === 'source.tone'),
+      laser = DATA.blocks.find((b) => b.id === 'power.laser');
+    DATA.themes.forEach((th, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'theme-tile' + (i === themeIx ? ' on' : '');
+      btn.setAttribute('aria-label', `Use theme ${th.name}`);
+      const cv = document.createElement('canvas'),
+        lab = document.createElement('span');
+      lab.textContent = th.name;
+      lab.style.background = th.colors[0];
+      lab.style.color = th.colors[th.txt];
+      btn.append(cv, lab);
+      btn.onclick = () => setTheme(i);
+      TH.append(btn);
+      requestAnimationFrame(() => {
+        const w = cv.getBoundingClientRect().width || 118,
+          h = 84,
+          ctx = setupCanvas(cv, w, h);
+        ctx.fillStyle = th.colors[0];
+        ctx.fillRect(0, 0, w, h);
+        const put = (ls, x) => {
+          const [mx, my] = centreOf(ls);
+          drawLayers(ctx, ls, th.colors, x - mx * 12, h / 2 - my * 12, 12);
+        };
+        put(tone.layers, w * 0.2);
+        put(layers, w * 0.5);
+        put(laser.layers, w * 0.8);
+      });
+    });
+    $('code').textContent = codeText(name, state);
+    renderSaved();
+    renderTodo();
+  }
+  function renderTodo() {
+    const T = $('todo');
+    T.innerHTML = '';
+    const savedNames = new Set(saved.map((s) => s.name.toLowerCase())),
+      done = new Set(DATA.designed.map((d) => d.name.toLowerCase()));
+    for (const [nm, cat, what] of DATA.todo) {
+      const k = nm.toLowerCase(),
+        isDone = done.has(k),
+        isSaved = !isDone && savedNames.has(k);
+      const it = document.createElement('div');
+      it.className = 'todo-item' + (isDone ? ' done' : '');
+      it.innerHTML = `<span class="mark" aria-hidden="true">${isDone ? '✓' : ''}</span><div><b></b><span class="state"></span></div><small></small>`;
+      it.querySelector('b').textContent = nm;
+      it.querySelector('.state').textContent = isDone ? 'Designed' : isSaved ? 'Saved here' : cat;
+      it.querySelector('small').textContent = isDone || isSaved ? `${cat} · ${what}` : what;
+      T.append(it);
+    }
+  }
+
+  // ---------- saved list + clipboard ----------
+  let saved = [];
+  try {
+    saved = JSON.parse(localStorage.getItem('bg.saved') || '[]');
+  } catch (e) {}
+  const persist = () => {
+    try {
+      localStorage.setItem('bg.saved', JSON.stringify(saved));
+    } catch (e) {}
+  };
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast.h);
+    toast.h = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+  function copy(text, msg) {
+    const fb = () => {
+      $('fallbackBox').innerHTML = '';
+      const ta = document.createElement('textarea');
+      ta.className = 'fallback';
+      ta.value = text;
+      $('fallbackBox').append(ta);
+      ta.focus();
+      ta.select();
+      toast('Select all and copy');
+    };
+    try {
+      navigator.clipboard.writeText(text).then(() => toast(msg), fb);
+    } catch (e) {
+      fb();
+    }
+  }
+  function renderSaved() {
+    const box = $('saved');
+    box.innerHTML = '';
+    if (!saved.length) {
+      box.innerHTML =
+        '<p class="hint">Nothing saved yet. Save keeps a design here and copies its code.</p>';
+      return;
+    }
+    saved.forEach((it, i) => {
+      const row = document.createElement('div');
+      row.className = 'saved-item';
+      const cv = document.createElement('canvas');
+      cv.style.width = '60px';
+      cv.style.height = '46px';
+      const left = document.createElement('div');
+      left.className = 'row';
+      left.append(cv, Object.assign(document.createElement('b'), { textContent: it.name }));
+      const right = document.createElement('div');
+      right.className = 'row';
+      const mk = (label, fn) => {
+        const b = document.createElement('button');
+        b.className = 'small';
+        b.textContent = label;
+        b.onclick = fn;
+        return b;
+      };
+      right.append(
+        mk('Edit', () => {
+          $('name').value = it.name;
+          commit(fitColours(JSON.parse(JSON.stringify(it.state))));
+        }),
+        mk('Copy', () => copy(codeText(it.name, it.state), `Copied ${it.name}`)),
+        mk('Remove', () => {
+          saved.splice(i, 1);
+          persist();
+          render();
+        }),
+      );
+      row.append(left, right);
+      box.append(row);
+      drawTile(cv, layersOf(it.state), 60, 46, 10);
+    });
+  }
+
+  // ---------- wiring ----------
+  DATA.themes.forEach((t, i) => $('theme').append(new Option(t.name, i)));
+  function setTheme(i) {
+    themeIx = (i + DATA.themes.length) % DATA.themes.length;
+    try {
+      localStorage.setItem('bg.theme', themeIx);
+    } catch (e) {}
+    render();
+  }
+  $('theme').onchange = (e) => setTheme(+e.target.value);
+  $('themePrev').onclick = (e) => {
+    e.preventDefault();
+    setTheme(themeIx - 1);
+  };
+  $('themeNext').onclick = (e) => {
+    e.preventDefault();
+    setTheme(themeIx + 1);
+  };
+  $('rShape').onclick = () => {
+    const base = randomShape(),
+      facets = randomFacets(base);
+    commit(
+      fitColours({ base, facets, colours: state.colours.slice(), stars: withStars(state, base) }),
+    );
+  };
+  $('rFill').onclick = () => {
+    commit(
+      fitColours({
+        base: state.base,
+        facets: randomFacets(state.base),
+        colours: state.colours.slice(),
+        stars: state.stars || [],
+      }),
+    );
+  };
+  $('rStars').onclick = () => {
+    const st = randomStars(state.base, starPalette(state));
+    if (!st.length) return toast('The body is too small for stars');
+    commit({ ...state, stars: st });
+  };
+  $('noStars').onclick = () => commit({ ...state, stars: [] });
+  $('rColour').onclick = () =>
+    commit({ ...state, colours: randomColours(1 + state.facets.length) });
+  $('rAll').onclick = () => {
+    sel = 0;
+    selPt = -1;
+    commit(newAll());
+  };
+  $('addFacet').onclick = () => {
+    const f = randomFacet(state.base);
+    if (!f) return toast('No room for a facet in this shape');
+    const s = JSON.parse(JSON.stringify(state));
+    s.facets.push(f);
+    sel = s.facets.length;
+    selPt = -1;
+    commit(fitColours(s));
+  };
+  $('delPoint').onclick = () => deleteCorner(selPt);
+  $('undo').onclick = () => {
+    if (!history.length) return toast('Nothing to undo');
+    state = JSON.parse(history.pop());
+    render();
+  };
+  $('name').oninput = () => {
+    $('code').textContent = codeText($('name').value.trim() || 'New block', state);
+    const n = document.querySelector('.tile.new span');
+    if (n) n.textContent = $('name').value;
+  };
+  $('save').onclick = () => {
+    const name = $('name').value.trim() || 'New block';
+    const ix = saved.findIndex((s) => s.name.toLowerCase() === name.toLowerCase());
+    const item = { name, state: JSON.parse(JSON.stringify(state)) };
+    if (ix >= 0) saved[ix] = item;
+    else saved.push(item);
+    persist();
+    render();
+    copy(codeText(name, state), `Saved and copied ${name}`);
+  };
+  $('copyAll').onclick = () => {
+    if (!saved.length) return toast('Nothing saved yet');
+    copy(
+      '[\n' + saved.map((s) => codeText(s.name, s.state)).join(',\n') + '\n]',
+      `Copied ${saved.length} blocks`,
+    );
+  };
+  $('clearSaved').onclick = (e) => {
+    const b = e.target;
+    if (b.dataset.armed) {
+      saved = [];
+      persist();
+      renderSaved();
+      b.textContent = 'Clear list';
+      delete b.dataset.armed;
+    } else {
+      b.dataset.armed = 1;
+      b.textContent = 'Tap again to clear';
+      setTimeout(() => {
+        b.textContent = 'Clear list';
+        delete b.dataset.armed;
+      }, 2500);
+    }
+  };
+  let rt;
+  window.addEventListener('resize', () => {
+    clearTimeout(rt);
+    rt = setTimeout(render, 120);
+  });
+
+  state = newAll();
+  document.fonts?.ready?.then(() => render());
+  render();
 </script>

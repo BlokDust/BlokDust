@@ -11,11 +11,17 @@ const [name, ...args] = process.argv.slice(2);
 if (!name || name === 'list' || name === 'help') {
   for (const d of readdirSync(toolsDir).sort()) {
     const m = join(toolsDir, d, 'tool.json');
-    if (existsSync(m)) { const t = JSON.parse(readFileSync(m, 'utf8')); console.log(`${t.name.padEnd(10)} ${t.summary}`); }
+    if (existsSync(m)) {
+      const t = JSON.parse(readFileSync(m, 'utf8'));
+      console.log(`${t.name.padEnd(10)} ${t.summary}`);
+    }
   }
   process.exit(0);
 }
 const entry = join(toolsDir, name, 'index.ts');
-if (!existsSync(entry)) { console.error(`unknown tool '${name}'. Run: pnpm bd list`); process.exit(2); }
-const r = spawnSync(process.execPath, [entry, ...args], { stdio: 'inherit' });
-process.exit(r.status ?? 1);
+if (!existsSync(entry)) {
+  console.error(`unknown tool '${name}'. Run: pnpm bd list`);
+  process.exit(2);
+}
+const result = spawnSync(process.execPath, [entry, ...args], { stdio: 'inherit' });
+process.exit(result.status ?? 1);

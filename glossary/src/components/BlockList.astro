@@ -7,8 +7,14 @@ interface Props {
 const { category } = Astro.props;
 const links = categoryLinks(category);
 ---
+
 <ul class="menu-links" role="list">
   {links.map(({ href, title }, i) => (
-    <li><a href={href} aria-current={Astro.url.pathname === href ? 'page' : undefined}>{title}</a>{i < links.length - 1 && ', '}</li>
+    <li>
+      <a href={href} aria-current={Astro.url.pathname === href ? 'page' : undefined}>
+        {title}
+      </a>
+      {i < links.length - 1 && ', '}
+    </li>
   ))}
 </ul>

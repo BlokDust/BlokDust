@@ -14,13 +14,18 @@ import { extract } from './extract.ts';
 
 const [cmd, ...rest] = process.argv.slice(2);
 if (cmd === 'fetch') fetchV1();
-else if (cmd === 'serve') { const port = Number(rest[0] ?? 8731); await serve(port); console.log(`v1 at http://localhost:${port}/`); }
-else if (cmd === 'capture') await capture(rest);
+else if (cmd === 'serve') {
+  const port = Number(rest[0] ?? 8731);
+  await serve(port);
+  console.log(`v1 at http://localhost:${port}/`);
+} else if (cmd === 'capture') await capture(rest);
 else if (cmd === 'audio') await (await import('./audio.ts')).audio(rest);
 else if (cmd === 'port-ui') (await import('./port-ui.ts')).portUi();
 else if (cmd === 'extract') await extract(rest);
 else if (cmd === 'verify') await (await import('./verify.ts')).verify(rest);
 else {
-  console.error('usage: bd v1 fetch | serve [port] | capture [fixtures.json...] [--blocks] [--only a,b] [--themes 0,3|all] [--dpr 1|2] [--out dir] | audio [--only a,b] | extract [--out blocks] | verify [--dpr 1|2]');
+  console.error(
+    'usage: bd v1 fetch | serve [port] | capture [fixtures.json...] [--blocks] [--only a,b] [--themes 0,3|all] [--dpr 1|2] [--out dir] | audio [--only a,b] | extract [--out blocks] | verify [--dpr 1|2]',
+  );
   process.exit(2);
 }

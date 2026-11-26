@@ -2,7 +2,8 @@
 # on iPadOS (CHG-0025), WebView editor hosting web/dist.
 # Build via `pnpm bd plugin build` (needs `pnpm web:build` first: the web bundle is embedded as BinaryData).
 include(FetchContent)
-FetchContent_Declare(JUCE GIT_REPOSITORY https://github.com/juce-framework/JUCE.git GIT_TAG 8.0.15 GIT_SHALLOW TRUE)
+FetchContent_Declare(JUCE GIT_REPOSITORY https://github.com/juce-framework/JUCE.git GIT_TAG 8.0.15 GIT_SHALLOW TRUE
+  SYSTEM)
 FetchContent_MakeAvailable(JUCE)
 
 set(BLOKDUST_WEB_DIST "${CMAKE_SOURCE_DIR}/web/dist")
@@ -135,6 +136,10 @@ function(blokdust_plugin target)
     PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
 endfunction()
 
+# CHG-0045: our own plugin sources get the project's warnings (JUCE's modules keep JUCE's).
+file(GLOB BLOKDUST_PLUGIN_OWN_SOURCES CONFIGURE_DEPENDS src/*.cpp src/*.mm src/ios/*.mm tests/*.cpp)
+blokdust_strict_warnings_for_sources(${BLOKDUST_PLUGIN_OWN_SOURCES})
+
 if(IOS)
   # iPadOS (CHG-0025): the instrument as an AUv3 inside the BlokDust app (JUCE needs the Standalone as its container),
   # and BlokDust FX as a second AUv3 in the same app (task 9): one App Store product holds both.
@@ -192,7 +197,7 @@ blokdust_plugin(BlokDustFX PRODUCT "BlokDust FX" CODE Bdfx FX TRUE FORMATS VST3 
 
 # Headless host test: loads the built plugin binary like a DAW.
 juce_add_console_app(blokdust_host_test PRODUCT_NAME "blokdust_host_test")
-target_sources(blokdust_host_test PRIVATE tests/host_render.cpp src/PatchFiles.cpp src/StageWorlds.cpp)
+target_sources(blokdust_host_test PRIVATE tests/host_render.cpp tests/selftest_patches.cpp src/PatchFiles.cpp src/StageWorlds.cpp)
 target_include_directories(blokdust_host_test PRIVATE src)
 target_compile_definitions(blokdust_host_test PRIVATE JUCE_PLUGINHOST_VST3=1 JUCE_PLUGINHOST_AU=1 JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0
   JUCE_MODAL_LOOPS_PERMITTED=1)

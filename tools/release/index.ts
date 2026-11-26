@@ -30,58 +30,132 @@ const sha256 = (buf: Buffer | Uint8Array) => createHash('sha256').update(buf).di
 
 function check() {
   const problems: string[] = [];
-  const files = FILES.map(f => {
+  const files = FILES.map((f) => {
     const path = join(DIST, f.file);
-    if (!existsSync(path)) { problems.push(`${path} missing (bd ${f.os === 'macos' ? 'plugin' : 'win'} package)`); return { ...f, path, sha: '', bytes: 0 }; }
+    if (!existsSync(path)) {
+      problems.push(`${path} missing (bd ${f.os === 'macos' ? 'plugin' : 'win'} package)`);
+      return { ...f, path, sha: '', bytes: 0 };
+    }
     const sha = sha256(readFileSync(path));
-    const side = existsSync(`${path}.sha256`) ? readFileSync(`${path}.sha256`, 'utf8').split(/\s+/)[0] : '';
+    const side = existsSync(`${path}.sha256`)
+      ? readFileSync(`${path}.sha256`, 'utf8').split(/\s+/)[0]
+      : '';
     if (side !== sha) problems.push(`${f.file}: .sha256 doesn't match the file`);
     return { ...f, path, sha, bytes: statSync(path).size };
   });
-  const pkg = files.find(f => f.os === 'macos')!;
-  if (existsSync(pkg.path) && spawnSync('xcrun', ['stapler', 'validate', pkg.path], { encoding: 'utf8' }).status !== 0)
+  const pkg = files.find((file) => file.os === 'macos')!;
+  if (
+    existsSync(pkg.path) &&
+    spawnSync('xcrun', ['stapler', 'validate', pkg.path], { encoding: 'utf8' }).status !== 0
+  )
     problems.push(`${pkg.file} is not notarised (no stapled ticket): bd plugin package`);
   return { files, problems };
 }
 
 async function publish(dryRun: boolean) {
   const { files, problems } = check();
-  if (problems.length) { console.log(JSON.stringify({ version: VERSION, problems })); process.exit(1); }
+  if (problems.length) {
+    console.log(JSON.stringify({ version: VERSION, problems }));
+    process.exit(1);
+  }
   // Immutable: a published URL never changes. Publish a corrected build as a new version. A file already published with
   // exactly these bytes is done (an interrupted publish resumes); different bytes are refused.
   const done = new Set<string>();
   for (const f of files) {
-    const r = await fetch(`${BASE_URL}/${key(f.file)}?source=release-check`);
-    if (r.status === 404) continue;
-    const same = r.ok && sha256(Buffer.from(await r.arrayBuffer())) === f.sha;
-    if (!same) { console.log(JSON.stringify({ version: VERSION, problems: [`${key(f.file)} already exists (HTTP ${r.status}) with other bytes: bump the version`] })); process.exit(1); }
+    const response = await fetch(`${BASE_URL}/${key(f.file)}?source=release-check`);
+    if (response.status === 404) continue;
+    const same = response.ok && sha256(Buffer.from(await response.arrayBuffer())) === f.sha;
+    if (!same) {
+      console.log(
+        JSON.stringify({
+          version: VERSION,
+          problems: [
+            `${key(f.file)} already exists (HTTP ${response.status}) with other bytes: bump the version`,
+          ],
+        }),
+      );
+      process.exit(1);
+    }
     done.add(f.file);
   }
-  const plan = files.map(f => ({ file: f.file, key: `${BUCKET}/${key(f.file)}`, url: `${BASE_URL}/${key(f.file)}`, sha256: f.sha, bytes: f.bytes }));
-  if (dryRun) { console.log(JSON.stringify({ version: VERSION, dryRun: true, plan })); return; }
-  for (const f of files.filter(x => !done.has(x.file))) for (const [path, name, type] of [[f.path, f.file, f.type], [`${f.path}.sha256`, `${f.file}.sha256`, 'text/plain']]) {
-    const r = spawnSync(WRANGLER, ['r2', 'object', 'put', `${BUCKET}/${key(name)}`, '--file', path, '--content-type', type, '--remote'], { encoding: 'utf8', cwd: process.cwd() });
-    if (r.status !== 0) throw new Error(`upload ${name}: ${r.stderr}`);
+  const plan = files.map((f) => ({
+    file: f.file,
+    key: `${BUCKET}/${key(f.file)}`,
+    url: `${BASE_URL}/${key(f.file)}`,
+    sha256: f.sha,
+    bytes: f.bytes,
+  }));
+  if (dryRun) {
+    console.log(JSON.stringify({ version: VERSION, dryRun: true, plan }));
+    return;
   }
+  for (const f of files.filter((x) => !done.has(x.file)))
+    for (const [path, name, type] of [
+      [f.path, f.file, f.type],
+      [`${f.path}.sha256`, `${f.file}.sha256`, 'text/plain'],
+    ]) {
+      const result = spawnSync(
+        WRANGLER,
+        [
+          'r2',
+          'object',
+          'put',
+          `${BUCKET}/${key(name)}`,
+          '--file',
+          path,
+          '--content-type',
+          type,
+          '--remote',
+        ],
+        { encoding: 'utf8', cwd: process.cwd() },
+      );
+      if (result.status !== 0) throw new Error(`upload ${name}: ${result.stderr}`);
+    }
   // What people will download is what was built.
   // A just-uploaded file can briefly answer 404 from the CDN: retry for up to a minute.
   for (const p of plan) {
     let ok = false;
     for (let i = 0; i < 12 && !ok; i++) {
-      const r = await fetch(`${p.url}?source=release-check&try=${i}`);
-      ok = r.ok && sha256(Buffer.from(await r.arrayBuffer())) === p.sha256;
-      if (!ok) await new Promise(res => setTimeout(res, 5000));
+      const response = await fetch(`${p.url}?source=release-check&try=${i}`);
+      ok = response.ok && sha256(Buffer.from(await response.arrayBuffer())) === p.sha256;
+      if (!ok) await new Promise((res) => setTimeout(res, 5000));
     }
     if (!ok) throw new Error(`${p.url} does not serve the built bytes`);
   }
-  const manifest = { version: VERSION, published: new Date().toISOString().slice(0, 10),
-    ...Object.fromEntries(files.map(f => [f.os, { file: f.file, url: `${BASE_URL}/${key(f.file)}`, sha256: f.sha, bytes: f.bytes }])) };
+  const manifest = {
+    version: VERSION,
+    published: new Date().toISOString().slice(0, 10),
+    ...Object.fromEntries(
+      files.map((f) => [
+        f.os,
+        { file: f.file, url: `${BASE_URL}/${key(f.file)}`, sha256: f.sha, bytes: f.bytes },
+      ]),
+    ),
+  };
   writeFileSync('web/src/releases.json', `${JSON.stringify(manifest, null, 2)}\n`);
-  console.log(JSON.stringify({ version: VERSION, published: plan, manifest: 'web/src/releases.json (commit it, then deploy the site)' }));
+  console.log(
+    JSON.stringify({
+      version: VERSION,
+      published: plan,
+      manifest: 'web/src/releases.json (commit it, then deploy the site)',
+    }),
+  );
 }
 
 const cmd = process.argv[2];
-if (cmd === 'check') { const c = check(); console.log(JSON.stringify({ version: VERSION, files: c.files.map(f => ({ file: f.file, bytes: f.bytes, sha256: f.sha })), problems: c.problems })); if (c.problems.length) process.exit(1); }
-else if (cmd === 'publish') await publish(process.argv.includes('--dry-run'));
+if (cmd === 'check') {
+  const c = check();
+  console.log(
+    JSON.stringify({
+      version: VERSION,
+      files: c.files.map((f) => ({ file: f.file, bytes: f.bytes, sha256: f.sha })),
+      problems: c.problems,
+    }),
+  );
+  if (c.problems.length) process.exit(1);
+} else if (cmd === 'publish') await publish(process.argv.includes('--dry-run'));
 else if (cmd === 'tag') releaseTag(process.argv.slice(3));
-else { console.error('usage: bd release check | publish [--dry-run] | tag [--dry-run] [--notes <file>]'); process.exit(2); }
+else {
+  console.error('usage: bd release check | publish [--dry-run] | tag [--dry-run] [--notes <file>]');
+  process.exit(2);
+}

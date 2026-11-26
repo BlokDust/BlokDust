@@ -1,0 +1,403 @@
+{
+  "CMakeLists.txt": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "cmake/BlokdustWarnings.cmake": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "engine/CMakeLists.txt": {
+    "comment-line-length": 1
+  },
+  "engine/include/blokdust/config.hpp": {
+    "comment-block-lines": 2
+  },
+  "engine/include/blokdust/connections.hpp": {
+    "comment-block-lines": 1
+  },
+  "engine/include/blokdust/convolver.hpp": {
+    "comment-block-lines": 3
+  },
+  "engine/include/blokdust/dmath.hpp": {
+    "comment-block-lines": 1
+  },
+  "engine/include/blokdust/dsp.hpp": {
+    "comment-block-lines": 5
+  },
+  "engine/include/blokdust/effects.hpp": {
+    "comment-block-lines": 15,
+    "comment-line-length": 6
+  },
+  "engine/include/blokdust/engine.hpp": {
+    "comment-block-lines": 18
+  },
+  "engine/include/blokdust/geometry.hpp": {
+    "comment-block-lines": 1
+  },
+  "engine/include/blokdust/hash.hpp": {
+    "comment-block-lines": 1
+  },
+  "engine/include/blokdust/mpe.hpp": {
+    "comment-block-lines": 3
+  },
+  "engine/include/blokdust/realtime.hpp": {
+    "comment-block-lines": 1
+  },
+  "engine/include/blokdust/tablebank.hpp": {
+    "comment-block-lines": 2
+  },
+  "engine/include/blokdust/test_signal.hpp": {
+    "comment-block-lines": 1
+  },
+  "engine/include/blokdust/wavetable.hpp": {
+    "comment-block-lines": 2
+  },
+  "engine/include/blokdust/world.hpp": {
+    "comment-block-lines": 3
+  },
+  "engine/patch/include/blokdust/patch_loader.hpp": {
+    "comment-block-lines": 2
+  },
+  "engine/patch/src/patch_loader.cpp": {
+    "comment-block-lines": 3
+  },
+  "engine/src/connections.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/src/engine.cpp": {
+    "comment-block-lines": 2
+  },
+  "engine/src/engine_arrange.cpp": {
+    "comment-block-lines": 4,
+    "comment-line-length": 2
+  },
+  "engine/src/engine_commands.cpp": {
+    "comment-block-lines": 6,
+    "comment-line-length": 2
+  },
+  "engine/src/engine_granular.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/src/engine_hits.cpp": {
+    "comment-block-lines": 8,
+    "comment-line-length": 2
+  },
+  "engine/src/engine_notes.cpp": {
+    "comment-block-lines": 8
+  },
+  "engine/src/engine_render.cpp": {
+    "comment-block-lines": 8,
+    "comment-line-length": 2
+  },
+  "engine/src/engine_tick.cpp": {
+    "comment-block-lines": 6
+  },
+  "engine/src/engine_voices.cpp": {
+    "comment-block-lines": 2
+  },
+  "engine/src/tablebank.cpp": {
+    "comment-block-lines": 3
+  },
+  "engine/src/wavetable.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/tests/test_audio_graph.cpp": {
+    "comment-block-lines": 2
+  },
+  "engine/tests/test_controllers.cpp": {
+    "comment-block-lines": 4
+  },
+  "engine/tests/test_emitter_hit.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/tests/test_ftz.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/tests/test_mpe.cpp": {
+    "comment-block-lines": 3
+  },
+  "engine/tests/test_mpe_parser.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/tests/test_review_fixes.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/tests/test_sound_laser.cpp": {
+    "comment-block-lines": 2
+  },
+  "engine/tests/test_stage.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/tests/test_tempo.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/tests/test_world_power.cpp": {
+    "comment-block-lines": 1
+  },
+  "engine/tools/render/main.cpp": {
+    "comment-block-lines": 2
+  },
+  "engine/wasm/bindings.cpp": {
+    "comment-block-lines": 3
+  },
+  "plugin/CMakeLists.txt": {
+    "comment-block-lines": 4,
+    "comment-line-length": 35
+  },
+  "plugin/src/AccountStore.h": {
+    "comment-block-lines": 1
+  },
+  "plugin/src/EditorSend.cpp": {
+    "comment-block-lines": 3
+  },
+  "plugin/src/PatchFiles.cpp": {
+    "comment-block-lines": 1
+  },
+  "plugin/src/PatchFiles.h": {
+    "comment-block-lines": 3
+  },
+  "plugin/src/PluginEditor.cpp": {
+    "comment-block-lines": 4,
+    "comment-line-length": 1
+  },
+  "plugin/src/PluginEditor.h": {
+    "comment-block-lines": 2
+  },
+  "plugin/src/PluginProcessor.cpp": {
+    "comment-block-lines": 8
+  },
+  "plugin/src/PluginProcessor.h": {
+    "comment-block-lines": 13
+  },
+  "plugin/src/Samples.cpp": {
+    "comment-block-lines": 1
+  },
+  "plugin/src/Samples.h": {
+    "comment-block-lines": 3
+  },
+  "plugin/src/StageWorlds.h": {
+    "comment-block-lines": 3
+  },
+  "plugin/src/Telemetry.cpp": {
+    "comment-block-lines": 3
+  },
+  "plugin/src/Telemetry.h": {
+    "comment-block-lines": 2
+  },
+  "plugin/src/WebViewDrops.cpp": {
+    "comment-block-lines": 1
+  },
+  "plugin/src/WebViewDrops.h": {
+    "comment-block-lines": 4
+  },
+  "plugin/src/WebViewDrops.mm": {
+    "comment-block-lines": 1
+  },
+  "plugin/src/ios/ContainerApp.mm": {
+    "comment-block-lines": 2
+  },
+  "plugin/src/ios/NativeSignIn.h": {
+    "comment-block-lines": 1
+  },
+  "plugin/tests/host_render.cpp": {
+    "comment-block-lines": 3
+  },
+  "plugin/tests/ios-host/main.mm": {
+    "comment-block-lines": 3
+  },
+  "tools/analytics/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 3
+  },
+  "tools/audio/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 8
+  },
+  "tools/block-designer/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 3
+  },
+  "tools/ci/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 6
+  },
+  "tools/codegen/index.ts": {
+    "comment-block-lines": 2,
+    "comment-line-length": 5
+  },
+  "tools/comments/collect.ts": {
+    "comment-line-length": 1
+  },
+  "tools/comments/index.ts": {
+    "comment-block-lines": 1
+  },
+  "tools/comments/rules.ts": {
+    "comment-line-length": 1
+  },
+  "tools/comments/scan.ts": {
+    "comment-line-length": 1
+  },
+  "tools/gallery/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 13
+  },
+  "tools/lib/audio-descriptors.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 9
+  },
+  "tools/lib/local-config.ts": {
+    "comment-line-length": 2
+  },
+  "tools/lib/pre-commit-hook.ts": {
+    "comment-line-length": 1
+  },
+  "tools/lib/wav.ts": {
+    "comment-line-length": 1
+  },
+  "tools/lint/baseline.ts": {
+    "comment-line-length": 1
+  },
+  "tools/lint/clang-tidy.ts": {
+    "comment-line-length": 1
+  },
+  "tools/lint/cxx.ts": {
+    "comment-line-length": 1
+  },
+  "tools/lint/index.ts": {
+    "comment-block-lines": 1
+  },
+  "tools/new/index.ts": {
+    "comment-line-length": 1
+  },
+  "tools/patches/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 3
+  },
+  "tools/patches/migrate.ts": {
+    "comment-line-length": 9
+  },
+  "tools/perf/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "tools/plugin/build.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 3
+  },
+  "tools/plugin/deploy.ts": {
+    "comment-line-length": 4
+  },
+  "tools/plugin/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 11
+  },
+  "tools/plugin/ios-app-check.ts": {
+    "comment-line-length": 6
+  },
+  "tools/plugin/ios-build.ts": {
+    "comment-line-length": 1
+  },
+  "tools/plugin/ios-device.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 10
+  },
+  "tools/plugin/ios-log.ts": {
+    "comment-line-length": 1
+  },
+  "tools/plugin/ios-paths.ts": {
+    "comment-line-length": 4
+  },
+  "tools/plugin/ios-release.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 10
+  },
+  "tools/plugin/ios-test.ts": {
+    "comment-line-length": 3
+  },
+  "tools/plugin/ios.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 11
+  },
+  "tools/plugin/package.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "tools/plugin/reaper.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "tools/plugin/sign.ts": {
+    "comment-line-length": 2
+  },
+  "tools/plugin/web.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 3
+  },
+  "tools/privacy/privacy.test.ts": {
+    "comment-line-length": 1
+  },
+  "tools/release/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 12
+  },
+  "tools/release/tag.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "tools/render/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 2
+  },
+  "tools/server/config.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 8
+  },
+  "tools/server/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 16
+  },
+  "tools/server/lib.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 6
+  },
+  "tools/size/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 6
+  },
+  "tools/ui/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 14
+  },
+  "tools/v1/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 4
+  },
+  "tools/v1/port-ui.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 26
+  },
+  "tools/v1/verify.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "tools/visual/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 5
+  },
+  "tools/wasm/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 3
+  },
+  "tools/win-vm/vm.sh": {
+    "comment-block-lines": 2,
+    "comment-line-length": 2
+  },
+  "tools/win/index.ts": {
+    "comment-block-lines": 1,
+    "comment-line-length": 8
+  },
+  "web/index.html": {
+    "comment-line-length": 1
+  }
+}

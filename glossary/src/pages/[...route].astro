@@ -3,11 +3,13 @@ import type { GetStaticPaths } from 'astro';
 import GuideArticle from '../components/GuideArticle.astro';
 import { guide } from '../catalogue';
 
-export const getStaticPaths = (() => guide.map(entry => ({
-  params: { route: entry.data.route },
-  props: { entry },
-}))) satisfies GetStaticPaths;
+export const getStaticPaths = (() =>
+  guide.map((entry) => ({
+    params: { route: entry.data.route },
+    props: { entry },
+  }))) satisfies GetStaticPaths;
 
 const { entry } = Astro.props;
 ---
+
 <GuideArticle {entry} />

@@ -2,6 +2,13 @@
 
 Everything an agent changes must be provable without a human (PROCESS-0004). The layers:
 
+## 0. Static checks (PROCESS-0006)
+`pnpm lint` (`bd lint`) runs tsc over all TypeScript, Prettier, ESLint (strict type-checked, no `any`), `bd comments`,
+clang-format and clang-tidy; `pnpm bd size check` keeps files to about 5,000 tokens. Findings already recorded in a
+baseline may only shrink: after fixing or splitting code, run `pnpm bd lint prune` / `pnpm bd size baseline`. The
+pre-commit hook (`pnpm bd lint install`) checks staged files; C++ warnings fail the build. A deliberate exception is a
+`NOLINT(check): reason` on its line.
+
 ## 1. Engine unit tests (C++, Catch2)
 Table-driven tests per spec requirement (`// SPEC-CONNECTIONS-PROXIMITY R1`). Run natively; a subset also runs under WASM in Node.
 

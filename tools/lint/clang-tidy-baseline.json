@@ -1,0 +1,228 @@
+{
+  "engine/include/blokdust/connections.hpp": {
+    "readability-identifier-length": 10
+  },
+  "engine/include/blokdust/dmath.hpp": {
+    "readability-identifier-length": 12,
+    "readability-identifier-naming": 12
+  },
+  "engine/include/blokdust/dsp.hpp": {
+    "readability-identifier-length": 8,
+    "readability-identifier-naming": 4
+  },
+  "engine/include/blokdust/effects.hpp": {
+    "readability-identifier-length": 48,
+    "readability-identifier-naming": 1
+  },
+  "engine/include/blokdust/engine.hpp": {
+    "readability-identifier-length": 15
+  },
+  "engine/include/blokdust/geometry.hpp": {
+    "readability-identifier-length": 2
+  },
+  "engine/include/blokdust/hash.hpp": {
+    "readability-identifier-length": 6
+  },
+  "engine/include/blokdust/mpe.hpp": {
+    "readability-identifier-length": 13
+  },
+  "engine/include/blokdust/spsc_queue.hpp": {
+    "readability-identifier-length": 1
+  },
+  "engine/include/blokdust/tablebank.hpp": {
+    "readability-identifier-length": 4
+  },
+  "engine/include/blokdust/wavetable.hpp": {
+    "readability-identifier-length": 3
+  },
+  "engine/include/blokdust/world.hpp": {
+    "readability-identifier-length": 1
+  },
+  "engine/patch/src/patch_loader.cpp": {
+    "readability-identifier-length": 22
+  },
+  "engine/src/connections.cpp": {
+    "readability-identifier-length": 10
+  },
+  "engine/src/convolver.cpp": {
+    "readability-identifier-length": 21
+  },
+  "engine/src/engine.cpp": {
+    "readability-identifier-length": 15
+  },
+  "engine/src/engine_arrange.cpp": {
+    "readability-identifier-length": 15,
+    "readability-identifier-naming": 2
+  },
+  "engine/src/engine_commands.cpp": {
+    "readability-identifier-length": 14
+  },
+  "engine/src/engine_granular.cpp": {
+    "readability-identifier-length": 7
+  },
+  "engine/src/engine_hits.cpp": {
+    "readability-identifier-length": 7
+  },
+  "engine/src/engine_internal.hpp": {
+    "readability-identifier-length": 2,
+    "readability-identifier-naming": 1
+  },
+  "engine/src/engine_notes.cpp": {
+    "readability-identifier-length": 13
+  },
+  "engine/src/engine_render.cpp": {
+    "readability-identifier-length": 24,
+    "readability-identifier-naming": 2
+  },
+  "engine/src/engine_tick.cpp": {
+    "readability-identifier-length": 18
+  },
+  "engine/src/engine_voices.cpp": {
+    "readability-identifier-length": 17
+  },
+  "engine/src/tablebank.cpp": {
+    "readability-identifier-length": 42,
+    "readability-identifier-naming": 4
+  },
+  "engine/src/wavetable.cpp": {
+    "readability-identifier-length": 13
+  },
+  "engine/tests/helpers.hpp": {
+    "readability-identifier-length": 4,
+    "readability-identifier-naming": 1
+  },
+  "engine/tests/test_audio.cpp": {
+    "readability-identifier-length": 6
+  },
+  "engine/tests/test_audio_graph.cpp": {
+    "readability-identifier-length": 8
+  },
+  "engine/tests/test_catalogue.cpp": {
+    "readability-identifier-length": 3
+  },
+  "engine/tests/test_chance.cpp": {
+    "readability-identifier-length": 5
+  },
+  "engine/tests/test_compressor.cpp": {
+    "readability-identifier-length": 7
+  },
+  "engine/tests/test_connections.cpp": {
+    "readability-identifier-length": 3
+  },
+  "engine/tests/test_controllers.cpp": {
+    "readability-identifier-length": 13
+  },
+  "engine/tests/test_counter.cpp": {
+    "readability-identifier-length": 4
+  },
+  "engine/tests/test_determinism.cpp": {
+    "readability-identifier-length": 5
+  },
+  "engine/tests/test_emitter_hit.cpp": {
+    "readability-identifier-length": 2
+  },
+  "engine/tests/test_ftz.cpp": {
+    "readability-identifier-length": 1
+  },
+  "engine/tests/test_gate.cpp": {
+    "readability-identifier-length": 2
+  },
+  "engine/tests/test_granular.cpp": {
+    "readability-identifier-length": 9
+  },
+  "engine/tests/test_lasers.cpp": {
+    "readability-identifier-length": 3
+  },
+  "engine/tests/test_lfo.cpp": {
+    "readability-identifier-length": 9
+  },
+  "engine/tests/test_mpe.cpp": {
+    "readability-identifier-length": 30,
+    "readability-identifier-naming": 1
+  },
+  "engine/tests/test_mpe_parser.cpp": {
+    "readability-identifier-length": 6
+  },
+  "engine/tests/test_note_effects.cpp": {
+    "readability-identifier-length": 24,
+    "readability-identifier-naming": 4
+  },
+  "engine/tests/test_patch_loader.cpp": {
+    "readability-identifier-length": 2
+  },
+  "engine/tests/test_prism.cpp": {
+    "readability-identifier-length": 5
+  },
+  "engine/tests/test_pulse_delay.cpp": {
+    "readability-identifier-length": 3
+  },
+  "engine/tests/test_queue.cpp": {
+    "readability-identifier-length": 1
+  },
+  "engine/tests/test_review_fixes.cpp": {
+    "readability-identifier-length": 9
+  },
+  "engine/tests/test_simulation.cpp": {
+    "readability-identifier-length": 2
+  },
+  "engine/tests/test_sound_laser.cpp": {
+    "readability-identifier-length": 4
+  },
+  "engine/tests/test_stage.cpp": {
+    "readability-identifier-length": 18
+  },
+  "engine/tests/test_tempo.cpp": {
+    "readability-identifier-length": 10,
+    "readability-identifier-naming": 1
+  },
+  "engine/tests/test_wavetable_block.cpp": {
+    "readability-identifier-length": 18
+  },
+  "engine/tools/render/main.cpp": {
+    "readability-identifier-length": 21,
+    "readability-identifier-naming": 2
+  },
+  "plugin/src/AccountStore.cpp": {
+    "readability-identifier-length": 3
+  },
+  "plugin/src/EditorSend.cpp": {
+    "readability-identifier-length": 1
+  },
+  "plugin/src/PatchFiles.cpp": {
+    "readability-identifier-length": 8
+  },
+  "plugin/src/PatchFiles.h": {
+    "readability-identifier-length": 1
+  },
+  "plugin/src/PluginEditor.cpp": {
+    "readability-identifier-length": 44
+  },
+  "plugin/src/PluginEditor.h": {
+    "readability-identifier-length": 1
+  },
+  "plugin/src/PluginProcessor.cpp": {
+    "readability-identifier-length": 64
+  },
+  "plugin/src/PluginProcessor.h": {
+    "readability-identifier-length": 6
+  },
+  "plugin/src/Samples.cpp": {
+    "readability-identifier-length": 7,
+    "readability-identifier-naming": 1
+  },
+  "plugin/src/StageWorlds.cpp": {
+    "readability-identifier-length": 4
+  },
+  "plugin/src/Telemetry.cpp": {
+    "readability-identifier-length": 12
+  },
+  "plugin/src/WebViewDrops.h": {
+    "readability-identifier-length": 3
+  },
+  "plugin/src/WebViewDrops.mm": {
+    "readability-identifier-length": 9
+  },
+  "plugin/tests/host_render.cpp": {
+    "readability-identifier-length": 19
+  }
+}

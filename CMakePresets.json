@@ -7,7 +7,8 @@
       "binaryDir": "${sourceDir}/build/dev",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "BLOKDUST_BUILD_TESTS": "ON"
+        "BLOKDUST_BUILD_TESTS": "ON",
+        "BLOKDUST_WARNINGS_AS_ERRORS": "ON"
       }
     },
     {
@@ -16,7 +17,8 @@
       "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "BLOKDUST_BUILD_TESTS": "ON"
+        "BLOKDUST_BUILD_TESTS": "ON",
+        "BLOKDUST_WARNINGS_AS_ERRORS": "ON"
       }
     },
     {
@@ -27,7 +29,23 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "BLOKDUST_BUILD_TESTS": "ON",
         "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all",
-        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined"
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined",
+        "BLOKDUST_WARNINGS_AS_ERRORS": "ON"
+      }
+    },
+    {
+      "name": "rtsan",
+      "displayName": "Debug + RealtimeSanitizer (upstream Clang 20+ in $BLOKDUST_LLVM; CHG-0045)",
+      "binaryDir": "${sourceDir}/build/rtsan",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BLOKDUST_BUILD_TESTS": "ON",
+        "BLOKDUST_BUILD_TOOLS": "OFF",
+        "BLOKDUST_WARNINGS_AS_ERRORS": "ON",
+        "CMAKE_C_COMPILER": "$env{BLOKDUST_LLVM}/bin/clang",
+        "CMAKE_CXX_COMPILER": "$env{BLOKDUST_LLVM}/bin/clang++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=realtime",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=realtime"
       }
     },
     {
@@ -38,7 +56,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "BLOKDUST_BUILD_TESTS": "OFF",
-        "BLOKDUST_BUILD_TOOLS": "OFF"
+        "BLOKDUST_BUILD_TOOLS": "OFF",
+        "BLOKDUST_WARNINGS_AS_ERRORS": "ON"
       }
     },
     {
@@ -50,7 +69,8 @@
         "BLOKDUST_BUILD_TESTS": "OFF",
         "BLOKDUST_BUILD_TOOLS": "ON",
         "BLOKDUST_BUILD_PLUGIN": "ON",
-        "BLOKDUST_UNIVERSAL": "ON"
+        "BLOKDUST_UNIVERSAL": "ON",
+        "BLOKDUST_WARNINGS_AS_ERRORS": "ON"
       }
     },
     {
@@ -61,7 +81,8 @@
         "CMAKE_BUILD_TYPE": "Release",
         "BLOKDUST_BUILD_TESTS": "OFF",
         "BLOKDUST_BUILD_TOOLS": "ON",
-        "BLOKDUST_BUILD_PLUGIN": "ON"
+        "BLOKDUST_BUILD_PLUGIN": "ON",
+        "BLOKDUST_WARNINGS_AS_ERRORS": "ON"
       }
     },
     {
@@ -75,7 +96,8 @@
         "CMAKE_OSX_ARCHITECTURES": "arm64",
         "BLOKDUST_BUILD_TESTS": "OFF",
         "BLOKDUST_BUILD_TOOLS": "ON",
-        "BLOKDUST_BUILD_PLUGIN": "ON"
+        "BLOKDUST_BUILD_PLUGIN": "ON",
+        "BLOKDUST_WARNINGS_AS_ERRORS": "ON"
       }
     },
     {
@@ -92,7 +114,8 @@
         "BLOKDUST_BUILD_PLUGIN": "ON",
         "CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM": "$env{BLOKDUST_APPLE_TEAM_ID}",
         "CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_STYLE": "Automatic",
-        "CMAKE_XCODE_GENERATE_SCHEME": "ON"
+        "CMAKE_XCODE_GENERATE_SCHEME": "ON",
+        "BLOKDUST_WARNINGS_AS_ERRORS": "ON"
       }
     },
     {
@@ -112,7 +135,8 @@
         "CMAKE_XCODE_GENERATE_SCHEME": "ON",
         "CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
         "CMAKE_C_FLAGS_RELEASE": "-O3 -DNDEBUG -g",
-        "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG -g"
+        "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG -g",
+        "BLOKDUST_WARNINGS_AS_ERRORS": "ON"
       }
     }
   ],
@@ -129,6 +153,10 @@
     {
       "name": "asan",
       "configurePreset": "asan"
+    },
+    {
+      "name": "rtsan",
+      "configurePreset": "rtsan"
     },
     {
       "name": "wasm",
@@ -172,6 +200,13 @@
     {
       "name": "asan",
       "configurePreset": "asan",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "rtsan",
+      "configurePreset": "rtsan",
       "output": {
         "outputOnFailure": true
       }
