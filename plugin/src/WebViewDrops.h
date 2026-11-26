@@ -51,8 +51,8 @@ class KeyUpsToHost {
   int forwarded() const noexcept { return forwarded_; }
 
  private:
-  juce::Component& c_;
-  void* monitor_ = nullptr;
+  [[maybe_unused]] juce::Component& c_;  // macOS only (iPad has no key monitor)
+  [[maybe_unused]] void* monitor_ = nullptr;
   int forwarded_ = 0;
 };
 }  // namespace blokdust::plugin

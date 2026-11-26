@@ -158,7 +158,7 @@
     "comment-block-lines": 3
   },
   "plugin/src/PluginEditor.cpp": {
-    "comment-block-lines": 5,
+    "comment-block-lines": 4,
     "comment-line-length": 1
   },
   "plugin/src/PluginEditor.h": {

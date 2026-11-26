@@ -27,7 +27,8 @@ void shareLink(juce::Component& editor, const juce::String& url, juce::Rectangle
     host = host.presentedViewController;
   if (host == nil)
     return;
-  NSURL* link = [NSURL URLWithString:[NSString stringWithUTF8String:url.toRawUTF8()]];
+  NSString* text = [NSString stringWithUTF8String:url.toRawUTF8()];
+  NSURL* link = text != nil ? [NSURL URLWithString:text] : nil;
   if (link == nil)
     return;
   auto* sheet = [[UIActivityViewController alloc] initWithActivityItems:@[ link ]
@@ -59,7 +60,8 @@ void systemLog(const juce::String& message) {
   file.getParentDirectory().createDirectory();
   if (file.getSize() > (256 << 10))
     file.moveFileTo(file.withFileExtension("old.log"));
-  const juce::String who([NSBundle mainBundle].bundleIdentifier.UTF8String ?: "?");
+  const char* bundle = [NSBundle mainBundle].bundleIdentifier.UTF8String;
+  const juce::String who(bundle != nullptr ? bundle : "?");
   file.appendText(juce::Time::getCurrentTime().toISO8601(true) + " " + who + " " + message + "\n");
 #endif
 }

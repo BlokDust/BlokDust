@@ -305,8 +305,7 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                           web_.emitEventIfBrowserIsVisible(
                               "bd_patchSaved", juce::JSON::parse(juce::String(r.dump())));
                         });
-                    return;
-#endif
+#else
                     patchChooser_ = std::make_unique<juce::FileChooser>(
                         "Save a BlokDust patch",
                         patchfiles::folder().getChildFile(patchfiles::safeName(title) +
@@ -329,6 +328,7 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                           web_.emitEventIfBrowserIsVisible(
                               "bd_patchSaved", juce::JSON::parse(juce::String(r.dump())));
                         });
+#endif
                   })
               .withEventListener("bd_patchRead",
                                  [this](const juce::var& v) {
@@ -392,47 +392,11 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                                  })
               // CREATE SHARE LINK (and the About links): open a web page in the user's browser.
               // https only.
-              .withEventListener("bd_openUrl",
-                                 [](const juce::var& v) {
-                                   const auto url = v.getProperty("url", "").toString();
-                                   if (!url.startsWith("https://"))
-                                     return;
-#if JUCE_IOS
-                                   // iPadOS gives an AUv3 no way to open Safari (CHG-0025 task 7):
-                                   // the link goes to the clipboard, with a note. The BlokDust app
-                                   // itself opens links as usual.
-                                   if (juce::SystemStats::isRunningInAppExtensionSandbox()) {
-                                     juce::SystemClipboard::copyTextToClipboard(url);
-                                     systemLog("link: copied to the clipboard (extension)");
-                                     linkNote_ = juce::NativeMessageBox::showScopedAsync(
-                                         juce::MessageBoxOptions::makeOptionsOk(
-                                             juce::MessageBoxIconType::InfoIcon, "Link copied",
-                                             "BlokDust can't open Safari from inside another app. "
-                                             "Paste the link into Safari to open it.")
-                                             .withAssociatedComponent(this),
-                                         nullptr);
-                                     return;
-                                   }
-#endif
-                                   juce::URL(url).launchInDefaultBrowser();
-                                 })
+              .withEventListener("bd_openUrl", [this](const juce::var& v) { openLink(v); })
               // iPad: CREATE SHARE LINK sends the patch's link with the share menu (Messages,
               // WhatsApp, Mail…), in the app and in a host (owner, 2026-11-16, CHG-0025). Elsewhere
               // the page opens the site instead.
-              .withEventListener("bd_share",
-                                 [](const juce::var& v) {
-                                   const auto url = v.getProperty("url", "").toString();
-                                   if (!url.startsWith("https://"))
-                                     return;
-#if JUCE_IOS
-                                   systemLog("share: menu opened");
-                                   const int x = v.getProperty("x", getWidth() / 2),
-                                             y = v.getProperty("y", getHeight() / 2);
-                                   shareLink(*this, url, {x - 20, y - 20, 40, 40});
-#else
-                 juce::URL(url).launchInDefaultBrowser();
-#endif
-                                 })
+              .withEventListener("bd_share", [this](const juce::var& v) { share(v); })
               .withEventListener("bd_dropTarget", [this](const juce::var& v) {
                 if (static_cast<int>(v.getProperty("token", -1)) != dropToken_ ||
                     pendingDrop_.isEmpty())
@@ -581,6 +545,42 @@ double BlokDustEditor::sentPerSecond() {
   sent_ = 0;
   sentSince_ = now;
   return rate;
+}
+
+void BlokDustEditor::openLink(const juce::var& message) {
+  const auto url = message.getProperty("url", "").toString();
+  if (!url.startsWith("https://"))
+    return;
+#if JUCE_IOS
+  // iPadOS gives an AUv3 no way to open Safari (CHG-0025 task 7): the link goes to the clipboard,
+  // with a note. The BlokDust app itself opens links as usual.
+  if (juce::SystemStats::isRunningInAppExtensionSandbox()) {
+    juce::SystemClipboard::copyTextToClipboard(url);
+    systemLog("link: copied to the clipboard (extension)");
+    linkNote_ = juce::NativeMessageBox::showScopedAsync(
+        juce::MessageBoxOptions::makeOptionsOk(juce::MessageBoxIconType::InfoIcon, "Link copied",
+                                               "BlokDust can't open Safari from inside another "
+                                               "app. Paste the link into Safari to open it.")
+            .withAssociatedComponent(this),
+        nullptr);
+    return;
+  }
+#endif
+  juce::URL(url).launchInDefaultBrowser();
+}
+
+void BlokDustEditor::share(const juce::var& message) {
+  const auto url = message.getProperty("url", "").toString();
+  if (!url.startsWith("https://"))
+    return;
+#if JUCE_IOS
+  systemLog("share: menu opened");
+  const int x = message.getProperty("x", getWidth() / 2),
+            y = message.getProperty("y", getHeight() / 2);
+  shareLink(*this, url, {x - 20, y - 20, 40, 40});
+#else
+  juce::URL(url).launchInDefaultBrowser();
+#endif
 }
 
 }  // namespace blokdust::plugin

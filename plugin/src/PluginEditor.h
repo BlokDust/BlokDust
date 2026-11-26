@@ -46,6 +46,10 @@ class BlokDustEditor : public juce::AudioProcessorEditor,
 
  private:
   void timerCallback() override;
+  /// The page's bd_openUrl: an https link opens in the browser (iPad extension: the clipboard).
+  void openLink(const juce::var& message);
+  /// The page's bd_share: the iPad share menu at the button; elsewhere the link opens.
+  void share(const juce::var& message);
   void tick();  // snapshot, params, keys: on the display's refresh at up to 60 a second, like the
                 // web app's worklet
   static std::optional<juce::WebBrowserComponent::Resource> resource(const juce::String& url);
