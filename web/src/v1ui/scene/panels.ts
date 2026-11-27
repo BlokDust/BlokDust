@@ -22,6 +22,7 @@ import { Tutorial } from '../ported/UI/Tutorial';
 import { TutorialHotspots } from '../ported/UI/TutorialHotspots';
 import type { SceneHost } from './sceneHost.ts';
 import { SAVE_WARNING } from './shareSlot.ts';
+import { followStageForCreateNew } from './createNewState.ts';
 import { ensureTextFields } from './textFields.ts';
 
 export abstract class V1ScenePanels {
@@ -65,6 +66,7 @@ export abstract class V1ScenePanels {
     document.body.appendChild(sub);
     App.SubCanvas = [sub];
     ensureTextFields();
+    followStageForCreateNew(this.CreateNew);
     // v1 SharePanel.GetWarning warned of Recorder blocks; v2 also of the user's own files, never
     // uploaded so the link can't carry them (DATA-0005).
     const share = this.SharePanel,
