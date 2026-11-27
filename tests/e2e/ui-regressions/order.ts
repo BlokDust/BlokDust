@@ -4,6 +4,7 @@ export const ORDER = [
   'particles-under-panels',
   'clear-stage',
   'clear-and-open-clear-particles',
+  'clear-stage-icon-shown',
   'ios-no-magnifier',
   'audio-resumes-after-interruption',
   'ios-silent-switch',

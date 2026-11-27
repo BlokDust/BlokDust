@@ -94,6 +94,50 @@ export const stageEditingTests: Record<string, RegressionTest> = {
       { before, afterClear, before2, afterOpen },
     ];
   },
+  /** SPEC-VISUAL-V1-PARITY R23: CLEAR shows on any non-empty stage, even one arriving while
+   * ResetScene's hide tween runs (v1 left it hidden). */
+  async 'clear-stage-icon-shown'(errors) {
+    const page = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    const iconX = () => page.evaluate(() => window.__bd_probe.scene.CreateNew.IconOffset.x);
+    const openPreset = async () => {
+      await page.evaluate(async () => {
+        await window.__bd_probe.scene.host.openPatch(
+          { key: 'preset:01-computer-keys-2-tones.blokdust' } as PatchItem,
+          'open',
+        );
+      });
+      await page.waitForTimeout(1200); // CreateNew tweens settle
+    };
+    const oneBlock = await iconX();
+    await openPreset();
+    const afterOpen = await iconX();
+    await page.mouse.click(37, 45);
+    await page.waitForTimeout(900); // CLEAR (as clear-stage)
+    await page.mouse.click(195, 135);
+    await page.waitForTimeout(1200);
+    const afterClear = await iconX();
+    await openPreset();
+    const afterClearOpen = await iconX();
+    // A scene arriving in the same frame as the reset (the plugin editor's reload, a fast open).
+    await page.evaluate(() => {
+      const scene = window.__bd_probe.scene;
+      scene.ResetScene();
+      scene.host.createBlock('ToneSource', 0, 0);
+      scene.host.createBlock('Power', -3, 0);
+    });
+    await page.waitForTimeout(1200);
+    const sameFrame = await iconX();
+    await page.screenshot({ path: `${OUT}/clear-stage-icon-shown.png` });
+    await page.close();
+    return [
+      oneBlock === 0 &&
+        afterOpen === 0 &&
+        afterClear === -1 &&
+        afterClearOpen === 0 &&
+        sameFrame === 0,
+      { oneBlock, afterOpen, afterClear, afterClearOpen, sameFrame },
+    ];
+  },
   /** Alt + drag duplicates the block with its params and drags the copy (v1 Block.MouseMove). */
   async 'alt-duplicate'(errors) {
     const page = await open(
