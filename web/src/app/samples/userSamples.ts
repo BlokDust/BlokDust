@@ -25,9 +25,20 @@ export const samples = new Map<number, AudioBuffer>();
 
 export const missing = new Set<number>();
 
-/** v1 App.AnimationsLayer.AddToList / RemoveFromList: the spinning loading bubble beside a block
- * while its audio loads. */
-export async function whileLoading<T>(id: number, work: () => Promise<T>): Promise<T> {
+/** Each block's newest load. A sound picked while another still loads wins whichever arrives
+ * first: the older one is dropped and its failure ignored. */
+const newestLoad = new Map<number, number>();
+let loads = 0;
+
+/** v1 App.AnimationsLayer.AddToList / RemoveFromList: the loading bubble beside a block while its
+ * audio loads. `work` applies its sound only if `isNewest()`; a replaced one resolves undefined. */
+export async function whileLoading<T>(
+  id: number,
+  work: (isNewest: () => boolean) => Promise<T>,
+): Promise<T | undefined> {
+  const load = ++loads;
+  newestLoad.set(id, load);
+  const isNewest = () => newestLoad.get(id) === load;
   const v1Block = v1Blocks.get(id);
   if (v1Block) {
     scene.AnimationsLayer.AddToList(v1Block);
@@ -35,12 +46,19 @@ export async function whileLoading<T>(id: number, work: () => Promise<T>): Promi
     stage.redraw();
   }
   try {
-    return await work();
+    return await work(isNewest);
+  } catch (error) {
+    if (isNewest()) throw error;
+    return undefined;
   } finally {
-    if (v1Block) {
-      scene.AnimationsLayer.RemoveFromList(v1Block);
-      if (scene.OptionsPanel.SelectedBlock === v1Block) v1Block.RefreshOptionsPanel();
-      stage.redraw();
+    // The newest load ends the spinner; an older one leaves it to that.
+    if (isNewest()) {
+      newestLoad.delete(id);
+      if (v1Block) {
+        scene.AnimationsLayer.RemoveFromList(v1Block);
+        if (scene.OptionsPanel.SelectedBlock === v1Block) v1Block.RefreshOptionsPanel();
+        stage.redraw();
+      }
     }
   }
 }
@@ -111,7 +129,9 @@ export async function useFile(
     hash: fp.hash,
   };
   if (handle) await rememberHandle(fp.hash, handle);
-  await whileLoading(id, async () => useSample(id, ref, await file.arrayBuffer(), fresh));
+  await whileLoading(id, async (isNewest) =>
+    useSample(id, ref, await file.arrayBuffer(), fresh, isNewest),
+  );
 }
 
 /** A sampler whose reference can't load here (someone else's file, a sound that's gone): the panel
@@ -155,12 +175,14 @@ export async function resolveSample(id: number, isNew = false): Promise<void> {
     const defaultSound = DEFAULT_SOUNDS[b.type];
     if (!defaultSound) return;
     try {
-      const ref = { ...defaultSound },
-        bytes = await whileLoading(id, () => fetchFreesound(ref, maxSecondsFor(id)));
-      // Something else was chosen meanwhile (a file, a search result): it wins.
-      const now = model.get(id);
-      if (samples.has(id) || !now || !isDeadDefault(now.params.track)) return;
-      await useSample(id, ref, bytes, isNew);
+      const ref = { ...defaultSound };
+      await whileLoading(id, async (isNewest) => {
+        const bytes = await fetchFreesound(ref, maxSecondsFor(id));
+        // Something else was chosen meanwhile (a file, a search result): it wins.
+        const now = model.get(id);
+        if (samples.has(id) || !now || !isDeadDefault(now.params.track)) return;
+        await useSample(id, ref, bytes, isNew, isNewest);
+      });
     } catch (error) {
       console.warn('BlokDust: default sound unavailable', error);
     }
@@ -174,8 +196,8 @@ export async function resolveSample(id: number, isNew = false): Promise<void> {
       return;
     }
     try {
-      await whileLoading(id, async () =>
-        useSample(id, ref, await fetchFreesound(ref, maxSecondsFor(id)), false),
+      await whileLoading(id, async (isNewest) =>
+        useSample(id, ref, await fetchFreesound(ref, maxSecondsFor(id)), false, isNewest),
       );
     } catch (error) {
       console.warn('BlokDust: Freesound sound unavailable', error);
@@ -185,7 +207,9 @@ export async function resolveSample(id: number, isNew = false): Promise<void> {
     const file =
       ref?.provider === 'file' && ref.hash ? await openRemembered(ref.hash, false) : null;
     if (file && ref?.provider === 'file')
-      await whileLoading(id, async () => useSample(id, ref, await file.arrayBuffer(), false));
+      await whileLoading(id, async (isNewest) =>
+        useSample(id, ref, await file.arrayBuffer(), false, isNewest),
+      );
     else markMissing(id);
   }
 }

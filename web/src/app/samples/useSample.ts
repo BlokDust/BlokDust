@@ -32,19 +32,20 @@ export async function showBuiltInImpulse(id: number): Promise<void> {
   }
 }
 
-/** Decoded audio for a sampler with its reference. `fresh`: newly chosen (v1 LoadTrack/SetBuffers:
- * region reset); otherwise a saved one being restored (its region params are kept). */
+/** Decoded audio for a sampler with its reference, unless a newer pick replaced it (`isNewest`).
+ * `fresh`: newly chosen (v1 LoadTrack/SetBuffers: region reset); otherwise a saved one restored. */
 export async function useSample(
   id: number,
   ref: SampleRef,
   bytes: ArrayBuffer,
   fresh = true,
+  isNewest = () => true,
   display?: { trackName: string; user: string; permalink: string },
 ): Promise<void> {
   const buffer = await new OfflineAudioContext(1, 1, 48000).decodeAudioData(bytes);
   const b = model.get(id),
     v1Block = v1Blocks.get(id);
-  if (!b) return;
+  if (!b || !isNewest()) return;
   if (ref.provider === 'file') ref.durationSec = Math.round(buffer.duration * 1000) / 1000;
   if (fresh)
     track('sample_loaded', {

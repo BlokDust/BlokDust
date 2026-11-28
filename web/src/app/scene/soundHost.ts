@@ -47,8 +47,8 @@ const loadFreesound: SoundHost['loadFreesound'] = (id, sound, display) => {
     });
     return;
   }
-  void whileLoading(id, async () =>
-    useSample(id, ref, await fetchFreesound(ref, maxSecondsFor(id)), true, display),
+  void whileLoading(id, async (isNewest) =>
+    useSample(id, ref, await fetchFreesound(ref, maxSecondsFor(id)), true, isNewest, display),
   ).catch((error: unknown) => {
     console.warn('BlokDust: Freesound sound unavailable', error);
     markMissing(id);
