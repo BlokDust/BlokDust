@@ -88,24 +88,33 @@ const BRIDGES: Record<string, string> = {
   'Core/Audio/Utils/Utils.ts':
     'export const isIOS = () => true;\nexport const hasAudioContextStarted = (_c: unknown) => true;\nexport const unlockAudioContext = (_c: unknown, cb: () => void) => cb();\n',
 };
-const CHROME_FOOTER =
-  '            // CHROME RECOMMENDED //\n            App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);\n            App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);\n            ctx.font = largeType;\n            ctx.textAlign = "center";\n            ctx.fillText(\'Chrome Recommended\', App.Width*0.5, this.OffsetY + this.DrawTo.Height - (20 * units));\n\n            ctx.lineWidth = 2;\n            ctx.beginPath();\n            ctx.moveTo((App.Width*0.5) - (60*units), this.OffsetY + this.DrawTo.Height - (27 * units));\n            ctx.lineTo((App.Width*0.5) - (63.89*units), this.OffsetY + this.DrawTo.Height - (20 * units));\n            ctx.lineTo((App.Width*0.5) - (56.11*units), this.OffsetY + this.DrawTo.Height - (20 * units));\n            ctx.closePath();\n            ctx.stroke();\n\n';
-const SPLASH_CHROME =
-  '        // CHROME RECOMMENDED //\n        var chY = (this.LoadOffset * App.Height);\n\n        App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);\n        App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);\n        ctx.font = App.Metrics.TxtLarge;\n        ctx.textAlign = "center";\n        ctx.fillText(\'Chrome Recommended\', App.Width*0.5, chY + this.DrawTo.Height - (20 * units));\n\n        ctx.lineWidth = 2;\n        ctx.beginPath();\n        ctx.moveTo((App.Width*0.5) - (60*units), chY + this.DrawTo.Height - (27 * units));\n        ctx.lineTo((App.Width*0.5) - (63.89*units), chY + this.DrawTo.Height - (20 * units));\n        ctx.lineTo((App.Width*0.5) - (56.11*units), chY + this.DrawTo.Height - (20 * units));\n        ctx.closePath();\n        ctx.stroke();\n';
-const SPLASH_TRIANGLE =
-  '        ctx.lineTo((App.Width*0.5) + (this._Scale*0.5),by + (App.Height*0.5));\n        ctx.fill();\n';
-const SPLASH_TRIANGLE_START =
-  '        ctx.lineTo((App.Width*0.5) + (this._Scale*0.5),by + (App.Height*0.5));\n        ctx.fill();\n\n        // START (owner, 2026-11-11): the word under v1\'s play triangle, in v1\'s header type //\n        App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);\n        ctx.textAlign = "center";\n        ctx.font = App.Metrics.TxtHeader;\n        ctx.fillText("START", App.Width*0.5, by + (App.Height*0.5) + this._Scale + (50*units));\n';
-// The only text changes to ported files, each for a stated reason (applied verbatim; the port fails if one no longer
-// matches, so a v1 pin bump can't silently drop it).
+// Owner (2026-11-11): START under the play triangle (v1's button had no word), after its fill.
+const SPLASH_TRIANGLE_FILL = '(this._Scale*0.5),by + (App.Height*0.5));\n        ctx.fill();\n';
+const SPLASH_START = `
+        // START (owner, 2026-11-11): the word under v1's play triangle, in v1's header type //
+        App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
+        ctx.textAlign = "center";
+        ctx.font = App.Metrics.TxtHeader;
+        ctx.fillText("START", App.Width*0.5, by + (App.Height*0.5) + this._Scale + (50*units));
+`;
+// Owner (2026-11-10, CHG-0005): no "Chrome Recommended" footer (v2 runs alike in every browser and in the plugin).
+// Each cut removes from its start marker through the first end marker after it.
+const CUTS: Record<string, [string, string, string][]> = {
+  'UI/SettingsPanel.ts': [
+    ['            // CHROME RECOMMENDED //\n', 'ctx.stroke();\n\n', 'Chrome Recommended footer'],
+  ],
+  'Splash.ts': [
+    ['        // CHROME RECOMMENDED //\n', 'ctx.stroke();\n', 'Chrome Recommended footer'],
+  ],
+};
+// With CUTS, the only text changes to ported files, each for a stated reason (applied verbatim; the
+// port fails if one no longer matches, so a v1 pin bump can't silently drop it).
 const REWRITES: Record<string, ([string, string, string] | [string, string, string, 'all'])[]> = {
   // DATA-0005 / CHG-0003: the sample panel searches Freesound (SoundCloud's API is gone).
   'UI/SoundcloudPanel.ts': [
     ['searchLine: "Search SoundCloud"', 'searchLine: "Search Freesound"', 'provider name'],
   ],
-  // Owner (2026-11-10, CHG-0005): no "Chrome Recommended" footer (v2 runs alike in every browser and in the plugin).
   'UI/SettingsPanel.ts': [
-    [CHROME_FOOTER, '', 'Chrome Recommended footer'],
     // Owner (2026-11-18, CHG-0037): on a phone the page is nearly the screen's width (App.SettingsMenuWidth), the tabs
     // share the width left of the close cross, and the rows are taller (App.SettingsRow). Desktop keeps v1's sizes.
     [
@@ -152,6 +161,15 @@ const REWRITES: Record<string, ([string, string, string] | [string, string, stri
       'slider rows can be taller (note bars)',
     ],
   ],
+  // CHG-0049 (owner, 2026-11-27): a dragged slider's value stays readable over its own bar when
+  // text and slider colours match (shim.ts SliderValueText).
+  'UI/Options/OptionSlider.ts': [
+    [
+      '            ctx.fillText(string, x + panel.Margin + (25 * units), y + (height * 0.5) + (headerType * 0.35));',
+      '            App.SliderValueText(ctx, string, x + panel.Margin + (25 * units), y + (height * 0.5) + (headerType * 0.35), origin + offset, x + panel.Margin, y, height, col);',
+      'value readable over its bar',
+    ],
+  ],
   'UI/Options/OptionMeter.ts': [
     [
       '        var height = 48*units;',
@@ -169,9 +187,7 @@ const REWRITES: Record<string, ([string, string, string] | [string, string, stri
     ],
   ],
   'Splash.ts': [
-    [SPLASH_CHROME, '', 'Chrome Recommended footer'],
-    // Owner (2026-11-11): START under the play triangle (v1's button had no word).
-    [SPLASH_TRIANGLE, SPLASH_TRIANGLE_START, 'START under the button'],
+    [SPLASH_TRIANGLE_FILL, SPLASH_TRIANGLE_FILL + SPLASH_START, 'START under the button'],
     // Owner (2026-11-14): the app is called BLOKDUST 2.
     ['this.Ctx.fillText("BLOKDUST",dx,', 'this.Ctx.fillText("BLOKDUST 2",dx,', 'title'],
     // Owner (2026-11-17, CHG-0035): on a phone held upright the title nearly touched the edges; it is at most 80% of
@@ -242,6 +258,12 @@ export function portUi() {
   const written: string[] = [];
   for (const rel of PORTED) {
     let src = readFileSync(join(SRC, rel), 'utf8');
+    for (const [start, end, why] of CUTS[rel] ?? []) {
+      const from = src.indexOf(start),
+        to = from < 0 ? -1 : src.indexOf(end, from);
+      if (to < 0) throw new Error(`${rel}: cut "${why}" no longer matches`);
+      src = src.slice(0, from) + src.slice(to + end.length);
+    }
     for (const [from, to, why, all] of REWRITES[rel] ?? []) {
       if (!src.includes(from)) throw new Error(`${rel}: rewrite "${why}" no longer matches`);
       src = all ? src.split(from).join(to) : src.replace(from, to);

@@ -375,7 +375,7 @@
   },
   "tools/v1/port-ui.ts": {
     "comment-block-lines": 1,
-    "comment-line-length": 26
+    "comment-line-length": 25
   },
   "tools/v1/verify.ts": {
     "comment-block-lines": 1,

@@ -121,7 +121,7 @@ export class Slider extends Option {
             } else {
                 string = panel.NumberWithCommas("" + (Math.round(this.Value * 100) / 100));
             }
-            ctx.fillText(string, x + panel.Margin + (25 * units), y + (height * 0.5) + (headerType * 0.35));
+            App.SliderValueText(ctx, string, x + panel.Margin + (25 * units), y + (height * 0.5) + (headerType * 0.35), origin + offset, x + panel.Margin, y, height, col);
         }
     }
 }

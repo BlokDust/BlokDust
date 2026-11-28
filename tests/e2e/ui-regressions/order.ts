@@ -124,4 +124,5 @@ export const ORDER = [
   'envelope-short-attack',
   'quick-save-no-link-opens-save',
   'quick-save-plugin-keys',
+  'slider-value-readable-on-bar',
 ];
