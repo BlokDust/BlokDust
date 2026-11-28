@@ -5,6 +5,7 @@ import menu from './ported/data/menu.json';
 import config from './ported/data/config.json';
 import { MAX_ASPECT } from '../stage/metrics.ts';
 import type { V1AppGlobal } from './appGlobal.ts';
+import { drawSliderValue } from './sliderValue.ts';
 import type { V1Scene } from './scene/v1Scene.ts';
 
 /** v1 Device.mobile (not imported: the Device module imports this one). */
@@ -387,6 +388,29 @@ const appAtStart: V1AppAtStart = {
   SessionId: null as string | null,
   FillColor(ctx: CanvasRenderingContext2D, color: string) {
     ctx.fillStyle = color;
+  },
+  /** v1 OptionSlider's value while dragged, readable over its bar (sliderValue.ts, CHG-0049). */
+  SliderValueText(
+    ctx: CanvasRenderingContext2D,
+    value: string,
+    x: number,
+    y: number,
+    barFrom: number,
+    barTo: number,
+    barY: number,
+    barHeight: number,
+    barColour: string,
+  ) {
+    const palette = this.Palette;
+    drawSliderValue(
+      ctx,
+      value,
+      x,
+      y,
+      { from: barFrom, to: barTo, y: barY, height: barHeight, colour: barColour },
+      palette[this.ThemeManager.Txt],
+      palette[2],
+    );
   },
   StrokeColor(ctx: CanvasRenderingContext2D, color: string) {
     ctx.strokeStyle = color;

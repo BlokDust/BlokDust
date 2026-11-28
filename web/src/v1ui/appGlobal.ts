@@ -60,6 +60,17 @@ export interface V1AppGlobal {
   CompositionId: string | null;
   SessionId: string | null;
   FillColor: (ctx: CanvasRenderingContext2D, color: string) => void;
+  SliderValueText: (
+    ctx: CanvasRenderingContext2D,
+    value: string,
+    x: number,
+    y: number,
+    barFrom: number,
+    barTo: number,
+    barY: number,
+    barHeight: number,
+    barColour: string,
+  ) => void;
   StrokeColor: (ctx: CanvasRenderingContext2D, color: string) => void;
   FillRGBA: (
     ctx: CanvasRenderingContext2D,

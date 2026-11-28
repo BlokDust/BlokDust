@@ -18,6 +18,7 @@ import { soundSourcesTests } from './ui-regressions/sound-sources.ts';
 import { recorderTests } from './ui-regressions/recorder.ts';
 import { midiTests } from './ui-regressions/midi.ts';
 import { optionsTests } from './ui-regressions/options.ts';
+import { sliderValueTests } from './ui-regressions/slider-value.ts';
 import { dustTests } from './ui-regressions/dust.ts';
 import { menusTests } from './ui-regressions/menus.ts';
 import { supportTests } from './ui-regressions/support.ts';
@@ -52,6 +53,7 @@ const byName: Record<string, RegressionTest> = {
   ...recorderTests,
   ...midiTests,
   ...optionsTests,
+  ...sliderValueTests,
   ...dustTests,
   ...menusTests,
   ...supportTests,
