@@ -153,6 +153,9 @@ export class V1Scene extends V1ScenePointer {
   /** Advance tweens; true while anything animates (the stage then redraws every frame). */
   update(nowMs: number): boolean {
     const animating = TWEEN.update(nowMs);
+    // An embed never syncs the scene, so its panels have nothing to update (and v1's OptionsPanel
+    // would throw on its first frame, stopping the ticker: Sentry BLOKDUST-WEB-2).
+    if (!this.initialised) return animating;
     // The open panel's block is loading (AnimationsLayer): keep redrawing so its square spins.
     if (
       this.OptionsPanel.Scale > 0 &&
