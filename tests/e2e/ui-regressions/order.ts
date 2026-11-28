@@ -120,6 +120,7 @@ export const ORDER = [
   'zoom-out-to-0-15',
   'splash-title-fits-phone',
   'freesound-results-show-length',
+  'freesound-newest-pick-wins',
   'looping-switch-redraws-waveform',
   'envelope-short-attack',
   'quick-save-no-link-opens-save',

@@ -90,7 +90,9 @@ never as audio (DATA-0005). The Worker is `server/`; the client is `web/src/patc
   licence and URL.
 
 - **R16.** While a sampler's audio downloads or decodes, v1's loading animation (AnimationsLayer: a spinning diamond in
-  a bubble beside the block) shows. The previous sound keeps playing until the new one is ready. The Convolver uses
+  a bubble beside the block) shows. The previous sound keeps playing until the new one is ready. The newest choice
+  for a block wins: a sound picked earlier that arrives (or fails) later is dropped, and the animation runs until the
+  newest is ready. The Convolver uses
   only the first 2.5 s of an impulse response, so it requests just the start of a Freesound preview (an HTTP Range).
   Audio is fetched by the browser and kept in memory only; it never passes through or onto our servers.
 - **R17.** A newly loaded sample resets its region (start 0, end = length, loop from half way, as v1 Sample.SetBuffers),

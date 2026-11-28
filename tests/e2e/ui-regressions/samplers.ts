@@ -353,4 +353,91 @@ export const samplersTests: Record<string, RegressionTest> = {
       Math.abs(Number(patchRegion) - Number(dragged.region)) < 1e-6;
     return [ok, { start, spreadUi, dragged, patchRegion }];
   },
+  /** The newest Freesound pick wins (SPEC-SHARING-BACKEND R16): an older one arriving or failing
+   * later used to replace it or mark it MISSING, or, arriving first, stop its spinner. */
+  async 'freesound-newest-pick-wins'(errors: string[]) {
+    cdn.seconds = 2;
+    const page = await open(browser, [blk(1, 'Sample', 0, 0)], errors);
+    await page.waitForFunction(() => window.__bd_probe.samples.some((x) => x.loaded), null, {
+      timeout: 10000,
+    });
+    const [x, y] = await toCss(page, 0, 0.5);
+    await page.mouse.click(x, y);
+    await page.waitForTimeout(1200);
+    // Sounds 101 (3 s) and 303 (not audio) arrive after 2.5 s; the rest (1 s) after 0.2 s.
+    await page.route('https://cdn.freesound.org/**', async (route) => {
+      const late = /\/(101|303)_/.test(route.request().url());
+      await new Promise((res) => setTimeout(res, late ? 2500 : 200));
+      await route.fulfill({
+        status: 200,
+        contentType: 'audio/wav',
+        headers: { 'access-control-allow-origin': '*' },
+        body: route.request().url().includes('/303_')
+          ? Buffer.from('not audio')
+          : decayWav(late ? 3 : 1),
+      });
+    });
+    const pick = (id: number, title: string) =>
+      page.evaluate(
+        ([soundId, name]) => {
+          (window.__bd_probe.scene.OptionsPanel.SelectedBlock as V1BlockView).LoadTrack({
+            TitleShort: name,
+            UserShort: 'SOMEONE',
+            Permalink: '',
+            Sound: {
+              id: soundId,
+              name,
+              username: 'someone',
+              license: 'CC0',
+              licenseUrl: '',
+              duration: 1,
+              preview: `https://cdn.freesound.org/previews/0/${soundId}_1-hq.mp3`,
+              url: `https://freesound.org/s/${soundId}/`,
+            },
+          });
+        },
+        [id, title] as const,
+      );
+    const shown = () =>
+      page.evaluate(() => ({
+        trackName: (window.__bd_probe.scene.OptionsPanel.SelectedBlock as V1BlockView).Params
+          .trackName,
+        track: window.__bd_probe.samples[0].track,
+        seconds: window.__bd_probe.samples[0].frames / 48000,
+        spinning: window.__bd_probe.scene.AnimationsLayer.ActiveBlocks.length,
+      }));
+    await pick(101, 'FIRST');
+    await page.waitForTimeout(100);
+    await pick(202, 'SECOND');
+    await page.waitForTimeout(3500);
+    const later = await shown();
+    await pick(303, 'BROKEN');
+    await page.waitForTimeout(100);
+    await pick(404, 'FOURTH');
+    await page.waitForTimeout(3500);
+    const failedLater = await shown();
+    // An older pick arriving first doesn't apply, and the newest keeps the spinner going.
+    await pick(505, 'FAST');
+    await page.waitForTimeout(100);
+    await pick(101, 'SLOW');
+    await page.waitForTimeout(800);
+    const waiting = await shown();
+    await page.waitForTimeout(2500);
+    const slowArrived = await shown();
+    await page.close();
+    const ok =
+      later.trackName === 'SECOND' &&
+      later.track === 'freesound:202' &&
+      Math.abs(later.seconds - 1) < 0.01 &&
+      later.spinning === 0 &&
+      failedLater.trackName === 'FOURTH' &&
+      failedLater.track === 'freesound:404' &&
+      failedLater.spinning === 0 &&
+      waiting.track === 'freesound:404' &&
+      waiting.spinning === 1 &&
+      slowArrived.track === 'freesound:101' &&
+      slowArrived.trackName === 'SLOW' &&
+      slowArrived.spinning === 0;
+    return [ok, { later, failedLater, waiting, slowArrived }];
+  },
 };
