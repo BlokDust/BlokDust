@@ -29,6 +29,7 @@ import { patchesSaveTests } from './ui-regressions/patches-save.ts';
 import { patchesLayoutTests } from './ui-regressions/patches-layout.ts';
 import { patchLoadingTests } from './ui-regressions/patch-loading.ts';
 import { shareTests } from './ui-regressions/share.ts';
+import { embedTests } from './ui-regressions/embed.ts';
 import { startTests } from './ui-regressions/start.ts';
 import { pluginPatchesTests } from './ui-regressions/plugin-patches.ts';
 import { pluginStageTests } from './ui-regressions/plugin-stage.ts';
@@ -64,6 +65,7 @@ const byName: Record<string, RegressionTest> = {
   ...patchesLayoutTests,
   ...patchLoadingTests,
   ...shareTests,
+  ...embedTests,
   ...startTests,
   ...pluginPatchesTests,
   ...pluginStageTests,
